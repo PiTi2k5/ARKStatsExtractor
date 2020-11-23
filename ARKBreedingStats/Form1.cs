@@ -14,7 +14,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using ARKBreedingStats.utils;
 using static ARKBreedingStats.settings.Settings;
@@ -53,7 +52,7 @@ namespace ARKBreedingStats
         private Creature _creatureTesterEdit;
         private int _hiddenLevelsCreatureTester;
         private FileSync _fileSync;
-        private FileWatcherExports _filewatcherExports;
+        private FileWatcherExports _fileWatcherExports;
         private readonly Extraction _extractor = new Extraction();
         private SpeechRecognition _speechRecognition;
         private readonly System.Windows.Forms.Timer _timerGlobal = new System.Windows.Forms.Timer();
@@ -61,7 +60,6 @@ namespace ARKBreedingStats
         private ExportedCreatureControl _exportedCreatureControl;
         private readonly ToolTip _tt;
         private bool _reactOnCreatureSelectionChange;
-        private CancellationTokenSource _cancelTokenLibrarySelection;
         private bool _clearExtractionCreatureData;
         /// <summary>
         /// The last tab-page opened in the settings.
@@ -148,15 +146,17 @@ namespace ARKBreedingStats
             breedingPlan1.BindChildrenControlEvents();
             raisingControl1.onChange += SetCollectionChanged;
             tamingControl1.CreateTimer += CreateTimer;
-            raisingControl1.extractBaby += ExtractBaby;
+            raisingControl1.ExtractBaby += ExtractBaby;
             raisingControl1.SetGlobalSpecies += SetSpecies;
             raisingControl1.timerControl = timerList1;
             notesControl1.changed += SetCollectionChanged;
             creatureInfoInputExtractor.CreatureDataRequested += CreatureInfoInput_CreatureDataRequested;
             creatureInfoInputTester.CreatureDataRequested += CreatureInfoInput_CreatureDataRequested;
+            creatureInfoInputExtractor.ColorsChanged += CreatureInfoInputExtractor_ColorsChanged;
+            creatureInfoInputTester.ColorsChanged += CreatureInfoInputExtractor_ColorsChanged;
             speciesSelector1.OnSpeciesSelected += SpeciesSelector1OnSpeciesSelected;
             statsMultiplierTesting1.OnApplyMultipliers += StatsMultiplierTesting1_OnApplyMultipliers;
-            raisingControl1.AdjustTimers += timerList1.AdjustAllTimersByOffset;
+            raisingControl1.AdjustTimersByOffset += timerList1.AdjustAllTimersByOffset;
 
             speciesSelector1.SetTextBox(tbSpeciesGlobal);
 
@@ -258,7 +258,7 @@ namespace ARKBreedingStats
             flowLayoutPanelStatIOsExtractor.Controls.Add(labelFootnote);
             flowLayoutPanelStatIOsTester.Controls.Add(panelStatTesterFootnote);
 
-            // some stats are not used for any species, hide them permamently (until needed in a later release)
+            // some stats are not used for any species, hide them permanently (until needed in a later release)
             _statIOs[(int)StatNames.Water].Hide();
             _statIOs[(int)StatNames.Temperature].Hide();
             _statIOs[(int)StatNames.TemperatureFortitude].Hide();
@@ -279,12 +279,11 @@ namespace ARKBreedingStats
             // exports file watcher
             bool enableExportWatcher = Utils.GetFirstImportExportFolder(out string exportFolderDefault)
                 && Properties.Settings.Default.AutoImportExportedCreatures;
-            _filewatcherExports = new FileWatcherExports(exportFolderDefault, ImportExportedAddIfPossible_WatcherThread, enableExportWatcher);
+            _fileWatcherExports = new FileWatcherExports(exportFolderDefault, ImportExportedAddIfPossible_WatcherThread, enableExportWatcher);
 
             if (!LoadStatAndKibbleValues(applySettings: false).statValuesLoaded || !Values.V.species.Any())
             {
-                MessageBox.Show(Loc.S("valuesFileLoadingError"),
-                        $"{Loc.S("error")}: Values-file not found - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ShowMessageBox(Loc.S("valuesFileLoadingError"), $"{Loc.S("error")}: Values-file not found");
                 Environment.Exit(1);
             }
 
@@ -293,6 +292,12 @@ namespace ARKBreedingStats
                 _statIOs[s].Input = 0;
             }
 
+            creatureInfoInputTester.PbColorRegion = pictureBoxColorRegionsTester;
+            creatureInfoInputExtractor.PbColorRegion = PbCreatureColorsExtractor;
+            creatureInfoInputExtractor.ParentInheritance = parentInheritanceExtractor;
+            parentInheritanceExtractor.Visible = false;
+
+            // set last species
             speciesSelector1.LastSpecies = Properties.Settings.Default.lastSpecies;
 
             if (Properties.Settings.Default.lastSpecies?.Any() == true)
@@ -319,11 +324,18 @@ namespace ARKBreedingStats
             // UI loaded
 
             //// initialize controls
-            radarChart1.initializeVariables(_creatureCollection.maxChartLevel);
-            radarChartExtractor.initializeVariables(_creatureCollection.maxChartLevel);
-            radarChartLibrary.initializeVariables(_creatureCollection.maxChartLevel);
+            radarChart1.InitializeVariables(_creatureCollection.maxChartLevel);
+            radarChartExtractor.InitializeVariables(_creatureCollection.maxChartLevel);
+            radarChartLibrary.InitializeVariables(_creatureCollection.maxChartLevel);
             extractionTestControl1.CopyToExtractor += ExtractionTestControl1_CopyToExtractor;
             extractionTestControl1.CopyToTester += ExtractionTestControl1_CopyToTester;
+
+            if (!string.IsNullOrEmpty(Properties.Settings.Default.LastImportedSaveGame))
+            {
+                var atImportFileLocation =
+                    ATImportFileLocation.CreateFromString(Properties.Settings.Default.LastImportedSaveGame);
+                TsbImportLastSaveGame.ToolTipText = $"Import savegame {atImportFileLocation.ConvenientName}";
+            }
 
             // dev tabs
             if (!Properties.Settings.Default.DevTools)
@@ -336,9 +348,6 @@ namespace ARKBreedingStats
                 extractionTestControl1.LoadExtractionTestCases(Properties.Settings.Default.LastSaveFileTestCases);
             }
 
-            creatureInfoInputTester.PbColorRegion = pictureBoxColorRegionsTester;
-            creatureInfoInputExtractor.PbColorRegion = PbCreatureColorsExtractor;
-
             // set TLS-protocol (github needs at least TLS 1.2) for update-check
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
@@ -346,11 +355,10 @@ namespace ARKBreedingStats
             if (DateTime.Now.AddHours(-20) > Properties.Settings.Default.lastUpdateCheck)
                 CheckForUpdates(true);
 
-            if (!Properties.Settings.Default.AlreadyAskedToDownloadImageFilesTropeognathus)
+            if (!Properties.Settings.Default.AlreadyAskedToDownloadImageFiles20200921)
             {
-                Properties.Settings.Default.AlreadyAskedToDownloadImageFilesTropeognathus = true;
-                if (!File.Exists(FileService.GetPath(FileService.ImageFolderName, "Tropeognathus.png"))
-                    && MessageBox.Show("Download new species images to display the creature colors?\n\nThe file to be downloaded has a size of ~17 MB.\nYou can later download these images in the menu ? - Download Species Images",
+                Properties.Settings.Default.AlreadyAskedToDownloadImageFiles20200921 = true;
+                if (MessageBox.Show("Download new species images to display the creature colors?\n\nThe file to be downloaded has a size of ~17 MB.\nYou can later download these images in the menu ? - Download Species Images",
                     "Download species images?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     DownloadSpeciesImagesAsync();
             }
@@ -394,6 +402,7 @@ namespace ARKBreedingStats
             if (createNewCollection)
                 NewCollection();
 
+            _updateExtractorVisualData = true;
             _timerGlobal.Start();
         }
 
@@ -405,19 +414,26 @@ namespace ARKBreedingStats
             bool speechRecognitionInitialized = false;
             if (Properties.Settings.Default.SpeechRecognition)
             {
-                // var speechRecognitionAvailable = (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.Substring(0, 13) == "System.Speech")); // TODO doesn't work as intended. Should only require System.Speech if available to allow running it on MONO
-
-                _speechRecognition = new SpeechRecognition(_creatureCollection.maxWildLevel, _creatureCollection.considerWildLevelSteps ? _creatureCollection.wildLevelStep : 1, Values.V.speciesWithAliasesList, lbListening);
-                if (_speechRecognition.Initialized)
+                try
                 {
-                    speechRecognitionInitialized = true;
-                    _speechRecognition.speechRecognized += TellTamingData;
-                    _speechRecognition.speechCommandRecognized += SpeechCommand;
-                    lbListening.Visible = true;
+                    _speechRecognition = new SpeechRecognition(_creatureCollection.maxWildLevel,
+                        _creatureCollection.considerWildLevelSteps ? _creatureCollection.wildLevelStep : 1,
+                        Values.V.speciesWithAliasesList, lbListening);
+                    if (_speechRecognition.Initialized)
+                    {
+                        speechRecognitionInitialized = true;
+                        _speechRecognition.speechRecognized += TellTamingData;
+                        _speechRecognition.speechCommandRecognized += SpeechCommand;
+                        lbListening.Visible = true;
+                    }
+                    else
+                    {
+                        Properties.Settings.Default.SpeechRecognition = false;
+                    }
                 }
-                else
+                catch (PlatformNotSupportedException ex)
                 {
-                    Properties.Settings.Default.SpeechRecognition = false;
+                    MessageBoxes.ExceptionMessageBox(ex, "The speech recognition could not be initialized on this system.");
                 }
             }
             if (!speechRecognitionInitialized)
@@ -580,6 +596,15 @@ namespace ARKBreedingStats
             if (tabControlMain.SelectedTab == tabPageExtractor)
             {
                 ClearAll();
+                // warn if a species selected that has a possible mod variant
+                if (Values.V.loadedModsHash != Values.NoModsHash
+                    && species.Mod == null
+                    && Values.V.TryGetSpeciesByName(species.name, out var modSpecies)
+                    && modSpecies.Mod != null
+                    )
+                {
+                    SetMessageLabelText($"The selected species \"{species}\" is not from a mod, but there is a variant of that species that appears in the loaded mod \"{modSpecies.Mod.title}\". Probably you want to select the mod variant", MessageBoxIcon.Warning);
+                }
             }
             else if (tabControlMain.SelectedTab == tabPageStatTesting)
             {
@@ -636,6 +661,7 @@ namespace ARKBreedingStats
             tamingControl1.SetTamingMultipliers(Values.V.currentServerMultipliers.TamingSpeedMultiplier,
                                                 Values.V.currentServerMultipliers.DinoCharacterFoodDrainMultiplier);
 
+            ColorModeColors.SetColors((ColorModeColors.AsbColorMode)Properties.Settings.Default.ColorMode);
             RecalculateAllCreaturesValues();
 
             breedingPlan1.UpdateBreedingData();
@@ -649,9 +675,9 @@ namespace ARKBreedingStats
                 _testingIOs[s].barMaxLevel = _creatureCollection.maxChartLevel;
             }
             breedingPlan1.MaxWildLevels = _creatureCollection.maxWildLevel;
-            radarChart1.initializeVariables(_creatureCollection.maxChartLevel);
-            radarChartExtractor.initializeVariables(_creatureCollection.maxChartLevel);
-            radarChartLibrary.initializeVariables(_creatureCollection.maxChartLevel);
+            radarChart1.InitializeVariables(_creatureCollection.maxChartLevel);
+            radarChartExtractor.InitializeVariables(_creatureCollection.maxChartLevel);
+            radarChartLibrary.InitializeVariables(_creatureCollection.maxChartLevel);
             statPotentials1.levelDomMax = _creatureCollection.maxDomLevel;
             statPotentials1.levelGraphMax = _creatureCollection.maxChartLevel;
 
@@ -820,7 +846,7 @@ namespace ARKBreedingStats
             UpdateOwnerServerTagLists();
             CalculateTopStats(creatures);
             UpdateSpeciesLists(_creatureCollection.creatures, keepCurrentlySelectedSpecies);
-            FilterLib();
+            FilterLibRecalculate();
             UpdateStatusBar();
             breedingPlan1.breedingPlanNeedsUpdate = true;
             pedigree1.UpdateListView();
@@ -962,8 +988,10 @@ namespace ARKBreedingStats
                 return;
 
             // check if values-files can be updated
-            //Values.V.CheckAndUpdateModFiles(Values.V.modsManifest.modsByFiles.Select(mikv => mikv.Value).Where(mi => mi.downloaded).Select(mi => mi.mod.FileName).ToList()); // mod-files are already checked when loaded
-            bool valuesUpdated = CheckAvailabilityAndUpdateModFiles(new List<string> { FileService.ValuesJson }, Values.V);
+            var downloadedModFiles = Values.V.modsManifest.modsByFiles.Select(mikv => mikv.Value).Where(mi => mi.locallyAvailable).Select(mi => mi.mod.FileName).ToList();
+            downloadedModFiles.Add(FileService.ValuesJson); // check also base values file
+
+            bool valuesUpdated = CheckAvailabilityAndUpdateModFiles(downloadedModFiles, Values.V);
 
             // update last successful update check
             Properties.Settings.Default.lastUpdateCheck = DateTime.Now;
@@ -979,8 +1007,7 @@ namespace ARKBreedingStats
                 }
                 else
                 {
-                    MessageBox.Show("Download of new stat successful, but files couldn't be loaded.\nTry again later, or redownload the tool.",
-                            $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ShowMessageBox("Download of new stat successful, but files couldn't be loaded.\nTry again later, or redownload the tool.");
                 }
             }
             else if (!silentCheck)
@@ -1009,9 +1036,8 @@ namespace ARKBreedingStats
             success.kibbleValuesLoaded = Kibbles.K.LoadValues();
             if (!success.kibbleValuesLoaded)
             {
-                MessageBox.Show("The kibbles-file couldn't be loaded, the kibble-recipes will not be available. " +
-                        "You can redownload this application to get this file.",
-                        $"{Loc.S("error")}: Kibble-recipe-file not loaded - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ShowMessageBox("The kibbles-file couldn't be loaded, the kibble-recipes will not be available. " +
+                                             "You can redownload this application to get this file.", $"{Loc.S("error")}: Kibble-recipe-file not loaded");
             }
 
             return success;
@@ -1202,7 +1228,7 @@ namespace ARKBreedingStats
         private void listBoxSpeciesLib_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetSpecies(listBoxSpeciesLib.SelectedItem as Species);
-            FilterLib();
+            FilterLibRecalculate();
         }
 
         /// <summary>
@@ -1320,7 +1346,10 @@ namespace ARKBreedingStats
             toolStripButtonAddPlayer.Visible = tabControlMain.SelectedTab == tabPagePlayerTribes;
             toolStripButtonAddTribe.Visible = tabControlMain.SelectedTab == tabPagePlayerTribes;
             toolStripButtonClear.Visible = tabControlMain.SelectedTab == tabPageExtractor || tabControlMain.SelectedTab == tabPageStatTesting;
-            //creatureToolStripMenuItem.Enabled = (tabControlMain.SelectedTab == tabPageLibrary);
+            var libraryShown = tabControlMain.SelectedTab == tabPageLibrary;
+            ToolStripLabelFilter.Visible = libraryShown;
+            ToolStripTextBoxLibraryFilter.Visible = libraryShown;
+            ToolStripButtonLibraryFilterClear.Visible = libraryShown;
             SetMessageLabelText();
             copyCreatureToolStripMenuItem.Visible = tabControlMain.SelectedTab == tabPageLibrary;
             toolStripButtonAddNote.Visible = tabControlMain.SelectedTab == tabPageNotes;
@@ -1345,13 +1374,15 @@ namespace ARKBreedingStats
                     listBoxSpeciesLib.SelectedItem = speciesSelector1.SelectedSpecies;
                 }
                 else if (_libraryNeedsUpdate)
-                    FilterLib();
+                    FilterLibRecalculate();
             }
             else if (tabControlMain.SelectedTab == tabPagePedigree)
             {
-                if (pedigree1.PedigreeNeedsUpdate && listViewLibrary.SelectedItems.Count > 0)
+                if (pedigree1.PedigreeNeedsUpdate)
                 {
-                    Creature c = (Creature)listViewLibrary.SelectedItems[0].Tag;
+                    Creature c = null;
+                    if (listViewLibrary.SelectedItems.Count > 0)
+                        c = (Creature)listViewLibrary.SelectedItems[0].Tag;
                     pedigree1.SetCreature(c, true);
                 }
             }
@@ -1414,7 +1445,7 @@ namespace ARKBreedingStats
             UpdateAllTesterValues();
             // calculate number of imprintings
             if (speciesSelector1.SelectedSpecies.breeding != null && speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted > 0)
-                lbImprintedCount.Text = "(" + Math.Round((double)numericUpDownImprintingBonusTester.Value / (100 * Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted, Values.V.currentServerMultipliers.BabyCuddleIntervalMultiplier)), 2) + "×)";
+                lbImprintedCount.Text = "(" + Math.Round((double)numericUpDownImprintingBonusTester.Value / (100 * Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted)), 2) + "×)";
             else lbImprintedCount.Text = string.Empty;
         }
 
@@ -1422,7 +1453,7 @@ namespace ARKBreedingStats
         {
             // calculate number of imprintings
             if (speciesSelector1.SelectedSpecies.breeding != null && speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted > 0)
-                lbImprintingCuddleCountExtractor.Text = "(" + Math.Round((double)numericUpDownImprintingBonusExtractor.Value / (100 * Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted, Values.V.currentServerMultipliers.BabyCuddleIntervalMultiplier))) + "×)";
+                lbImprintingCuddleCountExtractor.Text = "(" + Math.Round((double)numericUpDownImprintingBonusExtractor.Value / (100 * Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted))) + "×)";
             else lbImprintingCuddleCountExtractor.Text = string.Empty;
         }
 
@@ -1451,7 +1482,7 @@ namespace ARKBreedingStats
             if (tabControlMain.SelectedTab == tabPageStatTesting || tabControlMain.SelectedTab == tabPageExtractor)
             {
                 bool fromExtractor = tabControlMain.SelectedTab == tabPageExtractor;
-                if (!fromExtractor || _extractor.validResults)
+                if (!fromExtractor || _extractor.ValidResults)
                 {
                     CreatureInfoInput input;
                     bool bred;
@@ -1569,10 +1600,9 @@ namespace ARKBreedingStats
                 {
                     c = Newtonsoft.Json.JsonConvert.DeserializeObject<Creature>(clpb);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    MessageBox.Show($"Invalid Data in clipboard. Couldn\'t paste creature-data\nErrormessage:\n\n{e.Message}", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ExceptionMessageBox(ex, "Invalid Data in clipboard. Couldn\'t paste creature-data.");
                     return;
                 }
                 UpdateParents(new List<Creature> { c });
@@ -1633,7 +1663,8 @@ namespace ARKBreedingStats
                         else
                             SetCreatureValuesToExtractor(cv);
                     }
-                    else MessageBox.Show($"{Loc.S("unknownSpecies")}:\n" + m.Groups[2].Value, $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    else
+                        MessageBoxes.ShowMessageBox($"{Loc.S("unknownSpecies")}:\n" + m.Groups[2].Value);
                 }
             }
         }
@@ -1653,7 +1684,7 @@ namespace ARKBreedingStats
 
             // recalculate topstats
             CalculateTopStats(_creatureCollection.creatures);
-            FilterLib();
+            FilterLibRecalculate();
         }
 
         private void SetMatureBreedingStateOfSelectedCreatures(bool setMature = false, bool clearMatingCooldown = false, bool justMated = false)
@@ -1744,7 +1775,7 @@ namespace ARKBreedingStats
             {
                 // update list / recalculate topStats
                 CalculateTopStats(_creatureCollection.creatures.Where(c => speciesBlueprints.Contains(c.speciesBlueprint)).ToList());
-                FilterLib();
+                FilterLibRecalculate();
                 UpdateStatusBar();
                 SetCollectionChanged(true, speciesBlueprints.Count == 1 ? Values.V.SpeciesByBlueprint(speciesBlueprints[0]) : null);
             }
@@ -1825,7 +1856,7 @@ namespace ARKBreedingStats
 
                     bool enableExportWatcher = Utils.GetFirstImportExportFolder(out string exportFolderDefault)
                         && Properties.Settings.Default.AutoImportExportedCreatures;
-                    _filewatcherExports.SetWatchFolder(exportFolderDefault, enableExportWatcher);
+                    _fileWatcherExports.SetWatchFolder(exportFolderDefault, enableExportWatcher);
 
                     InitializeSpeechRecognition();
                     _overlay?.SetInfoPositions();
@@ -1833,7 +1864,7 @@ namespace ARKBreedingStats
                         statsMultiplierTesting1.CheckIfMultipliersAreEqualToSettings();
 
                     if (libraryTopCreatureColorHighlight != Properties.Settings.Default.LibraryHighlightTopCreatures)
-                        FilterLib();
+                        FilterLibRecalculate();
 
                     SetOverlayLocation();
 
@@ -1930,7 +1961,7 @@ namespace ARKBreedingStats
             ocrControl1.output.Text = debugText;
             if (OCRvalues.Length <= 1)
             {
-                if (manuallyTriggered) MessageBox.Show(debugText, $"OCR {Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (manuallyTriggered) MessageBoxes.ShowMessageBox(debugText, "OCR " + Loc.S("error"));
                 return;
             }
 
@@ -2210,8 +2241,8 @@ namespace ARKBreedingStats
 
                     if (!p.Any())
                     {
-                        MessageBox.Show("Process for capturing screenshots and for overlay (e.g. the game, or a stream of the game) not found.\n" +
-                                "Start the game or change the process in the settings.", $"Game started? - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBoxes.ShowMessageBox("Process for capturing screenshots and for overlay (e.g. the game, or a stream of the game) not found.\n" +
+                                                     "Start the game or change the process in the settings.", "Game started?", MessageBoxIcon.Warning);
                         cbToggleOverlay.Checked = false;
                         return false;
                     }
@@ -2341,7 +2372,7 @@ namespace ARKBreedingStats
                 int levelDom = tamedLevels.Sum();
 
                 string extraText = speciesSelector1.SelectedSpecies.name;
-                if (!_extractor.postTamed)
+                if (!_extractor.PostTamed)
                 {
                     string foodName = speciesSelector1.SelectedSpecies.taming.eats[0];
                     int foodNeeded = Taming.FoodAmountNeeded(speciesSelector1.SelectedSpecies, levelWild, Values.V.currentServerMultipliers.TamingSpeedMultiplier, foodName, speciesSelector1.SelectedSpecies.taming.nonViolent);
@@ -2407,7 +2438,7 @@ namespace ARKBreedingStats
                 // set imprinting-count to closes integer
                 if (speciesSelector1.SelectedSpecies.breeding != null && speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted > 0)
                 {
-                    double imprintingGainPerCuddle = Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted, Values.V.currentServerMultipliers.BabyCuddleIntervalMultiplier);
+                    double imprintingGainPerCuddle = Utils.ImprintingGainPerCuddle(speciesSelector1.SelectedSpecies.breeding.maturationTimeAdjusted);
                     int cuddleCount = (int)Math.Round((double)numericUpDownImprintingBonusTester.Value / (100 * imprintingGainPerCuddle));
                     double imprintingBonus;
                     do
@@ -2515,7 +2546,7 @@ namespace ARKBreedingStats
                 + (cryopod > 0 ? ", cryopod: " + cryopod : string.Empty)
                 + ")" : string.Empty)
                 + ". v" + Application.ProductVersion
-                //+ "-BETA" // TODO BETA indicator
+                //+ "-BETA .NET 4.8.0" // TODO BETA indicator
                 + " / values: " + Values.V.Version +
                     (modsLoaded ? ", additional values from " + _creatureCollection.ModList.Count + " mods (" + string.Join(", ", _creatureCollection.ModList.Select(m => m.title).ToArray()) + ")" : string.Empty);
         }
@@ -2637,6 +2668,16 @@ namespace ARKBreedingStats
 
         private void toolStripButtonSaveCreatureValuesTemp_Click(object sender, EventArgs e)
         {
+            _creatureCollection.creaturesValues.Add(GetCreatureValuesFromExtractor());
+            SetCollectionChanged(true);
+            UpdateTempCreatureDropDown();
+        }
+
+        /// <summary>
+        /// Returns the entered creature values from the extractor.
+        /// </summary>
+        private CreatureValues GetCreatureValuesFromExtractor()
+        {
             CreatureValues cv = new CreatureValues();
             for (int s = 0; s < Values.STATS_COUNT; s++)
                 cv.statValues[s] = _statIOs[s].Input;
@@ -2664,10 +2705,7 @@ namespace ARKBreedingStats
                 cv.isTamed = true;
             cv.imprintingBonus = (double)numericUpDownImprintingBonusExtractor.Value * 0.01;
 
-            _creatureCollection.creaturesValues.Add(cv);
-            SetCollectionChanged(true);
-
-            UpdateTempCreatureDropDown();
+            return cv;
         }
 
         private void toolStripButtonDeleteTempCreature_Click(object sender, EventArgs e)
@@ -2682,7 +2720,7 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Update the combolist with the temporary saved creature-values.
+        /// Update the combo list with the temporary saved creature-values.
         /// </summary>
         private void UpdateTempCreatureDropDown()
         {
@@ -2696,21 +2734,22 @@ namespace ARKBreedingStats
         /// </summary>
         /// <param name="input"></param>
         /// <param name="openPatternEditor"></param>
-        private void CreatureInfoInput_CreatureDataRequested(CreatureInfoInput input, bool openPatternEditor, bool showDuplicateNameWarning, int namingPatternIndex)
+        private void CreatureInfoInput_CreatureDataRequested(CreatureInfoInput input, bool openPatternEditor, bool updateInheritance, bool showDuplicateNameWarning, int namingPatternIndex)
         {
             Creature cr = new Creature
             {
                 ArkId = input.ArkId,
-                ArkIdImported = input.ArkIdImported
+                ArkIdImported = input.ArkIdImported,
+                guid = input.CreatureGuid,
+                name = input.CreatureName
             };
-            cr.guid = input.CreatureGuid;
-            cr.name = input.CreatureName;
             if (input == creatureInfoInputExtractor)
             {
                 cr.levelsWild = _statIOs.Select(s => s.LevelWild).ToArray();
                 cr.imprintingBonus = _extractor.ImprintingBonus;
                 cr.tamingEff = _extractor.UniqueTE();
                 cr.isBred = rbBredExtractor.Checked;
+                cr.topBreedingStats = _statIOs.Select(s => s.TopLevel == StatIOStatus.TopLevel || s.TopLevel == StatIOStatus.NewTopLevel).ToArray();
             }
             else
             {
@@ -2724,11 +2763,20 @@ namespace ARKBreedingStats
             cr.RecalculateCreatureValues(_creatureCollection.getWildLevelStep());
 
             if (openPatternEditor)
+            {
                 input.OpenNamePatternEditor(cr, _topLevels.ContainsKey(cr.Species) ? _topLevels[species] : null, _lowestLevels.ContainsKey(cr.Species) ? _lowestLevels[species] : null,
-                    _customReplacingNamingPattern, namingPatternIndex, ReloadNamePatternCustomReplacings);
+                       _customReplacingNamingPattern, namingPatternIndex, ReloadNamePatternCustomReplacings);
+            }
+            else if (updateInheritance)
+            {
+                if (_extractor.ValidResults && _updateExtractorVisualData)
+                    input.UpdateParentInheritances(cr);
+            }
             else
+            {
                 input.GenerateCreatureName(cr, _topLevels.ContainsKey(cr.Species) ? _topLevels[species] : null, _lowestLevels.ContainsKey(cr.Species) ? _lowestLevels[species] : null,
                     _customReplacingNamingPattern, showDuplicateNameWarning, namingPatternIndex);
+            }
         }
 
         private void ExtractionTestControl1_CopyToTester(string speciesBP, int[] wildLevels, int[] domLevels, bool postTamed, bool bred, double te, double imprintingBonus, bool gotoTester, testCases.TestCaseControl tcc)
@@ -2774,7 +2822,7 @@ namespace ARKBreedingStats
 
             if (tcc != null)
             {
-                bool success = _extractor.validResults;
+                bool success = _extractor.ValidResults;
                 if (!success)
                     tcc.SetTestResult(false, (int)watch.ElapsedMilliseconds, 0, "extraction failed");
                 else
@@ -2784,13 +2832,13 @@ namespace ARKBreedingStats
                     int resultCount = -Values.STATS_COUNT; // one result per stat is allowed, only count the additional ones. // TODO only consider possible stats
                     for (int s = 0; s < Values.STATS_COUNT; s++)
                     {
-                        resultCount += _extractor.results[s].Count;
+                        resultCount += _extractor.Results[s].Count;
                         bool statValid = false;
-                        for (int r = 0; r < _extractor.results[s].Count; r++)
+                        for (int r = 0; r < _extractor.Results[s].Count; r++)
                         {
-                            if (_extractor.results[s][r].levelWild == -1 || s == (int)StatNames.SpeedMultiplier && _extractor.results[s][r].levelWild == 0 || _extractor.results[s][r].levelWild == tcc.TestCase.levelsWild[s]
-                                    && _extractor.results[s][r].levelDom == tcc.TestCase.levelsDom[s]
-                                    && (_extractor.results[s][r].TE.Max == -1 || _extractor.results[s][r].TE.Includes(tcc.TestCase.tamingEff))
+                            if (_extractor.Results[s][r].levelWild == -1 || s == (int)StatNames.SpeedMultiplier && _extractor.Results[s][r].levelWild == 0 || _extractor.Results[s][r].levelWild == tcc.TestCase.levelsWild[s]
+                                    && _extractor.Results[s][r].levelDom == tcc.TestCase.levelsDom[s]
+                                    && (_extractor.Results[s][r].TE.Max == -1 || _extractor.Results[s][r].TE.Includes(tcc.TestCase.tamingEff))
                             )
                             {
                                 statValid = true;
@@ -2933,7 +2981,8 @@ namespace ARKBreedingStats
                 }
                 if (colorCommands.Any())
                 {
-                    Clipboard.SetText((Properties.Settings.Default.AdminConsoleCommandWithCheat ? "cheat " : string.Empty) + string.Join(" | ", colorCommands));
+                    var cheatPrefix = Properties.Settings.Default.AdminConsoleCommandWithCheat ? "cheat " : string.Empty;
+                    Clipboard.SetText(cheatPrefix + string.Join(" | " + cheatPrefix, colorCommands));
                 }
             }
         }
@@ -2972,6 +3021,16 @@ namespace ARKBreedingStats
                             "Discard Changes?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     LoadCollectionFile(filePath);
+                }
+            }
+            else if (ext == ".zip")
+            {
+                if (!_collectionDirty
+                    || MessageBox.Show("Your Creature Collection has been modified since it was last saved, " +
+                            "are you sure you want to discard your changes and load the file without saving first?",
+                            "Discard Changes?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    OpenZippedLibrary(filePath);
                 }
             }
             else if (ext == ".ark")
@@ -3016,9 +3075,9 @@ namespace ARKBreedingStats
         {
             if (listViewLibrary.SelectedItems.Count == 0) return;
 
+            var creaturesToUpdate = new List<Creature>();
             Creature[] sameSpecies = null;
 
-            listViewLibrary.BeginUpdate();
             for (int s = 0; s < listViewLibrary.SelectedItems.Count; s++)
             {
                 Creature cr = ((Creature)listViewLibrary.SelectedItems[s].Tag);
@@ -3031,8 +3090,13 @@ namespace ARKBreedingStats
                     _topLevels.ContainsKey(cr.Species) ? _topLevels[cr.Species] : null,
                     _lowestLevels.ContainsKey(cr.Species) ? _lowestLevels[cr.Species] : null, _customReplacingNamingPattern, false, 0);
 
-                UpdateDisplayedCreatureValues(cr, false, false);
+                creaturesToUpdate.Add(cr);
             }
+
+            listViewLibrary.BeginUpdate();
+            foreach (var cr in creaturesToUpdate)
+                UpdateDisplayedCreatureValues(cr, false, false);
+
             listViewLibrary.EndUpdate();
         }
 
@@ -3063,7 +3127,7 @@ namespace ARKBreedingStats
             }
             catch (FileNotFoundException ex)
             {
-                MessageBox.Show($"Folder not found\n{FileService.GetJsonPath()}\n\nException: {ex.Message}", $"No data folder - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ExceptionMessageBox(ex, $"Folder not found\n{FileService.GetJsonPath()}", "No data folder");
             }
         }
 
@@ -3072,12 +3136,15 @@ namespace ARKBreedingStats
         /// </summary>
         private void ReloadNamePatternCustomReplacings(PatternEditor pe = null)
         {
-            string filePath = FileService.GetJsonPath(FileService.CustomReplacingsNamePattern);
+            string filePath = Properties.Settings.Default.CustomReplacingFilePath;
+            if (string.IsNullOrEmpty(filePath))
+                filePath = FileService.GetJsonPath(FileService.CustomReplacingsNamePattern);
+
             string errorMessage = null;
             if (!File.Exists(filePath) || !FileService.LoadJsonFile(filePath, out _customReplacingNamingPattern, out errorMessage))
             {
                 if (!string.IsNullOrEmpty(errorMessage))
-                    MessageBox.Show(errorMessage, $"Custom replacing file loading error - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ShowMessageBox(errorMessage, "Custom replacing file loading error");
             }
             else if (pe != null) pe.SetCustomReplacings(_customReplacingNamingPattern);
         }
@@ -3117,7 +3184,7 @@ namespace ARKBreedingStats
                     || Properties.Settings.Default.useFiltersInTopStatCalculation != useFilterInTopStatsOld)
                     CalculateTopStats(_creatureCollection.creatures);
 
-                FilterLib();
+                FilterLibRecalculate();
             }
 
             (Properties.Settings.Default.LibraryFilterWindowRect, _) = Utils.GetWindowRectangle(libraryFilter);
@@ -3160,6 +3227,16 @@ namespace ARKBreedingStats
             var (success, result) = await Updater.DownloadSpeciesImages(overwrite).ConfigureAwait(true);
 
             MessageBox.Show(result, $"Species images download - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, success ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+        }
+
+        private void copyLibrarydumpToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveDebugFile();
+        }
+
+        private void BtCopyIssueDumpToClipboard_Click(object sender, EventArgs e)
+        {
+            SaveDebugFile();
         }
     }
 }

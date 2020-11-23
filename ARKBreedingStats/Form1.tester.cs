@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -121,7 +122,7 @@ namespace ARKBreedingStats
             int[] levelsWild = _testingIOs.Select(s => s.LevelWild).ToArray();
             if (!_testingIOs[2].Enabled)
                 levelsWild[2] = 0;
-            radarChart1.setLevels(levelsWild);
+            radarChart1.SetLevels(levelsWild);
             statPotentials1.SetLevels(levelsWild, false);
             //statGraphs1.setGraph(sE, 0, testingIOs[0].LevelWild, testingIOs[0].LevelDom, !radioButtonTesterWild.Checked, (double)NumericUpDownTestingTE.Value / 100, (double)numericUpDownImprintingBonusTester.Value / 100);
 
@@ -218,6 +219,7 @@ namespace ARKBreedingStats
             }
 
             SetTesterInfoInputCreature();
+            _libraryNeedsUpdate = true;
             tabControlMain.SelectedTab = tabPageLibrary;
         }
 
@@ -309,8 +311,7 @@ namespace ARKBreedingStats
                     tabControlMain.SelectedTab = tabPageExtractor;
                 }
                 else
-                    MessageBox.Show("Unknown Species. Try to update the species-stats, or redownload the tool.", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ShowMessageBox("Unknown Species. Try to update the species-stats, or redownload the tool.");
             }
         }
     }

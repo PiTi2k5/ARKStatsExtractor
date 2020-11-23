@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using ARKBreedingStats.utils;
@@ -30,14 +31,26 @@ namespace ARKBreedingStats.settings
             tabControlSettings.SelectTab((int)page);
         }
 
-        private const string DefaultOCRProcessName = "ShooterGame";
+        private const string DefaultOcrProcessName = "ShooterGame";
         /// <summary>
         /// Creates the list of currently running processes for an easy selection for the process the OCR uses to capture.
         /// </summary>
         private void CreateListOfProcesses()
         {
-            cbbOCRApp.DataSource = System.Diagnostics.Process.GetProcesses().Select(p => new ProcessSelector { ProcessName = p.ProcessName, MainWindowTitle = p.MainWindowTitle })
-                .Distinct().Where(pn => !string.IsNullOrEmpty(pn.MainWindowTitle) && pn.ProcessName != "System" && pn.ProcessName != "idle").OrderBy(pn => pn.ProcessName).ToArray();
+            // Wine doesn't support the Process.ProcessName getter and OCR doesn't work there currently
+            try
+            {
+                cbbOCRApp.DataSource = System.Diagnostics.Process.GetProcesses().Select(p => new ProcessSelector
+                { ProcessName = p.ProcessName, MainWindowTitle = p.MainWindowTitle })
+                    .Distinct().Where(pn =>
+                        !string.IsNullOrEmpty(pn.MainWindowTitle) && pn.ProcessName != "System" &&
+                        pn.ProcessName != "idle").OrderBy(pn => pn.ProcessName).ToArray();
+            }
+            catch (InvalidOperationException)
+            {
+                // OCR currently doesn't work on Wine, so hide settings tab page
+                tabControlSettings.TabPages.Remove(tabPageOCR);
+            }
         }
 
         private struct ProcessSelector
@@ -81,6 +94,7 @@ namespace ARKBreedingStats.settings
             nudEggHatchSpeed.NeutralNumber = 1;
             nudBabyMatureSpeed.NeutralNumber = 1;
             nudBabyCuddleInterval.NeutralNumber = 1;
+            nudBabyImprintAmount.NeutralNumber = 1;
             nudBabyImprintingStatScale.NeutralNumber = 1;
             nudBabyFoodConsumptionSpeed.NeutralNumber = 1;
             // event
@@ -90,6 +104,7 @@ namespace ARKBreedingStats.settings
             nudEggHatchSpeedEvent.NeutralNumber = 1;
             nudBabyMatureSpeedEvent.NeutralNumber = 1;
             nudBabyCuddleIntervalEvent.NeutralNumber = 1;
+            nudBabyImprintAmountEvent.NeutralNumber = 1;
             nudBabyFoodConsumptionSpeedEvent.NeutralNumber = 1;
 
             customSCStarving.Title = "Starving: ";
@@ -125,21 +140,24 @@ namespace ARKBreedingStats.settings
 
             // localizations / translations
             // for a new translation
-            // * a file local/strins.[languageCode].resx needs to exist.
+            // * a file local/strings.[languageCode].resx needs to exist.
             // * that file needs to be added to the installer files, for that edit the file setup.iss and setup-debug.iss in the repository base folder.
             // * the entry in the next dictionary needs to be added
             _languages = new Dictionary<string, string>
             {
-                { "System language", ""},
-                { Loc.S("de"), "de"},
-                { Loc.S("en"), "en"},
-                { Loc.S("es"), "es"},
-                { Loc.S("fr"), "fr"},
-                { Loc.S("it"), "it"},
-                { Loc.S("zh"), "zh"},
+                { Loc.S("SystemLanguage"), string.Empty},
+                { "Deutsch", "de"},
+                { "English", "en"},
+                { "Español", "es"},
+                { "Français", "fr"},
+                { "Italiano", "it"},
+                { "中文", "zh"},
             };
             foreach (string l in _languages.Keys)
                 cbbLanguage.Items.Add(l);
+
+            foreach (var cm in Enum.GetNames(typeof(ColorModeColors.AsbColorMode)))
+                CbbColorMode.Items.Add(cm);
         }
 
         private void LoadSettings(CreatureCollection cc)
@@ -163,25 +181,33 @@ namespace ARKBreedingStats.settings
             nudMaxServerLevel.ValueSave = cc.maxServerLevel > 0 ? cc.maxServerLevel : 0;
             nudMaxGraphLevel.ValueSave = cc.maxChartLevel;
             #region Non-event multiplier
-            nudMatingSpeed.ValueSave = (decimal)cc.serverMultipliers.MatingSpeedMultiplier;
-            nudMatingInterval.ValueSave = (decimal)cc.serverMultipliers.MatingIntervalMultiplier;
-            nudEggHatchSpeed.ValueSave = (decimal)cc.serverMultipliers.EggHatchSpeedMultiplier;
-            nudBabyMatureSpeed.ValueSave = (decimal)cc.serverMultipliers.BabyMatureSpeedMultiplier;
-            nudBabyImprintingStatScale.ValueSave = (decimal)cc.serverMultipliers.BabyImprintingStatScaleMultiplier;
-            nudBabyCuddleInterval.ValueSave = (decimal)cc.serverMultipliers.BabyCuddleIntervalMultiplier;
-            nudTamingSpeed.ValueSave = (decimal)cc.serverMultipliers.TamingSpeedMultiplier;
-            nudDinoCharacterFoodDrain.ValueSave = (decimal)cc.serverMultipliers.DinoCharacterFoodDrainMultiplier;
-            nudBabyFoodConsumptionSpeed.ValueSave = (decimal)cc.serverMultipliers.BabyFoodConsumptionSpeedMultiplier;
+            var multipliers = cc.serverMultipliers;
+            if (multipliers == null)
+            {
+                multipliers = new ServerMultipliers();
+                multipliers.SetDefaultValues(new StreamingContext());
+            }
+            nudMatingSpeed.ValueSave = (decimal)multipliers.MatingSpeedMultiplier;
+            nudMatingInterval.ValueSave = (decimal)multipliers.MatingIntervalMultiplier;
+            nudEggHatchSpeed.ValueSave = (decimal)multipliers.EggHatchSpeedMultiplier;
+            nudBabyMatureSpeed.ValueSave = (decimal)multipliers.BabyMatureSpeedMultiplier;
+            nudBabyImprintingStatScale.ValueSave = (decimal)multipliers.BabyImprintingStatScaleMultiplier;
+            nudBabyCuddleInterval.ValueSave = (decimal)multipliers.BabyCuddleIntervalMultiplier;
+            nudBabyImprintAmount.ValueSave = (decimal)multipliers.BabyImprintAmountMultiplier;
+            nudTamingSpeed.ValueSave = (decimal)multipliers.TamingSpeedMultiplier;
+            nudDinoCharacterFoodDrain.ValueSave = (decimal)multipliers.DinoCharacterFoodDrainMultiplier;
+            nudBabyFoodConsumptionSpeed.ValueSave = (decimal)multipliers.BabyFoodConsumptionSpeedMultiplier;
             #endregion
             #region event-multiplier
-            ServerMultipliers serverMultipliersEvent = cc.serverMultipliersEvents ?? cc.serverMultipliers;
-            nudBabyCuddleIntervalEvent.ValueSave = (decimal)serverMultipliersEvent.BabyCuddleIntervalMultiplier;
-            nudTamingSpeedEvent.ValueSave = (decimal)serverMultipliersEvent.TamingSpeedMultiplier;
-            nudDinoCharacterFoodDrainEvent.ValueSave = (decimal)serverMultipliersEvent.DinoCharacterFoodDrainMultiplier;
-            nudMatingIntervalEvent.ValueSave = (decimal)serverMultipliersEvent.MatingIntervalMultiplier;
-            nudEggHatchSpeedEvent.ValueSave = (decimal)serverMultipliersEvent.EggHatchSpeedMultiplier;
-            nudBabyMatureSpeedEvent.ValueSave = (decimal)serverMultipliersEvent.BabyMatureSpeedMultiplier;
-            nudBabyFoodConsumptionSpeedEvent.ValueSave = (decimal)serverMultipliersEvent.BabyFoodConsumptionSpeedMultiplier;
+            multipliers = cc.serverMultipliersEvents ?? multipliers;
+            nudBabyCuddleIntervalEvent.ValueSave = (decimal)multipliers.BabyCuddleIntervalMultiplier;
+            nudBabyImprintAmountEvent.ValueSave = (decimal)multipliers.BabyImprintAmountMultiplier;
+            nudTamingSpeedEvent.ValueSave = (decimal)multipliers.TamingSpeedMultiplier;
+            nudDinoCharacterFoodDrainEvent.ValueSave = (decimal)multipliers.DinoCharacterFoodDrainMultiplier;
+            nudMatingIntervalEvent.ValueSave = (decimal)multipliers.MatingIntervalMultiplier;
+            nudEggHatchSpeedEvent.ValueSave = (decimal)multipliers.EggHatchSpeedMultiplier;
+            nudBabyMatureSpeedEvent.ValueSave = (decimal)multipliers.BabyMatureSpeedMultiplier;
+            nudBabyFoodConsumptionSpeedEvent.ValueSave = (decimal)multipliers.BabyFoodConsumptionSpeedMultiplier;
             #endregion
 
             checkBoxAutoSave.Checked = Properties.Settings.Default.autosave;
@@ -204,6 +230,7 @@ namespace ARKBreedingStats.settings
             cbCustomOverlayLocation.Checked = Properties.Settings.Default.UseCustomOverlayLocation;
             nudCustomOverlayLocX.ValueSave = Properties.Settings.Default.CustomOverlayLocation.X;
             nudCustomOverlayLocY.ValueSave = Properties.Settings.Default.CustomOverlayLocation.Y;
+            CbOverlayDisplayInheritance.Checked = Properties.Settings.Default.DisplayInheritanceInOverlay;
             #endregion
 
             #region Timers
@@ -232,6 +259,9 @@ namespace ARKBreedingStats.settings
             nudWildLevelStep.ValueSave = cc.wildLevelStep;
             cbInventoryCheck.Checked = Properties.Settings.Default.inventoryCheckTimer;
             cbAllowMoreThanHundredImprinting.Checked = cc.allowMoreThanHundredImprinting;
+            nudInfoGraphicWidth.ValueSave = Properties.Settings.Default.InfoGraphicWidth;
+            CbHighlightLevel255.Checked = Properties.Settings.Default.Highlight255Level;
+            CbHighlightLevelEvenOdd.Checked = Properties.Settings.Default.HighlightEvenOdd;
 
             #region library
             cbCreatureColorsLibrary.Checked = Properties.Settings.Default.showColorsInLibrary;
@@ -249,6 +279,7 @@ namespace ARKBreedingStats.settings
                 }
             }
             nudWarnImportMoreThan.Value = Properties.Settings.Default.WarnWhenImportingMoreCreaturesThan;
+            CbApplyNamingPatternOnImportAlways.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportAlways;
             cbApplyNamePatternOnImportOnEmptyNames.Checked = Properties.Settings.Default.applyNamePatternOnImportIfEmptyName;
             cbApplyNamePatternOnImportOnNewCreatures.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures;
             cbCopyPatternNameToClipboard.Checked = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied;
@@ -288,9 +319,11 @@ namespace ARKBreedingStats.settings
 
             cbAdminConsoleCommandWithCheat.Checked = Properties.Settings.Default.AdminConsoleCommandWithCheat;
 
-            string langKey = _languages.FirstOrDefault(x => x.Value == Properties.Settings.Default.language).Key ?? "";
+            string langKey = _languages.FirstOrDefault(x => x.Value == Properties.Settings.Default.language).Key ?? string.Empty;
             int langI = cbbLanguage.Items.IndexOf(langKey);
             cbbLanguage.SelectedIndex = langI == -1 ? 0 : langI;
+
+            CbbColorMode.SelectedIndex = Math.Min(CbbColorMode.Items.Count, Math.Max(0, Properties.Settings.Default.ColorMode));
         }
 
         private void SaveSettings()
@@ -333,6 +366,7 @@ namespace ARKBreedingStats.settings
             _cc.serverMultipliers.MatingIntervalMultiplier = (double)nudMatingInterval.Value;
             _cc.serverMultipliers.EggHatchSpeedMultiplier = (double)nudEggHatchSpeed.Value;
             _cc.serverMultipliers.BabyCuddleIntervalMultiplier = (double)nudBabyCuddleInterval.Value;
+            _cc.serverMultipliers.BabyImprintAmountMultiplier = (double)nudBabyImprintAmount.Value;
             _cc.serverMultipliers.BabyImprintingStatScaleMultiplier = (double)nudBabyImprintingStatScale.Value;
             _cc.serverMultipliers.BabyMatureSpeedMultiplier = (double)nudBabyMatureSpeed.Value;
             _cc.serverMultipliers.BabyFoodConsumptionSpeedMultiplier = (double)nudBabyFoodConsumptionSpeed.Value;
@@ -345,6 +379,7 @@ namespace ARKBreedingStats.settings
             _cc.serverMultipliersEvents.MatingIntervalMultiplier = (double)nudMatingIntervalEvent.Value;
             _cc.serverMultipliersEvents.EggHatchSpeedMultiplier = (double)nudEggHatchSpeedEvent.Value;
             _cc.serverMultipliersEvents.BabyCuddleIntervalMultiplier = (double)nudBabyCuddleIntervalEvent.Value;
+            _cc.serverMultipliersEvents.BabyImprintAmountMultiplier = (double)nudBabyImprintAmountEvent.Value;
             _cc.serverMultipliersEvents.BabyImprintingStatScaleMultiplier = (double)nudBabyImprintingStatScale.Value;
             _cc.serverMultipliersEvents.BabyMatureSpeedMultiplier = (double)nudBabyMatureSpeedEvent.Value;
             _cc.serverMultipliersEvents.BabyFoodConsumptionSpeedMultiplier = (double)nudBabyFoodConsumptionSpeedEvent.Value;
@@ -365,6 +400,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.OverlayInfoPosition = new Point((int)nudOverlayInfoPosDFR.Value, (int)nudOverlayInfoPosY.Value);
             Properties.Settings.Default.UseCustomOverlayLocation = cbCustomOverlayLocation.Checked;
             Properties.Settings.Default.CustomOverlayLocation = new Point((int)nudCustomOverlayLocX.Value, (int)nudCustomOverlayLocY.Value);
+            Properties.Settings.Default.DisplayInheritanceInOverlay = CbOverlayDisplayInheritance.Checked;
             #endregion
 
             #region Timers
@@ -393,6 +429,9 @@ namespace ARKBreedingStats.settings
             _cc.wildLevelStep = (int)nudWildLevelStep.Value;
             Properties.Settings.Default.inventoryCheckTimer = cbInventoryCheck.Checked;
             _cc.allowMoreThanHundredImprinting = cbAllowMoreThanHundredImprinting.Checked;
+            Properties.Settings.Default.InfoGraphicWidth = (int)nudInfoGraphicWidth.Value;
+            Properties.Settings.Default.Highlight255Level = CbHighlightLevel255.Checked;
+            Properties.Settings.Default.HighlightEvenOdd = CbHighlightLevelEvenOdd.Checked;
 
             #region library
             Properties.Settings.Default.showColorsInLibrary = cbCreatureColorsLibrary.Checked;
@@ -407,6 +446,7 @@ namespace ARKBreedingStats.settings
                     .Where(location => !string.IsNullOrWhiteSpace(location.FolderPath))
                     .Select(location => $"{location.ConvenientName}|{location.OwnerSuffix}|{location.FolderPath}").ToArray();
 
+            Properties.Settings.Default.applyNamePatternOnAutoImportAlways = CbApplyNamingPatternOnImportAlways.Checked;
             Properties.Settings.Default.applyNamePatternOnImportIfEmptyName = cbApplyNamePatternOnImportOnEmptyNames.Checked;
             Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures = cbApplyNamePatternOnImportOnNewCreatures.Checked;
             Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied = cbCopyPatternNameToClipboard.Checked;
@@ -426,7 +466,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.savegameExtractionPath = fileSelectorExtractedSaveFolder.Link;
             Properties.Settings.Default.arkSavegamePaths = aTImportFileLocationBindingSource.OfType<ATImportFileLocation>()
                     .Where(location => !string.IsNullOrWhiteSpace(location.FileLocation))
-                    .Select(location => $"{location.ConvenientName}|{location.ServerName}|{location.FileLocation}").ToArray();
+                    .Select(location => location.ToString()).ToArray();
 
             Properties.Settings.Default.IgnoreUnknownBlueprintsOnSaveImport = cbIgnoreUnknownBPOnSaveImport.Checked;
             Properties.Settings.Default.SaveImportCryo = cbSaveImportCryo.Checked;
@@ -444,6 +484,8 @@ namespace ARKBreedingStats.settings
             string lang = cbbLanguage.SelectedItem.ToString();
             Properties.Settings.Default.language = _languages.ContainsKey(lang) ? _languages[lang] : string.Empty;
             LanguageChanged = oldLanguageSetting != Properties.Settings.Default.language;
+
+            Properties.Settings.Default.ColorMode = Math.Max(0, CbbColorMode.SelectedIndex);
 
             Properties.Settings.Default.Save();
         }
@@ -518,13 +560,13 @@ namespace ARKBreedingStats.settings
                 ParseAndSetStatMultiplier(2, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
                 ParseAndSetStatMultiplier(3, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
 
-                void ParseAndSetStatMultiplier(int _multiplierIndex, string _regexPattern)
+                void ParseAndSetStatMultiplier(int multiplierIndex, string regexPattern)
                 {
-                    m = Regex.Match(text, _regexPattern);
+                    m = Regex.Match(text, regexPattern);
                     if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, cultureForStrings, out d))
                     {
                         var multipliers = _multSetter[s].Multipliers;
-                        multipliers[_multiplierIndex] = d == 0 ? 1 : d;
+                        multipliers[multiplierIndex] = d == 0 ? 1 : d;
                         _multSetter[s].Multipliers = multipliers;
                     }
                 }
@@ -566,22 +608,22 @@ namespace ARKBreedingStats.settings
             ParseAndSetValue(nudTamingSpeedEvent, @"ASBEvent_TamingSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudDinoCharacterFoodDrainEvent, @"ASBEvent_DinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
 
-            bool ParseAndSetValue(uiControls.Nud _nud, string _regexPattern)
+            bool ParseAndSetValue(uiControls.Nud nud, string regexPattern)
             {
-                m = Regex.Match(text, _regexPattern);
+                m = Regex.Match(text, regexPattern);
                 if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint, cultureForStrings, out d))
                 {
-                    _nud.ValueSave = (decimal)d;
+                    nud.ValueSave = (decimal)d;
                     return true;
                 }
                 return false;
             }
-            void ParseAndSetCheckbox(CheckBox _cb, string _regexPattern)
+            void ParseAndSetCheckbox(CheckBox cb, string regexPattern)
             {
-                m = Regex.Match(text, _regexPattern, RegexOptions.IgnoreCase);
+                m = Regex.Match(text, regexPattern, RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    _cb.Checked = m.Groups[1].Value.ToLower() == "true";
+                    cb.Checked = m.Groups[1].Value.ToLower() == "true";
                 }
             }
         }
@@ -723,7 +765,6 @@ namespace ARKBreedingStats.settings
         /// <summary>
         /// Applies the multipliers of the preset.
         /// </summary>
-        /// <param name="sm"></param>
         private void ApplyMultiplierPreset(ServerMultipliers sm, bool onlyStatMultipliers = false)
         {
             if (sm == null) return;
@@ -736,6 +777,7 @@ namespace ARKBreedingStats.settings
                 nudBabyMatureSpeed.ValueSave = (decimal)sm.BabyMatureSpeedMultiplier;
                 nudBabyImprintingStatScale.ValueSave = (decimal)sm.BabyImprintingStatScaleMultiplier;
                 nudBabyCuddleInterval.ValueSave = (decimal)sm.BabyCuddleIntervalMultiplier;
+                nudBabyImprintAmount.ValueSave = (decimal)sm.BabyImprintAmountMultiplier;
                 nudMatingInterval.ValueSave = (decimal)sm.MatingIntervalMultiplier;
                 nudMatingSpeed.ValueSave = (decimal)sm.MatingSpeedMultiplier;
                 nudBabyFoodConsumptionSpeed.ValueSave = (decimal)sm.BabyFoodConsumptionSpeedMultiplier;
@@ -846,7 +888,7 @@ namespace ARKBreedingStats.settings
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error while writing settings file:\n\n" + ex.Message, $"File writing error - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ExceptionMessageBox(ex, "Error while writing settings file:", "File writing error");
             }
         }
 
@@ -857,7 +899,7 @@ namespace ARKBreedingStats.settings
             General = 1,
             SaveImport = 2,
             ExportedImport = 3,
-            OCR = 4,
+            Ocr = 4,
         }
 
         private void cbCustomOverlayLocation_CheckedChanged(object sender, EventArgs e)
@@ -867,7 +909,7 @@ namespace ARKBreedingStats.settings
 
         private void button1_Click(object sender, EventArgs e)
         {
-            tbOCRCaptureApp.Text = DefaultOCRProcessName;
+            tbOCRCaptureApp.Text = DefaultOcrProcessName;
         }
 
         private void Localization()

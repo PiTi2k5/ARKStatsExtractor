@@ -64,6 +64,7 @@ namespace ARKBreedingStats
             Loc.ControlText(copyToMultiplierTesterToolStripButton);
 
             // top bar
+            Loc.ControlText(cbEventMultipliers, "Event");
             Loc.ControlText(cbGuessSpecies, _tt);
             Loc.ControlText(btReadValuesFromArk, _tt);
             Loc.ControlText(btImportLastExported, _tt);
@@ -114,6 +115,7 @@ namespace ARKBreedingStats
                 _statIOs[si].Title = Utils.StatName(si, false, statNames);
                 _testingIOs[si].Title = Utils.StatName(si, false, statNames);
             }
+            parentInheritanceExtractor.SetLocalizations();
 
             // library
             Loc.ControlText(tabPageLibrary, "library");
@@ -161,6 +163,8 @@ namespace ARKBreedingStats
             pedigree1.SetLocalizations();
             tamingControl1.SetLocalizations();
             breedingPlan1.SetLocalizations();
+            raisingControl1.SetLocalizations();
+            _overlay?.SetLocatlizations();
         }
     }
 }

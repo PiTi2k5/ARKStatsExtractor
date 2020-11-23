@@ -305,9 +305,6 @@
     <Setting Name="FilterFlagsOneNeeded" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="FilterByName" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="ModManagerWindowRect" Type="System.Drawing.Rectangle" Scope="User">
       <Value Profile="(Default)">50, 50, 800, 600</Value>
     </Setting>
@@ -317,7 +314,7 @@
     <Setting Name="applyNamePatternOnAutoImportForNewCreatures" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AlreadyAskedToDownloadImageFilesTropeognathus" Type="System.Boolean" Scope="User">
+    <Setting Name="AlreadyAskedToDownloadImageFiles20200921" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="LibrarySelectSelectedSpeciesOnLoad" Type="System.Boolean" Scope="User">
@@ -334,6 +331,30 @@
     </Setting>
     <Setting Name="ImportExportedArchiveFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DisplayInheritanceInOverlay" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ColorMode" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">330</Value>
+    </Setting>
+    <Setting Name="CustomReplacingFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="applyNamePatternOnAutoImportAlways" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LastImportedSaveGame" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Highlight255Level" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="HighlightEvenOdd" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

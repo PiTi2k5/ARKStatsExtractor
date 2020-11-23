@@ -1222,18 +1222,6 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string FilterByName {
-            get {
-                return ((string)(this["FilterByName"]));
-            }
-            set {
-                this["FilterByName"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50, 50, 800, 600")]
         public global::System.Drawing.Rectangle ModManagerWindowRect {
             get {
@@ -1271,12 +1259,12 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AlreadyAskedToDownloadImageFilesTropeognathus {
+        public bool AlreadyAskedToDownloadImageFiles20200921 {
             get {
-                return ((bool)(this["AlreadyAskedToDownloadImageFilesTropeognathus"]));
+                return ((bool)(this["AlreadyAskedToDownloadImageFiles20200921"]));
             }
             set {
-                this["AlreadyAskedToDownloadImageFilesTropeognathus"] = value;
+                this["AlreadyAskedToDownloadImageFiles20200921"] = value;
             }
         }
         
@@ -1336,6 +1324,102 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["ImportExportedArchiveFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DisplayInheritanceInOverlay {
+            get {
+                return ((bool)(this["DisplayInheritanceInOverlay"]));
+            }
+            set {
+                this["DisplayInheritanceInOverlay"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ColorMode {
+            get {
+                return ((int)(this["ColorMode"]));
+            }
+            set {
+                this["ColorMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("330")]
+        public int InfoGraphicWidth {
+            get {
+                return ((int)(this["InfoGraphicWidth"]));
+            }
+            set {
+                this["InfoGraphicWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CustomReplacingFilePath {
+            get {
+                return ((string)(this["CustomReplacingFilePath"]));
+            }
+            set {
+                this["CustomReplacingFilePath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool applyNamePatternOnAutoImportAlways {
+            get {
+                return ((bool)(this["applyNamePatternOnAutoImportAlways"]));
+            }
+            set {
+                this["applyNamePatternOnAutoImportAlways"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastImportedSaveGame {
+            get {
+                return ((string)(this["LastImportedSaveGame"]));
+            }
+            set {
+                this["LastImportedSaveGame"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Highlight255Level {
+            get {
+                return ((bool)(this["Highlight255Level"]));
+            }
+            set {
+                this["Highlight255Level"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool HighlightEvenOdd {
+            get {
+                return ((bool)(this["HighlightEvenOdd"]));
+            }
+            set {
+                this["HighlightEvenOdd"] = value;
             }
         }
     }

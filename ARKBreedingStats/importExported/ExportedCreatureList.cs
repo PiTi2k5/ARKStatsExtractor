@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 using static ARKBreedingStats.importExported.EccComparer;
 
 namespace ARKBreedingStats.importExported
@@ -209,7 +210,7 @@ namespace ARKBreedingStats.importExported
                 switch (ecc.Status)
                 {
                     case ExportedCreatureControl.ImportStatus.JustImported: justImported++; break;
-                    case ExportedCreatureControl.ImportStatus.NeedsLevelChosing: issuesWhileImporting++; break;
+                    case ExportedCreatureControl.ImportStatus.NeedsLevelChoosing: issuesWhileImporting++; break;
                     case ExportedCreatureControl.ImportStatus.NotImported: notImported++; break;
                     case ExportedCreatureControl.ImportStatus.OldImported: oldImported++; break;
                 }
@@ -261,19 +262,20 @@ namespace ARKBreedingStats.importExported
 
         private void deleteAllImportedFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            deleteAllImportedFiles();
+            DeleteAllImportedFiles((ModifierKeys & Keys.Shift) != 0);
         }
 
         private void moveAllImportedFilesToimportedSubfolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SuspendLayout();
-            if (MessageBox.Show("Move all exported files in the current folder that are already imported in this library to the subfolder \"imported\"?",
+            bool suppressMessages = (ModifierKeys & Keys.Shift) != 0;
+            if (suppressMessages || MessageBox.Show("Move all exported files in the current folder that are already imported in this library to the subfolder \"imported\"?",
                     "Move imported files?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 string importedPath = Path.Combine(selectedFolder, "imported");
                 if (!FileService.TryCreateDirectory(importedPath, out string errorMessage))
                 {
-                    MessageBox.Show($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ShowMessageBox($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}");
                     return;
                 }
 
@@ -290,26 +292,30 @@ namespace ARKBreedingStats.importExported
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"The file\n{ecc.exportedFile}\ncould not be moved. The following files will not be moved either.\n\nException:\n{ex.Message}", $"Error moving file - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBoxes.ExceptionMessageBox(ex, $"The file\n{ecc.exportedFile}\ncould not be moved. The following files will not be moved either.", "Error moving file");
                             break;
                         }
                     }
                 }
-                if (movedFilesCount > 0)
-                    MessageBox.Show($"{movedFilesCount} imported files moved to\n{importedPath}", "Files moved",
+
+                if (!suppressMessages)
+                {
+                    if (movedFilesCount > 0)
+                        MessageBox.Show($"{movedFilesCount} imported files moved to\n{importedPath}", "Files moved",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
-                else
-                    MessageBox.Show("No files were moved.", "No files moved",
+                    else
+                        MessageBox.Show("No files were moved.", "No files moved",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             UpdateStatusBarLabelAndControls();
             ResumeLayout();
         }
 
-        private void deleteAllImportedFiles()
+        private void DeleteAllImportedFiles(bool dontDisplayAnyWarnings)
         {
             SuspendLayout();
-            if (MessageBox.Show("Delete all exported files in the current folder that are already imported in this library?\nThis cannot be undone!",
+            if (dontDisplayAnyWarnings || MessageBox.Show("Delete all exported files in the current folder that are already imported in this library?\nThis cannot be undone!",
                     "Delete imported files?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 int deletedFilesCount = 0;
@@ -317,14 +323,14 @@ namespace ARKBreedingStats.importExported
                 {
                     if (ecc.Status == ExportedCreatureControl.ImportStatus.JustImported || ecc.Status == ExportedCreatureControl.ImportStatus.OldImported)
                     {
-                        if (ecc.removeFile(false))
+                        if (ecc.RemoveFile(false))
                         {
                             deletedFilesCount++;
                             ecc.Dispose();
                         }
                     }
                 }
-                if (deletedFilesCount > 0)
+                if (!dontDisplayAnyWarnings && deletedFilesCount > 0)
                     MessageBox.Show(deletedFilesCount + " imported files deleted.", "Deleted Files",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -334,25 +340,25 @@ namespace ARKBreedingStats.importExported
 
         private void deleteAllFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DeleteAllFiles();
+            DeleteAllFiles((ModifierKeys & Keys.Shift) != 0);
         }
 
-        private void DeleteAllFiles()
+        private void DeleteAllFiles(bool dontDisplayAnyWarnings)
         {
             SuspendLayout();
-            if (MessageBox.Show("Delete all files in the current folder, regardless if they are imported or not imported?\nThis cannot be undone!",
+            if (dontDisplayAnyWarnings || MessageBox.Show("Delete all files in the current folder, regardless if they are imported or not imported?\nThis cannot be undone!",
                     "Delete ALL files?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 int deletedFilesCount = 0;
                 foreach (ExportedCreatureControl ecc in eccs)
                 {
-                    if (ecc.removeFile(false))
+                    if (ecc.RemoveFile(false))
                     {
                         deletedFilesCount++;
                         ecc.Dispose();
                     }
                 }
-                if (deletedFilesCount > 0)
+                if (!dontDisplayAnyWarnings && deletedFilesCount > 0)
                     MessageBox.Show(deletedFilesCount + " imported files deleted.", "Deleted Files", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             UpdateStatusBarLabelAndControls();

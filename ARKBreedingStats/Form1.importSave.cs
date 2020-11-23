@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -88,6 +89,9 @@ namespace ARKBreedingStats
                 if (_creatureCollection.ModValueReloadNeeded
                     && LoadModValuesOfCollection(_creatureCollection, true, true))
                     SetCollectionChanged(true);
+
+                Properties.Settings.Default.LastImportedSaveGame = atImportFileLocation.ToString();
+                TsbImportLastSaveGame.ToolTipText = $"Import savegame {atImportFileLocation.ConvenientName}";
             }
             catch (Exception ex)
             {
@@ -233,8 +237,7 @@ namespace ARKBreedingStats
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occured while loading saved ftp credentials. Message: \n\n{ex.Message}",
-                        $"Settings Error - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK);
+                MessageBoxes.ExceptionMessageBox(ex, $"An error occured while loading saved ftp credentials.");
             }
 
             return new Dictionary<string, FtpCredentials>(StringComparer.OrdinalIgnoreCase);
@@ -265,6 +268,22 @@ namespace ARKBreedingStats
             return listItems
                 .OrderByDescending(x => x.Modified)
                 .FirstOrDefault(x => nameRegex.IsMatch(x.Name));
+        }
+
+        /// <summary>
+        /// Import the last imported savegame.
+        /// </summary>
+        private void TsbImportLastSaveGame_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(Properties.Settings.Default.LastImportedSaveGame))
+            {
+                MessageBox.Show(
+                    "First import a savegame via the menu, after that you can import the last imported file with this button.",
+                    "First import manual.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            RunSavegameImport(ATImportFileLocation.CreateFromString(Properties.Settings.Default.LastImportedSaveGame));
         }
     }
 }

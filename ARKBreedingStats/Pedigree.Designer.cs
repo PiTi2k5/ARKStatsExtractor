@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats
+﻿using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats
 {
     partial class Pedigree
     {
@@ -35,12 +37,16 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.pedigreeCreature1 = new ARKBreedingStats.PedigreeCreature();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.TextBoxFilter = new System.Windows.Forms.TextBox();
+            this.ButtonClearFilter = new System.Windows.Forms.Button();
+            this.pedigreeCreatureHeaders = new PedigreeCreature();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // pictureBox
@@ -67,13 +73,14 @@
             this.listViewCreatures.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
             this.columnHeader2});
+            this.tableLayoutPanel1.SetColumnSpan(this.listViewCreatures, 2);
             this.listViewCreatures.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listViewCreatures.FullRowSelect = true;
             this.listViewCreatures.HideSelection = false;
-            this.listViewCreatures.Location = new System.Drawing.Point(0, 0);
+            this.listViewCreatures.Location = new System.Drawing.Point(3, 29);
             this.listViewCreatures.MultiSelect = false;
             this.listViewCreatures.Name = "listViewCreatures";
-            this.listViewCreatures.Size = new System.Drawing.Size(158, 520);
+            this.listViewCreatures.Size = new System.Drawing.Size(152, 488);
             this.listViewCreatures.TabIndex = 3;
             this.listViewCreatures.UseCompatibleStateImageBehavior = false;
             this.listViewCreatures.View = System.Windows.Forms.View.Details;
@@ -98,26 +105,65 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.listViewCreatures);
+            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel1);
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.AutoScroll = true;
-            this.splitContainer1.Panel2.Controls.Add(this.pedigreeCreature1);
+            this.splitContainer1.Panel2.Controls.Add(this.pedigreeCreatureHeaders);
             this.splitContainer1.Panel2.Controls.Add(this.pictureBox);
             this.splitContainer1.Panel2.Controls.Add(this.lbPedigreeEmpty);
             this.splitContainer1.Size = new System.Drawing.Size(1043, 520);
             this.splitContainer1.SplitterDistance = 158;
             this.splitContainer1.TabIndex = 4;
             // 
-            // pedigreeCreature1
+            // tableLayoutPanel1
             // 
-            this.pedigreeCreature1.Creature = null;
-            this.pedigreeCreature1.IsVirtual = false;
-            this.pedigreeCreature1.Location = new System.Drawing.Point(375, 19);
-            this.pedigreeCreature1.Name = "pedigreeCreature1";
-            this.pedigreeCreature1.Size = new System.Drawing.Size(325, 35);
-            this.pedigreeCreature1.TabIndex = 2;
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
+            this.tableLayoutPanel1.Controls.Add(this.listViewCreatures, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.TextBoxFilter, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.ButtonClearFilter, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(158, 520);
+            this.tableLayoutPanel1.TabIndex = 3;
+            // 
+            // TextBoxFilter
+            // 
+            this.TextBoxFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TextBoxFilter.Location = new System.Drawing.Point(3, 3);
+            this.TextBoxFilter.Name = "TextBoxFilter";
+            this.TextBoxFilter.Size = new System.Drawing.Size(129, 20);
+            this.TextBoxFilter.TabIndex = 4;
+            this.TextBoxFilter.TextChanged += new System.EventHandler(this.TextBoxFilterTextChanged);
+            // 
+            // ButtonClearFilter
+            // 
+            this.ButtonClearFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ButtonClearFilter.Location = new System.Drawing.Point(136, 1);
+            this.ButtonClearFilter.Margin = new System.Windows.Forms.Padding(1);
+            this.ButtonClearFilter.Name = "ButtonClearFilter";
+            this.ButtonClearFilter.Size = new System.Drawing.Size(21, 24);
+            this.ButtonClearFilter.TabIndex = 5;
+            this.ButtonClearFilter.Text = "×";
+            this.ButtonClearFilter.UseVisualStyleBackColor = true;
+            this.ButtonClearFilter.Click += new System.EventHandler(this.ButtonClearFilter_Click);
+            // 
+            // pedigreeCreatureHeaders
+            // 
+            this.pedigreeCreatureHeaders.Creature = null;
+            this.pedigreeCreatureHeaders.Location = new System.Drawing.Point(375, 19);
+            this.pedigreeCreatureHeaders.Name = "pedigreeCreatureHeaders";
+            this.pedigreeCreatureHeaders.OnlyLevels = false;
+            this.pedigreeCreatureHeaders.Size = new System.Drawing.Size(325, 35);
+            this.pedigreeCreatureHeaders.TabIndex = 2;
+            this.pedigreeCreatureHeaders.TotalLevelUnknown = false;
             // 
             // Pedigree
             // 
@@ -132,6 +178,8 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -140,10 +188,13 @@
 
         private System.Windows.Forms.PictureBox pictureBox;
         private System.Windows.Forms.Label lbPedigreeEmpty;
-        private PedigreeCreature pedigreeCreature1;
+        private PedigreeCreature pedigreeCreatureHeaders;
         private System.Windows.Forms.ListView listViewCreatures;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TextBox TextBoxFilter;
+        private System.Windows.Forms.Button ButtonClearFilter;
     }
 }

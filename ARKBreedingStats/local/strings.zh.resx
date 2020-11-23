@@ -127,7 +127,7 @@
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>库中已有一个生物拥有库中的最强属性 ({0} {1}).
 保守繁殖模式中的一些建议可能不会是最佳建议
-将繁殖模式改为"极致属性"来获得更好的建议.</value>
+将繁殖模式改为"最好的下一代"来获得更好的建议.</value>
   </data>
   <data name="ApproxOneNarcoberryEvery" xml:space="preserve">
     <value>每一个黑果子的大概数值</value>
@@ -333,9 +333,6 @@
   <data name="Damage_Abb" xml:space="preserve">
     <value>伤害</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>德语</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>已死亡生物</value>
   </data>
@@ -369,10 +366,7 @@
   <data name="ElectricProdHits" xml:space="preserve">
     <value>电击棍击中</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>英语</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>活动</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -963,20 +957,11 @@
   <data name="CurrentCreature" xml:space="preserve">
     <value>当前生物</value>
   </data>
-  <data name="es" xml:space="preserve">
-    <value>西班牙语</value>
-  </data>
-  <data name="fr" xml:space="preserve">
-    <value>法语</value>
-  </data>
   <data name="importingFromSavegameEmptyToolStripMenuItem" xml:space="preserve">
     <value>首先请配置 "导入保存游戏"</value>
   </data>
   <data name="importingFromSavegameToolStripMenuItem" xml:space="preserve">
     <value>从保存游戏导入</value>
-  </data>
-  <data name="it" xml:space="preserve">
-    <value>意大利语</value>
   </data>
   <data name="lbImprintingFailInfo" xml:space="preserve">
     <value>游戏可能没有及时修改受留痕加成影响的数值(通常收球再扔出/上传再下载/让龙离开渲染距离再回来/服务器重启可以解决)
@@ -1015,9 +1000,6 @@
   <data name="Water_Abb" xml:space="preserve">
     <value>水份</value>
   </data>
-  <data name="zh" xml:space="preserve">
-    <value>简体中文</value>
-  </data>
   <data name="BPCancelRestrictionOn" xml:space="preserve">
     <value>取消对 {0} 的限制</value>
   </data>
@@ -1026,5 +1008,41 @@
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>无法自动检测Steam的导出文件夹。</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>孵化</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>未选择计时器</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>已暂停</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>已过期</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>成熟</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>不再是婴儿</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>提取失败。 请参阅以下可能的原因列表</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>父母</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>系统语言</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>等级</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>价值观</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>代</value>
   </data>
 </root>

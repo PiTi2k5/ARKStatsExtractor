@@ -5,43 +5,42 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Threading;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
     public partial class PatternEditor : Form
     {
-        private CancellationTokenSource cancelSource;
-        private Creature _creature;
-        private Creature[] _creatureOfSameSpecies;
-        private int[] _speciesTopLevels;
-        private int[] _speciesLowestLevels;
+        private readonly Creature _creature;
+        private readonly Creature[] _creaturesOfSameSpecies;
+        private readonly int[] _speciesTopLevels;
+        private readonly int[] _speciesLowestLevels;
         private Dictionary<string, string> _customReplacings;
-        private Dictionary<string, string> _tokenDictionary;
-        private Action<PatternEditor> OnReloadCustomReplacings;
+        private readonly Dictionary<string, string> _tokenDictionary;
+        private readonly Debouncer _updateNameDebouncer = new Debouncer();
+        private Action<PatternEditor> _reloadCallback;
 
         public PatternEditor()
         {
             InitializeComponent();
         }
 
-        public PatternEditor(Creature creature, Creature[] creatureOfSameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback) : this()
+        public PatternEditor(Creature creature, Creature[] creaturesOfSameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback) : this()
         {
-            OnReloadCustomReplacings = reloadCallback;
             _creature = creature;
-            _creatureOfSameSpecies = creatureOfSameSpecies;
+            _creaturesOfSameSpecies = creaturesOfSameSpecies;
             _speciesTopLevels = speciesTopLevels;
             _speciesLowestLevels = speciesLowestLevels;
             _customReplacings = customReplacings;
+            _reloadCallback = reloadCallback;
             txtboxPattern.Text = Properties.Settings.Default.NamingPatterns?[namingPatternIndex] ?? string.Empty;
             txtboxPattern.SelectionStart = txtboxPattern.Text.Length;
 
             Text = $"Naming Pattern Editor: pattern {(namingPatternIndex + 1)}";
 
-            _tokenDictionary = NamePatterns.CreateTokenDictionary(creature, _creatureOfSameSpecies, _speciesTopLevels, _speciesLowestLevels);
+            _tokenDictionary = NamePatterns.CreateTokenDictionary(creature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels);
 
             TableLayoutPanel tlpKeys = new TableLayoutPanel();
             tableLayoutPanel1.Controls.Add(tlpKeys);
@@ -65,6 +64,7 @@ namespace ARKBreedingStats.uiControls
 
                 tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
                 tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                tlp.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
                 int i = 0;
                 foreach (KeyValuePair<string, string> p in nameExamples)
                 {
@@ -81,7 +81,7 @@ namespace ARKBreedingStats.uiControls
                     tlp.Controls.Add(btn);
                     tlp.SetCellPosition(btn, new TableLayoutPanelCellPosition(0, i));
                     if (!columns)
-                        tlp.SetColumnSpan(btn, 2);
+                        tlp.SetColumnSpan(btn, 3);
                     btn.Click += Btn_Click;
 
                     Label lbl = new Label
@@ -94,21 +94,27 @@ namespace ARKBreedingStats.uiControls
                     tlp.Controls.Add(lbl);
                     tlp.SetCellPosition(lbl, new TableLayoutPanelCellPosition(columns ? 1 : 0, columns ? i : ++i));
                     if (!columns)
-                        tlp.SetColumnSpan(lbl, 2);
+                        tlp.SetColumnSpan(lbl, 3);
 
                     if (!columns && p.Value.Contains("#customreplace"))
                     {
                         // button to open custom replacings file
                         tlp.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                         i++;
-                        var btCustomReplacings = new Button() { Text = "Open custom replacings file", Width = 150 };
+
+                        const int buttonCustomReplacingWidth = 100;
+                        var btCustomReplacings = new Button() { Text = "Open file", Width = buttonCustomReplacingWidth };
                         btCustomReplacings.Click += BtCustomReplacings_Click;
                         tlp.Controls.Add(btCustomReplacings);
                         tlp.SetCellPosition(btCustomReplacings, new TableLayoutPanelCellPosition(0, i));
-                        var btCustomReplacingsReload = new Button() { Text = "Reload custom replacings", Width = 150 };
-                        btCustomReplacingsReload.Click += (sender, eventArgs) => OnReloadCustomReplacings?.Invoke(this);
+                        var btCustomReplacingsReload = new Button() { Text = "Reload file", Width = buttonCustomReplacingWidth };
+                        btCustomReplacingsReload.Click += (s, e) => _reloadCallback?.Invoke(this);
                         tlp.Controls.Add(btCustomReplacingsReload);
                         tlp.SetCellPosition(btCustomReplacingsReload, new TableLayoutPanelCellPosition(1, i));
+                        var btCustomReplacingsFilePath = new Button() { Text = "Select file", Width = buttonCustomReplacingWidth };
+                        btCustomReplacingsFilePath.Click += ChangeCustomReplacingsFilePath;
+                        tlp.Controls.Add(btCustomReplacingsFilePath);
+                        tlp.SetCellPosition(btCustomReplacingsFilePath, new TableLayoutPanelCellPosition(2, i));
                     }
 
                     // separator
@@ -124,10 +130,37 @@ namespace ARKBreedingStats.uiControls
                         };
                         tlp.Controls.Add(separator);
                         tlp.SetRow(separator, ++i);
-                        tlp.SetColumnSpan(separator, 2);
+                        tlp.SetColumnSpan(separator, 3);
                     }
 
                     i++;
+                }
+            }
+        }
+
+        private void ChangeCustomReplacingsFilePath(object sender, EventArgs e)
+        {
+            string selectedFilePath = Properties.Settings.Default.CustomReplacingFilePath;
+            if (string.IsNullOrEmpty(selectedFilePath))
+                selectedFilePath = FileService.GetJsonPath(FileService.CustomReplacingsNamePattern);
+
+            string selectedFolder =
+                string.IsNullOrEmpty(selectedFilePath) ? null : Path.GetDirectoryName(selectedFilePath);
+
+            var selectedFileName = string.IsNullOrEmpty(selectedFilePath) ? null : Path.GetFileName(selectedFilePath);
+
+            using (OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = $"ASB Custom Replacings File (*.json)|*.json",
+                CheckFileExists = true,
+                InitialDirectory = selectedFolder,
+                FileName = selectedFileName
+            })
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    Properties.Settings.Default.CustomReplacingFilePath = dlg.FileName;
+                    _reloadCallback?.Invoke(this);
                 }
             }
         }
@@ -145,14 +178,14 @@ namespace ARKBreedingStats.uiControls
             {
                 if (!File.Exists(filePath))
                 {
-                    // çreate file with example dictionary entries to start with
+                    // create file with example dictionary entries to start with
                     File.WriteAllText(filePath, "{\n  \"Allosaurus\": \"Allo\",\n  \"Snow Owl\": \"Owl\"\n}");
                 }
                 Process.Start(filePath);
             }
             catch (FileNotFoundException ex)
             {
-                MessageBox.Show($"File not found\n{filePath}\n\nException: {ex.Message}", $"File not found - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ExceptionMessageBox(ex);
             }
             catch (System.ComponentModel.Win32Exception)
             {
@@ -169,9 +202,9 @@ namespace ARKBreedingStats.uiControls
                         // open explorer and display file
                         Process.Start("explorer.exe", @"/select,""" + filePath + "\"");
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("The file couldn't be opened\n" + filePath, $"Error while opening file - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBoxes.ExceptionMessageBox(ex, $"The file couldn't be opened\n{filePath}");
                     }
                 }
             }
@@ -204,7 +237,7 @@ namespace ARKBreedingStats.uiControls
 
                 { "sex", "sex (\"Male\", \"Female\", \"Unknown\")" },
                 { "sex_short", "\"M\", \"F\", \"U\"" },
-                { "n", "if the name is not unique, the smallest possible number is appended (only creatues with a given sex are considered)." },
+                { "n", "if the name is not unique, the smallest possible number is appended (only creatures with a given sex are considered)." },
 
                 { "hp", "Level of " + Utils.StatName((int)StatNames.Health, customStatNames:customStatNames) },
                 { "st", "Level of " + Utils.StatName((int)StatNames.Stamina, customStatNames:customStatNames) },
@@ -237,6 +270,8 @@ namespace ARKBreedingStats.uiControls
                 { "isLowesthp", "if hp is the lowest, it will return 1 and nothing if it's not the lowest. Combine with the if-function. All stat name abbreviations are possible, e.g. replace hp with st, to, ox etc."},
                 { "isNewLowesthp", "if hp is lower than the current lowest hp, it will return 1 and nothing else. Combine with the if-function. All stat name abbreviations are possible."},
 
+                { "dom", "how the creature was domesticated, \"T\" for tamed, \"B\" for bred" },
+                { "effImp", "Taming-effectiveness or Imprinting (if tamed / bred)" },
                 { "effImp_short", "Short Taming-effectiveness or Imprinting (if tamed / bred)"},
                 { "index",        "Index in library (same species)."},
                 { "oldname", "the old name of the creature" },
@@ -247,17 +282,16 @@ namespace ARKBreedingStats.uiControls
 
                 { "topPercent", "Percentage of the considered stat levels compared to the top levels of the species in the library" },
                 { "baselvl", "Base-level (level without manually added ones), i.e. level right after taming / hatching" },
-                { "effImp", "Taming-effectiveness or Imprinting (if tamed / bred)" },
                 { "muta", "Mutations. Numbers larger than 99 will be displayed as 99" },
                 { "gen", "Generation" },
                 { "gena", "Generation in letters (0=A, 1=B, 26=AA, 27=AB)" },
                 { "genn", "The number of creatures with the same species and the same generation plus one" },
                 { "nr_in_gen", "The number of the creature in its generation, ordered by added to the library" },
-                { "rnd", "6-digit random number in the range 100000 - 999999" },
+                { "rnd", "6-digit random number in the range 0 – 999999" },
                 { "tn", "number of creatures of the current species in the library + 1" },
                 { "sn", "number of creatures of the current species with the same sex in the library + 1" },
-                { "dom", "how the creature was domesticated, \"T\" for tamed, \"B\" for bred" },
-                { "arkid", "the Ark-Id (as entered or seen ingame)"},
+                { "arkid", "the Ark-Id (as entered or seen in-game)"},
+                { "alreadyExists", "returns 1 if the creature is already in the library, can be used with {{#if: }}"},
                 { "highest1l", "the highest stat-level of this creature (excluding torpidity)" },
                 { "highest2l", "the second highest stat-level of this creature (excluding torpidity)" },
                 { "highest3l", "the third highest stat-level of this creature (excluding torpidity)" },
@@ -274,19 +308,21 @@ namespace ARKBreedingStats.uiControls
 
         private static Dictionary<string, string> FunctionExplanations() => new Dictionary<string, string>()
         {
-            {"if", "{{#if: string | if string is not empty | if string is emtpy }}, to check if a string is empty. E.g. you can check if a stat is a top stat of that species (i.e. highest in library).\n{{#if: {isTophp} | bestHP{hp} | notTopHP }}" },
+            {"if", "{{#if: string | if string is not empty | if string is empty }}, to check if a string is empty. E.g. you can check if a stat is a top stat of that species (i.e. highest in library).\n{{#if: {isTophp} | bestHP{hp} | notTopHP }}" },
             {"ifexpr", "{{#ifexpr: expression | true | false }}, to check if an expression with two operands and one operator is true or false. Possible operators are ==, !=, <, <=, <, >=.\n{{#ifexpr: {topPercent} > 80 | true | false }}" },
-            {"substring","{{#substring: text | start | length }}. Length can be ommited. If start is negative it takes the characters from the end.\n{{#substring: {species} | 0 | 4 }}"},
+            {"expr", "{{#expr: expression }}, simple calculation with two operands and one operator. Possible operators are +, -, *, /.\n{{#expr: {hp} * 2 }}" },
+            {"len", "{{#len: string }}, returns the length of the passed string.\n{{#len: {isTophp}{isTopdm}{isTopwe} }}" },
+            {"substring","{{#substring: text | start | length }}. Length can be omitted. If start is negative it takes the characters from the end.\n{{#substring: {species} | 0 | 4 }}"},
             {"replace","{{#replace: text | find | replaceBy }}\n{{#replace: {species} | Abberant | Ab }}"},
             {"customreplace","{{#customreplace: text }}. Replaces the text with a value saved in the file customReplacings.json.\nIf a second parameter is given, that is returned if the key is not available.\n{{#customreplace: {species} }}"},
             {"float divide by","{{#float_div: number | divisor | formatString }}, can be used to display stat-values in thousands, e.g. '{{#float_div: {hp_vb} | 1000 | F2 }}kHP'.\n{{#float_div: {hp_vb} | 1000 | F2 }}"},
             {"divide by","{{#div: number | divisor }}, can be used to display stat-values in thousands, e.g. '{{#div: {hp_vb} | 1000 }}kHP'.\n{{#div: {hp_vb} | 1000 }}"},
             {"padleft","{{#padleft: number | length | padding character }}\n{{#padleft: {hp_vb} | 8 | 0 }}"},
             {"padright","{{#padright: number | length | padding character }}\n{{#padright: {hp_vb} | 8 | _ }}"},
-            {"casing","{{#casing: text | casingtype (U, L, T) }}. U for UPPER, L for lower, T for Title.\n{{#casing: {species} | U }}"},
+            {"casing","{{#casing: text | case (U, L, T) }}. U for UPPER, L for lower, T for Title.\n{{#casing: {species} | U }}"},
             {"time","{{#time: formatString }}\n{{#time: yyyy-MM-dd_HH:mm }}"},
             {"format","{{#format: number | formatString }}\n{{#format: {hp_vb} | 000000 }}"},
-            {"color","{{#color: regionId | colorName }}. Returns the colorId of the region. If the second parameter is not empty, the color name will be returned.\n{{#color: 0 | true }}"},
+            {"color","{{#color: regionId | return color name | return value even for unused regions }}. Returns the colorId of the region. If the second parameter is not empty, the color name will be returned. Unused regions will only return a value if the third value is not empty.\n{{#color: 0 | true }}"},
             {"indexof","{{#indexof: source string | string to find }}. Returns the index of the second parameter in the first parameter. If the string is not contained, an empty string will be returned.\n{{#indexof: hello | ll }}"},
         };
 
@@ -306,29 +342,15 @@ namespace ARKBreedingStats.uiControls
             set => splitContainer1.SplitterDistance = value;
         }
 
-        private async void txtboxPattern_TextChanged(object sender, EventArgs e)
+        private void txtboxPattern_TextChanged(object sender, EventArgs e)
         {
-            if (!cbPreview.Checked) return;
-
-            cancelSource?.Cancel();
-            using (cancelSource = new CancellationTokenSource())
-            {
-                try
-                {
-                    await Task.Delay(500, cancelSource.Token); // display preview only at interval
-                    DisplayPreview();
-                }
-                catch (TaskCanceledException)
-                {
-                    return;
-                }
-            }
-            cancelSource = null;
+            if (cbPreview.Checked)
+                _updateNameDebouncer.Debounce(500, DisplayPreview, Dispatcher.CurrentDispatcher);
         }
 
         private void DisplayPreview()
         {
-            cbPreview.Text = NamePatterns.GenerateCreatureName(_creature, _creatureOfSameSpecies, _speciesTopLevels, _speciesLowestLevels, _customReplacings, false, -1, false, txtboxPattern.Text, false, _tokenDictionary);
+            cbPreview.Text = NamePatterns.GenerateCreatureName(_creature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels, _customReplacings, false, -1, false, txtboxPattern.Text, false, _tokenDictionary);
         }
     }
 }

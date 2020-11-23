@@ -285,9 +285,6 @@ Los niveles se muestran sin el proceso de extracción (y sin validación).</valu
   <data name="Damage" xml:space="preserve">
     <value>Dañar</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>Alemán</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>Criaturas muertas</value>
   </data>
@@ -324,10 +321,7 @@ Los niveles se muestran sin el proceso de extracción (y sin validación).</valu
   <data name="ElectricProdHits" xml:space="preserve">
     <value>Golpes de productos eléctricos</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>Inglés</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>Evento</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -803,7 +797,7 @@ Habilítelo si el OCR no reconoce el nombre de la tribu correctamente y desea ag
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>Ya hay una criatura en tu biblioteca que tiene todas las estadísticas principales disponibles ({0} {1}).
 El modo de reproducción conservadora seleccionado actualmente puede mostrar algunas sugerencias que pueden parecer no óptimas.
-Cambia el modo de reproducción a "Estadísticas altas" para obtener mejores sugerencias.</value>
+Cambia el modo de reproducción a "Mejor próxima generación" para obtener mejores sugerencias.</value>
   </data>
   <data name="Baby" xml:space="preserve">
     <value>Bebé</value>
@@ -932,9 +926,6 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
   <data name="Available" xml:space="preserve">
     <value>Disponible</value>
   </data>
-  <data name="fr" xml:space="preserve">
-    <value>Francés</value>
-  </data>
   <data name="HarpoonLauncher" xml:space="preserve">
     <value>Lanzador de arpones</value>
   </data>
@@ -952,9 +943,6 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
   </data>
   <data name="lbImprintingFailInfo" xml:space="preserve">
     <value>Si la criatura está impresa, la extracción puede fallar porque el juego a veces se "olvida" de aumentar algunos valores estadísticos durante el proceso de impresión. Por lo general, funciona después de poner y sacar a la criatura de un criópodo, subirla y descargarla en un obelisco/terminal, salir de la distancia de renderizado o esperar el reinicio del servidor.</value>
-  </data>
-  <data name="it" xml:space="preserve">
-    <value>Italiano</value>
   </data>
   <data name="Crafting Speed" xml:space="preserve">
     <value>Velocidad de fabricación</value>
@@ -982,12 +970,6 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
   </data>
   <data name="btUpdateLibraryCreature" xml:space="preserve">
     <value>Actualizar criatura en la biblioteca</value>
-  </data>
-  <data name="es" xml:space="preserve">
-    <value>Español</value>
-  </data>
-  <data name="zh" xml:space="preserve">
-    <value>chino</value>
   </data>
   <data name="settingsToolStripMenuItem" xml:space="preserve">
     <value>Co&amp;nfiguracíón</value>
@@ -1018,5 +1000,41 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>La carpeta de exportación de Steam no se pudo detectar automáticamente.</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>incubación</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>sin temporizador seleccionado</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>pausada</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>caducada</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>madura</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>Ya no es una bebe</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>La extracción falló. Consulte la siguiente lista de posibles causas.</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Padres</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>Lenguaje del sistema</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Niveles</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>Valores</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>Generacion</value>
   </data>
 </root>

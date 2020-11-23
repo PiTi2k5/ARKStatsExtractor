@@ -126,7 +126,7 @@
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>Une créature ayant les meilleures statistiques est déjà présente dans la librairie ({0} {1}).
 Le mode de reproduction conservateur actuellement sélectionné peut indiquer certaines suggestions pouvant sembler non optimales.
-Changez le mode de reproduction en "Statistiques élevées" pour de meilleures suggestions.</value>
+Changez le mode de reproduction en "Meilleure prochaine génération" pour de meilleures suggestions.</value>
   </data>
   <data name="ApproxOneNarcoberryEvery" xml:space="preserve">
     <value>C'est approximativement 1 Narcoberry chaque</value>
@@ -335,9 +335,6 @@ Les niveaux sont ensuite affichés sans le processus d'extraction (et sans valid
   <data name="Damage_Abb" xml:space="preserve">
     <value>Dm</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>Allemand</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>Créatures mortes</value>
   </data>
@@ -371,10 +368,7 @@ Les niveaux sont ensuite affichés sans le processus d'extraction (et sans valid
   <data name="ElectricProdHits" xml:space="preserve">
     <value>Coups de matraque électrique</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>Anglais</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>Evénement</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -412,9 +406,6 @@ Les niveaux sont ensuite affichés sans le processus d'extraction (et sans valid
   </data>
   <data name="Food_Abb" xml:space="preserve">
     <value>Nou</value>
-  </data>
-  <data name="fr" xml:space="preserve">
-    <value>Français</value>
   </data>
   <data name="gbBPBreedingMode" xml:space="preserve">
     <value>Mode d'élevage</value>
@@ -951,9 +942,6 @@ Certaines progénitures peuvent être moins bonnes qu'en mode Statistiques Elev�
   <data name="lbImprintingFailInfo" xml:space="preserve">
     <value>Si la créature est élevée, l'extraction peut échouer car le jeu "oublie" parfois d'augmenter certaines valeurs des statistiques pendant le processus d'élevage. Généralement, cela fonctionne après que vous ayez mis puis sorti la créature dans un cryopod, que vous l'ayez téléchargé dans un obélisque/terminal puis que vous vous éloigniez de la distance de rendu ou que vous attendiez un redémarrage du serveur.</value>
   </data>
-  <data name="it" xml:space="preserve">
-    <value>Italien</value>
-  </data>
   <data name="Crafting Speed" xml:space="preserve">
     <value>Vitesse de fabrication</value>
   </data>
@@ -980,12 +968,6 @@ Certaines progénitures peuvent être moins bonnes qu'en mode Statistiques Elev�
   </data>
   <data name="btUpdateLibraryCreature" xml:space="preserve">
     <value>Mettre à jour la créature dans la bibliothèque</value>
-  </data>
-  <data name="es" xml:space="preserve">
-    <value>Espagnol</value>
-  </data>
-  <data name="zh" xml:space="preserve">
-    <value>Chinois</value>
   </data>
   <data name="CurrentCreature" xml:space="preserve">
     <value>Créature actuelle</value>
@@ -1213,13 +1195,61 @@ Le préréglage peut être appliqué par le bouton Appliquer le préréglage</va
   <data name="unknownSpecies" xml:space="preserve">
     <value>espèce inconnue</value>
   </data>
+  <data name="BestPossibleSpeciesLibrary" xml:space="preserve">
+    <value>Meilleur {0} possible pour cette bibliothèque</value>
+  </data>
+  <data name="VariantSelector" xml:space="preserve">
+    <value>Sélecteur de variante</value>
+  </data>
+  <data name="VariantSelectorInfo" xml:space="preserve">
+    <value>Les espèces qui contiennent une variante non cochée seront masquées.</value>
+  </data>
   <data name="BPCancelRestrictionOn" xml:space="preserve">
-    <value>annuler la restriction sur {0}</value>
+    <value>Annuler la restriction sur {0}</value>
   </data>
   <data name="BtGetExportFolderAutomatically" xml:space="preserve">
     <value>Définir automatiquement le dossier d'exportation</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>Le dossier d'exportation de Steam n'a pas pu être détecté automatiquement.</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>incubation</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>aucune minuterie sélectionnée</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>mis en pause</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>expiré</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>mature</value>
+  </data>
+  <data name="issueCauseModValues" xml:space="preserve">
+    <value>Si la créature provient d'un mod, vous devrez peut-être activer les valeurs du mod correspondant dans Paramètres - Gestionnaire des valeurs des mods.</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>plus un bébé</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>L'extraction a échoué. Voir la liste suivante des causes possibles</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Parents</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>Langue du système</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Niveaux</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>Valeurs</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>génération</value>
   </data>
 </root>

@@ -3,8 +3,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -42,8 +42,7 @@ namespace ARKBreedingStats
             }
             else
             {
-                MessageBox.Show($"File {FileService.KibblesJson} couldn\'t be opened or read.\nErrormessage:\n\n{errorMessage}", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ShowMessageBox($"File {FileService.KibblesJson} couldn\'t be opened or read.\nErrormessage:\n\n{errorMessage}");
             }
             return false;
         }

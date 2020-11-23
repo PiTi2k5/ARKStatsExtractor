@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using ARKBreedingStats.species;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -77,10 +78,10 @@ namespace ARKBreedingStats
                     return;
                 }
 
-                MessageBox.Show($"No exported creature-file found in the set folder\n{folder}\nYou have to export a creature first ingame.\n\n" +
-                                "You may also want to check the set folder in the settings. Usually the folder is\n" +
-                                @"…\Steam\steamapps\common\ARK\ShooterGame\Saved\DinoExports\<ID>",
-                    $"No files found - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ShowMessageBox($"No exported creature-file found in the set folder\n{folder}\nYou have to export a creature first ingame.\n\n" +
+                                             "You may also want to check the set folder in the settings. Usually the folder is\n" +
+                                             @"…\Steam\steamapps\common\ARK\ShooterGame\Saved\DinoExports\<ID>",
+                    $"No files found");
                 return;
             }
 
@@ -95,15 +96,23 @@ namespace ARKBreedingStats
         private void ExportedCreatureList_CopyValuesToExtractor(importExported.ExportedCreatureControl exportedCreatureControl, bool addToLibraryIfUnique, bool goToLibraryTab)
         {
             tabControlMain.SelectedTab = tabPageExtractor;
+
+            bool updateExtractorVisualKeeper = _updateExtractorVisualData;
+            if (addToLibraryIfUnique)
+                _updateExtractorVisualData = false;
+
             ExtractExportedFileInExtractor(exportedCreatureControl, updateParentVisuals: !addToLibraryIfUnique);
+
+            if (addToLibraryIfUnique)
+                _updateExtractorVisualData = updateExtractorVisualKeeper;
 
             // add to library automatically if batch-extracting exportedImported values and uniqueLevels
             if (addToLibraryIfUnique)
             {
-                if (_extractor.uniqueResults)
+                if (_extractor.UniqueResults)
                     AddCreatureToCollection(true, exportedCreatureControl.creatureValues.motherArkId, exportedCreatureControl.creatureValues.fatherArkId, goToLibraryTab);
                 else
-                    exportedCreatureControl.setStatus(importExported.ExportedCreatureControl.ImportStatus.NeedsLevelChosing, DateTime.Now);
+                    exportedCreatureControl.setStatus(importExported.ExportedCreatureControl.ImportStatus.NeedsLevelChoosing, DateTime.Now);
             }
             else
             {
@@ -138,15 +147,18 @@ namespace ARKBreedingStats
             bool alreadyExists = loadResult.Value;
             bool added = false;
             bool copyNameToClipboard = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied
-                && (Properties.Settings.Default.applyNamePatternOnImportIfEmptyName ||
-                   (!alreadyExists && Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures));
+                && (Properties.Settings.Default.applyNamePatternOnAutoImportAlways
+                    || Properties.Settings.Default.applyNamePatternOnImportIfEmptyName
+                    || (!alreadyExists && Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures)
+                   );
             Species species = speciesSelector1.SelectedSpecies;
+            Creature creature = null;
 
-            if (_extractor.uniqueResults
-                || (alreadyExists && _extractor.validResults))
+            if (_extractor.UniqueResults
+                || (alreadyExists && _extractor.ValidResults))
             {
-                AddCreatureToCollection(true, goToLibraryTab: false);
-                SetMessageLabelText($"Successful {(alreadyExists ? "updated" : "added")} {creatureInfoInputExtractor.CreatureName} ({species.name}) of the exported file\n" + filePath, MessageBoxIcon.Information);
+                creature = AddCreatureToCollection(true, goToLibraryTab: false);
+                SetMessageLabelText($"Successful {(alreadyExists ? "updated" : "added")} {creature.name} ({species.name}) of the exported file\n" + filePath, MessageBoxIcon.Information);
                 added = true;
             }
 
@@ -160,7 +172,7 @@ namespace ARKBreedingStats
             if (added)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine($"{species.name} \"{creatureInfoInputExtractor.CreatureName}\" {(alreadyExists ? "updated in " : "added to")} the library.");
+                sb.AppendLine($"{species.name} \"{creature.name}\" {(alreadyExists ? "updated in " : "added to")} the library.");
                 if (copyNameToClipboard)
                     sb.AppendLine("Name copied to clipboard.");
 
@@ -169,7 +181,7 @@ namespace ARKBreedingStats
                     int statIndex = values.Values.statsDisplayOrder[s];
                     if (!species.UsesStat(statIndex)) continue;
 
-                    sb.Append($"{Utils.StatName(statIndex, true, species.statNames)}: {_statIOs[statIndex].LevelWild} ({_statIOs[statIndex].BreedingValue})");
+                    sb.Append($"{Utils.StatName(statIndex, true, species.statNames)}: { _statIOs[statIndex].LevelWild} ({_statIOs[statIndex].BreedingValue})");
                     if (_statIOs[statIndex].TopLevel == StatIOStatus.NewTopLevel)
                     {
                         sb.Append($" {Loc.S("newTopLevel")}");
@@ -192,7 +204,12 @@ namespace ARKBreedingStats
                 textColor = Color.FromArgb(255, colorSaturation, colorSaturation);
             }
 
-            _overlay?.SetInfoText(infoText, textColor);
+            if (_overlay != null)
+            {
+                _overlay.SetInfoText(infoText, textColor);
+                if (Properties.Settings.Default.DisplayInheritanceInOverlay && creature != null)
+                    _overlay.SetInheritanceCreatures(creature, creature.Mother, creature.Father);
+            }
 
             if (added)
             {
@@ -203,7 +220,7 @@ namespace ARKBreedingStats
                             : Properties.Settings.Default.ImportExportedArchiveFolder;
                     if (!FileService.TryCreateDirectory(importedPath, out string errorMessage))
                     {
-                        MessageBox.Show($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBoxes.ShowMessageBox($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}");
                         return;
                     }
                     FileService.TryMoveFile(filePath, Path.Combine(importedPath, Path.GetFileName(filePath)));

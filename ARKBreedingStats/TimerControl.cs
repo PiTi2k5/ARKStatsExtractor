@@ -7,6 +7,7 @@ using System.Linq;
 using System.Media;
 using System.Speech.Synthesis;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -92,7 +93,7 @@ namespace ARKBreedingStats
                         ? null : SoundListBox.SelectedItem as string,
                 showInOverlay = Properties.Settings.Default.DisplayTimersInOverlayAutomatically
             };
-            tle.lvi = CreateLvi(name, finishTime, tle);
+            tle.lvi = CreateLvi(name, tle);
             int i = 0;
             while (i < listViewTimer.Items.Count && ((TimerListEntry)listViewTimer.Items[i].Tag).time < finishTime)
             {
@@ -112,7 +113,7 @@ namespace ARKBreedingStats
                 OnTimerChange?.Invoke();
         }
 
-        private ListViewItem CreateLvi(string name, DateTime finishTime, TimerListEntry tle)
+        private ListViewItem CreateLvi(string name, TimerListEntry tle)
         {
             // check if group of timers exists
             ListViewGroup g = null;
@@ -129,7 +130,7 @@ namespace ARKBreedingStats
                 g = new ListViewGroup(tle.group);
                 listViewTimer.Groups.Add(g);
             }
-            ListViewItem lvi = new ListViewItem(new[] { name, finishTime.ToString(), string.Empty }, g)
+            ListViewItem lvi = new ListViewItem(new[] { name, tle.timerIsRunning ? tle.time.ToString() : Loc.S("paused"), string.Empty }, g)
             {
                 Tag = tle,
                 Checked = Properties.Settings.Default.DisplayTimersInOverlayAutomatically
@@ -139,39 +140,38 @@ namespace ARKBreedingStats
 
         public void Tick()
         {
-            if (timerListEntries != null && timerListEntries.Any())
+            if (timerListEntries == null || !timerListEntries.Any()) return;
+
+            listViewTimer.BeginUpdate();
+            DateTime now = DateTime.Now;
+            foreach (TimerListEntry t in timerListEntries)
             {
-                listViewTimer.BeginUpdate();
-                DateTime now = DateTime.Now;
-                foreach (TimerListEntry t in timerListEntries)
+                if (t.lvi == null)
+                    continue;
+                TimeSpan diff = t.timerIsRunning ? t.time.Subtract(now) : t.leftTime;
+                int totalSeconds = (int)diff.TotalSeconds;
+                if (updateTimer)
+                    t.lvi.SubItems[2].Text = totalSeconds > 0 ? diff.ToString("dd':'hh':'mm':'ss") : "Finished";
+                if (diff.TotalSeconds < 0)
+                    continue;
+                if (totalSeconds < 11)
+                    t.lvi.BackColor = Color.LightSalmon;
+                else if (totalSeconds < 61)
+                    t.lvi.BackColor = Color.Gold;
+
+                if (timerAlerts == null || !timerAlerts.Any() || totalSeconds > timerAlerts.First())
+                    continue;
+
+                for (int i = 0; i < timerAlerts.Count; i++)
                 {
-                    if (t.lvi == null)
-                        continue;
-                    TimeSpan diff = t.time.Subtract(now);
-                    int totalSeconds = (int)diff.TotalSeconds;
-                    if (updateTimer)
-                        t.lvi.SubItems[2].Text = totalSeconds > 0 ? diff.ToString("dd':'hh':'mm':'ss") : "Finished";
-                    if (diff.TotalSeconds < 0)
-                        continue;
-                    if (totalSeconds < 11)
-                        t.lvi.BackColor = Color.LightSalmon;
-                    else if (totalSeconds < 61)
-                        t.lvi.BackColor = Color.Gold;
-
-                    if (timerAlerts == null || !timerAlerts.Any() || totalSeconds > timerAlerts.First())
-                        continue;
-
-                    for (int i = 0; i < timerAlerts.Count; i++)
+                    if (totalSeconds == timerAlerts[i])
                     {
-                        if (totalSeconds == timerAlerts[i])
-                        {
-                            PlaySound(t.@group, i, string.Empty, t.sound);
-                            break;
-                        }
+                        PlaySound(t.@group, i, string.Empty, t.sound);
+                        break;
                     }
                 }
-                listViewTimer.EndUpdate();
             }
+            listViewTimer.EndUpdate();
         }
 
         public void PlaySound(string group, int alert, string speakText = "", string customSoundFile = null)
@@ -213,7 +213,7 @@ namespace ARKBreedingStats
             else sound.Play();
         }
 
-        public List<int> TimerAlerts
+        private List<int> TimerAlerts
         {
             set
             {
@@ -261,7 +261,7 @@ namespace ARKBreedingStats
 
                 foreach (TimerListEntry tle in timerListEntries)
                 {
-                    tle.lvi = CreateLvi(tle.name, tle.time, tle);
+                    tle.lvi = CreateLvi(tle.name, tle);
                     int i = 0;
                     while (i < listViewTimer.Items.Count && ((TimerListEntry)listViewTimer.Items[i].Tag).time < tle.time)
                     {
@@ -429,9 +429,9 @@ namespace ARKBreedingStats
             {
                 Directory.CreateDirectory(soundPath);
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show("Error while trying to create the custom sound folder for custom timer-sounds", $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ExceptionMessageBox(ex, "Error while trying to create the custom sound folder for custom timer-sounds");
                 return;
             }
             if (Directory.Exists(soundPath))
@@ -440,14 +440,14 @@ namespace ARKBreedingStats
 
         private void btPlaySelectedSound_Click(object sender, EventArgs e)
         {
-            string customSoundfile = SoundListBox.SelectedItem?.ToString();
-            if (customSoundfile == DefaultSoundName)
+            string customSoundFile = SoundListBox.SelectedItem?.ToString();
+            if (customSoundFile == DefaultSoundName)
             {
                 SystemSounds.Hand.Play();
                 return;
             }
 
-            PlayCustomSound(customSoundfile);
+            PlayCustomSound(customSoundFile);
         }
 
         /// <summary>
@@ -499,6 +499,25 @@ namespace ARKBreedingStats
         {
             for (int ci = 0; ci < listViewTimer.Columns.Count; ci++)
                 listViewTimer.Columns[ci].Width = 100;
+        }
+
+        private void BtStartPauseTimers_Click(object sender, EventArgs e)
+        {
+            if (listViewTimer.SelectedIndices.Count == 0) return;
+
+            bool startTimer = true;
+            for (int i = 0; i < listViewTimer.SelectedIndices.Count; i++)
+            {
+                if (listViewTimer.SelectedItems[i].Tag is TimerListEntry tle)
+                {
+                    if (i == 0)
+                    {
+                        startTimer = !tle.timerIsRunning;
+                    }
+
+                    tle.StartStopTimer(startTimer);
+                }
+            }
         }
     }
 }

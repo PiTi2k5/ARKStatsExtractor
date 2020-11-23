@@ -285,9 +285,6 @@ The levels are then shown without the extraction-process (and without validation
   <data name="Damage" xml:space="preserve">
     <value>Damage</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>German</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>Dead Creatures</value>
   </data>
@@ -324,10 +321,7 @@ The levels are then shown without the extraction-process (and without validation
   <data name="ElectricProdHits" xml:space="preserve">
     <value>Electric Prod Hits</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>English</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>Event</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -803,7 +797,7 @@ Enable it if the OCR doesn't recognize the tribe-name correctly and you want to 
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>There is already a creature in your library that has all the available top-stats ({0} {1}).
 The currently selected conservative-breeding-mode might show some suggestions that may seem non-optimal.
-Change the breeding-mode to "High Stats" for better suggestions.</value>
+Change the breeding-mode to "Best next generation" for better suggestions.</value>
   </data>
   <data name="Baby" xml:space="preserve">
     <value>Baby</value>
@@ -932,9 +926,6 @@ Some offsprings might be worse than in High-Stats-Mode, but you also have a chan
   <data name="Available" xml:space="preserve">
     <value>Available</value>
   </data>
-  <data name="fr" xml:space="preserve">
-    <value>French</value>
-  </data>
   <data name="HarpoonLauncher" xml:space="preserve">
     <value>Harpoon Launcher</value>
   </data>
@@ -952,9 +943,6 @@ Some offsprings might be worse than in High-Stats-Mode, but you also have a chan
   </data>
   <data name="lbImprintingFailInfo" xml:space="preserve">
     <value>If the creature is imprinted the extraction may fail because the game sometimes "forgets" to increase some stat-values during the imprinting-process. Usually it works after you put the creature in and out of a cryopod, up- and download it in an obelisk/terminal, go out of render-distance, or wait for a server-restart.</value>
-  </data>
-  <data name="it" xml:space="preserve">
-    <value>Italian</value>
   </data>
   <data name="Crafting Speed" xml:space="preserve">
     <value>Crafting Speed</value>
@@ -982,12 +970,6 @@ Some offsprings might be worse than in High-Stats-Mode, but you also have a chan
   </data>
   <data name="btUpdateLibraryCreature" xml:space="preserve">
     <value>Update creature in Library</value>
-  </data>
-  <data name="es" xml:space="preserve">
-    <value>Spanish</value>
-  </data>
-  <data name="zh" xml:space="preserve">
-    <value>Chinese</value>
   </data>
   <data name="CurrentCreature" xml:space="preserve">
     <value>Current Creature</value>
@@ -1232,5 +1214,47 @@ The preset can be applied by the Apply Preset button</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>The export folder of Steam couldn't be detected automatically.</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>incubation</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>no timer selected</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>paused</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>expired</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>mature</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>not a baby anymore</value>
+  </data>
+  <data name="issueCauseModValues" xml:space="preserve">
+    <value>If the creature is from a mod, you may need to enable the according mod values in Settings - Mod value manager.</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>The extraction failed. See the following list of possible causes</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Parents</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>System Language</value>
+  </data>
+  <data name="max wild level" xml:space="preserve">
+    <value>max wild level</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>generation</value>
   </data>
 </root>

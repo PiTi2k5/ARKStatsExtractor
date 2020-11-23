@@ -74,6 +74,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.nudMaxDomLevels = new ARKBreedingStats.uiControls.Nud();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.CbHighlightLevelEvenOdd = new System.Windows.Forms.CheckBox();
+            this.CbHighlightLevel255 = new System.Windows.Forms.CheckBox();
             this.cbIgnoreSexInBreedingPlan = new System.Windows.Forms.CheckBox();
             this.label16 = new System.Windows.Forms.Label();
             this.radioButtonFahrenheit = new System.Windows.Forms.RadioButton();
@@ -115,6 +117,10 @@
             this.groupBox26 = new System.Windows.Forms.GroupBox();
             this.cbAdminConsoleCommandWithCheat = new System.Windows.Forms.CheckBox();
             this.groupBox25 = new System.Windows.Forms.GroupBox();
+            this.nudInfoGraphicWidth = new ARKBreedingStats.uiControls.Nud();
+            this.LbInfoGraphicSize = new System.Windows.Forms.Label();
+            this.label48 = new System.Windows.Forms.Label();
+            this.CbbColorMode = new System.Windows.Forms.ComboBox();
             this.nudDefaultFontSize = new ARKBreedingStats.uiControls.Nud();
             this.label33 = new System.Windows.Forms.Label();
             this.label32 = new System.Windows.Forms.Label();
@@ -134,28 +140,6 @@
             this.cbLibraryHighlightTopCreatures = new System.Windows.Forms.CheckBox();
             this.cbApplyGlobalSpeciesToLibrary = new System.Windows.Forms.CheckBox();
             this.cbCreatureColorsLibrary = new System.Windows.Forms.CheckBox();
-            this.groupBox10 = new System.Windows.Forms.GroupBox();
-            this.label45 = new System.Windows.Forms.Label();
-            this.pCustomOverlayLocation = new System.Windows.Forms.Panel();
-            this.nudCustomOverlayLocX = new ARKBreedingStats.uiControls.Nud();
-            this.label42 = new System.Windows.Forms.Label();
-            this.label43 = new System.Windows.Forms.Label();
-            this.nudCustomOverlayLocY = new ARKBreedingStats.uiControls.Nud();
-            this.cbCustomOverlayLocation = new System.Windows.Forms.CheckBox();
-            this.label38 = new System.Windows.Forms.Label();
-            this.nudOverlayInfoPosY = new ARKBreedingStats.uiControls.Nud();
-            this.label39 = new System.Windows.Forms.Label();
-            this.nudOverlayInfoPosDFR = new ARKBreedingStats.uiControls.Nud();
-            this.label40 = new System.Windows.Forms.Label();
-            this.label37 = new System.Windows.Forms.Label();
-            this.nudOverlayTimerPosY = new ARKBreedingStats.uiControls.Nud();
-            this.label36 = new System.Windows.Forms.Label();
-            this.nudOverlayTimerPosX = new ARKBreedingStats.uiControls.Nud();
-            this.label35 = new System.Windows.Forms.Label();
-            this.cbInventoryCheck = new System.Windows.Forms.CheckBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.nudOverlayInfoDuration = new ARKBreedingStats.uiControls.Nud();
-            this.chkbSpeechRecognition = new System.Windows.Forms.CheckBox();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
             this.label22 = new System.Windows.Forms.Label();
             this.tbPlayAlarmsSeconds = new System.Windows.Forms.TextBox();
@@ -209,6 +193,7 @@
             this.label28 = new System.Windows.Forms.Label();
             this.cbAutoImportExported = new System.Windows.Forms.CheckBox();
             this.groupBox21 = new System.Windows.Forms.GroupBox();
+            this.CbApplyNamingPatternOnImportAlways = new System.Windows.Forms.CheckBox();
             this.cbApplyNamePatternOnImportOnNewCreatures = new System.Windows.Forms.CheckBox();
             this.label41 = new System.Windows.Forms.Label();
             this.cbCopyPatternNameToClipboard = new System.Windows.Forms.CheckBox();
@@ -226,6 +211,30 @@
             this.aTExportFolderLocationsBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.btAddExportFolder = new System.Windows.Forms.Button();
             this.label25 = new System.Windows.Forms.Label();
+            this.tabPageOverlay = new System.Windows.Forms.TabPage();
+            this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.CbOverlayDisplayInheritance = new System.Windows.Forms.CheckBox();
+            this.label45 = new System.Windows.Forms.Label();
+            this.pCustomOverlayLocation = new System.Windows.Forms.Panel();
+            this.nudCustomOverlayLocX = new ARKBreedingStats.uiControls.Nud();
+            this.label42 = new System.Windows.Forms.Label();
+            this.label43 = new System.Windows.Forms.Label();
+            this.nudCustomOverlayLocY = new ARKBreedingStats.uiControls.Nud();
+            this.cbCustomOverlayLocation = new System.Windows.Forms.CheckBox();
+            this.label38 = new System.Windows.Forms.Label();
+            this.nudOverlayInfoPosY = new ARKBreedingStats.uiControls.Nud();
+            this.label39 = new System.Windows.Forms.Label();
+            this.nudOverlayInfoPosDFR = new ARKBreedingStats.uiControls.Nud();
+            this.label40 = new System.Windows.Forms.Label();
+            this.label37 = new System.Windows.Forms.Label();
+            this.nudOverlayTimerPosY = new ARKBreedingStats.uiControls.Nud();
+            this.label36 = new System.Windows.Forms.Label();
+            this.nudOverlayTimerPosX = new ARKBreedingStats.uiControls.Nud();
+            this.label35 = new System.Windows.Forms.Label();
+            this.cbInventoryCheck = new System.Windows.Forms.CheckBox();
+            this.label21 = new System.Windows.Forms.Label();
+            this.nudOverlayInfoDuration = new ARKBreedingStats.uiControls.Nud();
+            this.chkbSpeechRecognition = new System.Windows.Forms.CheckBox();
             this.tabPageOCR = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.button1 = new System.Windows.Forms.Button();
@@ -240,6 +249,9 @@
             this.cbbOCRApp = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.nudBabyImprintAmountEvent = new ARKBreedingStats.uiControls.Nud();
+            this.label49 = new System.Windows.Forms.Label();
+            this.nudBabyImprintAmount = new ARKBreedingStats.uiControls.Nud();
             this.groupBoxMultiplier.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMatingSpeed)).BeginInit();
@@ -279,21 +291,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.NudSpeciesSelectorCountLastUsed)).BeginInit();
             this.groupBox26.SuspendLayout();
             this.groupBox25.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudDefaultFontSize)).BeginInit();
             this.groupBox24.SuspendLayout();
             this.groupBox20.SuspendLayout();
             this.groupBox17.SuspendLayout();
             this.groupBox16.SuspendLayout();
             this.groupBox9.SuspendLayout();
-            this.groupBox10.SuspendLayout();
-            this.pCustomOverlayLocation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocY)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosY)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosDFR)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosY)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosX)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoDuration)).BeginInit();
             this.groupBox8.SuspendLayout();
             this.tabPageImportSavegame.SuspendLayout();
             this.groupBox12.SuspendLayout();
@@ -313,11 +317,23 @@
             this.groupBox13.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExportFolders)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.aTExportFolderLocationsBindingSource)).BeginInit();
+            this.tabPageOverlay.SuspendLayout();
+            this.groupBox10.SuspendLayout();
+            this.pCustomOverlayLocation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosDFR)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoDuration)).BeginInit();
             this.tabPageOCR.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaitBeforeScreenCapture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWhiteThreshold)).BeginInit();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmountEvent)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmount)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxMultiplier
@@ -451,6 +467,9 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.nudBabyImprintAmountEvent);
+            this.groupBox2.Controls.Add(this.label49);
+            this.groupBox2.Controls.Add(this.nudBabyImprintAmount);
             this.groupBox2.Controls.Add(this.label44);
             this.groupBox2.Controls.Add(this.nudMatingSpeed);
             this.groupBox2.Controls.Add(this.nudBabyFoodConsumptionSpeedEvent);
@@ -472,7 +491,7 @@
             this.groupBox2.Controls.Add(this.nudEggHatchSpeed);
             this.groupBox2.Location = new System.Drawing.Point(394, 241);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(346, 206);
+            this.groupBox2.Size = new System.Drawing.Size(346, 241);
             this.groupBox2.TabIndex = 4;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Breeding-Multiplier";
@@ -514,7 +533,7 @@
             // 
             this.nudBabyFoodConsumptionSpeedEvent.DecimalPlaces = 6;
             this.nudBabyFoodConsumptionSpeedEvent.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudBabyFoodConsumptionSpeedEvent.Location = new System.Drawing.Point(263, 175);
+            this.nudBabyFoodConsumptionSpeedEvent.Location = new System.Drawing.Point(263, 201);
             this.nudBabyFoodConsumptionSpeedEvent.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -633,7 +652,7 @@
             // labelBabyFoodConsumptionSpeed
             // 
             this.labelBabyFoodConsumptionSpeed.AutoSize = true;
-            this.labelBabyFoodConsumptionSpeed.Location = new System.Drawing.Point(10, 177);
+            this.labelBabyFoodConsumptionSpeed.Location = new System.Drawing.Point(10, 203);
             this.labelBabyFoodConsumptionSpeed.Name = "labelBabyFoodConsumptionSpeed";
             this.labelBabyFoodConsumptionSpeed.Size = new System.Drawing.Size(167, 13);
             this.labelBabyFoodConsumptionSpeed.TabIndex = 10;
@@ -643,7 +662,7 @@
             // 
             this.nudBabyFoodConsumptionSpeed.DecimalPlaces = 6;
             this.nudBabyFoodConsumptionSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudBabyFoodConsumptionSpeed.Location = new System.Drawing.Point(183, 175);
+            this.nudBabyFoodConsumptionSpeed.Location = new System.Drawing.Point(183, 201);
             this.nudBabyFoodConsumptionSpeed.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -732,7 +751,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(10, 151);
+            this.label13.Location = new System.Drawing.Point(10, 177);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(163, 13);
             this.label13.TabIndex = 4;
@@ -775,7 +794,7 @@
             // 
             this.nudBabyImprintingStatScale.DecimalPlaces = 6;
             this.nudBabyImprintingStatScale.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudBabyImprintingStatScale.Location = new System.Drawing.Point(183, 149);
+            this.nudBabyImprintingStatScale.Location = new System.Drawing.Point(183, 175);
             this.nudBabyImprintingStatScale.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -964,6 +983,8 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.CbHighlightLevelEvenOdd);
+            this.groupBox4.Controls.Add(this.CbHighlightLevel255);
             this.groupBox4.Controls.Add(this.cbIgnoreSexInBreedingPlan);
             this.groupBox4.Controls.Add(this.label16);
             this.groupBox4.Controls.Add(this.radioButtonFahrenheit);
@@ -972,10 +993,30 @@
             this.groupBox4.Controls.Add(this.numericUpDownMaxBreedingSug);
             this.groupBox4.Location = new System.Drawing.Point(6, 154);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(317, 90);
+            this.groupBox4.Size = new System.Drawing.Size(317, 138);
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Breeding Planner";
+            // 
+            // CbHighlightLevelEvenOdd
+            // 
+            this.CbHighlightLevelEvenOdd.AutoSize = true;
+            this.CbHighlightLevelEvenOdd.Location = new System.Drawing.Point(6, 114);
+            this.CbHighlightLevelEvenOdd.Name = "CbHighlightLevelEvenOdd";
+            this.CbHighlightLevelEvenOdd.Size = new System.Drawing.Size(156, 17);
+            this.CbHighlightLevelEvenOdd.TabIndex = 7;
+            this.CbHighlightLevelEvenOdd.Text = "Highlight  even / odd levels";
+            this.CbHighlightLevelEvenOdd.UseVisualStyleBackColor = true;
+            // 
+            // CbHighlightLevel255
+            // 
+            this.CbHighlightLevel255.AutoSize = true;
+            this.CbHighlightLevel255.Location = new System.Drawing.Point(6, 91);
+            this.CbHighlightLevel255.Name = "CbHighlightLevel255";
+            this.CbHighlightLevel255.Size = new System.Drawing.Size(159, 17);
+            this.CbHighlightLevel255.TabIndex = 6;
+            this.CbHighlightLevel255.Text = "Highlight Level 254 and 255";
+            this.CbHighlightLevel255.UseVisualStyleBackColor = true;
             // 
             // cbIgnoreSexInBreedingPlan
             // 
@@ -1225,7 +1266,7 @@
             // groupBox7
             // 
             this.groupBox7.Controls.Add(this.checkBoxDisplayHiddenStats);
-            this.groupBox7.Location = new System.Drawing.Point(6, 250);
+            this.groupBox7.Location = new System.Drawing.Point(6, 298);
             this.groupBox7.Name = "groupBox7";
             this.groupBox7.Size = new System.Drawing.Size(317, 43);
             this.groupBox7.TabIndex = 2;
@@ -1248,6 +1289,7 @@
             this.tabControlSettings.Controls.Add(this.tabPage1);
             this.tabControlSettings.Controls.Add(this.tabPageImportSavegame);
             this.tabControlSettings.Controls.Add(this.tabPageImportExported);
+            this.tabControlSettings.Controls.Add(this.tabPageOverlay);
             this.tabControlSettings.Controls.Add(this.tabPageOCR);
             this.tabControlSettings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlSettings.Location = new System.Drawing.Point(0, 0);
@@ -1415,7 +1457,7 @@
             // 
             // buttonEventToDefault
             // 
-            this.buttonEventToDefault.Location = new System.Drawing.Point(603, 468);
+            this.buttonEventToDefault.Location = new System.Drawing.Point(604, 488);
             this.buttonEventToDefault.Name = "buttonEventToDefault";
             this.buttonEventToDefault.Size = new System.Drawing.Size(136, 23);
             this.buttonEventToDefault.TabIndex = 6;
@@ -1443,7 +1485,6 @@
             this.tabPage1.Controls.Add(this.groupBox17);
             this.tabPage1.Controls.Add(this.groupBox16);
             this.tabPage1.Controls.Add(this.groupBox9);
-            this.tabPage1.Controls.Add(this.groupBox10);
             this.tabPage1.Controls.Add(this.groupBox8);
             this.tabPage1.Controls.Add(this.groupBox7);
             this.tabPage1.Controls.Add(this.groupBox4);
@@ -1460,7 +1501,7 @@
             // 
             this.GbSpecies.Controls.Add(this.LbSpeciesSelectorCountLastUsed);
             this.GbSpecies.Controls.Add(this.NudSpeciesSelectorCountLastUsed);
-            this.GbSpecies.Location = new System.Drawing.Point(6, 299);
+            this.GbSpecies.Location = new System.Drawing.Point(6, 347);
             this.GbSpecies.Name = "GbSpecies";
             this.GbSpecies.Size = new System.Drawing.Size(317, 43);
             this.GbSpecies.TabIndex = 14;
@@ -1492,7 +1533,7 @@
             // groupBox26
             // 
             this.groupBox26.Controls.Add(this.cbAdminConsoleCommandWithCheat);
-            this.groupBox26.Location = new System.Drawing.Point(6, 564);
+            this.groupBox26.Location = new System.Drawing.Point(6, 512);
             this.groupBox26.Name = "groupBox26";
             this.groupBox26.Size = new System.Drawing.Size(317, 43);
             this.groupBox26.TabIndex = 13;
@@ -1511,16 +1552,75 @@
             // 
             // groupBox25
             // 
+            this.groupBox25.Controls.Add(this.nudInfoGraphicWidth);
+            this.groupBox25.Controls.Add(this.LbInfoGraphicSize);
+            this.groupBox25.Controls.Add(this.label48);
+            this.groupBox25.Controls.Add(this.CbbColorMode);
             this.groupBox25.Controls.Add(this.nudDefaultFontSize);
             this.groupBox25.Controls.Add(this.label33);
             this.groupBox25.Controls.Add(this.label32);
             this.groupBox25.Controls.Add(this.tbDefaultFontName);
-            this.groupBox25.Location = new System.Drawing.Point(329, 309);
+            this.groupBox25.Location = new System.Drawing.Point(329, 333);
             this.groupBox25.Name = "groupBox25";
-            this.groupBox25.Size = new System.Drawing.Size(413, 53);
+            this.groupBox25.Size = new System.Drawing.Size(413, 100);
             this.groupBox25.TabIndex = 12;
             this.groupBox25.TabStop = false;
-            this.groupBox25.Text = "Default Font (changing needs restart)";
+            this.groupBox25.Text = "Visuals";
+            // 
+            // nudInfoGraphicWidth
+            // 
+            this.nudInfoGraphicWidth.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudInfoGraphicWidth.Location = new System.Drawing.Point(139, 72);
+            this.nudInfoGraphicWidth.Maximum = new decimal(new int[] {
+            99999,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicWidth.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicWidth.Name = "nudInfoGraphicWidth";
+            this.nudInfoGraphicWidth.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicWidth.Size = new System.Drawing.Size(57, 20);
+            this.nudInfoGraphicWidth.TabIndex = 26;
+            this.nudInfoGraphicWidth.Value = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            // 
+            // LbInfoGraphicSize
+            // 
+            this.LbInfoGraphicSize.AutoSize = true;
+            this.LbInfoGraphicSize.Location = new System.Drawing.Point(6, 74);
+            this.LbInfoGraphicSize.Name = "LbInfoGraphicSize";
+            this.LbInfoGraphicSize.Size = new System.Drawing.Size(110, 13);
+            this.LbInfoGraphicSize.TabIndex = 6;
+            this.LbInfoGraphicSize.Text = "InfoGraphic width [px]";
+            // 
+            // label48
+            // 
+            this.label48.AutoSize = true;
+            this.label48.Location = new System.Drawing.Point(6, 48);
+            this.label48.Name = "label48";
+            this.label48.Size = new System.Drawing.Size(60, 13);
+            this.label48.TabIndex = 5;
+            this.label48.Text = "Color mode";
+            // 
+            // CbbColorMode
+            // 
+            this.CbbColorMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.CbbColorMode.FormattingEnabled = true;
+            this.CbbColorMode.Location = new System.Drawing.Point(74, 45);
+            this.CbbColorMode.Name = "CbbColorMode";
+            this.CbbColorMode.Size = new System.Drawing.Size(222, 21);
+            this.CbbColorMode.TabIndex = 4;
             // 
             // nudDefaultFontSize
             // 
@@ -1550,15 +1650,15 @@
             this.label32.AutoSize = true;
             this.label32.Location = new System.Drawing.Point(6, 22);
             this.label32.Name = "label32";
-            this.label32.Size = new System.Drawing.Size(35, 13);
+            this.label32.Size = new System.Drawing.Size(62, 13);
             this.label32.TabIndex = 1;
-            this.label32.Text = "Name";
+            this.label32.Text = "Default font";
             // 
             // tbDefaultFontName
             // 
-            this.tbDefaultFontName.Location = new System.Drawing.Point(47, 19);
+            this.tbDefaultFontName.Location = new System.Drawing.Point(74, 19);
             this.tbDefaultFontName.Name = "tbDefaultFontName";
-            this.tbDefaultFontName.Size = new System.Drawing.Size(229, 20);
+            this.tbDefaultFontName.Size = new System.Drawing.Size(222, 20);
             this.tbDefaultFontName.TabIndex = 0;
             // 
             // groupBox24
@@ -1566,9 +1666,9 @@
             this.groupBox24.Controls.Add(this.cbKeepExpiredTimersInOverlay);
             this.groupBox24.Controls.Add(this.cbDeleteExpiredTimersOnSaving);
             this.groupBox24.Controls.Add(this.cbTimersInOverlayAutomatically);
-            this.groupBox24.Location = new System.Drawing.Point(6, 464);
+            this.groupBox24.Location = new System.Drawing.Point(329, 233);
             this.groupBox24.Name = "groupBox24";
-            this.groupBox24.Size = new System.Drawing.Size(317, 94);
+            this.groupBox24.Size = new System.Drawing.Size(413, 94);
             this.groupBox24.TabIndex = 11;
             this.groupBox24.TabStop = false;
             this.groupBox24.Text = "Timers";
@@ -1606,9 +1706,9 @@
             // groupBox20
             // 
             this.groupBox20.Controls.Add(this.cbPrettifyJSON);
-            this.groupBox20.Location = new System.Drawing.Point(329, 252);
+            this.groupBox20.Location = new System.Drawing.Point(329, 439);
             this.groupBox20.Name = "groupBox20";
-            this.groupBox20.Size = new System.Drawing.Size(413, 51);
+            this.groupBox20.Size = new System.Drawing.Size(413, 40);
             this.groupBox20.TabIndex = 10;
             this.groupBox20.TabStop = false;
             this.groupBox20.Text = "Prettify Library JSON-file";
@@ -1626,7 +1726,7 @@
             // groupBox17
             // 
             this.groupBox17.Controls.Add(this.cbbLanguage);
-            this.groupBox17.Location = new System.Drawing.Point(6, 613);
+            this.groupBox17.Location = new System.Drawing.Point(6, 561);
             this.groupBox17.Name = "groupBox17";
             this.groupBox17.Size = new System.Drawing.Size(317, 51);
             this.groupBox17.TabIndex = 9;
@@ -1645,7 +1745,7 @@
             // groupBox16
             // 
             this.groupBox16.Controls.Add(this.cbDevTools);
-            this.groupBox16.Location = new System.Drawing.Point(329, 590);
+            this.groupBox16.Location = new System.Drawing.Point(329, 485);
             this.groupBox16.Name = "groupBox16";
             this.groupBox16.Size = new System.Drawing.Size(413, 43);
             this.groupBox16.TabIndex = 8;
@@ -1668,7 +1768,7 @@
             this.groupBox9.Controls.Add(this.cbLibraryHighlightTopCreatures);
             this.groupBox9.Controls.Add(this.cbApplyGlobalSpeciesToLibrary);
             this.groupBox9.Controls.Add(this.cbCreatureColorsLibrary);
-            this.groupBox9.Location = new System.Drawing.Point(6, 348);
+            this.groupBox9.Location = new System.Drawing.Point(6, 396);
             this.groupBox9.Name = "groupBox9";
             this.groupBox9.Size = new System.Drawing.Size(317, 110);
             this.groupBox9.TabIndex = 7;
@@ -1715,306 +1815,6 @@
             this.cbCreatureColorsLibrary.Text = "Show Creature-Colors columns in library";
             this.cbCreatureColorsLibrary.UseVisualStyleBackColor = true;
             // 
-            // groupBox10
-            // 
-            this.groupBox10.Controls.Add(this.label45);
-            this.groupBox10.Controls.Add(this.pCustomOverlayLocation);
-            this.groupBox10.Controls.Add(this.cbCustomOverlayLocation);
-            this.groupBox10.Controls.Add(this.label38);
-            this.groupBox10.Controls.Add(this.nudOverlayInfoPosY);
-            this.groupBox10.Controls.Add(this.label39);
-            this.groupBox10.Controls.Add(this.nudOverlayInfoPosDFR);
-            this.groupBox10.Controls.Add(this.label40);
-            this.groupBox10.Controls.Add(this.label37);
-            this.groupBox10.Controls.Add(this.nudOverlayTimerPosY);
-            this.groupBox10.Controls.Add(this.label36);
-            this.groupBox10.Controls.Add(this.nudOverlayTimerPosX);
-            this.groupBox10.Controls.Add(this.label35);
-            this.groupBox10.Controls.Add(this.cbInventoryCheck);
-            this.groupBox10.Controls.Add(this.label21);
-            this.groupBox10.Controls.Add(this.nudOverlayInfoDuration);
-            this.groupBox10.Controls.Add(this.chkbSpeechRecognition);
-            this.groupBox10.Location = new System.Drawing.Point(329, 368);
-            this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(413, 216);
-            this.groupBox10.TabIndex = 6;
-            this.groupBox10.TabStop = false;
-            this.groupBox10.Text = "Overlay";
-            // 
-            // label45
-            // 
-            this.label45.AutoSize = true;
-            this.label45.Location = new System.Drawing.Point(6, 16);
-            this.label45.Name = "label45";
-            this.label45.Size = new System.Drawing.Size(315, 13);
-            this.label45.TabIndex = 24;
-            this.label45.Text = "The window-mode \"Fullscreen-Windowed\" should be set ingame.";
-            // 
-            // pCustomOverlayLocation
-            // 
-            this.pCustomOverlayLocation.Controls.Add(this.nudCustomOverlayLocX);
-            this.pCustomOverlayLocation.Controls.Add(this.label42);
-            this.pCustomOverlayLocation.Controls.Add(this.label43);
-            this.pCustomOverlayLocation.Controls.Add(this.nudCustomOverlayLocY);
-            this.pCustomOverlayLocation.Enabled = false;
-            this.pCustomOverlayLocation.Location = new System.Drawing.Point(195, 179);
-            this.pCustomOverlayLocation.Name = "pCustomOverlayLocation";
-            this.pCustomOverlayLocation.Size = new System.Drawing.Size(201, 28);
-            this.pCustomOverlayLocation.TabIndex = 23;
-            // 
-            // nudCustomOverlayLocX
-            // 
-            this.nudCustomOverlayLocX.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudCustomOverlayLocX.Location = new System.Drawing.Point(24, 3);
-            this.nudCustomOverlayLocX.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.nudCustomOverlayLocX.Minimum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            -2147483648});
-            this.nudCustomOverlayLocX.Name = "nudCustomOverlayLocX";
-            this.nudCustomOverlayLocX.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudCustomOverlayLocX.Size = new System.Drawing.Size(57, 20);
-            this.nudCustomOverlayLocX.TabIndex = 19;
-            // 
-            // label42
-            // 
-            this.label42.AutoSize = true;
-            this.label42.Location = new System.Drawing.Point(105, 5);
-            this.label42.Name = "label42";
-            this.label42.Size = new System.Drawing.Size(14, 13);
-            this.label42.TabIndex = 22;
-            this.label42.Text = "Y";
-            // 
-            // label43
-            // 
-            this.label43.AutoSize = true;
-            this.label43.Location = new System.Drawing.Point(4, 5);
-            this.label43.Name = "label43";
-            this.label43.Size = new System.Drawing.Size(14, 13);
-            this.label43.TabIndex = 20;
-            this.label43.Text = "X";
-            // 
-            // nudCustomOverlayLocY
-            // 
-            this.nudCustomOverlayLocY.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudCustomOverlayLocY.Location = new System.Drawing.Point(125, 3);
-            this.nudCustomOverlayLocY.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.nudCustomOverlayLocY.Minimum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            -2147483648});
-            this.nudCustomOverlayLocY.Name = "nudCustomOverlayLocY";
-            this.nudCustomOverlayLocY.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudCustomOverlayLocY.Size = new System.Drawing.Size(57, 20);
-            this.nudCustomOverlayLocY.TabIndex = 21;
-            this.nudCustomOverlayLocY.ThousandsSeparator = true;
-            // 
-            // cbCustomOverlayLocation
-            // 
-            this.cbCustomOverlayLocation.AutoSize = true;
-            this.cbCustomOverlayLocation.Location = new System.Drawing.Point(6, 183);
-            this.cbCustomOverlayLocation.Name = "cbCustomOverlayLocation";
-            this.cbCustomOverlayLocation.Size = new System.Drawing.Size(138, 17);
-            this.cbCustomOverlayLocation.TabIndex = 18;
-            this.cbCustomOverlayLocation.Text = "Custom overlay location";
-            this.cbCustomOverlayLocation.UseVisualStyleBackColor = true;
-            this.cbCustomOverlayLocation.CheckedChanged += new System.EventHandler(this.cbCustomOverlayLocation_CheckedChanged);
-            // 
-            // label38
-            // 
-            this.label38.AutoSize = true;
-            this.label38.Location = new System.Drawing.Point(120, 149);
-            this.label38.Name = "label38";
-            this.label38.Size = new System.Drawing.Size(93, 13);
-            this.label38.TabIndex = 17;
-            this.label38.Text = "distance from right";
-            // 
-            // nudOverlayInfoPosY
-            // 
-            this.nudOverlayInfoPosY.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayInfoPosY.Location = new System.Drawing.Point(320, 147);
-            this.nudOverlayInfoPosY.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoPosY.Name = "nudOverlayInfoPosY";
-            this.nudOverlayInfoPosY.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoPosY.Size = new System.Drawing.Size(57, 20);
-            this.nudOverlayInfoPosY.TabIndex = 16;
-            // 
-            // label39
-            // 
-            this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(300, 149);
-            this.label39.Name = "label39";
-            this.label39.Size = new System.Drawing.Size(14, 13);
-            this.label39.TabIndex = 15;
-            this.label39.Text = "Y";
-            // 
-            // nudOverlayInfoPosDFR
-            // 
-            this.nudOverlayInfoPosDFR.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayInfoPosDFR.Location = new System.Drawing.Point(219, 147);
-            this.nudOverlayInfoPosDFR.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoPosDFR.Name = "nudOverlayInfoPosDFR";
-            this.nudOverlayInfoPosDFR.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoPosDFR.Size = new System.Drawing.Size(57, 20);
-            this.nudOverlayInfoPosDFR.TabIndex = 14;
-            // 
-            // label40
-            // 
-            this.label40.AutoSize = true;
-            this.label40.Location = new System.Drawing.Point(6, 149);
-            this.label40.Name = "label40";
-            this.label40.Size = new System.Drawing.Size(94, 13);
-            this.label40.TabIndex = 13;
-            this.label40.Text = "Position of the info";
-            // 
-            // label37
-            // 
-            this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(300, 123);
-            this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size(14, 13);
-            this.label37.TabIndex = 12;
-            this.label37.Text = "Y";
-            // 
-            // nudOverlayTimerPosY
-            // 
-            this.nudOverlayTimerPosY.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayTimerPosY.Location = new System.Drawing.Point(320, 121);
-            this.nudOverlayTimerPosY.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.nudOverlayTimerPosY.Name = "nudOverlayTimerPosY";
-            this.nudOverlayTimerPosY.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudOverlayTimerPosY.Size = new System.Drawing.Size(57, 20);
-            this.nudOverlayTimerPosY.TabIndex = 11;
-            // 
-            // label36
-            // 
-            this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(199, 123);
-            this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(14, 13);
-            this.label36.TabIndex = 10;
-            this.label36.Text = "X";
-            // 
-            // nudOverlayTimerPosX
-            // 
-            this.nudOverlayTimerPosX.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayTimerPosX.Location = new System.Drawing.Point(219, 121);
-            this.nudOverlayTimerPosX.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.nudOverlayTimerPosX.Name = "nudOverlayTimerPosX";
-            this.nudOverlayTimerPosX.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudOverlayTimerPosX.Size = new System.Drawing.Size(57, 20);
-            this.nudOverlayTimerPosX.TabIndex = 9;
-            // 
-            // label35
-            // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(6, 123);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(104, 13);
-            this.label35.TabIndex = 8;
-            this.label35.Text = "Position of the timers";
-            // 
-            // cbInventoryCheck
-            // 
-            this.cbInventoryCheck.Location = new System.Drawing.Point(6, 85);
-            this.cbInventoryCheck.Name = "cbInventoryCheck";
-            this.cbInventoryCheck.Size = new System.Drawing.Size(305, 35);
-            this.cbInventoryCheck.TabIndex = 7;
-            this.cbInventoryCheck.Text = "Automatically extract inventory levels (needs working OCR and enabled overlay)";
-            this.cbInventoryCheck.UseVisualStyleBackColor = true;
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(27, 61);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(138, 13);
-            this.label21.TabIndex = 2;
-            this.label21.Text = "Display info in overlay for [s]";
-            // 
-            // nudOverlayInfoDuration
-            // 
-            this.nudOverlayInfoDuration.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudOverlayInfoDuration.Location = new System.Drawing.Point(189, 59);
-            this.nudOverlayInfoDuration.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoDuration.Name = "nudOverlayInfoDuration";
-            this.nudOverlayInfoDuration.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudOverlayInfoDuration.Size = new System.Drawing.Size(57, 20);
-            this.nudOverlayInfoDuration.TabIndex = 1;
-            this.nudOverlayInfoDuration.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // chkbSpeechRecognition
-            // 
-            this.chkbSpeechRecognition.AutoSize = true;
-            this.chkbSpeechRecognition.Location = new System.Drawing.Point(6, 36);
-            this.chkbSpeechRecognition.Name = "chkbSpeechRecognition";
-            this.chkbSpeechRecognition.Size = new System.Drawing.Size(123, 17);
-            this.chkbSpeechRecognition.TabIndex = 0;
-            this.chkbSpeechRecognition.Text = "Speech Recognition";
-            this.chkbSpeechRecognition.UseVisualStyleBackColor = true;
-            // 
             // groupBox8
             // 
             this.groupBox8.Controls.Add(this.label22);
@@ -2026,7 +1826,7 @@
             this.groupBox8.Controls.Add(this.label20);
             this.groupBox8.Location = new System.Drawing.Point(329, 6);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(413, 240);
+            this.groupBox8.Size = new System.Drawing.Size(413, 221);
             this.groupBox8.TabIndex = 5;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Timer Sounds";
@@ -2052,7 +1852,7 @@
             this.customSCCustom.Location = new System.Drawing.Point(6, 139);
             this.customSCCustom.Name = "customSCCustom";
             this.customSCCustom.Size = new System.Drawing.Size(401, 23);
-            this.customSCCustom.SoundFile = "";
+            this.customSCCustom.SoundFile = null;
             this.customSCCustom.TabIndex = 7;
             // 
             // customSCWakeup
@@ -2060,7 +1860,7 @@
             this.customSCWakeup.Location = new System.Drawing.Point(6, 81);
             this.customSCWakeup.Name = "customSCWakeup";
             this.customSCWakeup.Size = new System.Drawing.Size(401, 23);
-            this.customSCWakeup.SoundFile = null;
+            this.customSCWakeup.SoundFile = "";
             this.customSCWakeup.TabIndex = 6;
             // 
             // customSCBirth
@@ -2068,7 +1868,7 @@
             this.customSCBirth.Location = new System.Drawing.Point(6, 110);
             this.customSCBirth.Name = "customSCBirth";
             this.customSCBirth.Size = new System.Drawing.Size(401, 23);
-            this.customSCBirth.SoundFile = null;
+            this.customSCBirth.SoundFile = "";
             this.customSCBirth.TabIndex = 5;
             // 
             // customSCStarving
@@ -2076,7 +1876,7 @@
             this.customSCStarving.Location = new System.Drawing.Point(6, 52);
             this.customSCStarving.Name = "customSCStarving";
             this.customSCStarving.Size = new System.Drawing.Size(401, 23);
-            this.customSCStarving.SoundFile = "";
+            this.customSCStarving.SoundFile = null;
             this.customSCStarving.TabIndex = 4;
             // 
             // label20
@@ -2326,7 +2126,7 @@
             this.groupBox27.Controls.Add(this.label46);
             this.groupBox27.Controls.Add(this.RbTamerStringForTribe);
             this.groupBox27.Controls.Add(this.RbTamerStringForOwner);
-            this.groupBox27.Location = new System.Drawing.Point(330, 575);
+            this.groupBox27.Location = new System.Drawing.Point(330, 549);
             this.groupBox27.Name = "groupBox27";
             this.groupBox27.Size = new System.Drawing.Size(412, 95);
             this.groupBox27.TabIndex = 11;
@@ -2369,7 +2169,7 @@
             this.groupBox23.Controls.Add(this.label31);
             this.groupBox23.Controls.Add(this.label30);
             this.groupBox23.Controls.Add(this.nudImportLowerBoundTE);
-            this.groupBox23.Location = new System.Drawing.Point(6, 498);
+            this.groupBox23.Location = new System.Drawing.Point(6, 472);
             this.groupBox23.Name = "groupBox23";
             this.groupBox23.Size = new System.Drawing.Size(318, 45);
             this.groupBox23.TabIndex = 10;
@@ -2418,7 +2218,7 @@
             this.groupBox22.Controls.Add(this.cbMoveImportedFileToSubFolder);
             this.groupBox22.Controls.Add(this.label28);
             this.groupBox22.Controls.Add(this.cbAutoImportExported);
-            this.groupBox22.Location = new System.Drawing.Point(330, 421);
+            this.groupBox22.Location = new System.Drawing.Point(330, 395);
             this.groupBox22.Name = "groupBox22";
             this.groupBox22.Size = new System.Drawing.Size(412, 148);
             this.groupBox22.TabIndex = 9;
@@ -2558,21 +2358,32 @@
             // 
             // groupBox21
             // 
+            this.groupBox21.Controls.Add(this.CbApplyNamingPatternOnImportAlways);
             this.groupBox21.Controls.Add(this.cbApplyNamePatternOnImportOnNewCreatures);
             this.groupBox21.Controls.Add(this.label41);
             this.groupBox21.Controls.Add(this.cbCopyPatternNameToClipboard);
             this.groupBox21.Controls.Add(this.cbApplyNamePatternOnImportOnEmptyNames);
-            this.groupBox21.Location = new System.Drawing.Point(6, 549);
+            this.groupBox21.Location = new System.Drawing.Point(6, 523);
             this.groupBox21.Name = "groupBox21";
-            this.groupBox21.Size = new System.Drawing.Size(318, 121);
+            this.groupBox21.Size = new System.Drawing.Size(318, 147);
             this.groupBox21.TabIndex = 8;
             this.groupBox21.TabStop = false;
             this.groupBox21.Text = "Auto naming on import";
             // 
+            // CbApplyNamingPatternOnImportAlways
+            // 
+            this.CbApplyNamingPatternOnImportAlways.AutoSize = true;
+            this.CbApplyNamingPatternOnImportAlways.Location = new System.Drawing.Point(6, 39);
+            this.CbApplyNamingPatternOnImportAlways.Name = "CbApplyNamingPatternOnImportAlways";
+            this.CbApplyNamingPatternOnImportAlways.Size = new System.Drawing.Size(177, 17);
+            this.CbApplyNamingPatternOnImportAlways.TabIndex = 13;
+            this.CbApplyNamingPatternOnImportAlways.Text = "always (overwrite existing name)";
+            this.CbApplyNamingPatternOnImportAlways.UseVisualStyleBackColor = true;
+            // 
             // cbApplyNamePatternOnImportOnNewCreatures
             // 
             this.cbApplyNamePatternOnImportOnNewCreatures.AutoSize = true;
-            this.cbApplyNamePatternOnImportOnNewCreatures.Location = new System.Drawing.Point(6, 61);
+            this.cbApplyNamePatternOnImportOnNewCreatures.Location = new System.Drawing.Point(6, 85);
             this.cbApplyNamePatternOnImportOnNewCreatures.Name = "cbApplyNamePatternOnImportOnNewCreatures";
             this.cbApplyNamePatternOnImportOnNewCreatures.Size = new System.Drawing.Size(203, 17);
             this.cbApplyNamePatternOnImportOnNewCreatures.TabIndex = 12;
@@ -2591,7 +2402,7 @@
             // cbCopyPatternNameToClipboard
             // 
             this.cbCopyPatternNameToClipboard.AutoSize = true;
-            this.cbCopyPatternNameToClipboard.Location = new System.Drawing.Point(6, 98);
+            this.cbCopyPatternNameToClipboard.Location = new System.Drawing.Point(6, 124);
             this.cbCopyPatternNameToClipboard.Name = "cbCopyPatternNameToClipboard";
             this.cbCopyPatternNameToClipboard.Size = new System.Drawing.Size(208, 17);
             this.cbCopyPatternNameToClipboard.TabIndex = 1;
@@ -2601,7 +2412,7 @@
             // cbApplyNamePatternOnImportOnEmptyNames
             // 
             this.cbApplyNamePatternOnImportOnEmptyNames.AutoSize = true;
-            this.cbApplyNamePatternOnImportOnEmptyNames.Location = new System.Drawing.Point(6, 38);
+            this.cbApplyNamePatternOnImportOnEmptyNames.Location = new System.Drawing.Point(6, 62);
             this.cbApplyNamePatternOnImportOnEmptyNames.Name = "cbApplyNamePatternOnImportOnEmptyNames";
             this.cbApplyNamePatternOnImportOnEmptyNames.Size = new System.Drawing.Size(119, 17);
             this.cbApplyNamePatternOnImportOnEmptyNames.TabIndex = 0;
@@ -2612,7 +2423,7 @@
             // 
             this.groupBox19.Controls.Add(this.label26);
             this.groupBox19.Controls.Add(this.nudWarnImportMoreThan);
-            this.groupBox19.Location = new System.Drawing.Point(6, 421);
+            this.groupBox19.Location = new System.Drawing.Point(6, 395);
             this.groupBox19.Name = "groupBox19";
             this.groupBox19.Size = new System.Drawing.Size(318, 71);
             this.groupBox19.TabIndex = 7;
@@ -2646,7 +2457,7 @@
             this.groupBox13.Controls.Add(this.btAddExportFolder);
             this.groupBox13.Location = new System.Drawing.Point(6, 111);
             this.groupBox13.Name = "groupBox13";
-            this.groupBox13.Size = new System.Drawing.Size(736, 254);
+            this.groupBox13.Size = new System.Drawing.Size(736, 278);
             this.groupBox13.TabIndex = 5;
             this.groupBox13.TabStop = false;
             this.groupBox13.Text = "ARK export folders";
@@ -2664,7 +2475,7 @@
             this.dataGridViewExportFolders.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewExportFolders.Location = new System.Drawing.Point(3, 39);
             this.dataGridViewExportFolders.Name = "dataGridViewExportFolders";
-            this.dataGridViewExportFolders.Size = new System.Drawing.Size(730, 212);
+            this.dataGridViewExportFolders.Size = new System.Drawing.Size(730, 236);
             this.dataGridViewExportFolders.TabIndex = 5;
             this.dataGridViewExportFolders.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewExportFolders_CellClick);
             // 
@@ -2736,6 +2547,328 @@
             this.label25.Size = new System.Drawing.Size(579, 78);
             this.label25.TabIndex = 0;
             this.label25.Text = resources.GetString("label25.Text");
+            // 
+            // tabPageOverlay
+            // 
+            this.tabPageOverlay.Controls.Add(this.groupBox10);
+            this.tabPageOverlay.Location = new System.Drawing.Point(4, 22);
+            this.tabPageOverlay.Name = "tabPageOverlay";
+            this.tabPageOverlay.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageOverlay.Size = new System.Drawing.Size(750, 676);
+            this.tabPageOverlay.TabIndex = 5;
+            this.tabPageOverlay.Text = "Overlay";
+            this.tabPageOverlay.UseVisualStyleBackColor = true;
+            // 
+            // groupBox10
+            // 
+            this.groupBox10.Controls.Add(this.CbOverlayDisplayInheritance);
+            this.groupBox10.Controls.Add(this.label45);
+            this.groupBox10.Controls.Add(this.pCustomOverlayLocation);
+            this.groupBox10.Controls.Add(this.cbCustomOverlayLocation);
+            this.groupBox10.Controls.Add(this.label38);
+            this.groupBox10.Controls.Add(this.nudOverlayInfoPosY);
+            this.groupBox10.Controls.Add(this.label39);
+            this.groupBox10.Controls.Add(this.nudOverlayInfoPosDFR);
+            this.groupBox10.Controls.Add(this.label40);
+            this.groupBox10.Controls.Add(this.label37);
+            this.groupBox10.Controls.Add(this.nudOverlayTimerPosY);
+            this.groupBox10.Controls.Add(this.label36);
+            this.groupBox10.Controls.Add(this.nudOverlayTimerPosX);
+            this.groupBox10.Controls.Add(this.label35);
+            this.groupBox10.Controls.Add(this.cbInventoryCheck);
+            this.groupBox10.Controls.Add(this.label21);
+            this.groupBox10.Controls.Add(this.nudOverlayInfoDuration);
+            this.groupBox10.Controls.Add(this.chkbSpeechRecognition);
+            this.groupBox10.Location = new System.Drawing.Point(8, 6);
+            this.groupBox10.Name = "groupBox10";
+            this.groupBox10.Size = new System.Drawing.Size(734, 243);
+            this.groupBox10.TabIndex = 6;
+            this.groupBox10.TabStop = false;
+            this.groupBox10.Text = "Overlay";
+            // 
+            // CbOverlayDisplayInheritance
+            // 
+            this.CbOverlayDisplayInheritance.AutoSize = true;
+            this.CbOverlayDisplayInheritance.Location = new System.Drawing.Point(6, 215);
+            this.CbOverlayDisplayInheritance.Name = "CbOverlayDisplayInheritance";
+            this.CbOverlayDisplayInheritance.Size = new System.Drawing.Size(162, 17);
+            this.CbOverlayDisplayInheritance.TabIndex = 25;
+            this.CbOverlayDisplayInheritance.Text = "Display Inheritance on import";
+            this.CbOverlayDisplayInheritance.UseVisualStyleBackColor = true;
+            // 
+            // label45
+            // 
+            this.label45.AutoSize = true;
+            this.label45.Location = new System.Drawing.Point(6, 16);
+            this.label45.Name = "label45";
+            this.label45.Size = new System.Drawing.Size(315, 13);
+            this.label45.TabIndex = 24;
+            this.label45.Text = "The window-mode \"Fullscreen-Windowed\" should be set ingame.";
+            // 
+            // pCustomOverlayLocation
+            // 
+            this.pCustomOverlayLocation.Controls.Add(this.nudCustomOverlayLocX);
+            this.pCustomOverlayLocation.Controls.Add(this.label42);
+            this.pCustomOverlayLocation.Controls.Add(this.label43);
+            this.pCustomOverlayLocation.Controls.Add(this.nudCustomOverlayLocY);
+            this.pCustomOverlayLocation.Enabled = false;
+            this.pCustomOverlayLocation.Location = new System.Drawing.Point(195, 179);
+            this.pCustomOverlayLocation.Name = "pCustomOverlayLocation";
+            this.pCustomOverlayLocation.Size = new System.Drawing.Size(201, 28);
+            this.pCustomOverlayLocation.TabIndex = 23;
+            // 
+            // nudCustomOverlayLocX
+            // 
+            this.nudCustomOverlayLocX.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudCustomOverlayLocX.Location = new System.Drawing.Point(24, 3);
+            this.nudCustomOverlayLocX.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.nudCustomOverlayLocX.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.nudCustomOverlayLocX.Name = "nudCustomOverlayLocX";
+            this.nudCustomOverlayLocX.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudCustomOverlayLocX.Size = new System.Drawing.Size(57, 20);
+            this.nudCustomOverlayLocX.TabIndex = 19;
+            // 
+            // label42
+            // 
+            this.label42.AutoSize = true;
+            this.label42.Location = new System.Drawing.Point(105, 5);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(14, 13);
+            this.label42.TabIndex = 22;
+            this.label42.Text = "Y";
+            // 
+            // label43
+            // 
+            this.label43.AutoSize = true;
+            this.label43.Location = new System.Drawing.Point(4, 5);
+            this.label43.Name = "label43";
+            this.label43.Size = new System.Drawing.Size(14, 13);
+            this.label43.TabIndex = 20;
+            this.label43.Text = "X";
+            // 
+            // nudCustomOverlayLocY
+            // 
+            this.nudCustomOverlayLocY.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudCustomOverlayLocY.Location = new System.Drawing.Point(125, 3);
+            this.nudCustomOverlayLocY.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.nudCustomOverlayLocY.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.nudCustomOverlayLocY.Name = "nudCustomOverlayLocY";
+            this.nudCustomOverlayLocY.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudCustomOverlayLocY.Size = new System.Drawing.Size(57, 20);
+            this.nudCustomOverlayLocY.TabIndex = 21;
+            this.nudCustomOverlayLocY.ThousandsSeparator = true;
+            // 
+            // cbCustomOverlayLocation
+            // 
+            this.cbCustomOverlayLocation.AutoSize = true;
+            this.cbCustomOverlayLocation.Location = new System.Drawing.Point(6, 183);
+            this.cbCustomOverlayLocation.Name = "cbCustomOverlayLocation";
+            this.cbCustomOverlayLocation.Size = new System.Drawing.Size(138, 17);
+            this.cbCustomOverlayLocation.TabIndex = 18;
+            this.cbCustomOverlayLocation.Text = "Custom overlay location";
+            this.cbCustomOverlayLocation.UseVisualStyleBackColor = true;
+            this.cbCustomOverlayLocation.CheckedChanged += new System.EventHandler(this.cbCustomOverlayLocation_CheckedChanged);
+            // 
+            // label38
+            // 
+            this.label38.AutoSize = true;
+            this.label38.Location = new System.Drawing.Point(120, 149);
+            this.label38.Name = "label38";
+            this.label38.Size = new System.Drawing.Size(93, 13);
+            this.label38.TabIndex = 17;
+            this.label38.Text = "distance from right";
+            // 
+            // nudOverlayInfoPosY
+            // 
+            this.nudOverlayInfoPosY.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudOverlayInfoPosY.Location = new System.Drawing.Point(320, 147);
+            this.nudOverlayInfoPosY.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoPosY.Name = "nudOverlayInfoPosY";
+            this.nudOverlayInfoPosY.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoPosY.Size = new System.Drawing.Size(57, 20);
+            this.nudOverlayInfoPosY.TabIndex = 16;
+            // 
+            // label39
+            // 
+            this.label39.AutoSize = true;
+            this.label39.Location = new System.Drawing.Point(300, 149);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(14, 13);
+            this.label39.TabIndex = 15;
+            this.label39.Text = "Y";
+            // 
+            // nudOverlayInfoPosDFR
+            // 
+            this.nudOverlayInfoPosDFR.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudOverlayInfoPosDFR.Location = new System.Drawing.Point(219, 147);
+            this.nudOverlayInfoPosDFR.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoPosDFR.Name = "nudOverlayInfoPosDFR";
+            this.nudOverlayInfoPosDFR.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoPosDFR.Size = new System.Drawing.Size(57, 20);
+            this.nudOverlayInfoPosDFR.TabIndex = 14;
+            // 
+            // label40
+            // 
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(6, 149);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(94, 13);
+            this.label40.TabIndex = 13;
+            this.label40.Text = "Position of the info";
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(300, 123);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(14, 13);
+            this.label37.TabIndex = 12;
+            this.label37.Text = "Y";
+            // 
+            // nudOverlayTimerPosY
+            // 
+            this.nudOverlayTimerPosY.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudOverlayTimerPosY.Location = new System.Drawing.Point(320, 121);
+            this.nudOverlayTimerPosY.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudOverlayTimerPosY.Name = "nudOverlayTimerPosY";
+            this.nudOverlayTimerPosY.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudOverlayTimerPosY.Size = new System.Drawing.Size(57, 20);
+            this.nudOverlayTimerPosY.TabIndex = 11;
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Location = new System.Drawing.Point(199, 123);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(14, 13);
+            this.label36.TabIndex = 10;
+            this.label36.Text = "X";
+            // 
+            // nudOverlayTimerPosX
+            // 
+            this.nudOverlayTimerPosX.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudOverlayTimerPosX.Location = new System.Drawing.Point(219, 121);
+            this.nudOverlayTimerPosX.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudOverlayTimerPosX.Name = "nudOverlayTimerPosX";
+            this.nudOverlayTimerPosX.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudOverlayTimerPosX.Size = new System.Drawing.Size(57, 20);
+            this.nudOverlayTimerPosX.TabIndex = 9;
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(6, 123);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(104, 13);
+            this.label35.TabIndex = 8;
+            this.label35.Text = "Position of the timers";
+            // 
+            // cbInventoryCheck
+            // 
+            this.cbInventoryCheck.Location = new System.Drawing.Point(6, 85);
+            this.cbInventoryCheck.Name = "cbInventoryCheck";
+            this.cbInventoryCheck.Size = new System.Drawing.Size(305, 35);
+            this.cbInventoryCheck.TabIndex = 7;
+            this.cbInventoryCheck.Text = "Automatically extract inventory levels (needs working OCR and enabled overlay)";
+            this.cbInventoryCheck.UseVisualStyleBackColor = true;
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(6, 61);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(138, 13);
+            this.label21.TabIndex = 2;
+            this.label21.Text = "Display info in overlay for [s]";
+            // 
+            // nudOverlayInfoDuration
+            // 
+            this.nudOverlayInfoDuration.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudOverlayInfoDuration.Location = new System.Drawing.Point(150, 59);
+            this.nudOverlayInfoDuration.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoDuration.Name = "nudOverlayInfoDuration";
+            this.nudOverlayInfoDuration.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudOverlayInfoDuration.Size = new System.Drawing.Size(57, 20);
+            this.nudOverlayInfoDuration.TabIndex = 1;
+            this.nudOverlayInfoDuration.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // chkbSpeechRecognition
+            // 
+            this.chkbSpeechRecognition.AutoSize = true;
+            this.chkbSpeechRecognition.Location = new System.Drawing.Point(6, 36);
+            this.chkbSpeechRecognition.Name = "chkbSpeechRecognition";
+            this.chkbSpeechRecognition.Size = new System.Drawing.Size(123, 17);
+            this.chkbSpeechRecognition.TabIndex = 0;
+            this.chkbSpeechRecognition.Text = "Speech Recognition";
+            this.chkbSpeechRecognition.UseVisualStyleBackColor = true;
             // 
             // tabPageOCR
             // 
@@ -2895,6 +3028,63 @@
             this.panel1.Size = new System.Drawing.Size(758, 30);
             this.panel1.TabIndex = 12;
             // 
+            // nudBabyImprintAmountEvent
+            // 
+            this.nudBabyImprintAmountEvent.DecimalPlaces = 6;
+            this.nudBabyImprintAmountEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudBabyImprintAmountEvent.Location = new System.Drawing.Point(263, 149);
+            this.nudBabyImprintAmountEvent.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudBabyImprintAmountEvent.Name = "nudBabyImprintAmountEvent";
+            this.nudBabyImprintAmountEvent.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudBabyImprintAmountEvent.Size = new System.Drawing.Size(72, 20);
+            this.nudBabyImprintAmountEvent.TabIndex = 21;
+            this.nudBabyImprintAmountEvent.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label49
+            // 
+            this.label49.AutoSize = true;
+            this.label49.Location = new System.Drawing.Point(10, 151);
+            this.label49.Name = "label49";
+            this.label49.Size = new System.Drawing.Size(139, 13);
+            this.label49.TabIndex = 20;
+            this.label49.Text = "BabyImprintAmountMultiplier";
+            // 
+            // nudBabyImprintAmount
+            // 
+            this.nudBabyImprintAmount.DecimalPlaces = 6;
+            this.nudBabyImprintAmount.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudBabyImprintAmount.Location = new System.Drawing.Point(183, 149);
+            this.nudBabyImprintAmount.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudBabyImprintAmount.Name = "nudBabyImprintAmount";
+            this.nudBabyImprintAmount.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudBabyImprintAmount.Size = new System.Drawing.Size(72, 20);
+            this.nudBabyImprintAmount.TabIndex = 19;
+            this.nudBabyImprintAmount.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
             // Settings
             // 
             this.AcceptButton = this.buttonOK;
@@ -2962,6 +3152,7 @@
             this.groupBox26.PerformLayout();
             this.groupBox25.ResumeLayout(false);
             this.groupBox25.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicWidth)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudDefaultFontSize)).EndInit();
             this.groupBox24.ResumeLayout(false);
             this.groupBox24.PerformLayout();
@@ -2971,17 +3162,6 @@
             this.groupBox16.ResumeLayout(false);
             this.groupBox9.ResumeLayout(false);
             this.groupBox9.PerformLayout();
-            this.groupBox10.ResumeLayout(false);
-            this.groupBox10.PerformLayout();
-            this.pCustomOverlayLocation.ResumeLayout(false);
-            this.pCustomOverlayLocation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocY)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosY)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosDFR)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosY)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosX)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoDuration)).EndInit();
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
             this.tabPageImportSavegame.ResumeLayout(false);
@@ -3011,12 +3191,26 @@
             this.groupBox13.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExportFolders)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.aTExportFolderLocationsBindingSource)).EndInit();
+            this.tabPageOverlay.ResumeLayout(false);
+            this.groupBox10.ResumeLayout(false);
+            this.groupBox10.PerformLayout();
+            this.pCustomOverlayLocation.ResumeLayout(false);
+            this.pCustomOverlayLocation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoPosDFR)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayTimerPosX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoDuration)).EndInit();
             this.tabPageOCR.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaitBeforeScreenCapture)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWhiteThreshold)).EndInit();
             this.panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmountEvent)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmount)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -3233,5 +3427,17 @@
         private System.Windows.Forms.Button BtBeepSuccess;
         private System.Windows.Forms.Button BtImportArchiveFolder;
         private System.Windows.Forms.Button BtGetExportFolderAutomatically;
+        private System.Windows.Forms.CheckBox CbOverlayDisplayInheritance;
+        private System.Windows.Forms.Label label48;
+        private System.Windows.Forms.ComboBox CbbColorMode;
+        private uiControls.Nud nudInfoGraphicWidth;
+        private System.Windows.Forms.Label LbInfoGraphicSize;
+        private System.Windows.Forms.CheckBox CbApplyNamingPatternOnImportAlways;
+        private System.Windows.Forms.CheckBox CbHighlightLevelEvenOdd;
+        private System.Windows.Forms.CheckBox CbHighlightLevel255;
+        private System.Windows.Forms.TabPage tabPageOverlay;
+        private uiControls.Nud nudBabyImprintAmountEvent;
+        private System.Windows.Forms.Label label49;
+        private uiControls.Nud nudBabyImprintAmount;
     }
 }

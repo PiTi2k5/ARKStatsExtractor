@@ -125,7 +125,7 @@
   </data>
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>C'è già una creatura nella tua libreria che ha tutte le statistiche migliori disponibili ({0} {1}).
-La modalità di allevamento conservativo attualmente selezionata potrebbe mostrare alcuni suggerimenti che potrebbero sembrare non ottimali.Cambia la modalità di riproduzione in "Statistiche alte" per suggerimenti migliori.</value>
+La modalità di allevamento conservativo attualmente selezionata potrebbe mostrare alcuni suggerimenti che potrebbero sembrare non ottimali.Cambia la modalità di riproduzione in "Migliore prossima generazione" per suggerimenti migliori.</value>
   </data>
   <data name="ApproxOneNarcoberryEvery" xml:space="preserve">
     <value>Questo è appros. una Narcobacca ogni</value>
@@ -326,9 +326,6 @@ Se lo strumento riconosce il nome della specie, lo prenderà, altrimenti control
   <data name="Damage_Abb" xml:space="preserve">
     <value>Da</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>Tedesco</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>Creature morte</value>
   </data>
@@ -362,10 +359,7 @@ Se lo strumento riconosce il nome della specie, lo prenderà, altrimenti control
   <data name="ElectricProdHits" xml:space="preserve">
     <value>Colpi dal taser</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>English</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>Evento</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -467,9 +461,6 @@ Se lo strumento riconosce il nome della specie, lo prenderà, altrimenti control
   <data name="issueMaxWildLevelTooLow" xml:space="preserve">
     <value>L'estrazione è potenzialmente possibile, ma sembra che il livello selvatico massimo sia troppo basso per un'estrazione valida. Controlla se hai impostato il valore corretto nelle impostazioni.
 Il valore corrente è {0} e questa creatura sembra avere un livello selvatico più alto di questo.Per altri motivi del fallimento dell'estrazione, vedere l'elenco a destra dopo la chiusura di questo messaggio.</value>
-  </data>
-  <data name="it" xml:space="preserve">
-    <value>italiano</value>
   </data>
   <data name="lbBPBreedingScore" xml:space="preserve">
     <value>Punteggio allevamento</value>
@@ -913,12 +904,6 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
   <data name="WorstPossible" xml:space="preserve">
     <value>Peggiore Possibile</value>
   </data>
-  <data name="es" xml:space="preserve">
-    <value>Spagnolo</value>
-  </data>
-  <data name="zh" xml:space="preserve">
-    <value>cinese</value>
-  </data>
   <data name="settingsToolStripMenuItem" xml:space="preserve">
     <value>Impostazioni</value>
   </data>
@@ -948,5 +933,41 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>La cartella di esportazione di Steam non è stata rilevata automaticamente.</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>incubazione</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>nessun timer selezionato</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>messo in pausa</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>scaduta</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>matura</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>non più un bambino</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>L'estrazione non è riuscita. Vedere il seguente elenco di possibili cause</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>genitori</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>Lingua di sistema</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Livelli</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>Valori</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>generazione</value>
   </data>
 </root>

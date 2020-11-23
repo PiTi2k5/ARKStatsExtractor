@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using ARKBreedingStats.local;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -14,20 +16,9 @@ namespace ARKBreedingStats.uiControls
         /// <summary>
         /// Generate a creature name with the naming pattern.
         /// </summary>
-        public static string GenerateCreatureName(Creature creature, List<Creature> females, List<Creature> males, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true)
-        {
-            // collect creatures of the same species
-            var sameSpecies = (females ?? new List<Creature>()).Concat(males ?? new List<Creature>()).ToArray();
-
-            return GenerateCreatureName(creature, sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex, showTooLongWarning, pattern, displayError);
-        }
-
-        /// <summary>
-        /// Generate a creature name with the naming pattern.
-        /// </summary>
         public static string GenerateCreatureName(Creature creature, Creature[] sameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true, Dictionary<string, string> tokenDictionary = null)
         {
-            List<string> creatureNames = sameSpecies.Select(x => x.name).ToList();
+            var creatureNames = sameSpecies?.Select(x => x.name).ToArray() ?? new string[0];
             if (pattern == null)
             {
                 if (namingPatternIndex == -1)
@@ -62,6 +53,9 @@ namespace ARKBreedingStats.uiControls
                         creature.topness = (short)(creatureLevelSum * 1000f / topLevelSum);
                     else creature.topness = 1000;
                 }
+
+                if (tokenDictionary != null)
+                    tokenDictionary["topPercent"] = (creature.topness / 10f).ToString();
             }
 
             if (tokenDictionary == null)
@@ -194,10 +188,32 @@ namespace ARKBreedingStats.uiControls
                             }
                         }
                         return ParametersInvalid($"The expression for ifexpr invalid: \"{p1}\"");
+                    case "expr":
+                        // tries to calculate the result of the expression
+                        // possible operators are +, -, *, /
+                        match = Regex.Match(p1, @"\A\s*(\d+(?:\.\d*)?)\s*(\+|\-|\*|\/)\s*(\d+(?:\.\d*)?)\s*\Z");
+                        if (match.Success
+                            && double.TryParse(match.Groups[1].Value, out d1)
+                            && double.TryParse(match.Groups[3].Value, out d2)
+                            )
+                        {
+                            switch (match.Groups[2].Value)
+                            {
+                                case "+": return (d1 + d2).ToString();
+                                case "-": return (d1 - d2).ToString();
+                                case "*": return (d1 * d2).ToString();
+                                case "/": return d2 == 0 ? "divByZero" : (d1 / d2).ToString();
+                            }
+                        }
+                        return ParametersInvalid($"The expression for expr is invalid: \"{p1}\"");
+                    case "len":
+                        // returns the length of the parameter
+                        return p1.Length.ToString();
                     case "substring":
                         // check param number: 1: substring, 2: p1, 3: pos, 4: length
+                        if (!int.TryParse(m.Groups[3].Value, out var pos))
+                            return p1;
 
-                        int pos = Convert.ToInt32(m.Groups[3].Value);
                         bool fromEnd = pos < 0;
                         pos = Math.Min(Math.Abs(pos), p1.Length);
                         if (string.IsNullOrEmpty(m.Groups[4].Value))
@@ -219,24 +235,24 @@ namespace ARKBreedingStats.uiControls
                         // check param number: 1: format, 2: p1, 3: formatString
 
                         // only use last param
-                        string fmt_str = m.Groups[3].Value;
-                        if (!string.IsNullOrEmpty(fmt_str))
+                        string formatString = m.Groups[3].Value;
+                        if (!string.IsNullOrEmpty(formatString))
                         {
                             // convert to double
                             double value = Convert.ToDouble(p1);
                             // format it
-                            return value.ToString(fmt_str);
+                            return value.ToString(formatString);
                         }
                         else
                             return ParametersInvalid("No Format string given");
                     case "padleft":
                         // check param number: 1: padleft, 2: p1, 3: desired length, 4: padding char
 
-                        int pad_len = Convert.ToInt32(m.Groups[3].Value);
-                        string pad_char = m.Groups[4].Value;
-                        if (!string.IsNullOrEmpty(pad_char))
+                        int padLen = Convert.ToInt32(m.Groups[3].Value);
+                        string padChar = m.Groups[4].Value;
+                        if (!string.IsNullOrEmpty(padChar))
                         {
-                            return p1.PadLeft(pad_len, pad_char[0]);
+                            return p1.PadLeft(padLen, padChar[0]);
                         }
                         else
                         {
@@ -246,21 +262,21 @@ namespace ARKBreedingStats.uiControls
                     case "padright":
                         // check param number: 1: padright, 2: p1, 3: desired length, 4: padding char
 
-                        pad_len = Convert.ToInt32(m.Groups[3].Value);
-                        pad_char = m.Groups[4].Value;
-                        if (!string.IsNullOrEmpty(pad_char))
+                        padLen = Convert.ToInt32(m.Groups[3].Value);
+                        padChar = m.Groups[4].Value;
+                        if (!string.IsNullOrEmpty(padChar))
                         {
-                            return p1.PadRight(pad_len, pad_char[0]);
+                            return p1.PadRight(padLen, padChar[0]);
                         }
                         else
                             return ParametersInvalid($"No padding char given.");
                     case "float_div":
                         // returns an float after dividing the parsed number
                         // parameter: 1: div, 2: number, 3: divided by 4: format string
-                        double f_number = double.Parse(p1);
-                        double f_div = double.Parse(m.Groups[3].Value);
-                        if (f_div > 0)
-                            return ((f_number / f_div)).ToString(m.Groups[4].Value);
+                        double dividend = double.Parse(p1);
+                        double divisor = double.Parse(m.Groups[3].Value);
+                        if (divisor > 0)
+                            return ((dividend / divisor)).ToString(m.Groups[4].Value);
                         else
                             return ParametersInvalid("Division by 0");
                     case "div":
@@ -298,11 +314,15 @@ namespace ARKBreedingStats.uiControls
                         // parameter: 1: time, 2: format
                         return DateTime.Now.ToString(p1);
                     case "color":
-                        // parameter 1: region id (0,...,5), 2: if not empty, the color name instead of the numerical id is returned
+                        // parameter 1: region id (0,...,5), 2: if not empty, the color name instead of the numerical id is returned, 3: if not empty, the function will return also a value even if the color region is not used on that species.
                         if (!int.TryParse(p1, out int regionId)
                         || regionId < 0 || regionId > 5) return ParametersInvalid("color region id has to be a number in the range 0 - 5");
 
-                        if ((creature.colors?[regionId] ?? 0) == 0) return string.Empty; // no color info
+                        if (!creature.Species.EnabledColorRegions[regionId] &&
+                            string.IsNullOrWhiteSpace(m.Groups[4].Value))
+                            return string.Empty; // species does not use this region and user doesn't want it (param 3 is empty)
+
+                        if (creature.colors == null) return string.Empty; // no color info
                         if (string.IsNullOrWhiteSpace(m.Groups[3].Value))
                             return creature.colors[regionId].ToString();
                         return CreatureColors.CreatureColorName(creature.colors[regionId]);
@@ -316,55 +336,33 @@ namespace ARKBreedingStats.uiControls
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"The syntax of the following pattern function\n{m.Groups[0].Value}\ncannot be processed and will be ignored.\n\nSpecific error-message:\n{ex.Message}",
-                    $"Naming pattern function error - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ExceptionMessageBox(ex, $"The syntax of the following pattern function\n{m.Groups[0].Value}\ncannot be processed and will be ignored.", "Naming pattern function error");
             }
             return string.Empty;
 
             string ParametersInvalid(string specificError)
             {
                 if (displayError)
-                    MessageBox.Show($"The syntax of the following pattern function\n{m.Groups[0].Value}\ncannot be processed and will be ignored."
-                        + (string.IsNullOrEmpty(specificError) ? string.Empty : $"\n\nSpecific error:\n{specificError}"),
-                        $"Naming pattern function error - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxes.ShowMessageBox($"The syntax of the following pattern function\n{m.Groups[0].Value}\ncannot be processed and will be ignored."
+                                                  + (string.IsNullOrEmpty(specificError) ? string.Empty : $"\n\nSpecific error:\n{specificError}"),
+                        $"Naming pattern function error");
                 return displayError ? m.Groups[2].Value : specificError;
             }
         }
 
-        private static int StatIndexFromAbbreviation(string statAb)
-        {
-            switch (statAb)
-            {
-                case "hp": return (int)StatNames.Health;
-                case "st": return (int)StatNames.Stamina;
-                case "to": return (int)StatNames.Torpidity;
-                case "ox": return (int)StatNames.Oxygen;
-                case "fo": return (int)StatNames.Food;
-                case "wa": return (int)StatNames.Water;
-                case "te": return (int)StatNames.Temperature;
-                case "we": return (int)StatNames.Weight;
-                case "dm": return (int)StatNames.MeleeDamageMultiplier;
-                case "sp": return (int)StatNames.SpeedMultiplier;
-                case "fr": return (int)StatNames.TemperatureFortitude;
-                case "cr": return (int)StatNames.CraftingSpeedMultiplier;
-                default: return -1;
-            }
-        }
-
-        private static string[] StatAbbreviationFromIndex = new[]
-        {
-            "hp",
-            "st",
-            "to",
-            "ox",
-            "fo",
-            "wa",
-            "te",
-            "we",
-            "dm",
-            "sp",
-            "fr",
-            "cr"
+        private static readonly string[] StatAbbreviationFromIndex = {
+            "hp", // (int)StatNames.Health;
+            "st", // (int)StatNames.Stamina;
+            "to", // (int)StatNames.Torpidity;
+            "ox", // (int)StatNames.Oxygen;
+            "fo", // (int)StatNames.Food;
+            "wa", // (int)StatNames.Water;
+            "te", // (int)StatNames.Temperature;
+            "we", // (int)StatNames.Weight;
+            "dm", // (int)StatNames.MeleeDamageMultiplier;
+            "sp", // (int)StatNames.SpeedMultiplier;
+            "fr", // (int)StatNames.TemperatureFortitude;
+            "cr"  // (int)StatNames.CraftingSpeedMultiplier;
         };
 
 
@@ -373,22 +371,22 @@ namespace ARKBreedingStats.uiControls
         /// </summary>
         /// <param name="creature">Creature with the data</param>
         /// <param name="speciesCreatures">A list of all currently stored creatures of the species</param>
+        /// <param name="speciesTopLevels">top levels of that species</param>
+        /// <param name="speciesLowestLevels">lowest levels of that species</param>
         /// <returns>A dictionary containing all tokens and their replacements</returns>
         public static Dictionary<string, string> CreateTokenDictionary(Creature creature, Creature[] speciesCreatures, int[] speciesTopLevels, int[] speciesLowestLevels)
         {
-            string baselvl = creature.LevelHatched.ToString();
             string dom = creature.isBred ? "B" : "T";
 
             double imp = creature.imprintingBonus * 100;
             double eff = creature.tamingEff * 100;
 
             Random rand = new Random(DateTime.Now.Millisecond);
-            string randStr = rand.Next(100000, 999999).ToString();
+            string randStr = rand.Next(0, 999999).ToString("000000");
 
             string effImp = "Z";
-            string effImp_short = effImp;
             string prefix = string.Empty;
-            if (imp > 0)
+            if (creature.isBred)
             {
                 prefix = "I";
                 effImp = Math.Round(imp).ToString();
@@ -404,7 +402,7 @@ namespace ARKBreedingStats.uiControls
                 effImp = "0" + effImp;
             }
 
-            effImp_short = effImp;
+            string effImpShort = effImp;
             effImp = prefix + effImp;
 
             int generation = creature.generation;
@@ -415,15 +413,15 @@ namespace ARKBreedingStats.uiControls
                 );
 
             // the index of the creature in its generation, ordered by addedToLibrary
-            int nrInGeneration = speciesCreatures.Count(c => c.guid != creature.guid && c.addedToLibrary != null && c.generation == generation && (creature.addedToLibrary == null || c.addedToLibrary < creature.addedToLibrary)) + 1;
+            int nrInGeneration = (speciesCreatures?.Count(c => c.guid != creature.guid && c.addedToLibrary != null && c.generation == generation && (creature.addedToLibrary == null || c.addedToLibrary < creature.addedToLibrary)) ?? 0) + 1;
 
             int mutasn = creature.Mutations;
             string mutas = mutasn > 99 ? "99" : mutasn.ToString();
 
-            string old_name = creature.name;
+            string oldName = creature.name;
 
             string firstWordOfOldest = string.Empty;
-            if (speciesCreatures.Any())
+            if (speciesCreatures?.Any() ?? false)
             {
                 firstWordOfOldest = speciesCreatures.Where(c => c.addedToLibrary != null && !c.flags.HasFlag(CreatureFlags.Placeholder)).OrderBy(c => c.addedToLibrary).FirstOrDefault()?.name;
                 if (!string.IsNullOrEmpty(firstWordOfOldest) && firstWordOfOldest.Contains(" "))
@@ -433,11 +431,11 @@ namespace ARKBreedingStats.uiControls
 
                 if (creature.guid != Guid.Empty)
                 {
-                    old_name = speciesCreatures.FirstOrDefault(c => c.guid == creature.guid)?.name ?? creature.name;
+                    oldName = speciesCreatures.FirstOrDefault(c => c.guid == creature.guid)?.name ?? creature.name;
                 }
                 else if (creature.ArkId != 0)
                 {
-                    old_name = speciesCreatures.FirstOrDefault(c => c.ArkId == creature.ArkId)?.name ?? creature.name;
+                    oldName = speciesCreatures.FirstOrDefault(c => c.ArkId == creature.ArkId)?.name ?? creature.name;
                 }
             }
 
@@ -446,8 +444,8 @@ namespace ARKBreedingStats.uiControls
             while (spcsNm.LastIndexOfAny(vowels) > 0)
                 spcsNm = spcsNm.Remove(spcsNm.LastIndexOfAny(vowels), 1); // remove last vowel (not the first letter)
 
-            int speciesCount = speciesCreatures.Length + 1;
-            int speciesSexCount = speciesCreatures.Count(c => c.sex == creature.sex) + 1;
+            int speciesCount = (speciesCreatures?.Length ?? 0) + 1;
+            int speciesSexCount = (speciesCreatures?.Count(c => c.sex == creature.sex) ?? 0) + 1;
             string arkid = string.Empty;
             if (creature.ArkId != 0)
             {
@@ -461,14 +459,14 @@ namespace ARKBreedingStats.uiControls
                 }
             }
 
-            string index_str = string.Empty;
-            if (creature.guid != Guid.Empty)
+            string indexStr = string.Empty;
+            if (creature.guid != Guid.Empty && (speciesCreatures?.Any() ?? false))
             {
                 for (int i = 0; i < speciesCreatures.Length; i++)
                 {
                     if (creature.guid == speciesCreatures[i].guid)
                     {
-                        index_str = (i + 1).ToString();
+                        indexStr = (i + 1).ToString();
                         break;
                     }
                 }
@@ -483,7 +481,7 @@ namespace ARKBreedingStats.uiControls
             }
             levelOrder = levelOrder.OrderByDescending(l => l.Item2).ToList();
 
-            // replace tokens in user configurated pattern string
+            // replace tokens in user configured pattern string
             var dict = new Dictionary<string, string>
             {
                 { "species", creature.Species.name },
@@ -497,27 +495,28 @@ namespace ARKBreedingStats.uiControls
                 { "sex", creature.sex.ToString() },
                 { "sex_short", creature.sex.ToString().Substring(0, 1) },
 
-                { "effImp_short", effImp_short},
-                { "index", index_str},
-                { "oldname", old_name },
+                { "effImp_short", effImpShort},
+                { "index", indexStr},
+                { "oldname", oldName },
                 { "sex_lang",   Loc.S(creature.sex.ToString()) },
                 { "sex_lang_short", Loc.S(creature.sex.ToString()).Substring(0, 1) },
                 { "sex_lang_gen",   Loc.S(creature.sex.ToString() + "_gen") },
                 { "sex_lang_short_gen", Loc.S(creature.sex.ToString() + "_gen").Substring(0, 1) },
 
                 { "topPercent" , (creature.topness / 10f).ToString() },
-                { "baselvl" , baselvl },
+                { "baselvl" , creature.LevelHatched.ToString() },
                 { "effImp" , effImp },
                 { "muta", mutas},
                 { "gen", generation.ToString()},
-                { "gena", Dec2hexvig(generation)},
-                { "genn", (speciesCreatures.Count(c=>c.generation==generation) + 1).ToString()},
+                { "gena", Dec2Hexvig(generation)},
+                { "genn", (speciesCreatures?.Count(c=>c.generation==generation) ?? 0 + 1).ToString()},
                 { "nr_in_gen", nrInGeneration.ToString()},
                 { "rnd", randStr },
                 { "tn", speciesCount.ToString()},
                 { "sn", speciesSexCount.ToString()},
                 { "dom", dom},
                 { "arkid", arkid },
+                { "alreadyExists", speciesCreatures.Contains(creature) ? "1" : string.Empty },
                 { "highest1l", levelOrder[0].Item2.ToString() },
                 { "highest2l", levelOrder[1].Item2.ToString() },
                 { "highest3l", levelOrder[2].Item2.ToString() },
@@ -550,11 +549,11 @@ namespace ARKBreedingStats.uiControls
         }
 
         /// <summary>
-        /// Convertes an integer to a hexavigesimal representation using letters.
+        /// Converts an integer to a hexavigesimal representation using letters.
         /// </summary>
         /// <param name="number"></param>
         /// <returns></returns>
-        private static string Dec2hexvig(int number)
+        private static string Dec2Hexvig(int number)
         {
             string r = string.Empty;
             number++;

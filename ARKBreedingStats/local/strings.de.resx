@@ -285,9 +285,6 @@ Die angezeigten Level werden ohne Validierung angezeigt und gelten nur für wild
   <data name="Damage" xml:space="preserve">
     <value>Schaden</value>
   </data>
-  <data name="de" xml:space="preserve">
-    <value>Deutsch</value>
-  </data>
   <data name="deadCreaturesToolStripMenuItem" xml:space="preserve">
     <value>Tote Kreaturen</value>
   </data>
@@ -324,10 +321,7 @@ Die angezeigten Level werden ohne Validierung angezeigt und gelten nur für wild
   <data name="ElectricProdHits" xml:space="preserve">
     <value>Electric Prod Hits</value>
   </data>
-  <data name="en" xml:space="preserve">
-    <value>Englisch</value>
-  </data>
-  <data name="Event_" xml:space="preserve">
+  <data name="Event" xml:space="preserve">
     <value>Event</value>
   </data>
   <data name="exportValuesToClipboardToolStripMenuItem" xml:space="preserve">
@@ -801,7 +795,7 @@ Wenn eine Nummer mit Plus-Zeichen angezeigt wird, ist die Summe zu hoch, und ein
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
     <value>Es gibt bereits eine Kreatur, die alle verfügbaren Top-Stats besitzt ({0} {1}).
 Der aktuell gewählte konservative Zucht-Modus könnte einige suboptimale Vorschläge anzeigen.
-Wähle den "Hohe-Stats"-Modus aus, um bessere Vorschläge zu erhalten.</value>
+Wähle den "Beste nächste Generation"-Modus aus, um bessere Vorschläge zu erhalten.</value>
   </data>
   <data name="Baby" xml:space="preserve">
     <value>Baby</value>
@@ -924,9 +918,6 @@ Wählen, um die Top stats in einer Kreature zu vereinen. Dieser Modus geht ein R
   <data name="Available" xml:space="preserve">
     <value>Verfügbar</value>
   </data>
-  <data name="fr" xml:space="preserve">
-    <value>Französisch</value>
-  </data>
   <data name="HarpoonLauncher" xml:space="preserve">
     <value>Harpunenschleuder</value>
   </data>
@@ -944,9 +935,6 @@ Wählen, um die Top stats in einer Kreature zu vereinen. Dieser Modus geht ein R
   </data>
   <data name="lbImprintingFailInfo" xml:space="preserve">
     <value>Wenn die Kreatur geprägt wurde, kann die Extraktion fehlschlagen, weil das Spiel manchmal "vergisst" einige Stat-Werte während des Prägungs-Prozesses zu erhöhen. Oft funktioniert die Extraktion, nachdem das Tier in und wieder aus einem Cryopod genommen wurde, nachdem es in einem Obelisken/Terminal hoch- und wieder heruntergeladen wurde, nachdem du aus der Render-Entfernung gegangen bist, oder nach einem Server-Neustart.</value>
-  </data>
-  <data name="it" xml:space="preserve">
-    <value>Italienisch</value>
   </data>
   <data name="Crafting Speed" xml:space="preserve">
     <value>Herstellungsgeschwindigkeit</value>
@@ -974,12 +962,6 @@ Wählen, um die Top stats in einer Kreature zu vereinen. Dieser Modus geht ein R
   </data>
   <data name="btUpdateLibraryCreature" xml:space="preserve">
     <value>Kreatur aktualisieren</value>
-  </data>
-  <data name="es" xml:space="preserve">
-    <value>Spanisch</value>
-  </data>
-  <data name="zh" xml:space="preserve">
-    <value>Chinesisch</value>
   </data>
   <data name="CurrentCreature" xml:space="preserve">
     <value>Ausgewählte Kreatur</value>
@@ -1223,5 +1205,47 @@ Diese kann mit BSS Preset angewandt werden.</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
     <value>Der Export-Ordner von Steam konnte nicht automatisch ermittelt werden.</value>
+  </data>
+  <data name="incubation" xml:space="preserve">
+    <value>Inkubation</value>
+  </data>
+  <data name="noTimerSelected" xml:space="preserve">
+    <value>kein Timer ausgewählt</value>
+  </data>
+  <data name="paused" xml:space="preserve">
+    <value>pausiert</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>abgelaufen</value>
+  </data>
+  <data name="mature" xml:space="preserve">
+    <value>ausgewachsen</value>
+  </data>
+  <data name="notABabyAnymore" xml:space="preserve">
+    <value>kein Baby mehr</value>
+  </data>
+  <data name="issueCauseModValues" xml:space="preserve">
+    <value>Wenn die Kreatur von einem Mod stammt, müssen eventuell die entsprechenden Mod-Werte in dieser App geladen werden (Einstellungen - Lade Mod Werte).</value>
+  </data>
+  <data name="extractionFailedHeader" xml:space="preserve">
+    <value>Die Level Bestimmung ist fehlgeschlagen. Überprüfe die folgende List möglicher Ursachen</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Eltern</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>Systemsprache</value>
+  </data>
+  <data name="max wild level" xml:space="preserve">
+    <value>max wild Level</value>
+  </data>
+  <data name="Values" xml:space="preserve">
+    <value>Werte</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="generation" xml:space="preserve">
+    <value>Generation</value>
   </data>
 </root>
