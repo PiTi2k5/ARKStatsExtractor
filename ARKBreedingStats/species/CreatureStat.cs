@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace ARKBreedingStats.species
 {
@@ -9,7 +10,7 @@ namespace ARKBreedingStats.species
         public double IncPerWildLevel;
         public double IncPerTamedLevel;
         public double AddWhenTamed;
-        public double MultAffinity; // used with taming effectiveness
+        public double MultAffinity;
     }
 
     public enum StatNames

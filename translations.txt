@@ -1,4 +1,5 @@
 aboutToolStripMenuItem	about…
+Add Note  Add Note
 added	Added
 addedAt  Added at
 All  All
@@ -11,6 +12,7 @@ Available	Available
 Baby	Baby
 BestPossible	Best Possible
 BestPossibleSpeciesLibrary  Best possible {0} for this library
+BestPossibleSpeciesLibraryFiltered  Best possible {0} for this filter
 Body	Body
 BonusLevel	Bonus Level
 Bow	Bow
@@ -62,6 +64,7 @@ C3	C3
 C4	C4
 C5	C5
 Cancel	Cancel
+Cancel quitting  Cancel quitting
 cbBPMutationLimitOnlyOnePartner  One partner may have more mutations
 cbBPOnlyOneSuggestionForFemales  Only best suggestion for females
 cbBPTagExcludeDefaultTT	"Check if all creatures should be excluded and only be included when have the include-mark on their tag.
@@ -88,8 +91,12 @@ checkForUpdatedStatsToolStripMenuItem	Check for Updates
 clear  Clear
 clearColors  clear colors
 clearColorsFilters  Clear Color Filters
+ClickDisplayFile  Click to show file in explorer
 Club	Club
 cnBPIncludeCooldowneds	Include Creatures with Cooldown
+Collection changed discard and load?  Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and load the file without saving first?
+Collection changed discard and new?  Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and create a new Library without saving?
+Collection changed discard and quit?  Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and quit without saving?
 Colors	Colors
 cooldown	Cooldown
 cooldownGrowing	Cooldown/Growing
@@ -106,12 +113,15 @@ currentStatValue	Current stat-value
 currentValue	Current Value
 Damage	Damage
 Damage_Abb	Dm
-de	German
 deadCreaturesToolStripMenuItem	Dead Creatures
 Default	Default
 deleteSelectedToolStripMenuItem	Remove…
 Descendants  Descendants
 Details	Details
+Discard changes?  Discard changes?
+Discard changes and load file  Discard changes and load new library
+Discard changes and new  Discard changes and create new library
+Discard changes and quit  Discard changes and quit
 domesticatedAt	Domesticated at
 domLevelExplanation	Levels assigned manually to this stat after the creature was domesticated
 domLvl	Dom-Lvl
@@ -120,12 +130,10 @@ editToolStripMenuItem	Edit
 Egg	Egg
 ElectricProd	Electric Prod
 ElectricProdHits	Electric Prod Hits
-en	English
 error  Error
-es	Spanish
 Event	Event
 expired  expired
-ExportFolderDetectionFailed  The export folder of Steam couldn't be detected automatically.
+ExportFolderDetectionFailed  The export folder for exported creatures couldn't be detected automatically.
 exportValuesToClipboardToolStripMenuItem	Export to Clipboard
 extractionFailedHeader  The extraction failed. See the following list of possible causes
 extractionIssuesToolStripMenuItem	Extraction Issues…
@@ -145,12 +153,12 @@ Food_Abb	Fo
 FoodHasToDropUnits	Food has to drop by {0} units.
 Fortitude Fortitude
 Fortitude_Abb Fr
-fr	French
 gbBPBreedingMode	Breeding-Mode
 gbBPOffspring	Offspring
 gbCreatureInfo	Creature-info
 gbKOInfo	Knockout Info
 gbWeaponDamage	Weapon Damage [%]
+generation  generation
 Generation_Abb	Gen
 gpPreviewEdit	Preview / Edit
 gpStarvingTime	Starving-Time
@@ -170,6 +178,7 @@ importExportedCreaturesToolStripMenuItem	Import exported Creatures
 importingFromARKToolsToolStripMenuItem	Importing from ARK-Tools
 importingFromSavegameEmptyToolStripMenuItem	At first configure "Import Savegame"
 importingFromSavegameToolStripMenuItem	Importing from savegame
+ImportingSavegame  Importing savegame
 importValuesFromClipboardToolStripMenuItem	Import Values from Clipboard
 imprintingBonus	Imprinting Bonus
 incubation  incubation
@@ -187,7 +196,7 @@ issueCauseModValues  If the creature is from a mod, you may need to enable the a
 issueCauseOutdatedIngameValues  The stats of the creature were changed recently and the game displays the old values. Level up a stat, that should trigger a recalculation of the values.
 issueCauseSingleplayer  If you have enabled the Singleplayer-Settings in the game, make sure the according checkbox is enabled in the settings in this application as well.
 issueCauseStatMultipliers  The stat multipliers in the Settings are not set to the multipliers of the server. Ask your admin for the correct multipliers and adjust them in the Settings.
-issueCauseTamingEffectivenessRange  Taming-Effectiveness-Range too narrow, increase the upper and / or decrase the lower bound.
+issueCauseTamingEffectivenessRange  Taming-Effectiveness-Range too narrow, increase the upper and / or decrease the lower bound.
 issueCauseTypo  Double check if all stat-values are entered correctly.
 issueCauseWildLevelSteps  Adjust or disable the "Consider Wild-level - steps" in the settings.
 issueCauseWildTamedBred  Make sure the correct state (wild, tamed, bred) for the creature is chosen.
@@ -195,9 +204,8 @@ issueMaxWildLevelTooLow	"The extraction is potentially possible, but it seems th
 The current value is {0} and this creature seems to have a higher wild level than this.
 
 For other reasons of the failing of the extraction, see the list on the right after closing this messagebox."
-it Italian
 lbBPBreedingScore	Breeding Score
-lbBPBreedingScoreTT	"The Breeding-Score of a paring is not comparable to the Breeding-Score of another breeding-mode.
+lbBPBreedingScoreTT	"The Breeding-Score of a pairing is not comparable to the Breeding-Score of another breeding-mode.
 The numbers in the different modes are generated in incompatible ways."
 lbBPBreedingTimes	Breeding Times
 lbCurrentTorpor	Current Torpor
@@ -230,6 +238,7 @@ Enable it if the OCR doesn't recognize the tribe-name correctly and you want to 
 lbUsed	used
 Level	Level
 Level_Abb	Lvl
+Levels  Levels
 LevelWild_Abb	LW
 library	Library
 libraryFilter  Library Filter
@@ -242,6 +251,7 @@ malesToolStripMenuItem	Males
 matingTime  Mating Time
 Maturation	Maturation
 mature  mature
+max wild level  max wild level
 modValueManagerToolStripMenuItem	Load additional values…
 Mother	Mother
 multiSetterToolStripMenuItem	MultiSetter…
@@ -286,6 +296,7 @@ ownerFilterFromLibrary  Owner filter from library
 owners  owners
 Oxygen	Oxygen
 Oxygen_Abb	Ox
+Parents  Parents
 pasteCreatureToolStripMenuItem	Paste Creature
 paused  paused
 pedigree	Pedigree
@@ -309,6 +320,7 @@ Some offsprings might be worse than in High-Stats-Mode, but that's the mode you 
 rbBPTopStatsTT	"Combine top stats lucky
 Check for best long-term-results and if you're feeling lucky. It can be faster to get the perfect creature than in the Top-Stat-Conservative-Mode if you're lucky.
 Some offsprings might be worse than in High-Stats-Mode, but you also have a chance to the best possible offspring."
+Remove Note  Remove Note
 runDefaultExtractionAndImportFileToolStripMenuItem	Run default Extraction and import file
 runDefaultExtractionToolStripMenuItem	Run default Extraction
 saveAsToolStripMenuItem	Save &as...
@@ -334,6 +346,7 @@ statChart	Stat-Chart
 Stats	Stats
 statTesting	Stat Testing
 Status	Status
+SystemLanguage  System Language
 tags  tags
 Tail	Tail
 tamed	Tamed
@@ -351,16 +364,25 @@ timerWakeupOf	Wakeup of
 TimeUntilFeedingAllFood	Time until you can feed all needed food in one go
 timeUntilStarving	Time until starving:
 TimeUntilTorporDepleted	Time until max torpor is depleted
-toolStripButtonAddNote	Add Note
 toolStripButtonClear	Clear
 toolStripButtonCopy2Extractor	Copy to Extractor
 toolStripButtonCopy2Tester	Copy to Tester
 toolStripButtonDeleteExpiredIncubationTimers	Delete All Expired
 toolStripButtonDeleteTempCreature	Delete temp Cr
 toolStripButtonDeleteTempCreatureTT	Delete currently selected data of the temporary creature
-toolStripButtonRemoveNote	Remove Note
 toolStripButtonSaveCreatureValuesTemp	Save values
 toolStripButtonSaveCreatureValuesTempTT	Save entered values until extraction-issue is resolved. This creature cannot be used in other parts of this application until it is properly extracted.
+ToolStripLabelFilter  Filter
+ToolStripLabelFilterTT  "Filters the library. Multiple search words are separated by commas. Considered are the creature's
+Name
+Owner
+Tribe
+Note
+Ark id in game
+Server
+Tags
+Filter for a stats with {statAbb} [==|&lt;|&gt;] {value}, e.g. hp &gt; 20, st == 35
+Filter for colors with c{region}: {colorValue} {colorValue2}, e.g. c0: 20, c5: 3 4 5 6, c1: 13 14"
 Top	Top
 topLevel  top level
 topPercentage	Tp%
@@ -383,6 +405,7 @@ unknownSpecies  unknown species
 until until
 updateSuccessTitle  Update successful
 useFilterInTopStatCalculation  Use filter in top stat calculation
+Values  Values
 valuesFileLoadingError  The species values-file couldn't be loaded, this application does not work without. Try redownloading the tool.
 VariantSelector  Variant Selector
 VariantSelectorInfo  Species that contain one variant that is unchecked will be hidden.
@@ -399,4 +422,3 @@ wildLvl	Wild-Lvl
 WithXFoodTamingTakesTime	With {0} × {1} taming takes {2}
 WoodenClubHits	Wooden Club Hits
 WorstPossible	Worst Possible
-zh Chinese

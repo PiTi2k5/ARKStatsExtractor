@@ -3,12 +3,9 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -203,6 +200,7 @@ namespace ARKBreedingStats
             _creatureTesterEdit.mutationsPaternal = creatureInfoInputTester.MutationCounterFather;
             _creatureTesterEdit.colors = creatureInfoInputTester.RegionColors;
             _creatureTesterEdit.ArkId = creatureInfoInputTester.ArkId;
+            _creatureTesterEdit.InitializeArkInGame();
 
             if (wildChanged)
                 CalculateTopStats(_creatureCollection.creatures.Where(c => c.Species == _creatureTesterEdit.Species).ToList());
@@ -224,7 +222,7 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Set the values in the creatureInfoInput control to the values of the creature.
+        /// Set the values in the creatureInfoInput control to the values of the creature or clears the inputs.
         /// </summary>
         /// <param name="c"></param>
         /// <param name="virtualCreature"></param>
@@ -293,7 +291,10 @@ namespace ARKBreedingStats
                     ClearAll();
                     // copy values over to extractor
                     for (int s = 0; s < Values.STATS_COUNT; s++)
+                    {
                         _statIOs[s].Input = onlyWild ? StatValueCalculation.CalculateValue(species, s, c.levelsWild[s], 0, true, c.tamingEff, c.imprintingBonus) : c.valuesDom[s];
+                        if (c.levelsDom[s] > 0) _statIOs[s].DomLevelLockedZero = false;
+                    }
                     speciesSelector1.SetSpecies(species);
 
                     if (c.isBred)

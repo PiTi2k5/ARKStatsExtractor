@@ -679,17 +679,19 @@ Se viene visualizzato un numero con un segno più, la somma è troppo alta e dev
 La possibilità di avere una buona creatura generale è migliore.Verifica se non è importante avere stat al top della prole.</value>
   </data>
   <data name="rbBPTopStats" xml:space="preserve">
-    <value>Stat top Lc</value>
+    <value>Stat al top, Mi sento fortunato</value>
   </data>
   <data name="rbBPTopStatsCn" xml:space="preserve">
-    <value>Stat top Cn</value>
+    <value>Stat al top, Prudente</value>
   </data>
   <data name="rbBPTopStatsCnTT" xml:space="preserve">
-    <value>Stat al top, Prudente.Controlla i migliori risultati a lungo termine e se vuoi andare sul sicuro.
+    <value>Stat al top, Prudente.
+Controlla i migliori risultati a lungo termine e se vuoi andare sul sicuro.
 Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune progenie potrebbero essere peggiori di quelle in Modalità alta qualità, ma questa è la modalità che usi se vuoi avere quella creatura perfetta in alcune generazioni.</value>
   </data>
   <data name="rbBPTopStatsTT" xml:space="preserve">
-    <value>Stat al top, Mi sento fortunato.Controlla i migliori risultati a lungo termine e se ti senti fortunato. Può essere più veloce per ottenere la creatura perfetta rispetto nella modalità Stat al top coservatore se sei fortunato.Alcune progenie potrebbero essere peggiori di quelle in Modalità alta qualità, ma hai anche una possibilità per la migliore prole possibile.</value>
+    <value>Stat al top, Mi sento fortunato.
+Controlla i migliori risultati a lungo termine e se ti senti fortunato. Può essere più veloce per ottenere la creatura perfetta rispetto nella modalità Stat al top coservatore se sei fortunato.Alcune progenie potrebbero essere peggiori di quelle in Modalità alta qualità, ma hai anche una possibilità per la migliore prole possibile.</value>
   </data>
   <data name="runDefaultExtractionAndImportFileToolStripMenuItem" xml:space="preserve">
     <value>Esegui l'estrazione di default e importare il file</value>
@@ -799,9 +801,6 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
   <data name="TimeUntilTorporDepleted" xml:space="preserve">
     <value>Tempo fino al massimo torpore esaurito</value>
   </data>
-  <data name="toolStripButtonAddNote" xml:space="preserve">
-    <value>Aggiungi nota</value>
-  </data>
   <data name="toolStripButtonClear" xml:space="preserve">
     <value>Pulisci</value>
   </data>
@@ -820,7 +819,7 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
   <data name="toolStripButtonDeleteTempCreatureTT" xml:space="preserve">
     <value>Elimina i dati attualmente selezionati della creatura temporanea</value>
   </data>
-  <data name="toolStripButtonRemoveNote" xml:space="preserve">
+  <data name="Remove Note" xml:space="preserve">
     <value>Rimuovi nota</value>
   </data>
   <data name="toolStripButtonSaveCreatureValuesTemp" xml:space="preserve">
@@ -932,7 +931,7 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
     <value>Imposta automaticamente la cartella di esportazione</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
-    <value>La cartella di esportazione di Steam non è stata rilevata automaticamente.</value>
+    <value>La cartella di esportazione non è stata rilevata automaticamente.</value>
   </data>
   <data name="incubation" xml:space="preserve">
     <value>incubazione</value>
@@ -969,5 +968,8 @@ Questa modalità arriverà alla miglior prole possibile, ferma e sicura.Alcune p
   </data>
   <data name="generation" xml:space="preserve">
     <value>generazione</value>
+  </data>
+  <data name="Add Note" xml:space="preserve">
+    <value>Aggiungi nota</value>
   </data>
 </root>

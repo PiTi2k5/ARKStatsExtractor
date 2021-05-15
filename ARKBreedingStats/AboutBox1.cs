@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -86,7 +87,7 @@ namespace ARKBreedingStats
 
         private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/cadon/ARKStatsExtractor");
+            System.Diagnostics.Process.Start(RepositoryInfo.RepositoryUrl);
         }
 
         private string Contributors => @"Thanks for contributions, help and support to
@@ -106,12 +107,16 @@ namespace ARKBreedingStats
 * EmkioA (Cryopod import, listView tweaks)
 * dunger (fixes)
 * Myrmecoleon (extra species images)
+* Lunat1q (improved OCR)
 
 Translations:
 * French by Vykan and Yanuut
 * Italian by Zaffira and Spit-Biago
 * German by cadon
 * Spanish by KRIPT4
-* Chinese by MicheaBoab";
+* Chinese by MicheaBoab
+* Russian by SoulSuspect
+* Polish by alex4401
+* Japanese by maririyuzu";
     }
 }

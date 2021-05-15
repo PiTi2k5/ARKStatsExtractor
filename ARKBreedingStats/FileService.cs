@@ -13,15 +13,20 @@ namespace ARKBreedingStats
         public const string ValuesJson = "values.json";
         public const string ValuesServerMultipliers = "serverMultipliers.json";
         public const string TamingFoodData = "tamingFoodData.json";
-        public const string ModsManifest = "_manifest.json";
+        public const string ManifestFileName = "_manifest.json";
         public const string ModsManifestCustom = "_manifestCustom.json";
         public const string KibblesJson = "kibbles.json";
         public const string AliasesJson = "aliases.json";
         public const string IgnoreSpeciesClasses = "ignoreSpeciesClasses.json";
         public const string CustomReplacingsNamePattern = "customReplacings.json";
         public const string CustomSpeciesVariants = "customSpeciesVariants.json";
-        public const string ImageFolderName = "img";
+        public const string DataFolderName = "data";
+
+        /// <summary>
+        /// Where the colored species images are cached.
+        /// </summary>
         public const string CacheFolderName = "cache";
+        public const string OcrFolderName = "ocr";
 
         public static readonly string ExeFilePath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
         private static readonly string ExeLocation = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
@@ -40,9 +45,9 @@ namespace ARKBreedingStats
         /// Gets the full path for the given filename or the path to the application data folder.
         /// If fileName2 is given, fileName is considered to be the containing folder.
         /// </summary>
-        /// <returns></returns>
-        public static string GetPath(string fileName = null, string fileName2 = null, string fileName3 = null)
-            => Path.Combine(Updater.IsProgramInstalled ? GetLocalApplicationDataPath() : ExeLocation, fileName ?? string.Empty, fileName2 ?? string.Empty, fileName3 ?? string.Empty);
+        /// <param name="useAppData">If true, the %localAppData%-folder is used regardless of installed or portable version.</param>
+        public static string GetPath(string fileName = null, string fileName2 = null, string fileName3 = null, bool useAppData = false)
+            => Path.Combine(useAppData || Updater.Updater.IsProgramInstalled ? GetLocalApplicationDataPath() : ExeLocation, fileName ?? string.Empty, fileName2 ?? string.Empty, fileName3 ?? string.Empty);
 
 
         /// <summary>
@@ -63,14 +68,22 @@ namespace ARKBreedingStats
         /// <summary>
         /// Saves an object to a json-file.
         /// </summary>
-        public static bool SaveJsonFile(string filePath, object data, out string errorMessage)
+        public static bool SaveJsonFile(string filePath, object data, out string errorMessage, Newtonsoft.Json.JsonConverter converter = null)
         {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                errorMessage = "File path is empty.\nCouldn't be saved.";
+                return false;
+            }
+
             errorMessage = null;
             try
             {
                 using (StreamWriter sw = File.CreateText(filePath))
                 {
                     var ser = new Newtonsoft.Json.JsonSerializer();
+                    if (converter != null)
+                        ser.Converters.Add(converter);
                     ser.Serialize(sw, data);
                 }
                 return true;
@@ -85,7 +98,7 @@ namespace ARKBreedingStats
         /// <summary>
         /// Loads a serialized object from a json-file.
         /// </summary>
-        public static bool LoadJsonFile<T>(string filePath, out T data, out string errorMessage) where T : class
+        public static bool LoadJsonFile<T>(string filePath, out T data, out string errorMessage, Newtonsoft.Json.JsonConverter converter = null) where T : class
         {
             errorMessage = null;
             data = null;
@@ -96,6 +109,8 @@ namespace ARKBreedingStats
                 using (StreamReader sr = File.OpenText(filePath))
                 {
                     var ser = new Newtonsoft.Json.JsonSerializer();
+                    if (converter != null)
+                        ser.Converters.Add(converter);
                     data = (T)ser.Deserialize(sr, typeof(T));
                     if (data != null)
                         return true;
@@ -138,9 +153,10 @@ namespace ARKBreedingStats
         /// <summary>
         /// Tries to delete a file, doesn't throw an exception when failing.
         /// </summary>
+        /// <returns>True if the file is not existing after this method ends.</returns>
         public static bool TryDeleteFile(string filePath)
         {
-            if (!File.Exists(filePath)) return false;
+            if (!File.Exists(filePath)) return true;
             try
             {
                 File.Delete(filePath);
@@ -248,7 +264,7 @@ namespace ARKBreedingStats
         /// <returns></returns>
         internal static bool IsValidJsonFile(string filePath)
         {
-            if (!File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 return false;
 
             string fileContent = File.ReadAllText(filePath);

@@ -14,9 +14,12 @@ namespace ARKBreedingStats.values
     class TamingFoodData
     {
         [JsonProperty]
-        private string format = string.Empty; // must be present and a supported value
+        private string format; // must be present and a supported value
         [JsonProperty]
-        private string version = string.Empty; // must be present and a supported value
+        private string version; // must be present and a supported value
+
+        private static bool IsValidFormat(string formatVersion) => formatVersion == "1.13";
+
         /// <summary>
         /// The key is the species name, so it can be used for modded species with the same name, they often have the same taming-data.
         /// The value is a dictionary with the food-name as key and TamingFood info as value.
@@ -37,7 +40,7 @@ namespace ARKBreedingStats.values
 
             if (File.Exists(filePath) && FileService.LoadJsonFile(filePath, out TamingFoodData readData, out errorMessage))
             {
-                if (Values.IsValidFormatVersion(readData.format))
+                if (IsValidFormat(readData.format))
                 {
                     tamingFoodData = readData.tamingFoodData;
                     return tamingFoodData != null;
@@ -49,7 +52,7 @@ namespace ARKBreedingStats.values
                         "The taming info will be incomplete without that file.\n\n" +
                         "Do you want to visit the releases page to redownload it?",
                         $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
-                    System.Diagnostics.Process.Start(Updater.ReleasesUrl);
+                    System.Diagnostics.Process.Start(Updater.Updater.ReleasesUrl);
             }
 
             return false;

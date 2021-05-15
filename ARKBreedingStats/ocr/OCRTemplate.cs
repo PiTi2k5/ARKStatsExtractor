@@ -2,126 +2,124 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using ARKBreedingStats.ocr.PatternMatching;
 using ARKBreedingStats.utils;
+using Newtonsoft.Json;
 
 namespace ARKBreedingStats.ocr
 {
-    [DataContract]
-    public class OCRTemplate
+    [JsonObject(MemberSerialization.OptIn)]
+    public class OcrTemplate
     {
-        [DataMember]
-        public string description = string.Empty;
-        [DataMember]
+        /// <summary>
+        /// Format version of the OCR template.
+        /// </summary>
+        [JsonProperty]
+        public Version Version;
+        private const string CurrentVersion = "2.0";
+        [JsonProperty]
+        public string description;
+        [JsonProperty]
         public double resize = 1;
-        [DataMember]
+        [JsonProperty]
         public int resolutionWidth;
-        [DataMember]
+        [JsonProperty]
         public int resolutionHeight;
-        [DataMember]
+        [JsonProperty]
         public int statDistance;
-        [DataMember]
-        public int guiZoom = 100; // todo name / float? percentage? decimals?
-        [DataMember]
-        public List<int> fontSizes = new List<int>();
-        [DataMember]
-        public List<List<uint[]>> letterArrays = new List<List<uint[]>>();
-        [DataMember]
-        public List<List<char>> letters = new List<List<char>>();
-        [DataMember]
-        public List<Rectangle> labelRectangles = new List<Rectangle>();
-        public Dictionary<string, int> labelNameIndices = new Dictionary<string, int>();
-        public List<string> labelNames = new List<string>();
+        [JsonProperty]
+        public int guiZoom = 100;
+
+        /// <summary>
+        /// Contains all the patterns of all the recognizable strings.
+        /// </summary>
+        [JsonProperty]
+        public RecognitionPatterns RecognitionPatterns;
+
+        [JsonProperty]
+        public Rectangle[] labelRectangles;
+
+
+        //public Dictionary<string, int> labelNameIndices; // TODO remove
+        //public List<string> labelNames; // TODO remove
 
         public List<List<int>> reducedIndices = new List<List<int>>(); // indices of letters for reduced set (only [0-9\.,/%:])
 
-        public void init()
+        //#region Old file format properties, kept for backwards compatibility
+
+        //[JsonProperty]
+        //public List<List<uint[]>> letterArrays;
+        //[JsonProperty]
+        //public List<List<char>> letters;
+
+        //#endregion
+
+
+        public OcrTemplate()
         {
-            initLabelNames();
-            initReducedIndices();
+            Version = new Version(CurrentVersion);
+            InitializeOcrTemplate();
         }
 
-        private void initLabelNames()
+        public void InitializeOcrTemplate()
         {
-            labelNames = new List<string> { "Health", "Stamina", "Oxygen", "Food", "Weight", "MeleeDamage", "MovementSpeed", "Torpor", "Imprinting", "Level", "NameSpecies", "Tribe", "Owner" };
+            if (RecognitionPatterns == null) RecognitionPatterns = new RecognitionPatterns();
+            if (labelRectangles == null) labelRectangles = new Rectangle[Enum.GetValues(typeof(OcrLabels)).Length];
 
-            labelNameIndices = new Dictionary<string, int>();
-            for (int i = 0; i < labelNames.Count; i++)
-                labelNameIndices.Add(labelNames[i], i);
-        }
-
-        private void initReducedIndices()
-        {
-            reducedIndices = new List<List<int>>();
-            const string reducedChars = ":0123456789.,%/";
-            for (int o = 0; o < fontSizes.Count; o++)
+            var currentVersion = new Version(CurrentVersion);
+            if (Version == null || Version.Major < currentVersion.Major)
             {
-                reducedIndices.Add(new List<int>());
-                for (int c = 0; c < letters[o].Count; c++)
-                {
-                    if (reducedChars.IndexOf(letters[o][c]) != -1)
-                        reducedIndices[o].Add(c);
-                }
+                MessageBoxes.ShowMessageBox("The version of this OCR config file is not supported.\nLoad a config file with a supported format.", icon: MessageBoxIcon.Error);
+                Version = currentVersion;
             }
+            RecognitionPatterns.Save += Save;
         }
 
-        public int fontSizeIndex(int fontSize, bool createIfNotExisting = false)
+        public static OcrTemplate LoadFile(string filePath)
         {
-            if (fontSizes.IndexOf(fontSize) == -1 && createIfNotExisting)
-            {
-                fontSizes.Add(fontSize);
-                letterArrays.Add(new List<uint[]>());
-                letters.Add(new List<char>());
-                reducedIndices.Add(new List<int>());
-            }
-            return fontSizes.IndexOf(fontSize);
-        }
-
-        public static OCRTemplate LoadFile(string filePath)
-        {
-            OCRTemplate ocrConfig = null;
+            OcrTemplate ocrConfig = null;
 
             // check if file exists
             if (!File.Exists(filePath))
             {
-                MessageBoxes.ShowMessageBox($"OCR-File '{filePath}' not found. OCR is not possible without the config-file.");
+                MessageBoxes.ShowMessageBox($"OCR file '{filePath}' not found. OCR is not possible without the config-file.");
                 return null;
             }
 
-            using (FileStream file = File.OpenRead(filePath))
+            if (FileService.LoadJsonFile(filePath, out OcrTemplate data, out var errorMessage, new Newtonsoft.Json.Converters.VersionConverter()))
             {
-                try
-                {
-                    DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(OCRTemplate));
-                    ocrConfig = (OCRTemplate)ser.ReadObject(file);
-                    ocrConfig.init();
-                }
-                catch (Exception ex)
-                {
-                    MessageBoxes.ExceptionMessageBox(ex, "File Couldn't be opened or read.");
-                }
+                ocrConfig = data;
+                ocrConfig.InitializeOcrTemplate();
             }
+            else
+            {
+                MessageBoxes.ShowMessageBox(errorMessage, "OCR config File couldn't be opened or read.");
+            }
+
             return ocrConfig;
         }
 
-        public bool SaveFile(string filename)
+        private void Save()
         {
-            try
-            {
-                using (FileStream file = File.Create(filename))
-                {
-                    DataContractJsonSerializer writer = new DataContractJsonSerializer(typeof(OCRTemplate));
-                    writer.WriteObject(file, ArkOCR.OCR.ocrConfig);
-                }
+            SaveFile(Properties.Settings.Default.ocrFile);
+        }
+
+        public bool SaveFile(string filePath)
+        {
+            if (FileService.SaveJsonFile(filePath, this, out var errorMessage, new Newtonsoft.Json.Converters.VersionConverter()))
                 return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBoxes.ExceptionMessageBox(ex, "Error during serialization.", "Serialization-Error");
-            }
+
+            MessageBoxes.ShowMessageBox(errorMessage, "OCR config file save error");
             return false;
+        }
+
+        /// <summary>
+        /// Names of labels used in OCR.
+        /// </summary>
+        public enum OcrLabels
+        {
+            Health, Stamina, Oxygen, Food, Weight, MeleeDamage, MovementSpeed, Torpidity, Imprinting, Level, NameSpecies, Tribe, Owner
         }
     }
 }

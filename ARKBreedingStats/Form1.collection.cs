@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -20,13 +21,20 @@ namespace ARKBreedingStats
     {
         private const string CollectionFileExtension = ".asb";
 
-        private void NewCollection()
+        /// <summary>
+        /// Creates a new collection.
+        /// </summary>
+        /// <param name="resetCollection">If true, the user is not asked and a new collection is created. This can be used if something went wrong while loading a file and a clean collection is needed.</param>
+        private void NewCollection(bool resetCollection = false)
         {
-            if (_collectionDirty
-                && MessageBox.Show("Your Creature Collection has been modified since it was last saved, " +
-                        "are you sure you want to discard your changes and create a new Library without saving?",
-                        "Discard Changes?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+            if (!resetCollection
+                && UnsavedChanges()
+                && CustomMessageBox.Show(Loc.S("Collection changed discard and new?"),
+                    Loc.S("Discard changes?"), Loc.S("Discard changes and new"), buttonCancel: Loc.S("Cancel"), icon: MessageBoxIcon.Warning) != DialogResult.Yes
+            )
+            {
                 return;
+            }
 
             if (_creatureCollection.modIDs?.Any() ?? false)
             {
@@ -39,7 +47,7 @@ namespace ARKBreedingStats
             }
 
             if (_creatureCollection.serverMultipliers == null)
-                _creatureCollection.serverMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.OFFICIAL);
+                _creatureCollection.serverMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             // use previously used multipliers again in the new file
             ServerMultipliers oldMultipliers = _creatureCollection.serverMultipliers;
 
@@ -48,7 +56,6 @@ namespace ARKBreedingStats
                 serverMultipliers = oldMultipliers,
                 ModList = new List<Mod>()
             };
-            _creatureCollection.FormatVersion = CreatureCollection.CURRENT_FORMAT_VERSION;
             pedigree1.Clear();
             breedingPlan1.Clear();
             creatureInfoInputExtractor.Clear(true);
@@ -88,7 +95,7 @@ namespace ARKBreedingStats
         private void RecalculateAllCreaturesValues()
         {
             toolStripProgressBar1.Value = 0;
-            toolStripProgressBar1.Maximum = _creatureCollection.creatures.Count();
+            toolStripProgressBar1.Maximum = _creatureCollection.creatures.Count;
             toolStripProgressBar1.Visible = true;
             int? levelStep = _creatureCollection.getWildLevelStep();
             foreach (Creature c in _creatureCollection.creatures)
@@ -105,21 +112,17 @@ namespace ARKBreedingStats
         /// <param name="add">If true, the current loaded creatures will be kept and the ones of the loaded file are added</param>
         private void LoadCollection(bool add = false)
         {
-            if (!add && _collectionDirty)
+            if (!add && !DiscardChangesAndLoadNewLibrary())
             {
-                if (MessageBox.Show("Your Creature Collection has been modified since it was last saved, are you sure you want to load without saving first?", "Discard Changes?", MessageBoxButtons.YesNo) != DialogResult.Yes)
-                    return;
+                return;
             }
-
-            string selectedFolder =
-                string.IsNullOrEmpty(_currentFileName) ? null : Path.GetDirectoryName(_currentFileName);
 
             using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Filter = $"ASB Collection Files (*{CollectionFileExtension}; *.xml)|*{CollectionFileExtension};*.xml"
-                        + $"|ASB Collection File (*{CollectionFileExtension})|*{CollectionFileExtension}"
-                        + "|Old ASB Collection File(*.xml)| *.xml",
-                InitialDirectory = selectedFolder
+                                + $"|ASB Collection File (*{CollectionFileExtension})|*{CollectionFileExtension}"
+                                + "|Old ASB Collection File(*.xml)| *.xml",
+                InitialDirectory = InitialDirectoryForLoadSave
             })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -130,6 +133,27 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
+        /// Returns true if there are no unsaved changes or the user wants to discard the changes of the currently loaded library.
+        /// </summary>
+        private bool DiscardChangesAndLoadNewLibrary()
+        {
+            return !UnsavedChanges()
+                    || CustomMessageBox.Show(Loc.S("Collection changed discard and load?"),
+                    Loc.S("Discard changes?"), Loc.S("Discard changes and load file"), buttonCancel: Loc.S("Cancel"), icon: MessageBoxIcon.Warning) == DialogResult.Yes;
+        }
+
+        /// <summary>
+        /// Returns the directory of the currently used file or the last used directory when loading a file.
+        /// </summary>
+        private string InitialDirectoryForLoadSave => !string.IsNullOrEmpty(_currentFileName)
+            ? Path.GetDirectoryName(_currentFileName)
+            : !string.IsNullOrEmpty(Properties.Settings.Default.LastUsedCollectionFolder)
+              && Directory.Exists(Properties.Settings.Default.LastUsedCollectionFolder)
+                ? Properties.Settings.Default.LastUsedCollectionFolder
+                : null
+            ;
+
+        /// <summary>
         /// Save the current collection under its file. If it has no file, use saveAs.
         /// </summary>
         private void SaveCollection()
@@ -137,6 +161,8 @@ namespace ARKBreedingStats
             if (string.IsNullOrEmpty(_currentFileName))
             {
                 SaveNewCollection();
+                if (!string.IsNullOrEmpty(_currentFileName))
+                    Properties.Settings.Default.LastUsedCollectionFolder = Path.GetDirectoryName(_currentFileName);
             }
             else
             {
@@ -148,14 +174,15 @@ namespace ARKBreedingStats
         {
             using (SaveFileDialog dlg = new SaveFileDialog
             {
-                Filter = $"Creature Collection File (*{CollectionFileExtension})|*{CollectionFileExtension}"
+                Filter = $"Creature Collection File (*{CollectionFileExtension})|*{CollectionFileExtension}",
+                InitialDirectory = InitialDirectoryForLoadSave
             })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     _currentFileName = dlg.FileName;
-                    _fileSync.ChangeFile(_currentFileName);
                     SaveCollectionToFileName(_currentFileName);
+                    _fileSync.ChangeFile(_currentFileName);
                 }
             }
         }
@@ -166,6 +193,8 @@ namespace ARKBreedingStats
             if (Properties.Settings.Default.DeleteExpiredTimersOnSaving)
                 timerList1.DeleteAllExpiredTimers(false, false);
 
+            notesControl1.CheckForUnsavedChanges();
+
             // Wait until the file is writable
             const int numberOfRetries = 5;
             const int delayOnRetryBase = 500;
@@ -173,14 +202,14 @@ namespace ARKBreedingStats
 
             var tempSavePath = filePath + ".tmp";
 
+            _fileSync.SavingStarts();
             for (int i = 0; i < numberOfRetries; ++i)
             {
                 try
                 {
-                    _fileSync.JustSaving();
                     using (StreamWriter file = File.CreateText(tempSavePath))
                     {
-                        JsonSerializer serializer = new JsonSerializer()
+                        JsonSerializer serializer = new JsonSerializer
                         {
                             Formatting = Properties.Settings.Default.prettifyCollectionJson ? Formatting.Indented : Formatting.None,
                             DateTimeZoneHandling = DateTimeZoneHandling.Utc // save all date-times as UTC, so synced files don't change the timezones
@@ -191,8 +220,21 @@ namespace ARKBreedingStats
                     if (new FileInfo(tempSavePath).Length == 0)
                         throw new IOException("Saved file is empty and contains no data.");
 
-                    // if saving was successful, remove outdated library file and move successfully saved file
-                    File.Delete(filePath);
+                    // if saving was successful, keep old file as backup if set or remove it, then move successfully saved temp file to correct
+                    var backupEveryMinutes = Properties.Settings.Default.BackupEveryMinutes;
+                    var keepBackupFilesCount = Properties.Settings.Default.BackupFileCount;
+
+                    if (keepBackupFilesCount != 0
+                        && (backupEveryMinutes == 0 ||
+                            (DateTime.Now - _lastAutoSaveBackup).TotalMinutes > backupEveryMinutes)
+                        && FileService.IsValidJsonFile(filePath))
+                    {
+                        if (!KeepBackupFile(filePath, keepBackupFilesCount))
+                            File.Delete(filePath); // outdated file is not needed anymore
+                    }
+                    else
+                        File.Delete(filePath); // outdated file is not needed anymore
+
                     File.Move(tempSavePath, filePath);
 
                     fileSaved = true;
@@ -216,11 +258,58 @@ namespace ARKBreedingStats
                     break;
                 }
             }
+            _fileSync.SavingEnds();
 
             if (fileSaved)
                 SetCollectionChanged(false);
             else
-                MessageBoxes.ShowMessageBox($"This file couldn\'t be saved:\n{filePath}\nMaybe the file is used by another application.");
+                MessageBoxes.ShowMessageBox($"This file couldn't be saved:\n{filePath}\nMaybe the file is used by another application.");
+        }
+
+        /// <summary>
+        /// Creates a backup file of the current library file, then removes old backup files to keep number to setting.
+        /// Returns true if the currentSaveFile was moved as a backup, false if it's still existing.
+        /// </summary>
+        private bool KeepBackupFile(string currentSaveFilePath, int keepBackupFilesCount)
+        {
+            string fileNameWoExt = Path.GetFileNameWithoutExtension(currentSaveFilePath);
+            string backupFileName = $"{fileNameWoExt}_backup_{new FileInfo(currentSaveFilePath).LastWriteTime:yyyy-MM-dd_HH-mm-ss}{CollectionFileExtension}";
+
+            var backupFolderPath = Properties.Settings.Default.BackupFolder;
+            if (string.IsNullOrEmpty(backupFolderPath))
+                backupFolderPath = Path.GetDirectoryName(currentSaveFilePath);
+            else
+                Directory.CreateDirectory(backupFolderPath);
+
+            string backupFilePath = Path.Combine(backupFolderPath, backupFileName);
+            if (File.Exists(backupFilePath))
+            {
+                return false; // backup file of that timestamp already exists, no extra backup needed.
+            }
+
+            File.Move(currentSaveFilePath, backupFilePath);
+            _lastAutoSaveBackup = DateTime.Now;
+
+            // delete oldest backup file if more than a certain number
+
+            var directory = new DirectoryInfo(backupFolderPath);
+            var oldBackupFiles = directory.GetFiles($"{fileNameWoExt}_backup_*{CollectionFileExtension}")
+                .OrderByDescending(f => f.Name)
+                .Skip(keepBackupFilesCount)
+                .ToArray();
+            foreach (FileInfo f in oldBackupFiles)
+            {
+                try
+                {
+                    f.Delete();
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -328,10 +417,10 @@ namespace ARKBreedingStats
                         if (FileService.LoadJsonFile(filePath, out CreatureCollection readCollection, out string errorMessage))
                         {
                             if (!Version.TryParse(readCollection.FormatVersion, out Version ccVersion)
-                               || !Version.TryParse(CreatureCollection.CURRENT_FORMAT_VERSION, out Version currentVersion)
+                               || !Version.TryParse(CreatureCollection.CurrentLibraryFormatVersion, out Version currentVersion)
                                || ccVersion > currentVersion)
                             {
-                                throw new FormatException("Unhandled format version");
+                                throw new FormatException($"Unsupported format version: {(readCollection.FormatVersion ?? "null")}");
                             }
                             _creatureCollection = readCollection;
                         }
@@ -349,11 +438,11 @@ namespace ARKBreedingStats
                     // if file is not readable
                     Thread.Sleep(delayOnRetry);
                 }
-                catch (FormatException)
+                catch (FormatException ex)
                 {
                     // This FormatVersion is not understood, abort
                     MessageBoxes.ShowMessageBox($"This library format is unsupported in this version of ARK Smart Breeding." +
-                                                 "\n\nTry updating to a newer version.");
+                                                 $"\n\n{ex.Message}\n\nTry updating to a newer version.");
                     if ((DateTime.Now - Properties.Settings.Default.lastUpdateCheck).TotalMinutes < 10)
                         CheckForUpdates();
                     return false;
@@ -374,20 +463,20 @@ namespace ARKBreedingStats
                 // load original multipliers if they were changed
                 if (!LoadStatAndKibbleValues(false).statValuesLoaded)
                 {
-                    _creatureCollection = new CreatureCollection();
+                    NewCollection(true);
                     return false;
                 }
             }
             if (_creatureCollection.ModValueReloadNeeded
                 && !LoadModValuesOfCollection(_creatureCollection, false, false))
             {
-                _creatureCollection = new CreatureCollection();
+                NewCollection(true);
                 return false;
             }
 
             if (_creatureCollection.serverMultipliers == null)
             {
-                _creatureCollection.serverMultipliers = previouslyLoadedCreatureCollection.serverMultipliers ?? Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.OFFICIAL);
+                _creatureCollection.serverMultipliers = previouslyLoadedCreatureCollection.serverMultipliers ?? Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             }
 
             if (speciesSelector1.LastSpecies != null && speciesSelector1.LastSpecies.Length > 0)
@@ -395,7 +484,7 @@ namespace ARKBreedingStats
                 tamingControl1.SetSpecies(Values.V.SpeciesByBlueprint(speciesSelector1.LastSpecies[0]));
             }
 
-            _creatureCollection.FormatVersion = CreatureCollection.CURRENT_FORMAT_VERSION;
+            _creatureCollection.FormatVersion = CreatureCollection.CurrentLibraryFormatVersion;
 
             ApplySettingsToValues();
 
@@ -466,9 +555,21 @@ namespace ARKBreedingStats
             UpdateTempCreatureDropDown();
 
             Properties.Settings.Default.LastSaveFile = filePath;
+            Properties.Settings.Default.LastUsedCollectionFolder = Path.GetDirectoryName(filePath);
+            AddPathToRecentlyUsed(filePath);
+
             _lastAutoSaveBackup = DateTime.Now.AddMinutes(-10);
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns true if there are unsaved changes.
+        /// </summary>
+        private bool UnsavedChanges()
+        {
+            notesControl1.CheckForUnsavedChanges();
+            return _collectionDirty;
         }
 
         /// <summary>
@@ -483,49 +584,23 @@ namespace ARKBreedingStats
                 if (species == null || pedigree1.SelectedSpecies == species)
                     pedigree1.PedigreeNeedsUpdate = true;
                 if (species == null || breedingPlan1.CurrentSpecies == species)
-                    breedingPlan1.breedingPlanNeedsUpdate = true;
+                    breedingPlan1.BreedingPlanNeedsUpdate = true;
             }
 
-            if (_autoSave && changed)
+            var currentFileNotEmpty = !string.IsNullOrEmpty(_currentFileName);
+
+            if (changed && Properties.Settings.Default.autosave)
             {
                 // save changes automatically
-                if (!string.IsNullOrEmpty(_currentFileName) && _autoSaveMinutes > 0 && (DateTime.Now - _lastAutoSaveBackup).TotalMinutes > _autoSaveMinutes && FileService.IsValidJsonFile(_currentFileName))
-                {
-                    string filenameWOExt = Path.GetFileNameWithoutExtension(_currentFileName);
-                    string timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                    string backupFileName = filenameWOExt + "_backup_" + timeStamp + CollectionFileExtension;
-                    string backupFilePath = Path.Combine(Path.GetDirectoryName(_currentFileName), backupFileName);
-                    File.Copy(_currentFileName, backupFilePath);
-                    _lastAutoSaveBackup = DateTime.Now;
-                    // delete oldest backupfile if more than a certain number
-                    var directory = new DirectoryInfo(Path.GetDirectoryName(_currentFileName));
-                    var oldBackupfiles = directory.GetFiles()
-                            .Where(f => f.Name.Length == backupFileName.Length &&
-                                    f.Name.Substring(0, filenameWOExt.Length + 8) == filenameWOExt + "_backup_")
-                            .OrderByDescending(f => f.LastWriteTime)
-                            .Skip(3)
-                            .ToList();
-                    foreach (FileInfo f in oldBackupfiles)
-                    {
-                        try
-                        {
-                            f.Delete();
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-                }
-
-                // save changes
                 SaveCollection();
-                return; // function is called soon again from savecollection()
+                // function is called soon again from SaveCollectionToFileName(string filePath) to perform title text update
+                return;
             }
+
             _collectionDirty = changed;
-            string fileName = string.IsNullOrEmpty(_currentFileName) ? null : Path.GetFileName(_currentFileName);
-            Text = $"ARK Smart Breeding{(string.IsNullOrEmpty(fileName) ? string.Empty : " - " + fileName)}{(changed ? " *" : "")}";
-            openFolderOfCurrentFileToolStripMenuItem.Enabled = !string.IsNullOrEmpty(_currentFileName);
+            string fileName = currentFileNotEmpty ? Path.GetFileName(_currentFileName) : null;
+            Text = $"{Utils.ApplicationNameVersion}{(currentFileNotEmpty ? " - " + fileName : string.Empty)}{(changed ? " *" : string.Empty)}";
+            openFolderOfCurrentFileToolStripMenuItem.Enabled = currentFileNotEmpty;
         }
 
         /// <summary>
@@ -574,7 +649,7 @@ namespace ARKBreedingStats
             Clipboard.SetFileDropList(new StringCollection { tempZipFilePath });
 
             // display info that debug file is in clipboard
-            SetMessageLabelText("File with the current library and the values in the extractor has been copied to the clipboard. You can add this file to an issue report.", MessageBoxIcon.Information);
+            SetMessageLabelText("A File with the current library and the values in the extractor has been created and copied to the clipboard. You can paste this file to a folder to add it to an issue report.", MessageBoxIcon.Information, tempZipFilePath);
         }
 
         private bool OpenZippedLibrary(string filePath)
@@ -600,8 +675,12 @@ namespace ARKBreedingStats
                 _currentFileName = null;
 
                 // select last creature values
-                toolStripCBTempCreatures.SelectedIndex = toolStripCBTempCreatures.Items.Count - 1;
-                ExtractLevels();
+                var tempCreatureCount = toolStripCBTempCreatures.Items.Count;
+                if (tempCreatureCount > 0)
+                {
+                    toolStripCBTempCreatures.SelectedIndex = tempCreatureCount - 1;
+                    ExtractLevels();
+                }
             }
             catch (Exception ex)
             {
@@ -610,6 +689,58 @@ namespace ARKBreedingStats
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Adds a file path to the recently used list for libraries.
+        /// </summary>
+        /// <param name="filePath"></param>
+        private void AddPathToRecentlyUsed(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            var files = Properties.Settings.Default.LastUsedLibraryFiles;
+            if (files == null)
+            {
+                Properties.Settings.Default.LastUsedLibraryFiles = new[] { filePath };
+                UpdateRecentlyUsedFileMenu();
+                return;
+            }
+
+            if (files.FirstOrDefault() == filePath)
+            {
+                if (recentlyUsedToolStripMenuItem.DropDownItems.Count == 0)
+                    UpdateRecentlyUsedFileMenu();
+                return;
+            }
+
+            // add filePath to the first position
+            Properties.Settings.Default.LastUsedLibraryFiles =
+                files.Where(f => f != filePath).Prepend(filePath).Take(10).ToArray();
+            UpdateRecentlyUsedFileMenu();
+        }
+
+        /// <summary>
+        /// Updates the menu items for the last used files.
+        /// </summary>
+        private void UpdateRecentlyUsedFileMenu()
+        {
+            recentlyUsedToolStripMenuItem.DropDownItems.Clear();
+
+            if (!(Properties.Settings.Default.LastUsedLibraryFiles?.Any() ?? false)) return;
+
+            recentlyUsedToolStripMenuItem.DropDownItems.AddRange(
+                Properties.Settings.Default.LastUsedLibraryFiles.Select(f => new ToolStripMenuItem(f, null, OpenRecentlyUsedFile)).ToArray()
+            );
+        }
+
+        private void OpenRecentlyUsedFile(object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem mi
+                && !string.IsNullOrEmpty(mi.Text)
+                && DiscardChangesAndLoadNewLibrary()
+                )
+                LoadCollectionFile(mi.Text);
         }
     }
 }

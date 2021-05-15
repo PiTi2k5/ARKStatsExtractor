@@ -3,8 +3,11 @@ using ARKBreedingStats.species;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Design;
+using System.Globalization;
+using System.Reflection;
+using System.Resources;
 using System.Threading.Tasks;
+using System.Web.ModelBinding;
 using System.Windows.Forms;
 using ARKBreedingStats.values;
 
@@ -28,10 +31,6 @@ namespace ARKBreedingStats
         /// <summary>
         /// String with ARKml tags.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="percent"></param>
-        /// <param name="light"></param>
-        /// <returns></returns>
         public static string GetARKmlFromPercent(string text, int percent, double light = 0)
         {
             GetRgbFromPercent(out int r, out int g, out int b, percent, light);
@@ -41,11 +40,6 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns a string with ARKml tags. Currently that doesn't seem to be supported anymore by the ARK chat.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
         public static string GetARKml(string text, int r, int g, int b)
         {
             return
@@ -55,11 +49,6 @@ namespace ARKBreedingStats
         /// <summary>
         /// RGB values for a given percentage (0-100). 0 is red, 100 is green. Light can be adjusted (1 bright, 0 default, -1 dark).
         /// </summary>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        /// <param name="percent"></param>
-        /// <param name="light"></param>
         private static void GetRgbFromPercent(out int r, out int g, out int b, int percent, double light = 0)
         {
             if (light > 1) { light = 1; }
@@ -89,9 +78,6 @@ namespace ARKBreedingStats
         /// <summary>
         /// Adjusts the lightness of a color.
         /// </summary>
-        /// <param name="color"></param>
-        /// <param name="light"></param>
-        /// <returns></returns>
         public static Color AdjustColorLight(Color color, double light = 0)
         {
             if (light == 0) return color;
@@ -123,7 +109,6 @@ namespace ARKBreedingStats
         /// </summary>
         /// <param name="hue">red: 0, green: 120, blue: 240</param>
         /// <param name="light">-1 very dark, 0 default, 1 very bright</param>
-        /// <returns></returns>
         public static Color ColorFromHue(int hue, double light = 0)
         {
             hue %= 360;
@@ -219,11 +204,9 @@ namespace ARKBreedingStats
         /// <summary>
         /// String icon that represents a sex.
         /// </summary>
-        /// <param name="g"></param>
-        /// <returns></returns>
-        public static string SexSymbol(Sex g)
+        public static string SexSymbol(Sex s)
         {
-            switch (g)
+            switch (s)
             {
                 case Sex.Male:
                     return "♂";
@@ -237,11 +220,9 @@ namespace ARKBreedingStats
         /// <summary>
         /// Color for a sex.
         /// </summary>
-        /// <param name="g"></param>
-        /// <returns></returns>
-        public static Color SexColor(Sex g)
+        public static Color SexColor(Sex s)
         {
-            switch (g)
+            switch (s)
             {
                 case Sex.Male:
                     return Color.FromArgb(220, 235, 255);
@@ -346,11 +327,39 @@ namespace ARKBreedingStats
         /// </summary>
         private static string[] _statNamesAbb;
 
+        /// <summary>
+        /// Stat index for a given stat name abbreviation. Localized abbreviations are used, English abbreviations work as well if the localized abbreviations don't have an equal abbreviation already. Case insensitive.
+        /// </summary>
+        public static Dictionary<string, int> StatAbbreviationToIndex;
+
         public static void InitializeLocalizations()
         {
-            _statNames = new[] { Loc.S("Health"), Loc.S("Stamina"), Loc.S("Torpidity"), Loc.S("Oxygen"), Loc.S("Food"), Loc.S("Water"), Loc.S("Temperature"), Loc.S("Weight"), Loc.S("Damage"), Loc.S("Speed"), Loc.S("Fortitude"), Loc.S("Crafting Speed") };
-            _statNamesAbb = new[] { Loc.S("Health_Abb"), Loc.S("Stamina_Abb"), Loc.S("Torpidity_Abb"), Loc.S("Oxygen_Abb"), Loc.S("Food_Abb"), Loc.S("Water_Abb"), Loc.S("Temperature_Abb"), Loc.S("Weight_Abb"), Loc.S("Damage_Abb"), Loc.S("Speed_Abb"), Loc.S("Fortitude_Abb"), Loc.S("Crafting Speed_Abb") };
+            if (_statNames == null) _statNames = new string[Values.STATS_COUNT];
+            if (_statNamesAbb == null) _statNamesAbb = new string[Values.STATS_COUNT];
+            if (StatAbbreviationToIndex == null) StatAbbreviationToIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            else StatAbbreviationToIndex.Clear();
+
+            for (int si = 0; si < Values.STATS_COUNT; si++)
+            {
+                _statNames[si] = Loc.S(StatNameKeys[si]);
+                _statNamesAbb[si] = Loc.S(StatNameKeys[si] + "_Abb");
+                StatAbbreviationToIndex.Add(_statNamesAbb[si], si);
+            }
+
+            // load abbreviations of invariant culture (here English) as a fallback
+            var defaultCulture = CultureInfo.InvariantCulture;
+            for (int si = 0; si < Values.STATS_COUNT; si++)
+            {
+                var key = Loc.S(StatNameKeys[si] + "_Abb", defaultCulture);
+                if (StatAbbreviationToIndex.ContainsKey(key)) continue;
+                StatAbbreviationToIndex.Add(key, si);
+            }
         }
+
+        /// <summary>
+        /// Key names of stats like they're used in the localization files.
+        /// </summary>
+        private static readonly string[] StatNameKeys = { "Health", "Stamina", "Torpidity", "Oxygen", "Food", "Water", "Temperature", "Weight", "Damage", "Speed", "Fortitude", "Crafting Speed" };
 
         /// <summary>
         /// Returns a string that represents the localized stat name.
@@ -380,19 +389,15 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns the displayed decimal values of the stat with the given index
         /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
-        public static int Precision(int s)
+        public static int Precision(int statIndex)
         {
-            // damage and speed are percentagevalues, need more precision
-            return (s == (int)StatNames.SpeedMultiplier || s == (int)StatNames.MeleeDamageMultiplier || s == (int)StatNames.CraftingSpeedMultiplier) ? 3 : 1;
+            // damage and speed are percentage values, need more precision
+            return (statIndex == (int)StatNames.SpeedMultiplier || statIndex == (int)StatNames.MeleeDamageMultiplier || statIndex == (int)StatNames.CraftingSpeedMultiplier) ? 3 : 1;
         }
 
         /// <summary>
         /// String that represents a duration.
         /// </summary>
-        /// <param name="ts"></param>
-        /// <returns></returns>
         public static string Duration(TimeSpan ts)
         {
             return ts.ToString("dd':'hh':'mm':'ss");
@@ -401,15 +406,13 @@ namespace ARKBreedingStats
         /// <summary>
         /// String that represents a duration, given in seconds.
         /// </summary>
-        /// <param name="seconds"></param>
-        /// <returns></returns>
         public static string Duration(int seconds)
         {
             return Duration(new TimeSpan(0, 0, seconds));
         }
 
         /// <summary>
-        /// Returns the formated timespan and also the DateTime when the timespan is over
+        /// Returns the formatted timespan and also the DateTime when the timespan is over
         /// </summary>
         /// <param name="ts">timespan of countdown</param>
         /// <returns>Returns the timespan and the DateTime when the timespan is over</returns>
@@ -457,7 +460,7 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Returns either black or white, depending on the backcolor, so text can be read well.
+        /// Returns either black or white, depending on the backColor, so text can be read well.
         /// </summary>
         /// <param name="backColor"></param>
         /// <returns>ForeColor</returns>
@@ -492,7 +495,7 @@ namespace ARKBreedingStats
             textBox.Text = preInput;
             textBox.SelectAll();
 
-            input = "";
+            input = string.Empty;
             if (inputForm.ShowDialog() != DialogResult.OK)
                 return false;
             input = textBox.Text;
@@ -521,11 +524,13 @@ namespace ARKBreedingStats
         /// Returns the Ark-Id as seen ingame from the unique representation used in ASB
         /// </summary>
         /// <param name="importedArkId"></param>
-        /// <returns>Ingame visualisation of the Ark-Id (not unique in rare cases)</returns>
-        public static string ConvertImportedArkIdToIngameVisualization(long importedArkId)
-        {
-            return ((int)(importedArkId >> 32)).ToString() + ((int)importedArkId).ToString();
-        }
+        /// <returns>Ingame visualization of the Ark-Id (not unique in rare cases)</returns>
+        public static string ConvertImportedArkIdToIngameVisualization(long importedArkId) => $"{(int)(importedArkId >> 32)}{(int)importedArkId}";
+
+        /// <summary>
+        /// Converts the two 32 bit Ark id parts into one 64 bit Ark id.
+        /// </summary>
+        public static long ConvertArkIdsToLongArkId(int id1, int id2) => ((long)id1 << 32) | (id2 & 0xFFFFFFFFL);
 
         /// <summary>
         /// returns a shortened string with an ellipsis in the middle. One third of the beginning is shown and two thirds of then end
@@ -653,40 +658,7 @@ namespace ARKBreedingStats
             }
         }
 
-        /// <summary>
-        /// Beeps. 0: failure, 1: success, 2: good, 3: great.
-        /// </summary>
-        /// <param name="kind"></param>
-        public static void BeepSignal(int kind)
-        {
-            switch (kind)
-            {
-                case 0:
-                    Console.Beep(300, 50);
-                    Console.Beep(200, 100);
-                    break;
-                case 1:
-                    Console.Beep(300, 50);
-                    Console.Beep(400, 100);
-                    break;
-                case 2:
-                    Console.Beep(300, 50);
-                    Console.Beep(400, 50);
-                    Console.Beep(500, 50);
-                    Console.Beep(400, 100);
-                    break;
-                case 3:
-                    Console.Beep(300, 50);
-                    Console.Beep(400, 50);
-                    Console.Beep(500, 50);
-                    Console.Beep(600, 50);
-                    Console.Beep(675, 50);
-                    Console.Beep(600, 100);
-                    break;
-            }
-        }
-
-        private static string _ApplicationNameVersion;
+        private static string _applicationNameVersion;
         /// <summary>
         /// The name and version of this application.
         /// </summary>
@@ -694,9 +666,9 @@ namespace ARKBreedingStats
         {
             get
             {
-                if (string.IsNullOrEmpty(_ApplicationNameVersion))
-                    _ApplicationNameVersion = $"{Application.ProductName} v{Application.ProductVersion}";
-                return _ApplicationNameVersion;
+                if (string.IsNullOrEmpty(_applicationNameVersion))
+                    _applicationNameVersion = $"{Application.ProductName} v{Application.ProductVersion}";
+                return _applicationNameVersion;
             }
         }
     }

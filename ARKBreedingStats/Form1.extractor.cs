@@ -823,14 +823,24 @@ namespace ARKBreedingStats
 
             tabControlMain.SelectedTab = tabPageExtractor;
 
-            bool creatureExists = ExtractValuesInExtractor(cv, exportFilePath, true);
+            bool creatureAlreadyExists = ExtractValuesInExtractor(cv, exportFilePath, true);
+            CopyNameToClipboardIfSet(creatureAlreadyExists);
 
+            return creatureAlreadyExists;
+        }
+
+        /// <summary>
+        /// Copies the creature name to the clipboard if the conditions according to the user settings are fulfilled.
+        /// </summary>
+        /// <param name="creatureAlreadyExists"></param>
+        private void CopyNameToClipboardIfSet(bool creatureAlreadyExists)
+        {
             if (Properties.Settings.Default.applyNamePatternOnAutoImportAlways
                 || (Properties.Settings.Default.applyNamePatternOnImportIfEmptyName
                     && string.IsNullOrEmpty(creatureInfoInputExtractor.CreatureName))
-                || (!creatureExists
+                || (!creatureAlreadyExists
                     && Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures)
-                )
+            )
             {
                 CreatureInfoInput_CreatureDataRequested(creatureInfoInputExtractor, false, false, false, 0);
                 if (Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied)
@@ -840,7 +850,6 @@ namespace ARKBreedingStats
                         : creatureInfoInputExtractor.CreatureName);
                 }
             }
-            return creatureExists;
         }
 
         /// <summary>
@@ -853,7 +862,8 @@ namespace ARKBreedingStats
             if (ecc == null)
                 return;
 
-            ExtractValuesInExtractor(ecc.creatureValues, ecc.exportedFile, false);
+            bool creatureAlreadyExists = ExtractValuesInExtractor(ecc.creatureValues, ecc.exportedFile, false);
+            CopyNameToClipboardIfSet(creatureAlreadyExists);
 
             // gets deleted in extractLevels()
             _exportedCreatureControl = ecc;
@@ -862,15 +872,17 @@ namespace ARKBreedingStats
                 creatureInfoInputExtractor.CreatureOwner += _exportedCreatureList.ownerSuffix;
         }
 
+
         /// <summary>
         /// Sets the values of a creature to the extractor and extracts its levels.
         /// It returns if the creature is already present in the library.
         /// </summary>
         /// <param name="cv"></param>
-        /// <param name="filePath"></param>
+        /// <param name="filePath">If given, the file path will be displayed as info.</param>
         /// <param name="autoExtraction"></param>
+        /// <param name="highPrecisionValues"></param>
         /// <returns></returns>
-        private bool ExtractValuesInExtractor(CreatureValues cv, string filePath, bool autoExtraction)
+        private bool ExtractValuesInExtractor(CreatureValues cv, string filePath, bool autoExtraction, bool highPrecisionValues = true)
         {
             SetCreatureValuesToExtractor(cv, false);
 
@@ -879,11 +891,12 @@ namespace ARKBreedingStats
 
             bool creatureExists = IsCreatureAlreadyInLibrary(cv.guid, cv.ARKID, out Creature existingCreature);
 
-            ExtractLevels(autoExtraction: autoExtraction, statInputsHighPrecision: true, existingCreature: existingCreature);
+            ExtractLevels(autoExtraction, highPrecisionValues, existingCreature: existingCreature);
             SetCreatureValuesToInfoInput(cv, creatureInfoInputExtractor);
             UpdateParentListInput(creatureInfoInputExtractor); // this function is only used for single-creature extractions, e.g. LastExport
             creatureInfoInputExtractor.UpdateExistingCreature = creatureExists;
-            SetMessageLabelText(Loc.S("creatureOfFile") + "\n" + filePath);
+            if (!string.IsNullOrEmpty(filePath))
+                SetMessageLabelText(Loc.S("creatureOfFile") + "\n" + filePath, path: filePath);
             return creatureExists;
         }
 
@@ -983,6 +996,24 @@ namespace ARKBreedingStats
         {
             if (_updateExtractorVisualData)
                 input.SetRegionColorsExisting(_creatureCollection.ColorAlreadyAvailable(speciesSelector1.SelectedSpecies, input.RegionColors));
+        }
+
+        private void copyLibrarydumpToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveDebugFile();
+        }
+
+        private void BtCopyIssueDumpToClipboard_Click(object sender, EventArgs e)
+        {
+            SaveDebugFile();
+        }
+
+        private void LbBlueprintPath_Click(object sender, EventArgs e)
+        {
+            // copy blueprint path to clipboard
+            if (speciesSelector1.SelectedSpecies?.blueprintPath is string bp
+                && !string.IsNullOrEmpty(bp))
+                Clipboard.SetText(bp);
         }
     }
 }

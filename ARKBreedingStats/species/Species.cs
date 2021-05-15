@@ -42,12 +42,24 @@ namespace ARKBreedingStats.species
         [JsonProperty]
         public double[][] fullStatsRaw;
         /// <summary>
+        /// The  alternative / Troodonism / bugged raw stat values without multipliers.
+        /// The key is the stat index, the value is the base value (the only one that can have alternate values).
+        /// Values depending on the base value, e.g. incPerWild or incPerDom etc. can use either the correct or alternative base value.
+        /// </summary>
+        [JsonProperty("altBaseStats")]
+        public Dictionary<int, double> altBaseStatsRaw;
+        /// <summary>
         /// The stat values with all multipliers applied and ready to use.
         /// </summary>
-        public List<CreatureStat> stats;
+        public CreatureStat[] stats;
+        /// <summary>
+        /// The alternative / Troodonism base stat values with all multipliers applied and ready to use.
+        /// Values depending on the base value, e.g. incPerWild or incPerDom etc. can use either the correct or alternative base value.
+        /// </summary>
+        public CreatureStat[] altStats;
 
         /// <summary>
-        /// Indicates if a stat is shown ingame represented by bit-flags
+        /// Indicates if a stat is shown in game represented by bit-flags
         /// </summary>
         [JsonProperty]
         private int displayedStats;
@@ -56,6 +68,12 @@ namespace ARKBreedingStats.species
         /// Indicates if a species uses a stat represented by bit-flags
         /// </summary>
         private int usedStats;
+
+        /// <summary>
+        /// Indicates if the species is affected by the setting AllowFlyerSpeedLeveling
+        /// </summary>
+        [JsonProperty] public bool isFlyer;
+
         [JsonProperty]
         public float? TamedBaseHealthMultiplier;
         /// <summary>
@@ -106,15 +124,22 @@ namespace ARKBreedingStats.species
         [OnDeserialized]
         private void Initialize(StreamingContext context)
         {
-            // TODO: Base species are maybe not used ingame and may only lead to confusion (e.g. Giganotosaurus).
+            // TODO: Base species are maybe not used in game and may only lead to confusion (e.g. Giganotosaurus).
 
             InitializeNames();
-            stats = new List<CreatureStat>();
+
+            stats = new CreatureStat[Values.STATS_COUNT];
+            if (altBaseStatsRaw != null)
+                altStats = new CreatureStat[Values.STATS_COUNT];
+
             usedStats = 0;
             double[][] completeRaws = new double[Values.STATS_COUNT][];
             for (int s = 0; s < Values.STATS_COUNT; s++)
             {
-                stats.Add(new CreatureStat());
+                stats[s] = new CreatureStat();
+                if (altBaseStatsRaw?.ContainsKey(s) ?? false)
+                    altStats[s] = new CreatureStat();
+
                 completeRaws[s] = new double[] { 0, 0, 0, 0, 0 };
                 if (fullStatsRaw.Length > s && fullStatsRaw[s] != null)
                 {

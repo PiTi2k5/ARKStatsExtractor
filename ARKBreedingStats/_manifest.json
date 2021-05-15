@@ -1,0 +1,31 @@
+﻿{
+  "format": "1.0",
+  "modules":{
+    "ARK Smart Breeding": {
+      "Id": "ARK Smart Breeding",
+      "Category": "main",
+      "version": "0.45.1.0"
+    },
+    "SpeciesColorImages": {
+      "Id": "SpeciesColorImages",
+      "Category": "Species Images",
+      "Name": "Species Images",
+      "Author": "cadaei and Myrmecoleon",
+      "Description": "Images for species for visualizing the colors of creatures",
+      "Url": "https://github.com/cadon/ARKStatsExtractor/raw/master/speciesImages/speciesImages.zip",
+      "LocalPath": "images/speciesImages",
+      "IsFolder": true,
+      "Selectable": true,
+      "version": "2021.5.11"
+    },
+    "NamePatternTemplates": {
+      "Id": "NamePatternTemplates",
+      "Category": "Name Pattern Templates",
+      "Name": "Name Pattern Templates",
+      "Description": "Templates for naming patterns",
+      "Url": "https://github.com/cadon/ARKStatsExtractor/raw/master/json/namePatternTemplates.json",
+      "LocalPath": "json/namePatternTemplates.json",
+      "version": "2021.5.11"
+    }
+  }
+}

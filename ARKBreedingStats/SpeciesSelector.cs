@@ -20,6 +20,11 @@ namespace ARKBreedingStats
         public event Action<bool> OnSpeciesSelected;
 
         /// <summary>
+        /// Toggles the visibility of this control.
+        /// </summary>
+        public event Action<bool> ToggleVisibility;
+
+        /// <summary>
         /// The currently selected species
         /// </summary>
         public Species SelectedSpecies { get; private set; }
@@ -34,6 +39,8 @@ namespace ARKBreedingStats
         /// </summary>
         private TextBoxSuggest _textBox;
 
+        private bool _ignoreTextBoxChange;
+
         /// <summary>
         /// List of species-blueprintPaths last used by the user
         /// </summary>
@@ -47,7 +54,6 @@ namespace ARKBreedingStats
         {
             InitializeComponent();
             _lastSpeciesBPs = new List<string>();
-            _iconIndices = new List<string>();
             SplitterDistance = Properties.Settings.Default.SpeciesSelectorVerticalSplitterDistance;
             VariantSelector = new VariantSelector();
         }
@@ -64,12 +70,15 @@ namespace ARKBreedingStats
                 SelectedSpecies = Values.V.SpeciesByBlueprint(SelectedSpecies.blueprintPath);
             }
 
-            ImageList imageList;
-            (_entryList, imageList, _iconIndices) = LoadSpeciesImagesAndCreateSpeciesList(species, aliases);
+            if (SelectedSpecies == null)
+            {
+                // if after loading a new file the previously selected species is not available (e.g. previous species is from a now not loaded mod), select first available species
+                SetSpecies(species.FirstOrDefault(), ignoreInRecent: true);
+            }
 
-            imageList.ImageSize = new Size(64, 64);
-            lvLastSpecies.LargeImageList = imageList;
-            lvSpeciesInLibrary.LargeImageList = imageList;
+            InitializeSpeciesImages(species);
+
+            _entryList = CreateSpeciesList(species, aliases);
 
             // autocomplete for species-input
             var al = new AutoCompleteStringCollection();
@@ -82,43 +91,17 @@ namespace ARKBreedingStats
             Textbox_TextChanged(null, null);
         }
 
-        private static (List<SpeciesListEntry>, ImageList, List<string>) LoadSpeciesImagesAndCreateSpeciesList(List<Species> species, Dictionary<string, string> aliases)
+        private static List<SpeciesListEntry> CreateSpeciesList(List<Species> species, Dictionary<string, string> aliases)
         {
             Dictionary<string, Species> speciesNameToSpecies = new Dictionary<string, Species>();
-
-            var creatureColors = new int[]
-                {44, 42, 57, 10, 26, 78}; // uniform color pattern that is used for all species in the selector
-            var creatureColorsPolar = new int[]
-                {18, 18, 18, 18, 18, 18}; // uniform color pattern that is used for all polar species in the selector
-            ImageList lImgList = new ImageList();
-            var iconIndices = new List<string>();
-            bool imageFolderExist = Directory.Exists(FileService.GetPath(FileService.ImageFolderName));
-
-            //var speciesWOImage = new List<string>();// to determine which species have no image yet
-            foreach (Species ss in species)
-            {
-                if (!speciesNameToSpecies.ContainsKey(ss.DescriptiveNameAndMod))
-                    speciesNameToSpecies.Add(ss.DescriptiveNameAndMod, ss);
-
-                if (imageFolderExist)
-                {
-                    var (imgExists, imagePath, speciesListName) = CreatureColored.SpeciesImageExists(ss,
-                        ss.name.Contains("Polar") ? creatureColorsPolar : creatureColors);
-                    if (imgExists && !iconIndices.Contains(speciesListName))
-                    {
-                        lImgList.Images.Add(Image.FromFile(imagePath));
-                        iconIndices.Add(speciesListName);
-                    }
-
-                    //if (!imgExists && !speciesWOImage.Contains(ss.name)) speciesWOImage.Add(ss.name);
-                }
-            }
-            //Clipboard.SetText(string.Join("\n", speciesWOImage));
 
             var entryList = new List<SpeciesListEntry>();
 
             foreach (var s in species)
             {
+                if (!speciesNameToSpecies.ContainsKey(s.DescriptiveNameAndMod))
+                    speciesNameToSpecies.Add(s.DescriptiveNameAndMod, s);
+
                 entryList.Add(new SpeciesListEntry
                 {
                     DisplayName = s.name,
@@ -143,7 +126,62 @@ namespace ARKBreedingStats
             }
 
             entryList = entryList.OrderBy(s => s.DisplayName).ToList();
-            return (entryList, lImgList, iconIndices);
+            return entryList;
+        }
+
+        public void InitializeSpeciesImages(List<Species> species)
+        {
+            var creatureColors = new int[] { 44, 42, 57, 10, 26, 78 }; // uniform color pattern that is used for all species in the selector
+            var creatureColorsPolar = new int[] { 18, 18, 18, 18, 18, 18 }; // uniform color pattern that is used for all polar species in the selector
+            var lImgList = new ImageList();
+            _iconIndices = new List<string>();
+            bool imageFolderExist = !string.IsNullOrEmpty(CreatureColored.ImageFolder) && Directory.Exists(CreatureColored.ImageFolder);
+
+            //var speciesWOImage = new List<string>();// to determine which species have no image yet
+            foreach (Species s in species)
+            {
+
+                if (!imageFolderExist) continue;
+
+                var (imgExists, imagePath, speciesListName) = CreatureColored.SpeciesImageExists(s,
+                    s.name.Contains("Polar") ? creatureColorsPolar : creatureColors);
+                //if (!imgExists && !speciesWOImage.Contains(s.name)) speciesWOImage.Add(s.name);
+                if (!imgExists || _iconIndices.Contains(speciesListName)) continue;
+
+                try
+                {
+                    lImgList.Images.Add(Image.FromFile(imagePath));
+                    _iconIndices.Add(speciesListName);
+                }
+                catch (OutOfMemoryException)
+                {
+                    // usually this exception occurs if the image file is corrupted
+                    if (FileService.TryDeleteFile(imagePath))
+                    {
+                        (imgExists, imagePath, speciesListName) = CreatureColored.SpeciesImageExists(s,
+                            s.name.Contains("Polar") ? creatureColorsPolar : creatureColors);
+                        if (imgExists)
+                        {
+                            try
+                            {
+                                lImgList.Images.Add(Image.FromFile(imagePath));
+                                _iconIndices.Add(speciesListName);
+                            }
+                            catch
+                            {
+                                // ignore image if it failed a second time
+                            }
+                        }
+                    }
+                }
+            }
+            //Clipboard.SetText(speciesWOImage.Any() ? string.Join("\n", speciesWOImage) : string.Empty);
+
+            lImgList.ImageSize = new Size(64, 64);
+            lvLastSpecies.LargeImageList = lImgList;
+            lvSpeciesInLibrary.LargeImageList = lImgList;
+            UpdateLastSpecies();
+            UpdateLibraryList();
         }
 
         /// <summary>
@@ -164,6 +202,16 @@ namespace ARKBreedingStats
                 if (ii != -1)
                     lvi.ImageIndex = ii;
                 lvSpeciesInLibrary.Items.Add(lvi);
+            }
+        }
+
+        private void UpdateLibraryList()
+        {
+            foreach (ListViewItem lvi in lvSpeciesInLibrary.Items)
+            {
+                int ii = SpeciesImageIndex((lvi.Tag as Species)?.name);
+                if (ii != -1)
+                    lvi.ImageIndex = ii;
             }
         }
 
@@ -223,6 +271,9 @@ namespace ARKBreedingStats
                 }
             }
             lvSpeciesList.EndUpdate();
+
+            if (!Visible && !inputIsEmpty)
+                ToggleVisibility?.Invoke(true);
         }
 
         private void lvSpeciesList_SelectedIndexChanged(object sender, EventArgs e)
@@ -247,32 +298,53 @@ namespace ARKBreedingStats
         /// Sets the species with the speciesName. This may not be unique.
         /// </summary>
         /// <param name="speciesName"></param>
-        public void SetSpeciesByName(string speciesName)
+        /// <returns>True if the species was recognized and was already or is set.</returns>
+        public bool SetSpeciesByName(string speciesName)
         {
             if (Values.V.TryGetSpeciesByName(speciesName, out Species species))
             {
-                SetSpecies(species);
+                var speciesWasSet = SetSpecies(species);
+                if (speciesWasSet)
+                {
+                    _ignoreTextBoxChange = true;
+                    _textBox.Text = species.name;
+                    _ignoreTextBoxChange = false;
+                }
+                return speciesWasSet;
             }
+
+            return false;
         }
 
-        public void SetSpecies(Species species, bool alsoTriggerOnSameSpecies = false)
+        /// <summary>
+        /// Set the current species.
+        /// </summary>
+        /// <returns>True if the species was recognized and was or is set.</returns>
+        public bool SetSpecies(Species species, bool alsoTriggerOnSameSpecies = false, bool ignoreInRecent = false)
         {
-            if (species == null) return;
+            if (species == null) return false;
             if (SelectedSpecies == species)
             {
                 if (alsoTriggerOnSameSpecies)
                     OnSpeciesSelected?.Invoke(false);
-                return;
+                return true;
             }
 
-            _lastSpeciesBPs.Remove(species.blueprintPath);
-            _lastSpeciesBPs.Insert(0, species.blueprintPath);
-            if (_lastSpeciesBPs.Count > Properties.Settings.Default.SpeciesSelectorCountLastSpecies) // only keep keepNrLastSpecies of the last species in this list
-                _lastSpeciesBPs.RemoveRange(Properties.Settings.Default.SpeciesSelectorCountLastSpecies, _lastSpeciesBPs.Count - Properties.Settings.Default.SpeciesSelectorCountLastSpecies);
-            UpdateLastSpecies();
+            if (!ignoreInRecent)
+            {
+                _lastSpeciesBPs.Remove(species.blueprintPath);
+                _lastSpeciesBPs.Insert(0, species.blueprintPath);
+                if (_lastSpeciesBPs.Count > Properties.Settings.Default.SpeciesSelectorCountLastSpecies
+                ) // only keep keepNrLastSpecies of the last species in this list
+                    _lastSpeciesBPs.RemoveRange(Properties.Settings.Default.SpeciesSelectorCountLastSpecies,
+                        _lastSpeciesBPs.Count - Properties.Settings.Default.SpeciesSelectorCountLastSpecies);
+                UpdateLastSpecies();
+            }
+
             SelectedSpecies = species;
 
             OnSpeciesSelected?.Invoke(true);
+            return true;
         }
 
         public void SetTextBox(TextBoxSuggest textbox)
@@ -283,7 +355,8 @@ namespace ARKBreedingStats
 
         private void Textbox_TextChanged(object sender, EventArgs e)
         {
-            _speciesChangeDebouncer.Debounce(300, FilterListWithUnselectedText, Dispatcher.CurrentDispatcher);
+            if (!_ignoreTextBoxChange)
+                _speciesChangeDebouncer.Debounce(300, FilterListWithUnselectedText, Dispatcher.CurrentDispatcher);
         }
 
         public string[] LastSpecies
@@ -303,6 +376,8 @@ namespace ARKBreedingStats
 
         private int SpeciesImageIndex(string speciesName = null)
         {
+            if (_iconIndices == null) return -1;
+
             if (string.IsNullOrWhiteSpace(speciesName))
                 speciesName = SelectedSpecies.name;
             else speciesName = Values.V.SpeciesName(speciesName);
@@ -336,7 +411,7 @@ namespace ARKBreedingStats
             set => splitContainer2.SplitterDistance = value;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void BtVariantFilter_Click(object sender, EventArgs e)
         {
             VariantSelector.InitializeCheckStates();
             if (VariantSelector.ShowDialog() == DialogResult.OK)

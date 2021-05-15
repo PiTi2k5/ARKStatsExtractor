@@ -4,9 +4,9 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.values;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.multiplierTesting
 {
@@ -14,7 +14,7 @@ namespace ARKBreedingStats.multiplierTesting
     {
         public event Action OnApplyMultipliers;
 
-        private readonly List<StatMultiplierTestingControl> _statControls;
+        private readonly StatMultiplierTestingControl[] _statControls;
         private CreatureCollection _cc;
         private Species _selectedSpecies;
         private Nud _fineAdjustmentsNud;
@@ -25,20 +25,17 @@ namespace ARKBreedingStats.multiplierTesting
         {
             InitializeComponent();
 
-            _statControls = new List<StatMultiplierTestingControl>();
+            _statControls = new StatMultiplierTestingControl[Values.STATS_COUNT];
             for (int s = 0; s < Values.STATS_COUNT; s++)
             {
-                var sc = new StatMultiplierTestingControl
-                {
-                    StatName = $"[{s}]{Utils.StatName(s, true)}"
-                };
+                var sc = new StatMultiplierTestingControl();
                 if (Utils.Precision(s) == 3)
                     sc.Percent = true;
                 sc.OnLevelChanged += Sc_OnLevelChanged;
                 sc.OnTECalculated += SetTE;
                 sc.OnIBCalculated += SetIB;
                 sc.OnIBMCalculated += SetIBM;
-                _statControls.Add(sc);
+                _statControls[s] = sc;
             }
             // add controls in order like in-game
             for (int s = 0; s < Values.STATS_COUNT; s++)
@@ -47,8 +44,9 @@ namespace ARKBreedingStats.multiplierTesting
                 flowLayoutPanel1.SetFlowBreak(_statControls[Values.statsDisplayOrder[s]], true);
             }
 
-            // set level-control to last
+            // set bottom controls to bottom
             flowLayoutPanel1.Controls.Add(gbLevel);
+            flowLayoutPanel1.Controls.Add(LbAbbreviations);
 
             _fineAdjustmentRange = new MinMaxDouble(0);
             rbTamed.Checked = true;
@@ -207,28 +205,33 @@ namespace ARKBreedingStats.multiplierTesting
             SetIBM(_cc.serverMultipliers.BabyImprintingStatScaleMultiplier);
 
             cbSingleplayerSettings.Checked = _cc.singlePlayerSettings;
+            CbAllowFlyerSpeedLeveling.Checked = _cc.serverMultipliers.AllowFlyerSpeedLeveling;
 
             btUseMultipliersFromSettings.Visible = false;
         }
 
         public void SetSpecies(Species species, bool forceUpdate = false)
         {
-            if (species != null && (forceUpdate || cbUpdateOnSpeciesChange.Checked))
+            if (species == null ||
+                (!forceUpdate && (_selectedSpecies == species || !cbUpdateOnSpeciesChange.Checked))) return;
+
+            _selectedSpecies = species;
+            LbBlueprintPath.Text = $"BlueprintPath: {species.blueprintPath}";
+
+            double?[][] customStatOverrides = null;
+            bool customStatsAvailable =
+                _cc?.CustomSpeciesStats?.TryGetValue(species.blueprintPath, out customStatOverrides) ?? false;
+
+            for (int s = 0; s < Values.STATS_COUNT; s++)
             {
-                _selectedSpecies = species;
-
-                double?[][] customStatOverrides = null;
-                bool customStatsAvailable =
-                    _cc?.CustomSpeciesStats?.TryGetValue(species.blueprintPath, out customStatOverrides) ?? false;
-
-                for (int s = 0; s < Values.STATS_COUNT; s++)
-                {
-                    _statControls[s].SetStatValues(_selectedSpecies.fullStatsRaw[s], customStatsAvailable ? customStatOverrides?[s] : null);
-                    _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Values.STATS_COUNT]?[s] ?? _selectedSpecies.StatImprintMultipliers[s] : _selectedSpecies.StatImprintMultipliers[s];
-                    _statControls[s].Visible = species.UsesStat(s);
-                }
-                _statControls[(int)StatNames.Health].TBHM = _selectedSpecies.TamedBaseHealthMultiplier;
+                _statControls[s].SetStatValues(_selectedSpecies.fullStatsRaw[s], customStatsAvailable ? customStatOverrides?[s] : null,
+                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(s, out var altV) ? altV / _selectedSpecies.fullStatsRaw[s][0] : 1,
+                    !CbAllowFlyerSpeedLeveling.Checked && species.isFlyer && s == (int)StatNames.SpeedMultiplier);
+                _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Values.STATS_COUNT]?[s] ?? _selectedSpecies.StatImprintMultipliers[s] : _selectedSpecies.StatImprintMultipliers[s];
+                _statControls[s].Visible = species.UsesStat(s);
+                _statControls[s].StatName = $"[{s}]{Utils.StatName(s, true, species.statNames)}";
             }
+            _statControls[(int)StatNames.Health].TBHM = _selectedSpecies.TamedBaseHealthMultiplier;
         }
 
         private void btUpdateSpecies_Click(object sender, EventArgs e)
@@ -247,9 +250,15 @@ namespace ARKBreedingStats.multiplierTesting
         /// <param name="IB">Imprinting Bonus of the creature</param>
         /// <param name="tamed"></param>
         /// <param name="bred"></param>
-        public void SetCreatureValues(double[] statValues, int[] levelsWild, int[] levelsDom, int totalLevel, double TE, double IB, bool tamed, bool bred)
+        public void SetCreatureValues(double[] statValues, int[] levelsWild, int[] levelsDom, int totalLevel, double TE, double IB, bool tamed, bool bred, Species species)
         {
             int level = 1;
+
+            for (int s = 0; s < Values.STATS_COUNT; s++)
+                _statControls[s].BeginUpdate();
+
+            SetSpecies(species);
+
             if (statValues != null)
             {
                 for (int s = 0; s < Values.STATS_COUNT; s++)
@@ -271,11 +280,15 @@ namespace ARKBreedingStats.multiplierTesting
             }
             SetTE(TE);
             SetIB(IB);
+
             if (tamed)
                 rbTamed.Checked = true;
             else if (bred)
                 rbBred.Checked = true;
             else rbWild.Checked = true;
+
+            for (int s = 0; s < Values.STATS_COUNT; s++)
+                _statControls[s].EndUpdate(true);
 
             nudCreatureLevel.Value = level > totalLevel ? level : totalLevel;
 
@@ -291,7 +304,8 @@ namespace ARKBreedingStats.multiplierTesting
             if (_cc?.serverMultipliers?.statMultipliers != null)
             {
                 showWarning = _cc.serverMultipliers.BabyImprintingStatScaleMultiplier != (double)nudIBM.Value
-                                || _cc.singlePlayerSettings != cbSingleplayerSettings.Checked;
+                                || _cc.singlePlayerSettings != cbSingleplayerSettings.Checked
+                                || _cc.serverMultipliers.AllowFlyerSpeedLeveling != CbAllowFlyerSpeedLeveling.Checked;
                 if (!showWarning)
                 {
                     for (int s = 0; s < Values.STATS_COUNT; s++)
@@ -310,7 +324,7 @@ namespace ARKBreedingStats.multiplierTesting
 
         private void llStatCalculation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://ark.gamepedia.com/Creature_Stats_Calculation");
+            ArkWiki.OpenPage("Creature_Stats_Calculation");
         }
 
         public CreatureCollection CreatureCollection
@@ -373,7 +387,7 @@ namespace ARKBreedingStats.multiplierTesting
 
         private void useDefaultStatMultipliersToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ServerMultipliers officialSM = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.OFFICIAL);
+            ServerMultipliers officialSM = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             if (officialSM == null) return;
             for (int s = 0; s < Values.STATS_COUNT; s++)
                 _statControls[s].StatMultipliers = officialSM.statMultipliers[s];
@@ -387,6 +401,7 @@ namespace ARKBreedingStats.multiplierTesting
                 _cc.serverMultipliers.statMultipliers[s] = _statControls[s].StatMultipliers;
             _cc.serverMultipliers.BabyImprintingStatScaleMultiplier = (double)nudIBM.Value;
             _cc.singlePlayerSettings = cbSingleplayerSettings.Checked;
+            _cc.serverMultipliers.AllowFlyerSpeedLeveling = CbAllowFlyerSpeedLeveling.Checked;
             OnApplyMultipliers?.Invoke();
             btUseMultipliersFromSettings.Visible = false;
         }
@@ -411,7 +426,7 @@ namespace ARKBreedingStats.multiplierTesting
         {
             if (cbSingleplayerSettings.Checked)
             {
-                ServerMultipliers spM = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.SINGLEPLAYER);
+                ServerMultipliers spM = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Singleplayer);
                 if (spM != null)
                 {
                     for (int s = 0; s < Values.STATS_COUNT; s++)
@@ -428,6 +443,22 @@ namespace ARKBreedingStats.multiplierTesting
                 _statControls[s].SetSinglePlayerSettings();
         }
 
+        private void CbAllowFlyerSpeedLeveling_CheckedChanged(object sender, EventArgs e)
+        {
+            // non flyers are not affected
+            if (!(_selectedSpecies?.isFlyer ?? false)) return;
+
+            int speedIndex = (int)StatNames.SpeedMultiplier;
+
+            double?[][] customStatOverrides = null;
+            bool customStatsAvailable =
+                _cc?.CustomSpeciesStats?.TryGetValue(_selectedSpecies.blueprintPath, out customStatOverrides) ?? false;
+
+            _statControls[speedIndex].SetStatValues(_selectedSpecies.fullStatsRaw[speedIndex], customStatsAvailable ? customStatOverrides?[speedIndex] : null,
+                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(speedIndex, out var altV) ? altV / _selectedSpecies.fullStatsRaw[speedIndex][0] : 1,
+                    !CbAllowFlyerSpeedLeveling.Checked);
+        }
+
         private void allWildLvlToToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Utils.ShowTextInput("Wild Level", out string nr, "", "0") && int.TryParse(nr, out int lv))
@@ -442,7 +473,7 @@ namespace ARKBreedingStats.multiplierTesting
             if (Utils.ShowTextInput("Dom Level", out string nr, "", "0") && int.TryParse(nr, out int lv))
             {
                 for (int s = 0; s < Values.STATS_COUNT; s++)
-                    if (_selectedSpecies.UsesStat(s)) _statControls[s].LevelDom = lv;
+                    if (_selectedSpecies.UsesStat(s) && s != (int)StatNames.Torpidity) _statControls[s].LevelDom = lv;
             }
         }
 

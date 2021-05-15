@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -34,9 +36,6 @@ namespace ARKBreedingStats.uiControls
         /// </summary>
         public event Action RecalculateBreedingPlan;
 
-        public delegate void ExportToClipboardEventHandler(Creature c, bool breedingValues, bool ArkMl);
-
-        public event ExportToClipboardEventHandler ExportToClipboard;
         private readonly List<Label> _labels;
         private readonly ToolTip _tt;
         public int comboId;
@@ -49,9 +48,9 @@ namespace ARKBreedingStats.uiControls
         /// <summary>
         /// If set to true, the levelHatched in parenthesis is appended with an '+'.
         /// </summary>
-        public bool TotalLevelUnknown { get; set; } = false;
+        public bool TotalLevelUnknown { get; set; }
 
-        public static readonly int[] DisplayedStats = new[] {
+        public static readonly int[] DisplayedStats = {
                                                         (int)StatNames.Health,
                                                         (int)StatNames.Stamina,
                                                         (int)StatNames.Oxygen,
@@ -218,9 +217,8 @@ namespace ARKBreedingStats.uiControls
         /// <summary>
         /// Update the colors displayed in the wheel.
         /// </summary>
-        /// <param name="colorIds"></param>
         internal void UpdateColors(int[] colorIds)
-            => pictureBox1.Image = CreatureColored.GetColoredCreature(colorIds, null, enabledColorRegions, 24, 22, true);
+            => pictureBox1.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(colorIds, null, enabledColorRegions, 24, 22, true));
 
         /// <summary>
         /// Sets the displayed title of the control.
@@ -262,6 +260,9 @@ namespace ARKBreedingStats.uiControls
             PedigreeCreature_MouseClick(sender, e);
         }
 
+        /// <summary>
+        /// Clears the displayed data.
+        /// </summary>
         public void Clear()
         {
             for (int s = 0; s < DisplayedStatsCount; s++)
@@ -324,18 +325,17 @@ namespace ARKBreedingStats.uiControls
 
         private void plainTextbreedingValuesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ExportToClipboard?.Invoke(_creature, true, false);
+            ExportCreatures.ExportAsTextToClipboard(_creature, true, false);
         }
 
         private void plainTextcurrentValuesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ExportToClipboard?.Invoke(_creature, false, false);
+            ExportCreatures.ExportAsTextToClipboard(_creature, false, false);
         }
 
         private void OpenWikipageInBrowserToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (_creature?.Species != null)
-                System.Diagnostics.Process.Start("https://ark.gamepedia.com/" + _creature.Species.name);
+            ArkWiki.OpenPage(_creature?.Species?.name);
         }
 
         private void TsMiViewInPedigree_Click(object sender, EventArgs e)
@@ -347,6 +347,11 @@ namespace ARKBreedingStats.uiControls
         {
             if (!string.IsNullOrEmpty(_creature?.name))
                 Clipboard.SetText(_creature.name);
+        }
+
+        private void copyInfoGraphicToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _creature?.ExportInfoGraphicToClipboard(CreatureCollection.CurrentCreatureCollection);
         }
     }
 }

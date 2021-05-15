@@ -1,4 +1,5 @@
-﻿using System.Resources;
+﻿using System.Globalization;
+using System.Resources;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -23,12 +24,23 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns the localized string.
         /// </summary>
-        public static string S(string key, bool returnKeyIfValueNA = true)
+        public static string S(string key, bool returnKeyIfValueNa = true)
         {
             if (rm == null) return null;
             string s = rm.GetString(key);
-            //if (string.IsNullOrEmpty(s) && !key.EndsWith("TT")) System.Console.WriteLine("missing: " + key); // TODO debug
-            return s ?? (returnKeyIfValueNA ? key : null);
+            //if (string.IsNullOrEmpty(s) && !key.EndsWith("TT")) System.Console.WriteLine("missing: " + key); // for debugging
+            return s ?? (returnKeyIfValueNa ? key : null);
+        }
+
+        /// <summary>
+        /// Returns the localized string of the given culture.
+        /// </summary>
+        public static string S(string key, CultureInfo culture, bool returnKeyIfValueNa = true)
+        {
+            if (rm == null) return null;
+            string s = rm.GetString(key, culture);
+            //if (string.IsNullOrEmpty(s) && !key.EndsWith("TT")) System.Console.WriteLine("missing: " + key); // for debugging
+            return s ?? (returnKeyIfValueNa ? key : null);
         }
 
         public static void ControlText(Control c) => c.Text = S(c.Name);
@@ -71,15 +83,7 @@ namespace ARKBreedingStats
             c.Text = S(key);
             tt.SetToolTip(c, S(c.Name + "TT", false));
         }
-        public static void ControlText(ToolStripMenuItem i)
-        {
-            i.Text = S(i.Name);
-            string tt = S(i.Name + "TT", false);
-            if (!string.IsNullOrEmpty(tt))
-                i.ToolTipText = tt;
-        }
-
-        public static void ControlText(ToolStripButton i)
+        public static void ControlText(ToolStripItem i)
         {
             i.Text = S(i.Name);
             string tt = S(i.Name + "TT", false);

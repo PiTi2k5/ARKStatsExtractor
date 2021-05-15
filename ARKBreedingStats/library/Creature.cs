@@ -73,15 +73,24 @@ namespace ARKBreedingStats.Library
         [JsonProperty]
         public Guid guid;
         /// <summary>
-        /// The creature's id in ARK. This id is shown to the user ingame, but it's not always unique. (It's build from two integers which are concatenated as strings).
+        /// This field contains either the real Ark id or a user input value, depending on ArkIdImported.
+        /// The real, unique creature's id in ARK is created by id1 &lt;&lt; 32 | id2. This is not the one that is shown to the user in game (see ArkIdInGame for that).
+        /// This property is only set if the creature was imported.
+        /// If ArkIdImported is false, this field can contain any user input value, intended is the creature's id in ARK like it is shown to the user in game.
+        /// The shown id is not always unique. It's build from two 32 bit integers which are converted to strings and then concatenated.
         /// </summary>
         [JsonProperty]
         public long ArkId;
         /// <summary>
-        /// If true it's assumed the ArkId is correct (ingame visualization can be wrong). This field should only be true if the ArkId was imported.
+        /// If true it's assumed the ArkId is correct (in game visualization can be wrong). This field should only be true if the ArkId was imported.
         /// </summary>
         [JsonProperty]
         public bool ArkIdImported;
+        /// <summary>
+        /// Ark id how it is shown in game.
+        /// </summary>
+        [JsonIgnore]
+        public string ArkIdInGame;
         [JsonProperty]
         public bool isBred;
         [JsonProperty]
@@ -307,7 +316,12 @@ namespace ARKBreedingStats.Library
             }
         }
 
-        public void SetTopStatCount(bool[] considerStatHighlight)
+        /// <summary>
+        /// Sets the count of top stats according to the considered stat indices.
+        /// </summary>
+        /// <param name="considerStatHighlight"></param>
+        /// <param name="considerWastedStats">If false, stats that don't increase its wild value with levels don't make a creature non-top.</param>
+        public void SetTopStatCount(bool[] considerStatHighlight, bool considerWastedStats)
         {
             if (Species == null
                 || flags.HasFlag(CreatureFlags.Placeholder))
@@ -326,7 +340,7 @@ namespace ARKBreedingStats.Library
                     if (considerStatHighlight[s])
                         c++;
                 }
-                else if (onlyTopConsideredStats && considerStatHighlight[s] && Species.UsesStat(s) && Species.stats[s].IncPerWildLevel > 0)
+                else if (onlyTopConsideredStats && considerStatHighlight[s] && Species.UsesStat(s) && (considerWastedStats || Species.stats[s].IncPerWildLevel > 0))
                 {
                     onlyTopConsideredStats = false;
                 }
@@ -408,7 +422,9 @@ namespace ARKBreedingStats.Library
             else PauseTimer();
         }
 
-        // XmlSerializer does not support TimeSpan, so use this property for serialization instead.
+        /// <summary>
+        /// XmlSerializer does not support TimeSpan, so use this property for serialization instead.
+        /// </summary>
         [System.ComponentModel.Browsable(false)]
         [JsonProperty("growingLeft")]
         public string GrowingLeftString
@@ -425,7 +441,13 @@ namespace ARKBreedingStats.Library
         private void Initialize(StreamingContext ct)
         {
             InitializeArrays();
+            InitializeArkInGame();
         }
+
+        /// <summary>
+        /// Set the string of ArkIdInGame depending on the real ArkId or the user input number.
+        /// </summary>
+        internal void InitializeArkInGame() => ArkIdInGame = ArkIdImported ? Utils.ConvertImportedArkIdToIngameVisualization(ArkId) : ArkId.ToString();
 
         private void InitializeArrays()
         {

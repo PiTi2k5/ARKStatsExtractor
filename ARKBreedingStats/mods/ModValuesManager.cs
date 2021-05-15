@@ -4,10 +4,12 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Threading;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -76,30 +78,23 @@ namespace ARKBreedingStats.uiControls
             var selectedMiAvMod = lbAvailableModFiles.SelectedItem as ModInfo;
 
             lbModList.Items.Clear();
-            lbAvailableModFiles.Items.Clear();
 
             if (cc?.ModList == null) return;
 
             var modToModInfo = modInfos.ToDictionary(mi => mi.mod, mi => mi);
 
-            foreach (ModInfo mi in modInfos) mi.currentlyInLibrary = false;
+            foreach (ModInfo mi in modInfos) mi.CurrentlyInLibrary = false;
 
             foreach (Mod m in cc.ModList)
             {
                 if (modToModInfo.ContainsKey(m))
                 {
                     lbModList.Items.Add(modToModInfo[m]);
-                    modToModInfo[m].currentlyInLibrary = true;
+                    modToModInfo[m].CurrentlyInLibrary = true;
                 }
             }
 
-            foreach (ModInfo mi in modInfos)
-            {
-                if (!mi.currentlyInLibrary)
-                {
-                    lbAvailableModFiles.Items.Add(mi);
-                }
-            }
+            FilterMods();
 
             lbModList.SelectedItem = selectedMiLib;
             lbAvailableModFiles.SelectedItem = selectedMiAvMod;
@@ -128,7 +123,7 @@ namespace ARKBreedingStats.uiControls
             LbModVersion.Text = modInfo.version;
             lbModTag.Text = modInfo.mod.tag;
             lbModId.Text = modInfo.mod.id;
-            llbSteamPage.Visible = modInfo.onlineAvailable; // it's assumed that the officially supported mods all have a steam page
+            llbSteamPage.Visible = modInfo.OnlineAvailable; // it's assumed that the officially supported mods all have a steam page
         }
 
         private void BtClose_Click(object sender, EventArgs e)
@@ -207,7 +202,42 @@ namespace ARKBreedingStats.uiControls
 
         private void linkLabelCustomModManual_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/cadon/ARKStatsExtractor/wiki/Mod-Values");
+            RepositoryInfo.OpenWikiPage("Mod-Values");
+        }
+
+        private void LlUnofficialModFiles_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            RepositoryInfo.OpenWikiPage("Unsupported-Mod-Values");
+        }
+
+        private readonly Debouncer _modFilterDebouncer = new Debouncer();
+        private void TbModFilter_TextChanged(object sender, EventArgs e)
+        {
+            _modFilterDebouncer.Debounce(300, FilterMods, Dispatcher.CurrentDispatcher);
+        }
+
+        private void BtClearFilter_Click(object sender, EventArgs e)
+        {
+            TbModFilter.Text = string.Empty;
+        }
+
+        private void FilterMods()
+        {
+            var filter = string.IsNullOrWhiteSpace(TbModFilter.Text) ? null : TbModFilter.Text.Trim();
+
+            lbAvailableModFiles.Items.Clear();
+
+            foreach (ModInfo mi in modInfos)
+            {
+                if (!mi.CurrentlyInLibrary
+                    && (filter == null || mi.mod.title.IndexOf(filter, StringComparison.OrdinalIgnoreCase) != -1)
+                )
+                {
+                    lbAvailableModFiles.Items.Add(mi);
+                }
+            }
+
+            TbModFilter.BackColor = filter == null ? SystemColors.Window : Color.LightYellow;
         }
     }
 }

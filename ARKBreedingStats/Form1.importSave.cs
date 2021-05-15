@@ -4,6 +4,7 @@ using FluentFTP;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -17,17 +18,24 @@ namespace ARKBreedingStats
 {
     public partial class Form1
     {
-        private void SavegameImportClick(object sender, EventArgs e)
+        private async void SavegameImportClick(object sender, EventArgs e)
         {
-            RunSavegameImport((ATImportFileLocation)((ToolStripMenuItem)sender).Tag);
+            var error = await RunSavegameImport((ATImportFileLocation)((ToolStripMenuItem)sender).Tag);
+            if (error == null) return;
+            MessageBoxes.ShowMessageBox(error, "Savegame import error");
         }
 
         /// <summary>
         /// Imports the creatures from the given savegame. ftp is possible.
         /// </summary>
         /// <param name="atImportFileLocation"></param>
-        private async void RunSavegameImport(ATImportFileLocation atImportFileLocation)
+        private async Task<string> RunSavegameImport(ATImportFileLocation atImportFileLocation)
         {
+            TsbImportLastSaveGame.Enabled = false;
+            TsbImportLastSaveGame.BackColor = Color.Yellow;
+            ToolStripStatusLabelImport.Text = $"{Loc.S("ImportingSavegame")} {atImportFileLocation.ConvenientName}";
+            ToolStripStatusLabelImport.Visible = true;
+
             try
             {
                 string workingCopyfilename = Properties.Settings.Default.savegameExtractionPath;
@@ -35,7 +43,7 @@ namespace ARKBreedingStats
                 // working dir not configured? use temp dir
                 // luser configured savegame folder as working dir? use temp dir instead
                 if (string.IsNullOrWhiteSpace(workingCopyfilename) ||
-                        Path.GetDirectoryName(atImportFileLocation.FileLocation) == workingCopyfilename)
+                    Path.GetDirectoryName(atImportFileLocation.FileLocation) == workingCopyfilename)
                 {
                     workingCopyfilename = Path.GetTempPath();
                 }
@@ -47,10 +55,11 @@ namespace ARKBreedingStats
                     switch (uri.Scheme)
                     {
                         case "ftp":
-                            workingCopyfilename = await CopyFtpFileAsync(uri, atImportFileLocation.ConvenientName, workingCopyfilename);
+                            workingCopyfilename = await CopyFtpFileAsync(uri, atImportFileLocation.ConvenientName,
+                                workingCopyfilename);
                             if (workingCopyfilename == null)
                                 // the user didn't enter credentials
-                                return;
+                                return "no credentials";
                             break;
                         default:
                             throw new Exception($"Unsupported uri scheme: {uri.Scheme}");
@@ -58,11 +67,16 @@ namespace ARKBreedingStats
                 }
                 else
                 {
-                    workingCopyfilename = Path.Combine(workingCopyfilename, Path.GetFileName(atImportFileLocation.FileLocation));
+                    if (!File.Exists(atImportFileLocation.FileLocation))
+                        return $"File not found: {atImportFileLocation.FileLocation}";
+
+                    workingCopyfilename = Path.Combine(workingCopyfilename,
+                        Path.GetFileName(atImportFileLocation.FileLocation));
                     File.Copy(atImportFileLocation.FileLocation, workingCopyfilename, true);
                 }
 
-                await ImportSavegame.ImportCollectionFromSavegame(_creatureCollection, workingCopyfilename, atImportFileLocation.ServerName);
+                await ImportSavegame.ImportCollectionFromSavegame(_creatureCollection, workingCopyfilename,
+                    atImportFileLocation.ServerName);
 
                 UpdateParents(_creatureCollection.creatures);
 
@@ -91,20 +105,32 @@ namespace ARKBreedingStats
                     SetCollectionChanged(true);
 
                 Properties.Settings.Default.LastImportedSaveGame = atImportFileLocation.ToString();
-                TsbImportLastSaveGame.ToolTipText = $"Import savegame {atImportFileLocation.ConvenientName}";
+                SetLastSaveFileImportTooltip(atImportFileLocation);
             }
             catch (Exception ex)
             {
                 string message = ex.Message
-                       + "\n\nException in " + ex.Source
-                       + "\n\nMethod throwing the error: " + ex.TargetSite.DeclaringType.FullName + "." + ex.TargetSite.Name
-                       + "\n\nStackTrace:\n" + ex.StackTrace
-                       + (ex.InnerException != null ? "\n\nInner Exception:\n" + ex.InnerException.Message : string.Empty)
-                       ;
-                MessageBox.Show($"An error occured while importing. Message: \n\n{message}",
-                        "Import Error", MessageBoxButtons.OK);
+                                 + "\n\nException in " + ex.Source
+                                 + "\n\nMethod throwing the error: " + ex.TargetSite.DeclaringType.FullName + "." +
+                                 ex.TargetSite.Name
+                                 + "\n\nStackTrace:\n" + ex.StackTrace
+                                 + (ex.InnerException != null
+                                     ? "\n\nInner Exception:\n" + ex.InnerException.Message
+                                     : string.Empty)
+                    ;
+                MessageBoxes.ShowMessageBox($"An error occurred while importing. Message:\n\n{message}", "Save file import error");
             }
+            finally
+            {
+                TsbImportLastSaveGame.Enabled = true;
+                TsbImportLastSaveGame.BackColor = SystemColors.Control;
+                ToolStripStatusLabelImport.Visible = false;
+            }
+
+            return null; // no error
         }
+
+        private void SetLastSaveFileImportTooltip(ATImportFileLocation importInfo) => TsbImportLastSaveGame.ToolTipText = $"Import savegame {importInfo.ConvenientName}\n{importInfo.FileLocation}";
 
         private async Task<string> CopyFtpFileAsync(Uri ftpUri, string serverName, string workingCopyFolder)
         {
@@ -271,19 +297,34 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Import the last imported savegame.
+        /// Import the last imported save game.
         /// </summary>
-        private void TsbImportLastSaveGame_Click(object sender, EventArgs e)
+        private async void TsbImportLastSaveGame_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(Properties.Settings.Default.LastImportedSaveGame))
             {
-                MessageBox.Show(
-                    "First import a savegame via the menu, after that you can import the last imported file with this button.",
-                    "First import manual.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBoxes.ShowMessageBox(
+                "First import a savegame via the menu. After that you can import the last imported file with this button.",
+                    "First import a save file manually", MessageBoxIcon.Information);
                 return;
             }
 
-            RunSavegameImport(ATImportFileLocation.CreateFromString(Properties.Settings.Default.LastImportedSaveGame));
+            var importFile = ATImportFileLocation.CreateFromString(Properties.Settings.Default.LastImportedSaveGame);
+
+            if (string.IsNullOrEmpty(importFile.FileLocation)
+                || (!(Uri.TryCreate(importFile.FileLocation, UriKind.Absolute, out var uri) && uri.Scheme == "ftp")
+                    && !File.Exists(importFile.FileLocation)
+                ))
+            {
+                MessageBoxes.ShowMessageBox(
+                    $"The file that was imported last time does not exist anymore:\n{importFile.FileLocation}\nImport the file you want to import at least once via the menu. After that you can import the last imported file with this button.",
+                    "File not existing");
+                return;
+            }
+
+            var error = await RunSavegameImport(importFile);
+            if (error == null) return;
+            MessageBoxes.ShowMessageBox(error, "Savegame import error");
         }
     }
 }

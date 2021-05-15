@@ -5,16 +5,20 @@ namespace ARKBreedingStats
 {
     public partial class Form1
     {
-        private void initLocalization()
+        private void InitLocalization()
         {
             Loc.LoadResourceFile();
             Utils.InitializeLocalizations();
         }
 
-        private void setLocalizations(bool init = true)
+        /// <summary>
+        /// Sets the localizations, i.e. translated texts in the application.
+        /// </summary>
+        /// <param name="init">If true</param>
+        private void SetLocalizations(bool init = true)
         {
             if (init)
-                initLocalization();
+                InitLocalization();
 
             // menu
             Loc.ControlText(fileToolStripMenuItem);
@@ -55,8 +59,6 @@ namespace ARKBreedingStats
             Loc.ControlText(toolStripButtonCopy2Tester);
             Loc.ControlText(toolStripButtonCopy2Extractor);
             Loc.ControlText(toolStripButtonClear);
-            Loc.ControlText(toolStripButtonAddNote);
-            Loc.ControlText(toolStripButtonRemoveNote);
             Loc.ControlText(toolStripButtonDeleteExpiredIncubationTimers);
             Loc.ControlText(toolStripButtonSaveCreatureValuesTemp);
             Loc.ControlText(toolStripButtonDeleteTempCreature);
@@ -141,7 +143,7 @@ namespace ARKBreedingStats
             columnHeaderGen.Text = Loc.S("Generation_Abb");
             columnHeaderLW.Text = Loc.S("LevelWild_Abb");
             columnHeaderMutations.Text = Loc.S("Mutations_Abb");
-            columnHeaderAdded.Text = Loc.S("added");
+            columnHeaderDomesticated.Text = Loc.S("domesticatedAt");
             columnHeaderCooldown.Text = Loc.S("cooldownGrowing");
             columnHeaderColor0.Text = Loc.S("C0");
             columnHeaderColor1.Text = Loc.S("C1");
@@ -149,6 +151,7 @@ namespace ARKBreedingStats
             columnHeaderColor3.Text = Loc.S("C3");
             columnHeaderColor4.Text = Loc.S("C4");
             columnHeaderColor5.Text = Loc.S("C5");
+            Loc.ControlText(ToolStripLabelFilter);
 
             // other tabs
             Loc.ControlText(tabPagePedigree, "pedigree");
@@ -164,6 +167,8 @@ namespace ARKBreedingStats
             tamingControl1.SetLocalizations();
             breedingPlan1.SetLocalizations();
             raisingControl1.SetLocalizations();
+            creatureBoxListView.SetLocalizations();
+            notesControl1.SetLocalizations();
             _overlay?.SetLocatlizations();
         }
     }

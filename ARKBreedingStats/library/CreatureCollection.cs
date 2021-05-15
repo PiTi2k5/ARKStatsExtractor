@@ -11,11 +11,21 @@ namespace ARKBreedingStats.Library
     [JsonObject(MemberSerialization.OptIn)]
     public class CreatureCollection
     {
-        public const string CURRENT_FORMAT_VERSION = "1.13";
+        public const string CurrentLibraryFormatVersion = "1.13";
+
+        public CreatureCollection()
+        {
+            FormatVersion = CurrentLibraryFormatVersion;
+        }
 
         public const int MaxDomLevelDefault = 73;
         public const int MaxDomLevelSinglePlayerDefault = 88;
 
+        /// <summary>
+        /// The currently loaded creature collection.
+        /// </summary>
+        [JsonIgnore]
+        public static CreatureCollection CurrentCreatureCollection;
         [JsonProperty]
         public string FormatVersion;
         [JsonProperty]
@@ -144,6 +154,9 @@ namespace ARKBreedingStats.Library
             modListHash = CalculateModListHash(ModList);
         }
 
+        /// <summary>
+        /// Mods currently loaded to this collection.
+        /// </summary>
         public List<Mod> ModList
         {
             set
@@ -163,9 +176,9 @@ namespace ARKBreedingStats.Library
         /// Adds creatures to the current library.
         /// </summary>
         /// <param name="creaturesToMerge">List of creatures to add</param>
-        /// <param name="addPreviouslylDeletedCreatures">If true creatures will be added even if they were just deleted.</param>
+        /// <param name="addPreviouslyDeletedCreatures">If true creatures will be added even if they were just deleted.</param>
         /// <returns></returns>
-        public bool MergeCreatureList(List<Creature> creaturesToMerge, bool addPreviouslylDeletedCreatures = false)
+        public bool MergeCreatureList(List<Creature> creaturesToMerge, bool addPreviouslyDeletedCreatures = false)
         {
             bool creaturesWereAddedOrUpdated = false;
             Species onlyThisSpeciesAdded = null;
@@ -173,7 +186,7 @@ namespace ARKBreedingStats.Library
 
             foreach (Creature creatureNew in creaturesToMerge)
             {
-                if (!addPreviouslylDeletedCreatures && DeletedCreatureGuids != null && DeletedCreatureGuids.Contains(creatureNew.guid)) continue;
+                if (!addPreviouslyDeletedCreatures && DeletedCreatureGuids != null && DeletedCreatureGuids.Contains(creatureNew.guid)) continue;
 
                 if (onlyOneSpeciesAdded)
                 {
@@ -183,18 +196,21 @@ namespace ARKBreedingStats.Library
                         onlyOneSpeciesAdded = false;
                 }
 
-                if (!creatures.Contains(creatureNew))
+                var creatureExisting = creatures.FirstOrDefault(c => c.guid == creatureNew.guid);
+                if (creatureExisting == null)
                 {
                     creatures.Add(creatureNew);
                     creaturesWereAddedOrUpdated = true;
                     continue;
                 }
 
-                // creature is already in the library. Update it's properties.
-                var creatureExisting = creatures.Single(c => c.guid == creatureNew.guid);
-                if (creatureExisting.Species == null)
+                // creature is already in the library. Update its properties.
+                if (creatureExisting.Species == null
+                    || creatureExisting.speciesBlueprint != creatureNew.speciesBlueprint)
+                {
                     creatureExisting.Species = creatureNew.Species;
-                else if (creatureExisting.speciesBlueprint != creatureNew.speciesBlueprint) continue;
+                    creaturesWereAddedOrUpdated = true;
+                }
 
                 if (creatureNew.Mother != null)
                     creatureExisting.Mother = creatureNew.Mother;
@@ -489,7 +505,7 @@ namespace ARKBreedingStats.Library
             /// </summary>
             ColorExistingInOtherRegion,
             /// <summary>
-            /// The color is not existing on any region on any creature of that species.
+            /// The color does not exist on any region on any creature of that species.
             /// </summary>
             ColorIsNew
         }

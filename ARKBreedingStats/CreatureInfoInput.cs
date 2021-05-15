@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.Properties;
 using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
@@ -92,7 +93,11 @@ namespace ARKBreedingStats
                     }
                 };
             }
+
+            // set tooltips
             _tt = new ToolTip();
+            _tt.SetToolTip(LbArkId, "The real Ark id of the creature, not directly shown in game.\nEach creature has its id stored in two 32 bit integers (id1, id2), this value is created by (id1 << 32) | id2");
+            _tt.SetToolTip(LbArkIdIngame, "The id of the creature like it is shown in game.\nIt is created by the game by two 32 bit integers which are concatenated as strings.");
 
             regionColorChooser1.RegionColorChosen += UpdateRegionColorImage;
         }
@@ -104,8 +109,7 @@ namespace ARKBreedingStats
         {
             ParentInheritance?.UpdateColors(RegionColors);
             ColorsChanged?.Invoke(this);
-            if (PbColorRegion != null)
-                PbColorRegion.Image = CreatureColored.GetColoredCreature(RegionColors, _selectedSpecies, regionColorChooser1.ColorRegionsUseds, 256, onlyImage: true, creatureSex: CreatureSex);
+            PbColorRegion?.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(RegionColors, _selectedSpecies, regionColorChooser1.ColorRegionsUseds, 256, onlyImage: true, creatureSex: CreatureSex));
         }
 
         internal void UpdateParentInheritances(Creature creature)
@@ -376,13 +380,13 @@ namespace ARKBreedingStats
         /// </summary>
         public DateTime? DomesticatedAt
         {
-            get => dateTimePickerAdded.Value;
+            get => dateTimePickerDomesticatedAt.Value;
             set
             {
                 if (value.HasValue)
-                    dateTimePickerAdded.Value = value.Value < dateTimePickerAdded.MinDate ? dateTimePickerAdded.MinDate : value.Value;
+                    dateTimePickerDomesticatedAt.Value = value.Value < dateTimePickerDomesticatedAt.MinDate ? dateTimePickerDomesticatedAt.MinDate : value.Value;
                 else
-                    dateTimePickerAdded.Value = dateTimePickerAdded.MinDate;
+                    dateTimePickerDomesticatedAt.Value = dateTimePickerDomesticatedAt.MinDate;
             }
         }
 
@@ -419,22 +423,28 @@ namespace ARKBreedingStats
 
         public void SetArkId(long arkId, bool arkIdImported)
         {
-            tbARKID.Text = arkId.ToString();
             ArkIdImported = arkIdImported;
 
             if (arkIdImported)
             {
-                tbArkIdIngame.Text = Utils.ConvertImportedArkIdToIngameVisualization(arkId);
+                TbArkIdIngame.Text = Utils.ConvertImportedArkIdToIngameVisualization(arkId);
+                TbArkId.Text = arkId.ToString();
             }
-            lbArkIdIngame.Visible = arkIdImported;
-            tbArkIdIngame.Visible = arkIdImported;
+            else
+            {
+                TbArkIdIngame.Text = arkId.ToString();
+            }
+            // if the creature is imported, the id is considered to be correct and the user should not change it.
+            TbArkIdIngame.ReadOnly = arkIdImported;
+            LbArkId.Visible = arkIdImported;
+            TbArkId.Visible = arkIdImported;
         }
 
         public long ArkId
         {
             get
             {
-                long.TryParse(tbARKID.Text, out long result);
+                long.TryParse(ArkIdImported ? TbArkId.Text : TbArkIdIngame.Text, out long result);
                 return result;
             }
         }
@@ -516,7 +526,7 @@ namespace ARKBreedingStats
         public void GenerateCreatureName(Creature creature, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, bool showDuplicateNameWarning, int namingPatternIndex)
         {
             SetCreatureData(creature);
-            CreatureName = NamePatterns.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex);
+            CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex);
         }
 
         public void OpenNamePatternEditor(Creature creature, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback)
@@ -526,9 +536,6 @@ namespace ARKBreedingStats
             SetCreatureData(creature);
             using (var pe = new PatternEditor(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, namingPatternIndex, reloadCallback))
             {
-                Utils.SetWindowRectangle(pe, Settings.Default.PatternEditorFormRectangle);
-                if (Settings.Default.PatternEditorSplitterDistance > 0)
-                    pe.SplitterDistance = Settings.Default.PatternEditorSplitterDistance;
                 if (pe.ShowDialog() == DialogResult.OK)
                 {
                     var namingPatterns = Settings.Default.NamingPatterns ?? new string[6];
@@ -755,7 +762,7 @@ namespace ARKBreedingStats
             //tooltips
             Loc.SetToolTip(buttonSex, "Sex", _tt);
             Loc.SetToolTip(buttonStatus, "Status", _tt);
-            Loc.SetToolTip(dateTimePickerAdded, "addedAt", _tt);
+            Loc.SetToolTip(dateTimePickerDomesticatedAt, "domesticatedAt", _tt);
             Loc.SetToolTip(nudMutationsMother, "mutationCounter", _tt);
             Loc.SetToolTip(nudMutationsFather, "mutationCounter", _tt);
             Loc.ControlText(BtApplyOTSPreset, _tt);
@@ -766,6 +773,11 @@ namespace ARKBreedingStats
                 _tt.SetToolTip(namingPatternButtons[bi], Loc.S("btnGenerateUniqueNameTT", false));
         }
 
-        internal void SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable = null) => regionColorChooser1.SetRegionColorsExisting(colorAlreadyAvailable);
+        internal void SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable = null)
+        {
+            regionColorChooser1.SetRegionColorsExisting(colorAlreadyAvailable);
+            LbColorNewInRegion.Visible = regionColorChooser1.ColorNewInRegion;
+            LbColorNewInSpecies.Visible = regionColorChooser1.ColorNewInSpecies;
+        }
     }
 }

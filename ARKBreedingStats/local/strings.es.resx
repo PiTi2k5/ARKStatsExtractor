@@ -698,9 +698,6 @@ Habilítelo si el OCR no reconoce el nombre de la tribu correctamente y desea ag
   <data name="Torpidity_Abb" xml:space="preserve">
     <value>A</value>
   </data>
-  <data name="toolStripButtonAddNote" xml:space="preserve">
-    <value>Añadir la nota</value>
-  </data>
   <data name="toolStripButtonClear" xml:space="preserve">
     <value>Limpiar</value>
   </data>
@@ -719,7 +716,7 @@ Habilítelo si el OCR no reconoce el nombre de la tribu correctamente y desea ag
   <data name="toolStripButtonDeleteTempCreatureTT" xml:space="preserve">
     <value>Eliminar los datos seleccionados actualmente de la criatura temporal</value>
   </data>
-  <data name="toolStripButtonRemoveNote" xml:space="preserve">
+  <data name="Remove Note" xml:space="preserve">
     <value>Eliminar nota</value>
   </data>
   <data name="toolStripButtonSaveCreatureValuesTemp" xml:space="preserve">
@@ -892,10 +889,10 @@ La posibilidad de una buena criatura en general es mejor.
 Compruebe si no es importante tener un Top-Stats-Offspring.</value>
   </data>
   <data name="rbBPTopStats" xml:space="preserve">
-    <value>Top Stats Lc</value>
+    <value>Estadísticas superiores, sentirse afortunado</value>
   </data>
   <data name="rbBPTopStatsCn" xml:space="preserve">
-    <value>Top Stats Cn</value>
+    <value>Estadísticas superiores, conservador</value>
   </data>
   <data name="rbBPTopStatsCnTT" xml:space="preserve">
     <value>Estadísticas superiores, conservador.
@@ -999,7 +996,7 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
     <value>Establecer carpeta de exportación automáticamente</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
-    <value>La carpeta de exportación de Steam no se pudo detectar automáticamente.</value>
+    <value>La carpeta de exportación no se pudo detectar automáticamente.</value>
   </data>
   <data name="incubation" xml:space="preserve">
     <value>incubación</value>
@@ -1036,5 +1033,8 @@ Algunas crías pueden ser peores que en el modo de estadísticas altas, pero tam
   </data>
   <data name="generation" xml:space="preserve">
     <value>Generacion</value>
+  </data>
+  <data name="Add Note" xml:space="preserve">
+    <value>Añadir la nota</value>
   </data>
 </root>

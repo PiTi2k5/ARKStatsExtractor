@@ -17,7 +17,7 @@
     <Setting Name="autosave" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="autosaveMinutes" Type="System.Int32" Scope="User">
+    <Setting Name="BackupEveryMinutes" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
     <Setting Name="customStatWeights" Type="System.Double[][]" Scope="User">
@@ -71,11 +71,11 @@
     <Setting Name="OverlayInfoDuration" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
     </Setting>
-    <Setting Name="OCRWhiteThreshold" Type="System.Int32" Scope="User">
+    <Setting Name="OCRWhiteThreshold" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">160</Value>
     </Setting>
     <Setting Name="ocrFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">json/ocr_1920x1080_100.json</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="waitBeforeScreenCapture" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">500</Value>
@@ -314,7 +314,7 @@
     <Setting Name="applyNamePatternOnAutoImportForNewCreatures" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AlreadyAskedToDownloadImageFiles20200921" Type="System.Boolean" Scope="User">
+    <Setting Name="AlreadyAskedToDownloadSpeciesImageFiles" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="LibrarySelectSelectedSpeciesOnLoad" Type="System.Boolean" Scope="User">
@@ -355,6 +355,81 @@
     </Setting>
     <Setting Name="HighlightEvenOdd" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LastUsedCollectionFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LastUsedLibraryFiles" Type="System.String[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicExportFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicShowMaxWildLevel" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicBackColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">AntiqueWhite</Value>
+    </Setting>
+    <Setting Name="InfoGraphicForeColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">Black</Value>
+    </Setting>
+    <Setting Name="InfoGraphicFontName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Arial</Value>
+    </Setting>
+    <Setting Name="InfoGraphicBorderColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">Maroon</Value>
+    </Setting>
+    <Setting Name="BackupFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BackupFileCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="InfoGraphicWithDomLevels" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicDisplayMutations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicDisplayGeneration" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ImgCacheUseLocalAppData" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoImportedExportFileRenamePattern" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DinoExport_{arkid}_{species}.ini</Value>
+    </Setting>
+    <Setting Name="AutoImportedExportFileRename" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BreedingPlannerConsiderOnlyEvenForHighStats" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoImportGotoLibraryAfterSuccess" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PauseGrowingTimerAfterAddingBaby" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CreatureTableExportFields" Type="System.Int32[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SpeciesImagesFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ConsiderWastedStatsForTopCreatures" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="SaveFileImportUnclaimedBabies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="OcrGuessSpecies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="WaitBeforeAutoLoadMs" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

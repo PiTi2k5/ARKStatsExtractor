@@ -4,13 +4,14 @@ using ARKBreedingStats.uiControls;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.utils;
+using System.IO;
+using System.Text.RegularExpressions;
+using ARKBreedingStats.library;
 
 namespace ARKBreedingStats
 {
@@ -18,7 +19,7 @@ namespace ARKBreedingStats
     {
         /// <summary>
         /// Creatures filtered according to the library-filter.
-        /// Used so the live filter doesn't need to do the base filtering everytime.
+        /// Used so the live filter doesn't need to do the base filtering every time.
         /// </summary>
         private Creature[] _creaturesPreFiltered;
 
@@ -70,14 +71,13 @@ namespace ARKBreedingStats
                 mutationsMaternal = input.MutationCounterMother,
                 mutationsPaternal = input.MutationCounterFather,
                 Status = input.CreatureStatus,
-                colors = input.RegionColors
+                colors = input.RegionColors,
+                guid = fromExtractor && input.CreatureGuid != Guid.Empty ? input.CreatureGuid : Guid.NewGuid(),
+                ArkId = input.ArkId
             };
 
-            // Ids: ArkId and Guid
-            creature.guid = fromExtractor && input.CreatureGuid != Guid.Empty ? input.CreatureGuid : Guid.NewGuid();
-
-            creature.ArkId = input.ArkId;
             creature.ArkIdImported = Utils.IsArkIdImported(creature.ArkId, creature.guid);
+            creature.InitializeArkInGame();
 
             // parent guids
             if (motherArkId != 0)
@@ -139,6 +139,9 @@ namespace ARKBreedingStats
             if (creature.Mother == null || creature.Father == null)
                 UpdateParents(new List<Creature> { creature });
 
+            if (Properties.Settings.Default.PauseGrowingTimerAfterAddingBaby)
+                creature.StartStopMatureTimer(false);
+
             _filterListAllowed = false;
             UpdateCreatureListings(species, false);
 
@@ -150,6 +153,21 @@ namespace ARKBreedingStats
             if (goToLibraryTab)
             {
                 tabControlMain.SelectedTab = tabPageLibrary;
+
+                // select new creature and ensure visibility
+                _reactOnCreatureSelectionChange = false;
+                listViewLibrary.SelectedItems.Clear();
+                _reactOnCreatureSelectionChange = true;
+                for (int i = 0; i < listViewLibrary.Items.Count; i++)
+                {
+                    if (creature == (Creature)listViewLibrary.Items[i].Tag)
+                    {
+                        listViewLibrary.Items[i].Focused = true;
+                        listViewLibrary.Items[i].Selected = true;
+                        listViewLibrary.EnsureVisible(i);
+                        break;
+                    }
+                }
             }
 
             creatureInfoInputExtractor.parentListValid = false;
@@ -266,6 +284,7 @@ namespace ARKBreedingStats
         private void InitializeCollection(bool keepCurrentSelection = false)
         {
             // set pointer to current collection
+            CreatureCollection.CurrentCreatureCollection = _creatureCollection;
             pedigree1.SetCreatures(_creatureCollection.creatures);
             breedingPlan1.CreatureCollection = _creatureCollection;
             tribesControl1.Tribes = _creatureCollection.tribes;
@@ -320,14 +339,17 @@ namespace ARKBreedingStats
         /// <param name="creatures">creatures to consider</param>
         private void CalculateTopStats(List<Creature> creatures)
         {
-            toolStripProgressBar1.Value = 0;
-            toolStripProgressBar1.Maximum = Values.V.speciesNames.Count;
-            toolStripProgressBar1.Visible = true;
+            var filteredCreaturesHash = Properties.Settings.Default.useFiltersInTopStatCalculation ? new HashSet<Creature>(ApplyLibraryFilterSettings(creatures)) : null;
 
-            var filteredCreatures = Properties.Settings.Default.useFiltersInTopStatCalculation ? ApplyLibraryFilterSettings(creatures).ToArray() : null;
-            foreach (Species species in Values.V.species)
+            var speciesCreaturesGroups = creatures.GroupBy(c => c.Species);
+
+            foreach (var g in speciesCreaturesGroups)
             {
-                toolStripProgressBar1.Value++;
+                var species = g.Key;
+                if (species == null)
+                    continue;
+                var speciesCreatures = g.ToArray();
+
                 List<int> usedStatIndices = new List<int>(Values.STATS_COUNT);
                 List<int> usedAndConsideredStatIndices = new List<int>(Values.STATS_COUNT);
                 int[] bestStat = new int[Values.STATS_COUNT];
@@ -347,21 +369,15 @@ namespace ARKBreedingStats
                 int usedStatsCount = usedStatIndices.Count;
                 int usedAndConsideredStatsCount = usedAndConsideredStatIndices.Count;
 
-                bool noCreaturesInThisSpecies = true;
-                foreach (Creature c in creatures)
+                foreach (var c in speciesCreatures)
                 {
-                    if (c.Species != species
-                        || c.flags.HasFlag(CreatureFlags.Placeholder))
-                        continue;
-
-                    noCreaturesInThisSpecies = false;
                     // reset topBreeding stats for this creature
                     c.topBreedingStats = new bool[Values.STATS_COUNT];
                     c.topBreedingCreature = false;
 
                     if (
                         //if not in the filtered collection (using library filter settings), continue
-                        (filteredCreatures != null && !filteredCreatures.Contains(c))
+                        (filteredCreaturesHash != null && !filteredCreaturesHash.Contains(c))
                         // only consider creature if it's available for breeding
                         || !(c.Status == CreatureStatus.Available
                             || c.Status == CreatureStatus.Cryopod
@@ -393,10 +409,6 @@ namespace ARKBreedingStats
                         }
                     }
                 }
-                if (noCreaturesInThisSpecies)
-                {
-                    continue;
-                }
 
                 if (!_topLevels.ContainsKey(species))
                 {
@@ -416,9 +428,9 @@ namespace ARKBreedingStats
                     _lowestLevels[species] = lowestStat;
                 }
 
-                // beststat and bestcreatures now contain the best stats and creatures for each stat.
+                // bestStat and bestCreatures now contain the best stats and creatures for each stat.
 
-                // set topness of each creature (== mean wildlevels/mean top wildlevels in permille)
+                // set topness of each creature (== mean wildLevels/mean top wildLevels in permille)
                 int sumTopLevels = 0;
                 for (int s = 0; s < usedAndConsideredStatsCount; s++)
                 {
@@ -428,11 +440,8 @@ namespace ARKBreedingStats
                 }
                 if (sumTopLevels > 0)
                 {
-                    foreach (Creature c in creatures)
+                    foreach (var c in speciesCreatures)
                     {
-                        if (c.Species != species
-                            || c.flags.HasFlag(CreatureFlags.Placeholder))
-                            continue;
                         int sumCreatureLevels = 0;
                         for (int s = 0; s < usedAndConsideredStatsCount; s++)
                         {
@@ -451,13 +460,14 @@ namespace ARKBreedingStats
                         continue; // no creature has levelups in this stat or the stat is not used for this species
                     }
 
-                    if (bestCreatures[s].Count == 1)
+                    var crCount = bestCreatures[s].Count;
+                    if (crCount == 1)
                     {
                         bestCreatures[s][0].topBreedingCreature = true;
                         continue;
                     }
 
-                    for (int c = 0; c < bestCreatures[s].Count; c++)
+                    for (int c = 0; c < crCount; c++)
                     {
                         bestCreatures[s][c].topBreedingCreature = true;
                         if (bestCreatures[s][c].sex != Sex.Male)
@@ -475,7 +485,7 @@ namespace ARKBreedingStats
                         if (maxval > 1)
                         {
                             // check now if the other males have only 1.
-                            for (int oc = 0; oc < bestCreatures[s].Count; oc++)
+                            for (int oc = 0; oc < crCount; oc++)
                             {
                                 if (bestCreatures[s][oc].sex != Sex.Male)
                                     continue;
@@ -497,10 +507,6 @@ namespace ARKBreedingStats
                         }
                     }
                 }
-                if (noCreaturesInThisSpecies)
-                {
-                    continue;
-                }
 
                 // now we have a list of all candidates for breeding. Iterate on stats.
                 for (int s = 0; s < Values.STATS_COUNT; s++)
@@ -509,15 +515,16 @@ namespace ARKBreedingStats
                     {
                         for (int c = 0; c < bestCreatures[s].Count; c++)
                         {
-                            // flag topstats in creatures
+                            // flag topStats in creatures
                             bestCreatures[s][c].topBreedingStats[s] = true;
                         }
                     }
                 }
-                foreach (Creature c in creatures)
-                    c.SetTopStatCount(_considerStatHighlight);
             }
-            toolStripProgressBar1.Visible = false;
+
+            bool considerWastedStatsForTopCreatures = Properties.Settings.Default.ConsiderWastedStatsForTopCreatures;
+            foreach (Creature c in creatures)
+                c.SetTopStatCount(_considerStatHighlight, considerWastedStatsForTopCreatures);
         }
 
         /// <summary>
@@ -528,36 +535,24 @@ namespace ARKBreedingStats
         {
             List<Creature> placeholderAncestors = new List<Creature>();
 
+            var creatureGuids = _creatureCollection.creatures.ToDictionary(c => c.guid);
+
             foreach (Creature c in creatures)
             {
-                if (c.motherGuid != Guid.Empty || c.fatherGuid != Guid.Empty)
-                {
-                    Creature mother = null;
-                    Creature father = null;
-                    foreach (Creature p in _creatureCollection.creatures)
-                    {
-                        if (c.motherGuid != Guid.Empty && c.motherGuid == p.guid)
-                        {
-                            mother = p;
-                            if (father != null || c.fatherGuid == Guid.Empty)
-                                break;
-                        }
-                        else if (c.fatherGuid != Guid.Empty && c.fatherGuid == p.guid)
-                        {
-                            father = p;
-                            if (mother != null || c.motherGuid == Guid.Empty)
-                                break;
-                        }
-                    }
+                if (c.motherGuid == Guid.Empty && c.fatherGuid == Guid.Empty) continue;
 
-                    if (mother == null)
-                        mother = EnsurePlaceholderCreature(placeholderAncestors, c, c.motherArkId, c.motherGuid, c.motherName, Sex.Female);
-                    if (father == null)
-                        father = EnsurePlaceholderCreature(placeholderAncestors, c, c.fatherArkId, c.fatherGuid, c.fatherName, Sex.Male);
+                Creature mother = null;
+                if (c.motherGuid == Guid.Empty
+                    || !creatureGuids.TryGetValue(c.motherGuid, out mother))
+                    mother = EnsurePlaceholderCreature(placeholderAncestors, c, c.motherArkId, c.motherGuid, c.motherName, Sex.Female);
 
-                    c.Mother = mother;
-                    c.Father = father;
-                }
+                Creature father = null;
+                if (c.fatherGuid == Guid.Empty
+                    || !creatureGuids.TryGetValue(c.fatherGuid, out father))
+                    father = EnsurePlaceholderCreature(placeholderAncestors, c, c.fatherArkId, c.fatherGuid, c.fatherName, Sex.Male);
+
+                c.Mother = mother;
+                c.Father = father;
             }
 
             _creatureCollection.creatures.AddRange(placeholderAncestors);
@@ -630,13 +625,9 @@ namespace ARKBreedingStats
             listViewLibrary.Items.Clear();
             listViewLibrary.Groups.Clear();
 
-            // add groups for each species (so they are sorted alphabetically)
-            foreach (Species s in Values.V.species)
-            {
-                listViewLibrary.Groups.Add(new ListViewGroup(s.name));
-            }
-
+            Dictionary<string, ListViewGroup> speciesGroups = new Dictionary<string, ListViewGroup>();
             List<ListViewItem> items = new List<ListViewItem>();
+
             foreach (Creature cr in creatures)
             {
                 // if species is unknown, don't display the creature
@@ -644,28 +635,32 @@ namespace ARKBreedingStats
                     continue;
 
                 // check if group of species exists
-                ListViewGroup g = null;
-                foreach (ListViewGroup lvg in listViewLibrary.Groups)
+                var spDesc = cr.Species.DescriptiveNameAndMod;
+                if (!speciesGroups.TryGetValue(spDesc, out var group))
                 {
-                    if (lvg.Header == cr.Species.DescriptiveNameAndMod)
-                    {
-                        g = lvg;
-                        break;
-                    }
+                    group = new ListViewGroup(spDesc);
+                    speciesGroups.Add(spDesc, group);
                 }
-                if (g == null)
-                {
-                    g = new ListViewGroup(cr.Species.DescriptiveNameAndMod);
-                    listViewLibrary.Groups.Add(g);
-                }
-                items.Add(CreateCreatureLVItem(cr, g));
+
+                items.Add(CreateCreatureLVItem(cr, group));
             }
+            // use species list as initial source to get the sorted order set by the user
+            listViewLibrary.Groups.AddRange(Values.V.species.Select(sp => sp.DescriptiveNameAndMod).Where(sp => speciesGroups.ContainsKey(sp)).Select(sp => speciesGroups[sp]).ToArray());
             listViewLibrary.Items.AddRange(items.ToArray());
             listViewLibrary.EndUpdate();
 
             // highlight filter input if something is entered and no results are available
-            ToolStripTextBoxLibraryFilter.BackColor = string.IsNullOrEmpty(ToolStripTextBoxLibraryFilter.Text) || items.Any()
-                ? SystemColors.Window : Color.LightSalmon;
+            if (string.IsNullOrEmpty(ToolStripTextBoxLibraryFilter.Text))
+            {
+                ToolStripTextBoxLibraryFilter.BackColor = SystemColors.Window;
+                ToolStripButtonLibraryFilterClear.BackColor = SystemColors.Control;
+            }
+            else
+            {
+                // if no items are shown, shade red, if something is shown and potentially some are sorted out, shade yellow
+                ToolStripTextBoxLibraryFilter.BackColor = items.Any() ? Color.LightGoldenrodYellow : Color.LightSalmon;
+                ToolStripButtonLibraryFilterClear.BackColor = Color.Orange;
+            }
         }
 
         /// <summary>
@@ -706,12 +701,12 @@ namespace ARKBreedingStats
                     listViewLibrary.Items[ci] = CreateCreatureLVItem(cr, listViewLibrary.Items[ci].Group);
             }
 
-            // recreate ownerlist
+            // recreate ownerList
             if (ownerServerChanged)
                 UpdateOwnerServerTagLists();
             SetCollectionChanged(true, cr.Species);
 
-            // select previous selecteded again
+            // select previous selected creatures again
             int selectedCount = selectedCreatures.Count;
             if (selectedCount > 0)
             {
@@ -732,26 +727,12 @@ namespace ARKBreedingStats
             _reactOnCreatureSelectionChange = true;
         }
 
-        /// <summary>
-        /// Returns the dateTime when the countdown of a creature is ready. Either the maturingTime, the matingCooldownTime or null if no countdown is set.
-        /// </summary>
-        /// <returns></returns>
-        private DateTime? DisplayedCreatureCountdown(DateTime? matingCooldownUntil, DateTime? growingUntil)
-        {
-            var countdown = matingCooldownUntil.HasValue && growingUntil.HasValue
-                    ? (matingCooldownUntil.Value > growingUntil.Value ? matingCooldownUntil.Value : growingUntil.Value)
-                    : matingCooldownUntil ?? growingUntil;
-            if (countdown == null) return null;
-
-            return DateTime.Now.CompareTo(countdown) < 0 ? countdown : null;
-        }
-
         private ListViewItem CreateCreatureLVItem(Creature cr, ListViewGroup g)
         {
             double colorFactor = 100d / _creatureCollection.maxChartLevel;
             DateTime? cldGr = cr.cooldownUntil.HasValue && cr.growingUntil.HasValue ?
                 (cr.cooldownUntil.Value > cr.growingUntil.Value ? cr.cooldownUntil.Value : cr.growingUntil.Value)
-                : cr.cooldownUntil ?? (cr.growingUntil);
+                : cr.cooldownUntil ?? cr.growingUntil;
 
             string[] subItems = new[]
                     {
@@ -760,13 +741,13 @@ namespace ARKBreedingStats
                             cr.note,
                             cr.server,
                             Utils.SexSymbol(cr.sex),
-                            cr.domesticatedAt?.ToString("yyyy'-'MM'-'dd HH':'mm':'ss") ?? "?",
+                            cr.domesticatedAt?.ToString("yyyy'-'MM'-'dd HH':'mm':'ss") ?? string.Empty,
                             (cr.topness / 10).ToString(),
                             cr.topStatsCount.ToString(),
                             cr.generation.ToString(),
                             cr.levelFound.ToString(),
                             cr.Mutations.ToString(),
-                            DisplayedCreatureCountdown(cr.cooldownUntil,cr.growingUntil)?.ToString() ?? "-"
+                            DisplayedCreatureCountdown(cr, out var cooldownForeColor, out var cooldownBackColor)
                     }
                     .Concat(cr.levelsWild.Select(x => x.ToString()).ToArray())
                     .ToArray();
@@ -847,7 +828,7 @@ namespace ARKBreedingStats
                 lvi.SubItems[7].ForeColor = Color.LightGray;
             }
 
-            // color for timestamp added
+            // color for timestamp domesticated
             if (cr.domesticatedAt == null || cr.domesticatedAt.Value.Year < 2015)
             {
                 lvi.SubItems[5].Text = "n/a";
@@ -877,9 +858,8 @@ namespace ARKBreedingStats
                 lvi.SubItems[10].ForeColor = Color.LightGray;
 
             // color for cooldown
-            CooldownColors(cr, out Color forecolor, out Color backcolor);
-            lvi.SubItems[11].ForeColor = forecolor;
-            lvi.SubItems[11].BackColor = backcolor;
+            lvi.SubItems[11].ForeColor = cooldownForeColor;
+            lvi.SubItems[11].BackColor = cooldownBackColor;
 
             if (Properties.Settings.Default.showColorsInLibrary)
             {
@@ -903,48 +883,71 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Sets the cooldown colors depending if the cooldown is maturing or post-mating.
+        /// Returns the dateTime when the countdown of a creature is ready. Either the maturingTime, the matingCooldownTime or null if no countdown is set.
         /// </summary>
-        /// <param name="c"></param>
-        /// <param name="forecolor"></param>
-        /// <param name="backcolor"></param>
-        private void CooldownColors(Creature c, out Color forecolor, out Color backcolor)
+        /// <returns></returns>
+        private string DisplayedCreatureCountdown(Creature cr, out Color foreColor, out Color backColor)
         {
-            DateTime? cldGr = c.cooldownUntil.HasValue && c.growingUntil.HasValue ?
-                (c.cooldownUntil.Value > c.growingUntil.Value ? c.cooldownUntil.Value : c.growingUntil.Value)
-                : c.cooldownUntil ?? (c.growingUntil ?? default(DateTime?));
-
-            forecolor = SystemColors.ControlText;
-            backcolor = SystemColors.Window;
-
-            double minCld = cldGr?.Subtract(DateTime.Now).TotalMinutes ?? 0;
-            if (minCld <= 0)
+            foreColor = SystemColors.ControlText;
+            backColor = SystemColors.Window;
+            DateTime dt;
+            var isGrowing = true;
+            var useGrowingLeft = false;
+            var now = DateTime.Now;
+            if (cr.cooldownUntil.HasValue && cr.cooldownUntil.Value > now)
             {
-                forecolor = Color.LightGray;
-                return;
+                isGrowing = false;
+                dt = cr.cooldownUntil.Value;
             }
-
-            if ((c.cooldownUntil.HasValue && c.growingUntil.HasValue && c.cooldownUntil > c.growingUntil)
-                || !c.growingUntil.HasValue)
+            else if (!cr.growingUntil.HasValue)
             {
-                // mating-cooldown
-                if (minCld < 1)
-                    backcolor = Color.FromArgb(235, 255, 109); // green-yellow
-                else if (minCld < 10)
-                    backcolor = Color.FromArgb(255, 250, 109); // yellow
-                else
-                    backcolor = Color.FromArgb(255, 179, 109); // yellow-orange
+                foreColor = Color.LightGray;
+                return "-";
+            }
+            else if (!cr.growingPaused)
+            {
+                dt = cr.growingUntil.Value;
             }
             else
             {
+                useGrowingLeft = true;
+                dt = new DateTime();
+            }
+
+            if (!useGrowingLeft && now > dt)
+            {
+                foreColor = Color.LightGray;
+                return "-";
+            }
+
+            double minCld;
+            if (useGrowingLeft)
+                minCld = cr.growingLeft.TotalMinutes;
+            else
+                minCld = dt.Subtract(now).TotalMinutes;
+
+            if (isGrowing)
+            {
                 // growing
                 if (minCld < 1)
-                    backcolor = Color.FromArgb(168, 187, 255); // light blue
+                    backColor = Color.FromArgb(168, 187, 255); // light blue
                 else if (minCld < 10)
-                    backcolor = Color.FromArgb(197, 168, 255); // light blue/pink
+                    backColor = Color.FromArgb(197, 168, 255); // light blue/pink
                 else
-                    backcolor = Color.FromArgb(236, 168, 255); // light pink
+                    backColor = Color.FromArgb(236, 168, 255); // light pink
             }
+            else
+            {
+                // mating-cooldown
+                if (minCld < 1)
+                    backColor = Color.FromArgb(235, 255, 109); // green-yellow
+                else if (minCld < 10)
+                    backColor = Color.FromArgb(255, 250, 109); // yellow
+                else
+                    backColor = Color.FromArgb(255, 179, 109); // yellow-orange
+            }
+
+            return useGrowingLeft ? Utils.Duration(cr.growingLeft) : dt.ToString();
         }
 
         private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
@@ -1001,7 +1004,7 @@ namespace ARKBreedingStats
                     $"{selCrs.Count(cr => cr.sex == Sex.Female)} females, " +
                     $"{selCrs.Count(cr => cr.sex == Sex.Male)} males\n" +
                     (cnt == 1
-                        ? $"level: {selCrs[0].Level}" + (selCrs[0].ArkIdImported ? $"; Ark-Id (ingame): {Utils.ConvertImportedArkIdToIngameVisualization(selCrs[0].ArkId)}" : string.Empty)
+                        ? $"level: {selCrs[0].Level}; Ark-Id (ingame): " + (selCrs[0].ArkIdImported ? Utils.ConvertImportedArkIdToIngameVisualization(selCrs[0].ArkId) : selCrs[0].ArkId.ToString())
                         : $"level-range: {selCrs.Min(cr => cr.Level)} - {selCrs.Max(cr => cr.Level)}"
                     ) + "\n" +
                     $"Tags: {string.Join(", ", tagList)}");
@@ -1060,7 +1063,65 @@ namespace ARKBreedingStats
             {
                 // filter parameter are separated by commas and all parameter must be found on an item to have it included
                 var filterStrings = filterString.Split(',').Select(f => f.Trim())
-                    .Where(f => !string.IsNullOrEmpty(f)).ToArray();
+                    .Where(f => !string.IsNullOrEmpty(f)).ToList();
+
+                // extract stat level filter
+                var statGreaterThan = new Dictionary<int, int>();
+                var statLessThan = new Dictionary<int, int>();
+                var statEqualTo = new Dictionary<int, int>();
+                var statFilterRegex = new Regex(@"(\w{2}) ?(<|>|==) ?(\d+)");
+
+                // color filter
+                var colorFilter = new Dictionary<int, int[]>();
+                var colorFilterRegex = new Regex(@"c([0-5]): ?([\d ]+)");
+
+                var removeFilterIndex = new List<int>();
+                for (var i = filterStrings.Count - 1; i >= 0; i--)
+                {
+                    var f = filterStrings[i];
+
+                    // color region filter
+                    var m = colorFilterRegex.Match(f);
+                    if (m.Success)
+                    {
+                        var colorRegion = int.Parse(m.Groups[1].Value);
+                        if (colorFilter.ContainsKey(colorRegion)) continue;
+
+                        var colorIds = m.Groups[2].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(cId => int.Parse(cId)).Distinct().ToArray();
+                        if (!colorIds.Any()) continue;
+
+                        colorFilter.Add(colorRegion, colorIds);
+                        removeFilterIndex.Add(i);
+                        continue;
+                    }
+
+                    // stat filter
+                    m = statFilterRegex.Match(f);
+                    if (!m.Success
+                        || !Utils.StatAbbreviationToIndex.TryGetValue(m.Groups[1].Value, out var statIndex))
+                        continue;
+
+                    switch (m.Groups[2].Value)
+                    {
+                        case ">":
+                            statGreaterThan.Add(statIndex, int.Parse(m.Groups[3].Value));
+                            break;
+                        case "<":
+                            statLessThan.Add(statIndex, int.Parse(m.Groups[3].Value));
+                            break;
+                        case "==":
+                            statEqualTo.Add(statIndex, int.Parse(m.Groups[3].Value));
+                            break;
+                    }
+                    removeFilterIndex.Add(i);
+                }
+
+                if (!statGreaterThan.Any()) statGreaterThan = null;
+                if (!statLessThan.Any()) statLessThan = null;
+                if (!statEqualTo.Any()) statEqualTo = null;
+                if (!colorFilter.Any()) colorFilter = null;
+                foreach (var i in removeFilterIndex)
+                    filterStrings.RemoveAt(i);
 
                 filteredList = filteredList.Where(c => filterStrings.All(f =>
                     c.name.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) != -1
@@ -1068,9 +1129,15 @@ namespace ARKBreedingStats
                     || (c.owner?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
                     || (c.tribe?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
                     || (c.note?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
+                    || (c.ArkIdInGame?.StartsWith(f) ?? false)
                     || (c.server?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
                     || (c.tags?.Any(t => string.Equals(t, f, StringComparison.InvariantCultureIgnoreCase)) ?? false)
-                ));
+                )
+                && (statGreaterThan?.All(si => c.levelsWild[si.Key] > si.Value) ?? true)
+                && (statLessThan?.All(si => c.levelsWild[si.Key] < si.Value) ?? true)
+                && (statEqualTo?.All(si => c.levelsWild[si.Key] == si.Value) ?? true)
+                && (colorFilter?.All(cr => cr.Value.Contains(c.colors[cr.Key])) ?? true)
+                );
             }
 
             // display new results
@@ -1194,46 +1261,7 @@ namespace ARKBreedingStats
             {
                 if (listViewLibrary.SelectedItems.Count > 0)
                 {
-                    // header
-                    var output = new StringBuilder("Species\tName\tSex\tOwner\t");
-
-                    var suffixe = new List<string> { "w", "d", "b", "v" }; // wild, dom, bred-values, dom-values
-                    foreach (var suffix in suffixe)
-                    {
-                        for (int s = 0; s < Values.STATS_COUNT; s++)
-                        {
-                            output.Append(Utils.StatName(Values.statsDisplayOrder[s], true) + suffix + "\t");
-                        }
-                    }
-                    output.Append("mother\tfather\tMut\tNotes\tColor0\tColor1\tColor2\tColor3\tColor4\tColor5");
-
-                    foreach (ListViewItem l in listViewLibrary.SelectedItems)
-                    {
-                        Creature c = (Creature)l.Tag;
-                        output.Append("\n" + c.Species.name + "\t" + c.name + "\t" + c.sex + "\t" + c.owner);
-                        for (int s = 0; s < Values.STATS_COUNT; s++)
-                        {
-                            output.Append("\t" + c.levelsWild[Values.statsDisplayOrder[s]]);
-                        }
-                        for (int s = 0; s < Values.STATS_COUNT; s++)
-                        {
-                            output.Append("\t" + c.levelsDom[Values.statsDisplayOrder[s]]);
-                        }
-                        for (int s = 0; s < Values.STATS_COUNT; s++)
-                        {
-                            output.Append($"\t{c.valuesBreeding[Values.statsDisplayOrder[s]] * (Utils.Precision(Values.statsDisplayOrder[s]) == 3 ? 100 : 1)}{(Utils.Precision(Values.statsDisplayOrder[s]) == 3 ? "%" : string.Empty)}");
-                        }
-                        for (int s = 0; s < Values.STATS_COUNT; s++)
-                        {
-                            output.Append($"\t{c.valuesDom[Values.statsDisplayOrder[s]] * (Utils.Precision(Values.statsDisplayOrder[s]) == 3 ? 100 : 1)}{(Utils.Precision(Values.statsDisplayOrder[s]) == 3 ? "%" : string.Empty)}");
-                        }
-                        output.Append($"\t{(c.Mother?.name ?? string.Empty)}\t{(c.Father?.name ?? string.Empty)}\t{c.Mutations}\t{(string.IsNullOrEmpty(c.note) ? string.Empty : c.note.Replace("\r", string.Empty).Replace("\n", " "))}");
-                        for (int cl = 0; cl < 6; cl++)
-                        {
-                            output.Append("\t" + c.colors[cl]);
-                        }
-                    }
-                    Clipboard.SetText(output.ToString());
+                    ExportCreatures.ExportTable(listViewLibrary.SelectedItems.Cast<ListViewItem>().Select(lvi => (Creature)lvi.Tag));
                 }
                 else
                     MessageBox.Show("No creatures in the library selected to copy to the clipboard", "No Creatures Selected",
@@ -1241,44 +1269,6 @@ namespace ARKBreedingStats
             }
             else if (tabControlMain.SelectedTab == tabPageExtractor)
                 CopyExtractionToClipboard();
-        }
-
-        /// <summary>
-        /// Export the data of a creature to the clipboard in plain text.
-        /// </summary>
-        /// <param name="c">Creature to export</param>
-        /// <param name="breeding">Stat values that are inherited</param>
-        /// <param name="ARKml">True if ARKml markup for coloring should be used. That feature was disabled in the ARK-chat.</param>
-        private void ExportAsTextToClipboard(Creature c, bool breeding = true, bool ARKml = false)
-        {
-            if (c != null)
-            {
-                double colorFactor = 100d / _creatureCollection.maxChartLevel;
-                bool wild = c.tamingEff == -2;
-                string modifierText = string.Empty;
-                if (!breeding)
-                {
-                    if (wild)
-                        modifierText = ", wild";
-                    else if (c.tamingEff < 1)
-                        modifierText = ", TE: " + Math.Round(100 * c.tamingEff, 1) + "%";
-                    else if (c.imprintingBonus > 0)
-                        modifierText = ", Impr: " + Math.Round(100 * c.imprintingBonus, 2) + "%";
-                }
-
-                var output = new StringBuilder((string.IsNullOrEmpty(c.name) ? "noName" : c.name) + " (" + (ARKml ? Utils.GetARKml(c.Species.name, 50, 172, 255) : c.Species.name)
-                        + ", Lvl " + (breeding ? c.LevelHatched : c.Level) + modifierText + (c.sex != Sex.Unknown ? ", " + c.sex : string.Empty) + "): ");
-                for (int s = 0; s < Values.STATS_COUNT; s++)
-                {
-                    int si = Values.statsDisplayOrder[s];
-                    if (c.levelsWild[si] >= 0 && c.valuesBreeding[si] > 0) // ignore unknown levels (e.g. oxygen, speed for some species)
-                        output.Append(Utils.StatName(si, true) + ": " + (breeding ? c.valuesBreeding[si] : c.valuesDom[si]) * (Utils.Precision(si) == 3 ? 100 : 1) + (Utils.Precision(si) == 3 ? "%" : string.Empty) +
-                                " (" + (ARKml ? Utils.GetARKmlFromPercent(c.levelsWild[si].ToString(), (int)(c.levelsWild[si] * (si == (int)StatNames.Torpidity ? colorFactor / 7 : colorFactor))) : c.levelsWild[si].ToString()) +
-                                (ARKml ? breeding || si == (int)StatNames.Torpidity ? string.Empty : ", " + Utils.GetARKmlFromPercent(c.levelsDom[si].ToString(), (int)(c.levelsDom[si] * colorFactor)) : breeding || si == (int)StatNames.Torpidity ? string.Empty : ", " + c.levelsDom[si]) + "); ");
-                }
-                var outputString = output.ToString();
-                Clipboard.SetText(outputString.Substring(0, outputString.Length - 1));
-            }
         }
 
         /// <summary>
@@ -1343,6 +1333,107 @@ namespace ARKBreedingStats
         {
             ToolStripTextBoxLibraryFilter.Clear();
             ToolStripTextBoxLibraryFilter.Focus();
+        }
+
+        /// <summary>
+        /// User can select a folder where infoGraphics for all selected creatures are saved.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void saveInfographicsToFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var si = listViewLibrary.SelectedItems;
+            if (si.Count == 0) return;
+
+            var initialFolder = Properties.Settings.Default.InfoGraphicExportFolder;
+            if (string.IsNullOrEmpty(initialFolder) || !Directory.Exists(initialFolder))
+                initialFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+            string folderPath = null;
+            using (var fs = new FolderBrowserDialog
+            {
+                SelectedPath = initialFolder
+            })
+            {
+                if (fs.ShowDialog() == DialogResult.OK)
+                    folderPath = fs.SelectedPath;
+            }
+
+            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return;
+
+            Properties.Settings.Default.InfoGraphicExportFolder = folderPath;
+
+            // test if files can be written to the folder
+            var testFileName = "testFile.txt";
+            try
+            {
+                var testFilePath = Path.Combine(folderPath, testFileName);
+                File.WriteAllText(testFilePath, string.Empty);
+                FileService.TryDeleteFile(testFilePath);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, $"The selected folder\n{folderPath}\nis protected, the files cannot be saved there. Select a different folder.");
+                return;
+            }
+
+            int imagesCreated = 0;
+            string firstImageFilePath = null;
+
+            foreach (ListViewItem li in si)
+            {
+                var c = (Creature)li.Tag;
+                var filePath = Path.Combine(folderPath, $"ARK_info_{c.Species.name}_{c.name}.png");
+                if (File.Exists(filePath))
+                {
+                    switch (MessageBox.Show($"The file\n{filePath}\nalready exists.\nOverwrite the file?", "File exists already", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning))
+                    {
+                        case DialogResult.No: continue;
+                        case DialogResult.Yes: break;
+                        default: return;
+                    }
+                }
+                c.InfoGraphic(_creatureCollection).Save(filePath);
+                if (firstImageFilePath == null) firstImageFilePath = filePath;
+
+                imagesCreated++;
+            }
+
+            if (imagesCreated == 0) return;
+
+            var pluralS = (imagesCreated != 1 ? "s" : string.Empty);
+            SetMessageLabelText($"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\n{(imagesCreated == 1 ? firstImageFilePath : folderPath)}", MessageBoxIcon.Information, firstImageFilePath);
+        }
+
+        /// <summary>
+        /// Selects a creature in the library
+        /// </summary>
+        /// <param name="creature"></param>
+        private void SelectCreatureInLibrary(Creature creature)
+        {
+            if (creature == null) return;
+
+            ListViewItem lviCreature = null;
+            foreach (ListViewItem lvi in listViewLibrary.Items)
+            {
+                if (lvi.Tag is Creature c && c == creature)
+                {
+                    lviCreature = lvi;
+                    break;
+                }
+            }
+
+            if (lviCreature == null) return;
+
+            _reactOnCreatureSelectionChange = false;
+            // deselect
+            foreach (ListViewItem lvi in listViewLibrary.SelectedItems)
+                lvi.Selected = false;
+            _reactOnCreatureSelectionChange = true;
+
+            lviCreature.Focused = true;
+            lviCreature.Selected = true;
+            listViewLibrary.EnsureVisible(lviCreature.Index);
         }
     }
 }

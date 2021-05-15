@@ -18,20 +18,21 @@ namespace ARKBreedingStats
 
     public class ImportSavegame
     {
-        private readonly float gameTime;
+        private readonly float _gameTime;
 
         private ImportSavegame(float gameTime)
         {
-            this.gameTime = gameTime;
+            _gameTime = gameTime;
         }
 
         public static async Task ImportCollectionFromSavegame(CreatureCollection creatureCollection, string filename, string serverName)
         {
-            (GameObjectContainer gameObjectContainer, float gameTime) = await ReadSavegameFile(filename);
+            (GameObjectContainer gameObjectContainer, float gameTime) = await Task.Run(() => ReadSavegameFile(filename));
             var ignoreClasses = Values.V.IgnoreSpeciesClassesOnImport;
+            var importUnclaimedBabies = Properties.Settings.Default.SaveFileImportUnclaimedBabies;
 
             IEnumerable<GameObject> tamedCreatureObjects = gameObjectContainer
-                    .Where(o => o.IsCreature() && o.IsTamed() && !o.IsUnclaimedBaby() && !ignoreClasses.Contains(o.ClassString));
+                    .Where(o => o.IsCreature() && o.IsTamed() && (importUnclaimedBabies || !o.IsUnclaimedBaby()) && !ignoreClasses.Contains(o.ClassString));
 
             if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.ImportTribeNameFilter))
             {
@@ -52,14 +53,16 @@ namespace ARKBreedingStats
 
             ImportSavegame importSavegame = new ImportSavegame(gameTime);
             int? wildLevelStep = creatureCollection.getWildLevelStep();
-            List<Creature> creatures = tamedCreatureObjects.Select(o => importSavegame.ConvertGameObject(o, wildLevelStep)).Where(c => c != null).ToList();
+            var creatures = tamedCreatureObjects.Select(o => importSavegame.ConvertGameObject(o, wildLevelStep)).Where(c => c != null).ToArray();
+
+            ArkName.ClearCache();
 
             // if there are creatures with unknown species, check if the according mod-file is available
-            var unknownSpeciesCreatures = creatures.Where(c => c.Species == null).ToList();
+            var unknownSpeciesCreatures = creatures.Where(c => c.Species == null).ToArray();
 
             if (!unknownSpeciesCreatures.Any()
                 || Properties.Settings.Default.IgnoreUnknownBlueprintsOnSaveImport
-                || MessageBox.Show("The species of " + unknownSpeciesCreatures.Count.ToString() + " creature" + (unknownSpeciesCreatures.Count != 1 ? "s" : "") + " is not recognized, probably because they are from a mod that is not loaded.\n"
+                || MessageBox.Show("The species of " + unknownSpeciesCreatures.Length + " creature" + (unknownSpeciesCreatures.Length != 1 ? "s" : "") + " is not recognized, probably because they are from a mod that is not loaded.\n"
                                   + "The unrecognized species-classes are as follows, all the according creatures cannot be imported:\n\n" + string.Join("\n", unknownSpeciesCreatures.Select(c => c.name).Distinct().ToArray())
                                   + "\n\nTo import the unrecognized creatures, you first need mod values-files, see Settings - Mod value manager… if the mod value is available\n\n"
                                   + "Do you want to import the recognized creatures? If you click no, nothing is imported.",
@@ -71,47 +74,43 @@ namespace ARKBreedingStats
             }
         }
 
-        private static async Task<(GameObjectContainer, float)> ReadSavegameFile(string fileName)
+        private static (GameObjectContainer, float) ReadSavegameFile(string fileName)
         {
-            return await Task.Run(() =>
+            if (new FileInfo(fileName).Length > int.MaxValue)
             {
-                if (new FileInfo(fileName).Length > int.MaxValue)
-                {
-                    throw new Exception("Input file is too large.");
-                }
+                throw new Exception("Input file is too large.");
+            }
 
-                Stream stream = new MemoryStream(File.ReadAllBytes(fileName));
+            ArkSavegame arkSavegame = new ArkSavegame();
 
-                ArkSavegame arkSavegame = new ArkSavegame();
+            bool PredicateCreatures(GameObject o) => !o.IsItem && (o.Parent != null || o.Components.Any());
+            bool PredicateCreaturesAndCryopods(GameObject o) => (!o.IsItem && (o.Parent != null || o.Components.Any())) || o.ClassString.Contains("Cryopod") || o.ClassString.Contains("SoulTrap_");
 
-                bool PredicateCreatures(GameObject o) => !o.IsItem && (o.Parent != null || o.Components.Any());
-                bool PredicateCreaturesAndCryopods(GameObject o) => (!o.IsItem && (o.Parent != null || o.Components.Any())) || o.ClassString.Contains("Cryopod") || o.ClassString.Contains("SoulTrap_");
+            using (Stream stream = new MemoryStream(File.ReadAllBytes(fileName)))
+            using (ArkArchive archive = new ArkArchive(stream))
+            {
+                arkSavegame.ReadBinary(archive, ReadingOptions.Create()
+                        .WithDataFiles(false)
+                        .WithEmbeddedData(false)
+                        .WithDataFilesObjectMap(false)
+                        .WithObjectFilter(Properties.Settings.Default.SaveImportCryo ? new Predicate<GameObject>(PredicateCreaturesAndCryopods) : new Predicate<GameObject>(PredicateCreatures))
+                        .WithBuildComponentTree(true));
+            }
 
-                using (ArkArchive archive = new ArkArchive(stream))
-                {
-                    arkSavegame.ReadBinary(archive, ReadingOptions.Create()
-                            .WithDataFiles(false)
-                            .WithEmbeddedData(false)
-                            .WithDataFilesObjectMap(false)
-                            .WithObjectFilter(Properties.Settings.Default.SaveImportCryo ? new Predicate<GameObject>(PredicateCreaturesAndCryopods) : new Predicate<GameObject>(PredicateCreatures))
-                            .WithBuildComponentTree(true));
-                }
+            if (!arkSavegame.HibernationEntries.Any())
+            {
+                return (arkSavegame, arkSavegame.GameTime);
+            }
 
-                if (!arkSavegame.HibernationEntries.Any())
-                {
-                    return (arkSavegame, arkSavegame.GameTime);
-                }
+            List<GameObject> combinedObjects = arkSavegame.Objects;
 
-                List<GameObject> combinedObjects = arkSavegame.Objects;
+            foreach (HibernationEntry entry in arkSavegame.HibernationEntries)
+            {
+                ObjectCollector collector = new ObjectCollector(entry, 1);
+                combinedObjects.AddRange(collector.Remap(combinedObjects.Count));
+            }
 
-                foreach (HibernationEntry entry in arkSavegame.HibernationEntries)
-                {
-                    ObjectCollector collector = new ObjectCollector(entry, 1);
-                    combinedObjects.AddRange(collector.Remap(combinedObjects.Count));
-                }
-
-                return (new GameObjectContainer(combinedObjects), arkSavegame.GameTime);
-            });
+            return (new GameObjectContainer(combinedObjects), arkSavegame.GameTime);
         }
 
         private static void ImportCollection(CreatureCollection creatureCollection, List<Creature> newCreatures, string serverName)
@@ -119,7 +118,9 @@ namespace ARKBreedingStats
             if (creatureCollection.changeCreatureStatusOnSavegameImport)
             {
                 // mark creatures that are no longer present as unavailable
-                var removedCreatures = creatureCollection.creatures.Where(c => c.Status == CreatureStatus.Available && c.server == serverName).Except(newCreatures);
+                var removedCreatures = creatureCollection.creatures.Where(c =>
+                        (c.Status == CreatureStatus.Available || c.Status == CreatureStatus.Cryopod) && c.server == serverName
+                        ).Except(newCreatures);
                 foreach (var c in removedCreatures)
                     c.Status = CreatureStatus.Unavailable;
             }
@@ -129,7 +130,7 @@ namespace ARKBreedingStats
                 creature.server = serverName;
             });
 
-            creatureCollection.MergeCreatureList(newCreatures, addPreviouslylDeletedCreatures: true);
+            creatureCollection.MergeCreatureList(newCreatures, true);
         }
 
         private Creature ConvertGameObject(GameObject creatureObject, int? levelStep)
@@ -188,12 +189,20 @@ namespace ARKBreedingStats
             };
 
             // If it's a baby and still growing, work out growingUntil
-            if (creatureObject.GetPropertyValue<bool>("bIsBaby") || !creatureObject.GetPropertyValue<bool>("bIsBaby") && !string.IsNullOrWhiteSpace(imprinterName))
+            if (creatureObject.GetPropertyValue<bool>("bIsBaby") || !string.IsNullOrWhiteSpace(imprinterName))
             {
                 double maturationTime = species.breeding?.maturationTimeAdjusted ?? 0;
-                float tamedTime = gameTime - (float)creatureObject.GetPropertyValue<double>("TamedAtTime");
+                float tamedTime = _gameTime - (float)creatureObject.GetPropertyValue<double>("TamedAtTime");
                 if (tamedTime < maturationTime - 120) // there seems to be a slight offset of one of these saved values, so don't display a creature as being in cooldown if it is about to leave it in the next 2 minutes
-                    creature.growingUntil = DateTime.Now + TimeSpan.FromSeconds(maturationTime - tamedTime);
+                    creature.growingUntil = DateTime.Now.Add(TimeSpan.FromSeconds(maturationTime - tamedTime));
+            }
+            else
+            {
+                double nextMatingPossible = creatureObject.GetPropertyValue<double>("NextAllowedMatingTime");
+                if (_gameTime < nextMatingPossible)
+                {
+                    creature.cooldownUntil = DateTime.Now.Add(TimeSpan.FromSeconds(nextMatingPossible - _gameTime));
+                }
             }
 
             // Ancestor linking is done later after entire collection is formed - here we just set the guids
@@ -201,7 +210,7 @@ namespace ARKBreedingStats
             StructPropertyList femaleAncestor = (StructPropertyList)femaleAncestors?.LastOrDefault();
             if (femaleAncestor != null)
             {
-                creature.motherGuid = Utils.ConvertArkIdToGuid(GameObjectExtensions.CreateDinoId(
+                creature.motherGuid = Utils.ConvertArkIdToGuid(Utils.ConvertArkIdsToLongArkId(
                         femaleAncestor.GetPropertyValue<int>("FemaleDinoID1"),
                         femaleAncestor.GetPropertyValue<int>("FemaleDinoID2")));
                 creature.motherName = femaleAncestor.GetPropertyValue<string>("FemaleName");

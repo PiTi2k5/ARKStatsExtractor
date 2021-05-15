@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ARKBreedingStats.Library;
-using ARKBreedingStats.values;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -123,9 +122,7 @@ namespace ARKBreedingStats.uiControls
         private void SetColorButton(Button bt, int region)
         {
             int colorId = _selectedRegionColorIds[region];
-            Color cl = CreatureColors.CreatureColor(colorId);
-            bt.BackColor = cl;
-            bt.ForeColor = Utils.ForeColor(cl);
+            bt.SetBackColorAndAccordingForeColor(CreatureColors.CreatureColor(colorId));
             if (VerboseButtonTexts)
                 bt.Text = $"[{region}]: {colorId}";
             // tooltip
@@ -138,8 +135,20 @@ namespace ARKBreedingStats.uiControls
             _tt.RemoveAll();
         }
 
+        /// <summary>
+        /// True if a color is new in this species.
+        /// </summary>
+        internal bool ColorNewInSpecies;
+        /// <summary>
+        /// True if color is new in this region (but exists in other region in this species).
+        /// </summary>
+        internal bool ColorNewInRegion;
+
         internal void SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable)
         {
+            ColorNewInRegion = false;
+            ColorNewInSpecies = false;
+
             var parameter = CreatureCollection.ColorExisting.Unknown;
             for (int ci = 0; ci < Species.ColorRegionCount; ci++)
             {
@@ -148,9 +157,13 @@ namespace ARKBreedingStats.uiControls
                 switch (parameter)
                 {
                     case CreatureCollection.ColorExisting.ColorIsNew:
-                        _panels[ci].BackColor = Color.Gold; break;
+                        _panels[ci].BackColor = Color.Gold;
+                        ColorNewInSpecies = true;
+                        break;
                     case CreatureCollection.ColorExisting.ColorExistingInOtherRegion:
-                        _panels[ci].BackColor = Color.DarkGreen; break;
+                        _panels[ci].BackColor = Color.DarkGreen;
+                        ColorNewInRegion = true;
+                        break;
                     default:
                         _panels[ci].BackColor = Color.Transparent; break;
                 }

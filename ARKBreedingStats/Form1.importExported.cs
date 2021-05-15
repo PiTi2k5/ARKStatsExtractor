@@ -8,7 +8,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.species;
+using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -129,8 +131,8 @@ namespace ARKBreedingStats
 
             // moving to the archived folder can trigger another fileWatcherEvent, first check if the file is still there
             if (File.Exists(filePath))
-                // filewatcher is on another thread, invoke ui-thread to work with ui
-                Invoke(new Action(delegate () { ImportExportedAddIfPossible(filePath); }));
+                // fileWatcher is on another thread, invoke ui-thread to work with ui
+                Invoke(new Action(delegate { ImportExportedAddIfPossible(filePath); }));
 
             fwe.Watching = true;
         }
@@ -157,8 +159,8 @@ namespace ARKBreedingStats
             if (_extractor.UniqueResults
                 || (alreadyExists && _extractor.ValidResults))
             {
-                creature = AddCreatureToCollection(true, goToLibraryTab: false);
-                SetMessageLabelText($"Successful {(alreadyExists ? "updated" : "added")} {creature.name} ({species.name}) of the exported file\n" + filePath, MessageBoxIcon.Information);
+                creature = AddCreatureToCollection(true, goToLibraryTab: Properties.Settings.Default.AutoImportGotoLibraryAfterSuccess);
+                SetMessageLabelText($"Successful {(alreadyExists ? "updated" : "added")} {creature.name} ({species.name}) of the exported file\n" + filePath, MessageBoxIcon.Information, filePath);
                 added = true;
             }
 
@@ -213,21 +215,44 @@ namespace ARKBreedingStats
 
             if (added)
             {
-                if (Properties.Settings.Default.MoveAutoImportedFileToSubFolder)
-                {
-                    string importedPath = string.IsNullOrEmpty(Properties.Settings.Default.ImportExportedArchiveFolder)
-                            ? Path.Combine(Path.GetDirectoryName(filePath), "imported")
-                            : Properties.Settings.Default.ImportExportedArchiveFolder;
-                    if (!FileService.TryCreateDirectory(importedPath, out string errorMessage))
-                    {
-                        MessageBoxes.ShowMessageBox($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}");
-                        return;
-                    }
-                    FileService.TryMoveFile(filePath, Path.Combine(importedPath, Path.GetFileName(filePath)));
-                }
-                else if (Properties.Settings.Default.DeleteAutoImportedFile)
+                if (Properties.Settings.Default.DeleteAutoImportedFile)
                 {
                     FileService.TryDeleteFile(filePath);
+                }
+                else if (Properties.Settings.Default.MoveAutoImportedFileToSubFolder || Properties.Settings.Default.AutoImportedExportFileRename)
+                {
+                    string newPath = Properties.Settings.Default.MoveAutoImportedFileToSubFolder
+                        ? (string.IsNullOrEmpty(Properties.Settings.Default.ImportExportedArchiveFolder)
+                            ? Path.Combine(Path.GetDirectoryName(filePath), "imported")
+                            : Properties.Settings.Default.ImportExportedArchiveFolder)
+                        : Path.GetDirectoryName(filePath);
+
+                    if (Properties.Settings.Default.MoveAutoImportedFileToSubFolder
+                        && !FileService.TryCreateDirectory(newPath, out string errorMessage))
+                    {
+                        MessageBoxes.ShowMessageBox($"Subfolder\n{newPath}\ncould not be created.\n{errorMessage}");
+                        return;
+                    }
+
+                    string namePattern = Properties.Settings.Default.AutoImportedExportFileRenamePattern;
+
+                    string newFileName = Properties.Settings.Default.AutoImportedExportFileRename && !string.IsNullOrWhiteSpace(namePattern)
+                        ? NamePattern.GenerateCreatureName(creature,
+                            _creatureCollection.creatures.Where(c => c.Species == speciesSelector1.SelectedSpecies).ToArray(), null, null,
+                            _customReplacingNamingPattern, false, -1, false, namePattern)
+                        : Path.GetFileName(filePath);
+
+                    string newFileNameWithoutExtension = Path.GetFileNameWithoutExtension(newFileName);
+                    string newFileNameExtension = Path.GetExtension(newFileName);
+                    string newFilePath = Path.Combine(newPath, newFileName);
+                    int fileSuffix = 1;
+                    while (File.Exists(newFilePath))
+                    {
+                        newFilePath = Path.Combine(newPath, $"{newFileNameWithoutExtension}_{++fileSuffix}{newFileNameExtension}");
+                    }
+
+                    if (FileService.TryMoveFile(filePath, newFilePath))
+                        _librarySelectionInfoClickPath = newFilePath;
                 }
             }
             else if (copyNameToClipboard)
@@ -240,16 +265,18 @@ namespace ARKBreedingStats
             {
                 if (added)
                 {
+                    if (alreadyExists)
+                        SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Indifferent);
                     if (newTopLevels)
-                        Utils.BeepSignal(3);
+                        SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Great);
                     else if (topLevels)
-                        Utils.BeepSignal(2);
+                        SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Good);
                     else
-                        Utils.BeepSignal(1);
+                        SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Success);
                 }
                 else
                 {
-                    Utils.BeepSignal(0);
+                    SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Failure);
                 }
             }
         }
@@ -265,7 +292,7 @@ namespace ARKBreedingStats
 
         private void llOnlineHelpExtractionIssues_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/cadon/ARKStatsExtractor/wiki/Extraction-issues");
+            RepositoryInfo.OpenWikiPage("Extraction-issues");
         }
 
         /// <summary>

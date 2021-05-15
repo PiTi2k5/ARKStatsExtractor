@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -85,12 +85,12 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public int autosaveMinutes {
+        public int BackupEveryMinutes {
             get {
-                return ((int)(this["autosaveMinutes"]));
+                return ((int)(this["BackupEveryMinutes"]));
             }
             set {
-                this["autosaveMinutes"] = value;
+                this["BackupEveryMinutes"] = value;
             }
         }
         
@@ -297,9 +297,9 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("160")]
-        public int OCRWhiteThreshold {
+        public byte OCRWhiteThreshold {
             get {
-                return ((int)(this["OCRWhiteThreshold"]));
+                return ((byte)(this["OCRWhiteThreshold"]));
             }
             set {
                 this["OCRWhiteThreshold"] = value;
@@ -308,7 +308,7 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("json/ocr_1920x1080_100.json")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string ocrFile {
             get {
                 return ((string)(this["ocrFile"]));
@@ -1259,12 +1259,12 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AlreadyAskedToDownloadImageFiles20200921 {
+        public bool AlreadyAskedToDownloadSpeciesImageFiles {
             get {
-                return ((bool)(this["AlreadyAskedToDownloadImageFiles20200921"]));
+                return ((bool)(this["AlreadyAskedToDownloadSpeciesImageFiles"]));
             }
             set {
-                this["AlreadyAskedToDownloadImageFiles20200921"] = value;
+                this["AlreadyAskedToDownloadSpeciesImageFiles"] = value;
             }
         }
         
@@ -1420,6 +1420,304 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["HighlightEvenOdd"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastUsedCollectionFolder {
+            get {
+                return ((string)(this["LastUsedCollectionFolder"]));
+            }
+            set {
+                this["LastUsedCollectionFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public string[] LastUsedLibraryFiles {
+            get {
+                return ((string[])(this["LastUsedLibraryFiles"]));
+            }
+            set {
+                this["LastUsedLibraryFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string InfoGraphicExportFolder {
+            get {
+                return ((string)(this["InfoGraphicExportFolder"]));
+            }
+            set {
+                this["InfoGraphicExportFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InfoGraphicShowMaxWildLevel {
+            get {
+                return ((bool)(this["InfoGraphicShowMaxWildLevel"]));
+            }
+            set {
+                this["InfoGraphicShowMaxWildLevel"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("AntiqueWhite")]
+        public global::System.Drawing.Color InfoGraphicBackColor {
+            get {
+                return ((global::System.Drawing.Color)(this["InfoGraphicBackColor"]));
+            }
+            set {
+                this["InfoGraphicBackColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Black")]
+        public global::System.Drawing.Color InfoGraphicForeColor {
+            get {
+                return ((global::System.Drawing.Color)(this["InfoGraphicForeColor"]));
+            }
+            set {
+                this["InfoGraphicForeColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Arial")]
+        public string InfoGraphicFontName {
+            get {
+                return ((string)(this["InfoGraphicFontName"]));
+            }
+            set {
+                this["InfoGraphicFontName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Maroon")]
+        public global::System.Drawing.Color InfoGraphicBorderColor {
+            get {
+                return ((global::System.Drawing.Color)(this["InfoGraphicBorderColor"]));
+            }
+            set {
+                this["InfoGraphicBorderColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BackupFolder {
+            get {
+                return ((string)(this["BackupFolder"]));
+            }
+            set {
+                this["BackupFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int BackupFileCount {
+            get {
+                return ((int)(this["BackupFileCount"]));
+            }
+            set {
+                this["BackupFileCount"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InfoGraphicWithDomLevels {
+            get {
+                return ((bool)(this["InfoGraphicWithDomLevels"]));
+            }
+            set {
+                this["InfoGraphicWithDomLevels"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool InfoGraphicDisplayMutations {
+            get {
+                return ((bool)(this["InfoGraphicDisplayMutations"]));
+            }
+            set {
+                this["InfoGraphicDisplayMutations"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool InfoGraphicDisplayGeneration {
+            get {
+                return ((bool)(this["InfoGraphicDisplayGeneration"]));
+            }
+            set {
+                this["InfoGraphicDisplayGeneration"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ImgCacheUseLocalAppData {
+            get {
+                return ((bool)(this["ImgCacheUseLocalAppData"]));
+            }
+            set {
+                this["ImgCacheUseLocalAppData"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("DinoExport_{arkid}_{species}.ini")]
+        public string AutoImportedExportFileRenamePattern {
+            get {
+                return ((string)(this["AutoImportedExportFileRenamePattern"]));
+            }
+            set {
+                this["AutoImportedExportFileRenamePattern"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AutoImportedExportFileRename {
+            get {
+                return ((bool)(this["AutoImportedExportFileRename"]));
+            }
+            set {
+                this["AutoImportedExportFileRename"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool BreedingPlannerConsiderOnlyEvenForHighStats {
+            get {
+                return ((bool)(this["BreedingPlannerConsiderOnlyEvenForHighStats"]));
+            }
+            set {
+                this["BreedingPlannerConsiderOnlyEvenForHighStats"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AutoImportGotoLibraryAfterSuccess {
+            get {
+                return ((bool)(this["AutoImportGotoLibraryAfterSuccess"]));
+            }
+            set {
+                this["AutoImportGotoLibraryAfterSuccess"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PauseGrowingTimerAfterAddingBaby {
+            get {
+                return ((bool)(this["PauseGrowingTimerAfterAddingBaby"]));
+            }
+            set {
+                this["PauseGrowingTimerAfterAddingBaby"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public int[] CreatureTableExportFields {
+            get {
+                return ((int[])(this["CreatureTableExportFields"]));
+            }
+            set {
+                this["CreatureTableExportFields"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SpeciesImagesFolder {
+            get {
+                return ((string)(this["SpeciesImagesFolder"]));
+            }
+            set {
+                this["SpeciesImagesFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ConsiderWastedStatsForTopCreatures {
+            get {
+                return ((bool)(this["ConsiderWastedStatsForTopCreatures"]));
+            }
+            set {
+                this["ConsiderWastedStatsForTopCreatures"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SaveFileImportUnclaimedBabies {
+            get {
+                return ((bool)(this["SaveFileImportUnclaimedBabies"]));
+            }
+            set {
+                this["SaveFileImportUnclaimedBabies"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OcrGuessSpecies {
+            get {
+                return ((bool)(this["OcrGuessSpecies"]));
+            }
+            set {
+                this["OcrGuessSpecies"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int WaitBeforeAutoLoadMs {
+            get {
+                return ((int)(this["WaitBeforeAutoLoadMs"]));
+            }
+            set {
+                this["WaitBeforeAutoLoadMs"] = value;
             }
         }
     }

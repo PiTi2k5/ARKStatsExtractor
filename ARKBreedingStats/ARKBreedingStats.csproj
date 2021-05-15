@@ -78,7 +78,13 @@
     <Compile Include="AboutBox1.Designer.cs">
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
-    <Compile Include="ASBManifest.cs" />
+    <Compile Include="NamePatterns\NamePatternEntry.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="NamePatterns\PatternTemplate.cs" />
+    <Compile Include="NamePatterns\PatternTemplates.cs" />
+    <Compile Include="Updater\AsbManifest.cs" />
+    <Compile Include="Updater\AsbModule.cs" />
     <Compile Include="duplicates\MergingDuplicates.cs" />
     <Compile Include="duplicates\MergingDuplicatesUI.cs">
       <SubType>UserControl</SubType>
@@ -94,11 +100,7 @@
     </Compile>
     <Compile Include="importExported\FileWatcherExports.cs" />
     <Compile Include="library\CreatureExtensions.cs" />
-    <Compile Include="local\strings.es.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>strings.es.resx</DependentUpon>
-    </Compile>
+    <Compile Include="library\ExportCreatures.cs" />
     <Compile Include="mods\CustomStatOverridesEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -111,6 +113,24 @@
     <Compile Include="mods\StatBaseValuesEdit.Designer.cs">
       <DependentUpon>StatBaseValuesEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="ocr\PatternMatching\Boolean2DimArrayConverter.cs" />
+    <Compile Include="ocr\PatternMatching\Coords.cs" />
+    <Compile Include="ocr\PatternMatching\CoordsData.cs" />
+    <Compile Include="ocr\PatternMatching\DirectBitmap.cs" />
+    <Compile Include="ocr\PatternMatching\ImageUtils.cs" />
+    <Compile Include="ocr\PatternMatching\OcrUtils.cs" />
+    <Compile Include="ocr\PatternMatching\Pattern.cs" />
+    <Compile Include="ocr\PatternMatching\PatternOcr.cs" />
+    <Compile Include="ocr\PatternMatching\RecognitionPatterns.cs" />
+    <Compile Include="ocr\PatternMatching\RecognitionTrainingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ocr\PatternMatching\RecognitionTrainingForm.designer.cs">
+      <DependentUpon>RecognitionTrainingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ocr\PatternMatching\RecognizedCharData.cs" />
+    <Compile Include="ocr\PatternMatching\TextData.cs" />
+    <Compile Include="ocr\PatternMatching\TrainingSettings.cs" />
     <Compile Include="oldLibraryFormat\FormatConverter.cs" />
     <Compile Include="importExported\ExportedCreatureList.cs">
       <SubType>Form</SubType>
@@ -121,26 +141,6 @@
     <Compile Include="FileService.cs" />
     <Compile Include="ImportSavegame.cs" />
     <Compile Include="importExported\ImportExported.cs" />
-    <Compile Include="local\strings.it.Designer.cs">
-      <DependentUpon>strings.it.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="local\strings.fr.Designer.cs">
-      <DependentUpon>strings.fr.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="local\strings.de.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>strings.de.resx</DependentUpon>
-    </Compile>
-    <Compile Include="local\strings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>strings.resx</DependentUpon>
-    </Compile>
     <Compile Include="miscClasses\Encryption.cs" />
     <Compile Include="miscClasses\FtpCredentials.cs" />
     <Compile Include="miscClasses\IssueNotes.cs" />
@@ -198,7 +198,7 @@
     <Compile Include="mods\Mod.cs" />
     <Compile Include="species\SpeciesListBoxEntry.cs" />
     <Compile Include="testCases\ExtractionTestCase.cs" />
-    <Compile Include="ocr\ArkOCR.cs" />
+    <Compile Include="ocr\ArkOcr.cs" />
     <Compile Include="ARKOverlay.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -289,7 +289,7 @@
       <DependentUpon>CreatureBox.cs</DependentUpon>
     </Compile>
     <Compile Include="library\CreatureCollection.cs" />
-    <Compile Include="CreatureColored.cs" />
+    <Compile Include="species\CreatureColored.cs" />
     <Compile Include="CreatureInfoInput.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -323,6 +323,12 @@
     </Compile>
     <Compile Include="uiControls\ButtonAddTime.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="uiControls\CustomMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="uiControls\CustomMessageBox.Designer.cs">
+      <DependentUpon>CustomMessageBox.cs</DependentUpon>
     </Compile>
     <Compile Include="uiControls\dhmsInput.cs">
       <SubType>UserControl</SubType>
@@ -360,7 +366,7 @@
     <Compile Include="uiControls\MultiSetterTag.Designer.cs">
       <DependentUpon>MultiSetterTag.cs</DependentUpon>
     </Compile>
-    <Compile Include="uiControls\NamePatterns.cs" />
+    <Compile Include="NamePatterns\NamePattern.cs" />
     <Compile Include="uiControls\Nud.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -370,10 +376,10 @@
     <Compile Include="uiControls\ParentInheritance.Designer.cs">
       <DependentUpon>ParentInheritance.cs</DependentUpon>
     </Compile>
-    <Compile Include="uiControls\PatternEditor.cs">
+    <Compile Include="NamePatterns\PatternEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="uiControls\PatternEditor.Designer.cs">
+    <Compile Include="NamePatterns\PatternEditor.Designer.cs">
       <DependentUpon>PatternEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="uiControls\RegionColorChooser.cs">
@@ -497,10 +503,10 @@
     <Compile Include="uiControls\StatDisplay.Designer.cs">
       <DependentUpon>StatDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="StatIO.cs">
+    <Compile Include="uiControls\StatIO.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="StatIO.Designer.cs">
+    <Compile Include="uiControls\StatIO.Designer.cs">
       <DependentUpon>StatIO.cs</DependentUpon>
     </Compile>
     <Compile Include="StatResult.cs" />
@@ -567,26 +573,66 @@
     <Compile Include="uiControls\VariantSelector.Designer.cs">
       <DependentUpon>VariantSelector.cs</DependentUpon>
     </Compile>
-    <Compile Include="Updater.cs" />
+    <Compile Include="Updater\UpdateModules.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Updater\UpdateModules.Designer.cs">
+      <DependentUpon>UpdateModules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Updater\Updater.cs" />
+    <Compile Include="Updater\ValueModule.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="miscClasses\ValueMinMax.cs" />
+    <Compile Include="utils\ArkWiki.cs" />
     <Compile Include="utils\ColorModeColors.cs" />
     <Compile Include="utils\Debouncer.cs" />
     <Compile Include="utils\ExportFolderLocation.cs" />
     <Compile Include="utils\ExtensionMethods.cs" />
     <Compile Include="utils\MessageBoxes.cs" />
+    <Compile Include="NamePatterns\NamePatternFunctions.cs" />
+    <Compile Include="utils\RepositoryInfo.cs" />
+    <Compile Include="utils\SoundFeedback.cs" />
+    <Compile Include="utils\Themes.cs" />
     <Compile Include="values\TamingFoodData.cs" />
     <Compile Include="values\ServerMultipliersPresets.cs" />
     <Compile Include="values\ServerMultipliers.cs" />
     <Compile Include="values\Values.cs" />
-    <Compile Include="Win32API.cs" />
+    <Compile Include="utils\Win32API.cs" />
+    <Content Include="_manifest.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>_manifest.json</LastGenOutput>
+    </Content>
+    <EmbeddedResource Include="local\strings.ja.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>strings.ja.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="local\strings.ru.resx" />
+    <EmbeddedResource Include="local\strings.pl.resx" />
+    <EmbeddedResource Include="ocr\PatternMatching\RecognitionTrainingForm.resx">
+      <DependentUpon>RecognitionTrainingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\CustomMessageBox.resx">
+      <DependentUpon>CustomMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="uiControls\ParentInheritance.resx">
       <DependentUpon>ParentInheritance.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="uiControls\VariantSelector.resx">
       <DependentUpon>VariantSelector.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Updater\UpdateModules.resx">
+      <DependentUpon>UpdateModules.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="json\ignoreSpeciesClasses.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="json\namePatternTemplates.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="json\ocr\ocr_1920x1080_100.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="json\ocr\ocr_2560x1440_100.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="json\tamingFoodData.json">
@@ -610,27 +656,21 @@
       <DependentUpon>ExportedCreatureList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.es.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>strings.es.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.it.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>strings.it.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.fr.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>strings.fr.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.de.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>strings.de.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>strings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="local\strings.zh.resx" />
@@ -709,7 +749,7 @@
     <EmbeddedResource Include="uiControls\MultiSetterTag.resx">
       <DependentUpon>MultiSetterTag.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="uiControls\PatternEditor.resx">
+    <EmbeddedResource Include="NamePatterns\PatternEditor.resx">
       <DependentUpon>PatternEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="uiControls\RegionColorChooser.resx">
@@ -748,25 +788,7 @@
     <None Include="json\aliases.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="json\ark_data.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="json\kibbles.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="json\ocr_1680x1050_100.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="json\ocr_1920x1080_100.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="json\ocr_2560x1440_100.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="json\ocr_2680x1080_100.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="json\ocr_3440x1440_100.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\kofi.png" />
@@ -818,11 +840,17 @@
     <EmbeddedResource Include="uiControls\StatDisplay.resx">
       <DependentUpon>StatDisplay.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="StatIO.resx">
+    <EmbeddedResource Include="uiControls\StatIO.resx">
       <DependentUpon>StatIO.cs</DependentUpon>
     </EmbeddedResource>
     <Content Include="Resources\pen.png" />
     <None Include="json\values\values.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="_manifest.json">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>_manifest.tt</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

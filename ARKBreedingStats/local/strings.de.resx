@@ -696,9 +696,6 @@ Wenn eine Nummer mit Plus-Zeichen angezeigt wird, ist die Summe zu hoch, und ein
   <data name="Torpidity_Abb" xml:space="preserve">
     <value>Be</value>
   </data>
-  <data name="toolStripButtonAddNote" xml:space="preserve">
-    <value>Neue Notiz</value>
-  </data>
   <data name="toolStripButtonClear" xml:space="preserve">
     <value>Zurücksetzen</value>
   </data>
@@ -717,7 +714,7 @@ Wenn eine Nummer mit Plus-Zeichen angezeigt wird, ist die Summe zu hoch, und ein
   <data name="toolStripButtonDeleteTempCreatureTT" xml:space="preserve">
     <value>Lösche die gerade ausgewählten Kreaturen-Werte</value>
   </data>
-  <data name="toolStripButtonRemoveNote" xml:space="preserve">
+  <data name="Remove Note" xml:space="preserve">
     <value>Notiz löschen</value>
   </data>
   <data name="toolStripButtonSaveCreatureValuesTemp" xml:space="preserve">
@@ -793,7 +790,7 @@ Wenn eine Nummer mit Plus-Zeichen angezeigt wird, ist die Summe zu hoch, und ein
     <value>Knüppel-Schläge</value>
   </data>
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
-    <value>Es gibt bereits eine Kreatur, die alle verfügbaren Top-Stats besitzt ({0} {1}).
+    <value>Es gibt bereits eine Kreatur, die alle verfügbaren Top-Stats mit den gesetzten Filtern besitzt ({0} {1}).
 Der aktuell gewählte konservative Zucht-Modus könnte einige suboptimale Vorschläge anzeigen.
 Wähle den "Beste nächste Generation"-Modus aus, um bessere Vorschläge zu erhalten.</value>
   </data>
@@ -886,7 +883,7 @@ Setze auf -1 um Kreaturen unabhängig der Mutationen anzuzeigen.</value>
     <value>Aktivieren um die besten Vorschläge für die nächste Generation zu bekommen, wenn Top-Stats nicht wichtig sind.</value>
   </data>
   <data name="rbBPTopStats" xml:space="preserve">
-    <value>Kombiniere Top Stats lucky</value>
+    <value>Kombiniere Top Stats mit Glück</value>
   </data>
   <data name="rbBPTopStatsCn" xml:space="preserve">
     <value>Kombiniere Top Stats sicher</value>
@@ -897,7 +894,7 @@ Wählen, um alle Top stats in einer Kreatur zu vereinen.
 Einige Nachkommen werden teilweise ein niedrigeres Gesamtlevel als im High-Stats-Mode haben, aber die Top-Stats werden hier nacheinander zusammengeführt.</value>
   </data>
   <data name="rbBPTopStatsTT" xml:space="preserve">
-    <value>Kombiniere Top Stats lucky
+    <value>Kombiniere Top Stats mit Glück
 Wählen, um die Top stats in einer Kreature zu vereinen. Dieser Modus geht ein Risiko ein und versucht mehrere Top-Stats auf einmal zu vereinen. Wenn es klappt, geht es schneller, aber die Wahrscheinlichkeit ist geringer als im konservativen Modus.</value>
   </data>
   <data name="SelectSpeciesBreedingPlanner" xml:space="preserve">
@@ -1204,7 +1201,7 @@ Diese kann mit BSS Preset angewandt werden.</value>
     <value>Automatisches Einstellen des Export Ordners</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
-    <value>Der Export-Ordner von Steam konnte nicht automatisch ermittelt werden.</value>
+    <value>Der Export-Ordner für exportierte Kreaturen konnte nicht automatisch ermittelt werden.</value>
   </data>
   <data name="incubation" xml:space="preserve">
     <value>Inkubation</value>
@@ -1247,5 +1244,56 @@ Diese kann mit BSS Preset angewandt werden.</value>
   </data>
   <data name="generation" xml:space="preserve">
     <value>Generation</value>
+  </data>
+  <data name="BestPossibleSpeciesLibraryFiltered" xml:space="preserve">
+    <value>Bestmöglicher {0} für diese Auswahl</value>
+  </data>
+  <data name="Discard changes?" xml:space="preserve">
+    <value>Änderungen verwerfen?</value>
+  </data>
+  <data name="Collection changed discard and load?" xml:space="preserve">
+    <value>Die aktuell geladene Datei wurde seit dem letzten Speichern verändert. Sollen diese Änderungen verworfen und eine neue Datei geladen werden?</value>
+  </data>
+  <data name="Discard changes and load file" xml:space="preserve">
+    <value>Änderungen verwerfen und neue Datei laden</value>
+  </data>
+  <data name="Discard changes and quit" xml:space="preserve">
+    <value>Änderungen verwerfen und beenden</value>
+  </data>
+  <data name="Cancel quitting" xml:space="preserve">
+    <value>Nicht beenden</value>
+  </data>
+  <data name="Collection changed discard and quit?" xml:space="preserve">
+    <value>Die aktuell geladene Datei wurde seit dem letzten Speichern verändert. Sollen diese Änderungen verworfen und die Anwendung beendet werden?</value>
+  </data>
+  <data name="Collection changed discard and new?" xml:space="preserve">
+    <value>Die aktuell geladene Datei wurde seit dem letzten Speichern verändert. Sollen diese Änderungen verworfen und eine neue Sammlung erstellt werden?</value>
+  </data>
+  <data name="Discard changes and new" xml:space="preserve">
+    <value>Änderungen verwerfen und neue Datei erstellen</value>
+  </data>
+  <data name="ToolStripLabelFilter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="ToolStripLabelFilterTT" xml:space="preserve">
+    <value>Filtert die angezeigten Kreaturen. Mehrere Suchwörter können mit Kommas getrennt werden. Berücksichtigte Werte der Kreaturen sind
+Name
+Besitzer
+Stamm
+Bemerkung
+Ark id im Spiel
+Server
+Tags
+Filter nach Stats mit {englische statAbkürzung} [==|&lt;|&gt;] {Wert}, z.B. hp &gt; 20, st == 35
+Filter nach Farben mit c{Region}: {FarbCode} {FarbCode2}, z.B. c0: 20, c5: 3 4 5 6, c1: 13 14</value>
+  </data>
+  <data name="ClickDisplayFile" xml:space="preserve">
+    <value>Klicken um Datei im Explorer anzuzeigen</value>
+  </data>
+  <data name="ImportingSavegame" xml:space="preserve">
+    <value>Importiere Spielstand</value>
+  </data>
+  <data name="Add Note" xml:space="preserve">
+    <value>Neue Notiz</value>
   </data>
 </root>

@@ -31,6 +31,8 @@ namespace ARKBreedingStats
         private void InitializeComponent()
         {
             this.gbCreatureInfo = new System.Windows.Forms.GroupBox();
+            this.LbColorNewInRegion = new System.Windows.Forms.Label();
+            this.LbColorNewInSpecies = new System.Windows.Forms.Label();
             this.BtApplyOTSPreset = new System.Windows.Forms.Button();
             this.BtSaveOTSPreset = new System.Windows.Forms.Button();
             this.btNamingPattern6 = new System.Windows.Forms.Button();
@@ -40,8 +42,8 @@ namespace ARKBreedingStats
             this.btNamingPattern2 = new System.Windows.Forms.Button();
             this.btNamingPatternEditor = new System.Windows.Forms.Button();
             this.btnGenerateUniqueName = new System.Windows.Forms.Button();
-            this.tbArkIdIngame = new System.Windows.Forms.TextBox();
-            this.tbARKID = new System.Windows.Forms.TextBox();
+            this.TbArkIdIngame = new System.Windows.Forms.TextBox();
+            this.TbArkId = new System.Windows.Forms.TextBox();
             this.cbServer = new System.Windows.Forms.ComboBox();
             this.textBoxTribe = new System.Windows.Forms.TextBox();
             this.textBoxNote = new System.Windows.Forms.TextBox();
@@ -57,12 +59,12 @@ namespace ARKBreedingStats
             this.dhmsInputCooldown = new ARKBreedingStats.uiControls.dhmsInput();
             this.nudMaturation = new ARKBreedingStats.uiControls.Nud();
             this.cbNeutered = new System.Windows.Forms.CheckBox();
-            this.dateTimePickerAdded = new System.Windows.Forms.DateTimePicker();
+            this.dateTimePickerDomesticatedAt = new System.Windows.Forms.DateTimePicker();
             this.buttonStatus = new System.Windows.Forms.Button();
             this.buttonSex = new System.Windows.Forms.Button();
             this.lbNewMutations = new System.Windows.Forms.Label();
-            this.lbArkIdIngame = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.LbArkIdIngame = new System.Windows.Forms.Label();
+            this.LbArkId = new System.Windows.Forms.Label();
             this.btClearColors = new System.Windows.Forms.Button();
             this.regionColorChooser1 = new ARKBreedingStats.uiControls.RegionColorChooser();
             this.lbServer = new System.Windows.Forms.Label();
@@ -89,6 +91,8 @@ namespace ARKBreedingStats
             // 
             // gbCreatureInfo
             // 
+            this.gbCreatureInfo.Controls.Add(this.LbColorNewInRegion);
+            this.gbCreatureInfo.Controls.Add(this.LbColorNewInSpecies);
             this.gbCreatureInfo.Controls.Add(this.BtApplyOTSPreset);
             this.gbCreatureInfo.Controls.Add(this.BtSaveOTSPreset);
             this.gbCreatureInfo.Controls.Add(this.btNamingPattern6);
@@ -98,8 +102,8 @@ namespace ARKBreedingStats
             this.gbCreatureInfo.Controls.Add(this.btNamingPattern2);
             this.gbCreatureInfo.Controls.Add(this.btNamingPatternEditor);
             this.gbCreatureInfo.Controls.Add(this.btnGenerateUniqueName);
-            this.gbCreatureInfo.Controls.Add(this.tbArkIdIngame);
-            this.gbCreatureInfo.Controls.Add(this.tbARKID);
+            this.gbCreatureInfo.Controls.Add(this.TbArkIdIngame);
+            this.gbCreatureInfo.Controls.Add(this.TbArkId);
             this.gbCreatureInfo.Controls.Add(this.cbServer);
             this.gbCreatureInfo.Controls.Add(this.textBoxTribe);
             this.gbCreatureInfo.Controls.Add(this.textBoxNote);
@@ -115,12 +119,12 @@ namespace ARKBreedingStats
             this.gbCreatureInfo.Controls.Add(this.dhmsInputCooldown);
             this.gbCreatureInfo.Controls.Add(this.nudMaturation);
             this.gbCreatureInfo.Controls.Add(this.cbNeutered);
-            this.gbCreatureInfo.Controls.Add(this.dateTimePickerAdded);
+            this.gbCreatureInfo.Controls.Add(this.dateTimePickerDomesticatedAt);
             this.gbCreatureInfo.Controls.Add(this.buttonStatus);
             this.gbCreatureInfo.Controls.Add(this.buttonSex);
             this.gbCreatureInfo.Controls.Add(this.lbNewMutations);
-            this.gbCreatureInfo.Controls.Add(this.lbArkIdIngame);
-            this.gbCreatureInfo.Controls.Add(this.label1);
+            this.gbCreatureInfo.Controls.Add(this.LbArkIdIngame);
+            this.gbCreatureInfo.Controls.Add(this.LbArkId);
             this.gbCreatureInfo.Controls.Add(this.btClearColors);
             this.gbCreatureInfo.Controls.Add(this.regionColorChooser1);
             this.gbCreatureInfo.Controls.Add(this.lbServer);
@@ -142,11 +146,32 @@ namespace ARKBreedingStats
             this.gbCreatureInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gbCreatureInfo.Location = new System.Drawing.Point(0, 0);
             this.gbCreatureInfo.Name = "gbCreatureInfo";
-            this.gbCreatureInfo.Size = new System.Drawing.Size(262, 542);
+            this.gbCreatureInfo.Size = new System.Drawing.Size(262, 561);
             this.gbCreatureInfo.TabIndex = 0;
             this.gbCreatureInfo.TabStop = false;
             this.gbCreatureInfo.Text = "Creature-info";
             this.gbCreatureInfo.Enter += new System.EventHandler(this.groupBox1_Enter);
+            // 
+            // LbColorNewInRegion
+            // 
+            this.LbColorNewInRegion.AutoSize = true;
+            this.LbColorNewInRegion.BackColor = System.Drawing.Color.DarkGreen;
+            this.LbColorNewInRegion.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.LbColorNewInRegion.Location = new System.Drawing.Point(65, 499);
+            this.LbColorNewInRegion.Name = "LbColorNewInRegion";
+            this.LbColorNewInRegion.Size = new System.Drawing.Size(89, 13);
+            this.LbColorNewInRegion.TabIndex = 52;
+            this.LbColorNewInRegion.Text = "new in this region";
+            // 
+            // LbColorNewInSpecies
+            // 
+            this.LbColorNewInSpecies.AutoSize = true;
+            this.LbColorNewInSpecies.BackColor = System.Drawing.Color.Gold;
+            this.LbColorNewInSpecies.Location = new System.Drawing.Point(160, 499);
+            this.LbColorNewInSpecies.Name = "LbColorNewInSpecies";
+            this.LbColorNewInSpecies.Size = new System.Drawing.Size(96, 13);
+            this.LbColorNewInSpecies.TabIndex = 51;
+            this.LbColorNewInSpecies.Text = "new in this species";
             // 
             // BtApplyOTSPreset
             // 
@@ -238,20 +263,20 @@ namespace ARKBreedingStats
             this.btnGenerateUniqueName.Text = "Generate";
             this.btnGenerateUniqueName.UseVisualStyleBackColor = true;
             // 
-            // tbArkIdIngame
+            // TbArkIdIngame
             // 
-            this.tbArkIdIngame.Location = new System.Drawing.Point(118, 281);
-            this.tbArkIdIngame.Name = "tbArkIdIngame";
-            this.tbArkIdIngame.ReadOnly = true;
-            this.tbArkIdIngame.Size = new System.Drawing.Size(138, 20);
-            this.tbArkIdIngame.TabIndex = 40;
+            this.TbArkIdIngame.Location = new System.Drawing.Point(82, 255);
+            this.TbArkIdIngame.Name = "TbArkIdIngame";
+            this.TbArkIdIngame.Size = new System.Drawing.Size(174, 20);
+            this.TbArkIdIngame.TabIndex = 40;
             // 
-            // tbARKID
+            // TbArkId
             // 
-            this.tbARKID.Location = new System.Drawing.Point(68, 255);
-            this.tbARKID.Name = "tbARKID";
-            this.tbARKID.Size = new System.Drawing.Size(188, 20);
-            this.tbARKID.TabIndex = 8;
+            this.TbArkId.Location = new System.Drawing.Point(68, 281);
+            this.TbArkId.Name = "TbArkId";
+            this.TbArkId.ReadOnly = true;
+            this.TbArkId.Size = new System.Drawing.Size(188, 20);
+            this.TbArkId.TabIndex = 8;
             // 
             // cbServer
             // 
@@ -434,15 +459,15 @@ namespace ARKBreedingStats
             this.cbNeutered.Text = "Neutered";
             this.cbNeutered.UseVisualStyleBackColor = true;
             // 
-            // dateTimePickerAdded
+            // dateTimePickerDomesticatedAt
             // 
-            this.dateTimePickerAdded.Checked = false;
-            this.dateTimePickerAdded.Format = System.Windows.Forms.DateTimePickerFormat.Time;
-            this.dateTimePickerAdded.Location = new System.Drawing.Point(180, 440);
-            this.dateTimePickerAdded.MinDate = new System.DateTime(2014, 12, 31, 0, 0, 0, 0);
-            this.dateTimePickerAdded.Name = "dateTimePickerAdded";
-            this.dateTimePickerAdded.Size = new System.Drawing.Size(76, 20);
-            this.dateTimePickerAdded.TabIndex = 18;
+            this.dateTimePickerDomesticatedAt.Checked = false;
+            this.dateTimePickerDomesticatedAt.Format = System.Windows.Forms.DateTimePickerFormat.Time;
+            this.dateTimePickerDomesticatedAt.Location = new System.Drawing.Point(180, 440);
+            this.dateTimePickerDomesticatedAt.MinDate = new System.DateTime(2014, 12, 31, 0, 0, 0, 0);
+            this.dateTimePickerDomesticatedAt.Name = "dateTimePickerDomesticatedAt";
+            this.dateTimePickerDomesticatedAt.Size = new System.Drawing.Size(76, 20);
+            this.dateTimePickerDomesticatedAt.TabIndex = 18;
             // 
             // buttonStatus
             // 
@@ -473,23 +498,23 @@ namespace ARKBreedingStats
             this.lbNewMutations.Text = "+mut";
             this.lbNewMutations.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // lbArkIdIngame
+            // LbArkIdIngame
             // 
-            this.lbArkIdIngame.AutoSize = true;
-            this.lbArkIdIngame.Location = new System.Drawing.Point(5, 284);
-            this.lbArkIdIngame.Name = "lbArkIdIngame";
-            this.lbArkIdIngame.Size = new System.Drawing.Size(72, 13);
-            this.lbArkIdIngame.TabIndex = 41;
-            this.lbArkIdIngame.Text = "Ark-Id ingame";
+            this.LbArkIdIngame.AutoSize = true;
+            this.LbArkIdIngame.Location = new System.Drawing.Point(6, 258);
+            this.LbArkIdIngame.Name = "LbArkIdIngame";
+            this.LbArkIdIngame.Size = new System.Drawing.Size(72, 13);
+            this.LbArkIdIngame.TabIndex = 41;
+            this.LbArkIdIngame.Text = "Ark-Id ingame";
             // 
-            // label1
+            // LbArkId
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 258);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 39;
-            this.label1.Text = "Ark-Id";
+            this.LbArkId.AutoSize = true;
+            this.LbArkId.Location = new System.Drawing.Point(6, 284);
+            this.LbArkId.Name = "LbArkId";
+            this.LbArkId.Size = new System.Drawing.Size(35, 13);
+            this.LbArkId.TabIndex = 39;
+            this.LbArkId.Text = "Ark-Id";
             // 
             // btClearColors
             // 
@@ -562,9 +587,9 @@ namespace ARKBreedingStats
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(136, 446);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(38, 13);
+            this.label7.Size = new System.Drawing.Size(41, 13);
             this.label7.TabIndex = 17;
-            this.label7.Text = "Added";
+            this.label7.Text = "Dom at";
             // 
             // lbMaturationPerc
             // 
@@ -596,7 +621,7 @@ namespace ARKBreedingStats
             // btSaveChanges
             // 
             this.btSaveChanges.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btSaveChanges.Location = new System.Drawing.Point(6, 499);
+            this.btSaveChanges.Location = new System.Drawing.Point(6, 518);
             this.btSaveChanges.Name = "btSaveChanges";
             this.btSaveChanges.Size = new System.Drawing.Size(124, 37);
             this.btSaveChanges.TabIndex = 20;
@@ -657,7 +682,7 @@ namespace ARKBreedingStats
             // btAdd2Library
             // 
             this.btAdd2Library.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btAdd2Library.Location = new System.Drawing.Point(6, 499);
+            this.btAdd2Library.Location = new System.Drawing.Point(6, 518);
             this.btAdd2Library.Name = "btAdd2Library";
             this.btAdd2Library.Size = new System.Drawing.Size(250, 37);
             this.btAdd2Library.TabIndex = 21;
@@ -671,7 +696,7 @@ namespace ARKBreedingStats
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.gbCreatureInfo);
             this.Name = "CreatureInfoInput";
-            this.Size = new System.Drawing.Size(262, 542);
+            this.Size = new System.Drawing.Size(262, 561);
             this.gbCreatureInfo.ResumeLayout(false);
             this.gbCreatureInfo.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMutationsFather)).EndInit();
@@ -700,7 +725,7 @@ namespace ARKBreedingStats
         private System.Windows.Forms.Button btSaveChanges;
         private System.Windows.Forms.Label lbCooldown;
         private System.Windows.Forms.Label lbGrownIn;
-        private System.Windows.Forms.DateTimePicker dateTimePickerAdded;
+        private System.Windows.Forms.DateTimePicker dateTimePickerDomesticatedAt;
         private System.Windows.Forms.CheckBox cbNeutered;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label lbMaturationPerc;
@@ -721,10 +746,10 @@ namespace ARKBreedingStats
         private System.Windows.Forms.Label label11;
         private uiControls.RegionColorChooser regionColorChooser1;
         private System.Windows.Forms.Button btClearColors;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox tbARKID;
-        private System.Windows.Forms.Label lbArkIdIngame;
-        private System.Windows.Forms.TextBox tbArkIdIngame;
+        private System.Windows.Forms.Label LbArkId;
+        private System.Windows.Forms.TextBox TbArkId;
+        private System.Windows.Forms.Label LbArkIdIngame;
+        private System.Windows.Forms.TextBox TbArkIdIngame;
         private System.Windows.Forms.Label lbNewMutations;
         private System.Windows.Forms.Button btNamingPatternEditor;
         private System.Windows.Forms.Button btNamingPattern6;
@@ -734,5 +759,7 @@ namespace ARKBreedingStats
         private System.Windows.Forms.Button btNamingPattern2;
         private System.Windows.Forms.Button BtApplyOTSPreset;
         private System.Windows.Forms.Button BtSaveOTSPreset;
+        private System.Windows.Forms.Label LbColorNewInRegion;
+        private System.Windows.Forms.Label LbColorNewInSpecies;
     }
 }

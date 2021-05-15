@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using ARKBreedingStats.library;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
@@ -18,7 +19,6 @@ namespace ARKBreedingStats
 
         public event EditCreatureEventHandler EditCreature;
         public event Action<Creature> BestBreedingPartners;
-        public event PedigreeCreature.ExportToClipboardEventHandler ExportToClipboard;
 
         /// <summary>
         /// All creatures of the current collection.
@@ -45,6 +45,8 @@ namespace ARKBreedingStats
             NoCreatureSelected();
             listViewCreatures.ListViewItemSorter = new ListViewColumnSorter();
             splitContainer1.Panel2.Paint += Panel2_Paint;
+            var tt = new ToolTip();
+            tt.SetToolTip(pictureBox, "Click with the left mouse button to copy InfoGraphic to Clipboard.");
         }
 
         private void Panel2_Paint(object sender, PaintEventArgs e)
@@ -204,13 +206,12 @@ namespace ARKBreedingStats
                 pc.CreatureClicked += CreatureClicked;
                 pc.CreatureEdit += CreatureEdit;
                 pc.BestBreedingPartners += BestBreedingPartners;
-                pc.ExportToClipboard += ExportToClipboard;
                 splitContainer1.Panel2.Controls.Add(pc);
                 _pcs.Add(pc);
                 row++;
             }
 
-            pictureBox.Image = CreatureColored.GetColoredCreature(_selectedCreature.colors, _selectedCreature.Species, _enabledColorRegions, 256, creatureSex: _selectedCreature.sex);
+            pictureBox.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(_selectedCreature.colors, _selectedCreature.Species, _enabledColorRegions, 256, creatureSex: _selectedCreature.sex));
             pictureBox.Visible = true;
 
             Invalidate();
@@ -242,7 +243,6 @@ namespace ARKBreedingStats
                 pc.CreatureClicked += CreatureClicked;
                 pc.CreatureEdit += CreatureEdit;
                 pc.BestBreedingPartners += BestBreedingPartners;
-                pc.ExportToClipboard += ExportToClipboard;
                 _pcs.Add(pc);
             }
 
@@ -416,11 +416,11 @@ namespace ARKBreedingStats
         private void DisplayFilteredCreatureList()
         {
             listViewCreatures.BeginUpdate();
-            listViewCreatures.Items.Clear();
-
             var filterStrings = TextBoxFilter.Text.Split(',').Select(f => f.Trim())
                 .Where(f => !string.IsNullOrEmpty(f)).ToArray();
             if (!filterStrings.Any()) filterStrings = null;
+
+            var items = new List<ListViewItem>();
 
             foreach (Creature cr in _prefilteredCreatures)
             {
@@ -456,8 +456,11 @@ namespace ARKBreedingStats
                     lvi.SubItems[0].ForeColor = Color.LightGray;
                 if (crLevel == "?")
                     lvi.SubItems[1].ForeColor = Color.LightGray;
-                listViewCreatures.Items.Add(lvi);
+                items.Add(lvi);
             }
+
+            listViewCreatures.Items.Clear();
+            listViewCreatures.Items.AddRange(items.ToArray());
             listViewCreatures.EndUpdate();
         }
 
@@ -482,6 +485,11 @@ namespace ARKBreedingStats
         {
             TextBoxFilter.Clear();
             TextBoxFilter.Focus();
+        }
+
+        private void pictureBox_Click(object sender, EventArgs e)
+        {
+            _selectedCreature?.ExportInfoGraphicToClipboard(CreatureCollection.CurrentCreatureCollection);
         }
     }
 }

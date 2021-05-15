@@ -698,9 +698,6 @@ Enable it if the OCR doesn't recognize the tribe-name correctly and you want to 
   <data name="Torpidity_Abb" xml:space="preserve">
     <value>To</value>
   </data>
-  <data name="toolStripButtonAddNote" xml:space="preserve">
-    <value>Add Note</value>
-  </data>
   <data name="toolStripButtonClear" xml:space="preserve">
     <value>Clear</value>
   </data>
@@ -719,7 +716,7 @@ Enable it if the OCR doesn't recognize the tribe-name correctly and you want to 
   <data name="toolStripButtonDeleteTempCreatureTT" xml:space="preserve">
     <value>Delete currently selected data of the temporary creature</value>
   </data>
-  <data name="toolStripButtonRemoveNote" xml:space="preserve">
+  <data name="Remove Note" xml:space="preserve">
     <value>Remove Note</value>
   </data>
   <data name="toolStripButtonSaveCreatureValuesTemp" xml:space="preserve">
@@ -795,7 +792,7 @@ Enable it if the OCR doesn't recognize the tribe-name correctly and you want to 
     <value>Wooden Club Hits</value>
   </data>
   <data name="AlreadyCreatureWithTopStats" xml:space="preserve">
-    <value>There is already a creature in your library that has all the available top-stats ({0} {1}).
+    <value>There is already a creature in your library that has all the available top-stats with the current set filters ({0} {1}).
 The currently selected conservative-breeding-mode might show some suggestions that may seem non-optimal.
 Change the breeding-mode to "Best next generation" for better suggestions.</value>
   </data>
@@ -852,7 +849,7 @@ If this checkbox is unchecked, all creatures will be included by default, and on
     <value>Breeding Score</value>
   </data>
   <data name="lbBPBreedingScoreTT" xml:space="preserve">
-    <value>The Breeding-Score of a paring is not comparable to the Breeding-Score of another breeding-mode.
+    <value>The Breeding-Score of a pairing is not comparable to the Breeding-Score of another breeding-mode.
 The numbers in the different modes are generated in incompatible ways.</value>
   </data>
   <data name="lbBPBreedingTimes" xml:space="preserve">
@@ -1077,7 +1074,7 @@ Some offsprings might be worse than in High-Stats-Mode, but you also have a chan
     <value>Make sure the correct state (wild, tamed, bred) for the creature is chosen.</value>
   </data>
   <data name="issueCauseTamingEffectivenessRange" xml:space="preserve">
-    <value>Taming-Effectiveness-Range too narrow, increase the upper and / or decrase the lower bound.</value>
+    <value>Taming-Effectiveness-Range too narrow, increase the upper and / or decrease the lower bound.</value>
   </data>
   <data name="issueCauseLockedDomLevel" xml:space="preserve">
     <value>Uncheck all Lock-to-Zero-buttons in the stats (all lock-symbols should be green and opened).</value>
@@ -1213,7 +1210,7 @@ The preset can be applied by the Apply Preset button</value>
     <value>Set export folder automatically</value>
   </data>
   <data name="ExportFolderDetectionFailed" xml:space="preserve">
-    <value>The export folder of Steam couldn't be detected automatically.</value>
+    <value>The export folder for exported creatures couldn't be detected automatically.</value>
   </data>
   <data name="incubation" xml:space="preserve">
     <value>incubation</value>
@@ -1256,5 +1253,56 @@ The preset can be applied by the Apply Preset button</value>
   </data>
   <data name="generation" xml:space="preserve">
     <value>generation</value>
+  </data>
+  <data name="BestPossibleSpeciesLibraryFiltered" xml:space="preserve">
+    <value>Best possible {0} for this filter</value>
+  </data>
+  <data name="Discard changes?" xml:space="preserve">
+    <value>Discard changes?</value>
+  </data>
+  <data name="Collection changed discard and load?" xml:space="preserve">
+    <value>Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and load the file without saving first?</value>
+  </data>
+  <data name="Discard changes and load file" xml:space="preserve">
+    <value>Discard changes and load new library</value>
+  </data>
+  <data name="Discard changes and quit" xml:space="preserve">
+    <value>Discard changes and quit</value>
+  </data>
+  <data name="Cancel quitting" xml:space="preserve">
+    <value>Cancel quitting</value>
+  </data>
+  <data name="Collection changed discard and quit?" xml:space="preserve">
+    <value>Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and quit without saving?</value>
+  </data>
+  <data name="Collection changed discard and new?" xml:space="preserve">
+    <value>Your Creature Collection has been modified since it was last saved, are you sure you want to discard your changes and create a new Library without saving?</value>
+  </data>
+  <data name="Discard changes and new" xml:space="preserve">
+    <value>Discard changes and create new library</value>
+  </data>
+  <data name="ToolStripLabelFilter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="ToolStripLabelFilterTT" xml:space="preserve">
+    <value>Filters the library. Multiple search words are separated by commas. Considered are the creature's
+Name
+Owner
+Tribe
+Note
+Ark id in game
+Server
+Tags
+Filter for a stats with {statAbb} [==|&lt;|&gt;] {value}, e.g. hp &gt; 20, st == 35
+Filter for colors with c{region}: {colorValue} {colorValue2}, e.g. c0: 20, c5: 3 4 5 6, c1: 13 14</value>
+  </data>
+  <data name="ClickDisplayFile" xml:space="preserve">
+    <value>Click to show file in explorer</value>
+  </data>
+  <data name="ImportingSavegame" xml:space="preserve">
+    <value>Importing savegame</value>
+  </data>
+  <data name="Add Note" xml:space="preserve">
+    <value>Add Note</value>
   </data>
 </root>

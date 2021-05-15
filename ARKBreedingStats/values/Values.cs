@@ -21,13 +21,10 @@ namespace ARKBreedingStats.values
         /// <summary>
         /// Checks if the version string is a format version that is supported by the version of this application.
         /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        public static bool IsValidFormatVersion(string version)
-        => !string.IsNullOrEmpty(version) && (
-               version == "1.12"
-            || version == "1.13"
-            );
+        private static bool IsValidFormatVersion(string version) =>
+            version == "1.12" // format with 12 stats (minimum required format)
+            || version == "1.13" // introduced remaps for blueprintPaths
+            || version == "1.14-flyerspeed"; // introduced isFlyer property for AllowFlyerSpeedLeveling
 
         private static Values _V;
 
@@ -47,7 +44,7 @@ namespace ARKBreedingStats.values
         [JsonProperty]
         public List<List<object>> dyeDefinitions;
         /// <summary>
-        /// If a species for a blueprintpath is requested, the blueprintPath will be remapped if an according key is present.
+        /// If a species for a blueprintPath is requested, the blueprintPath will be remapped if an according key is present.
         /// This is needed if species are remapped ingame, e.g. if a variant is removed.
         /// </summary>
         [JsonProperty("remaps")]
@@ -183,7 +180,7 @@ namespace ARKBreedingStats.values
         {
             if (FileService.LoadJsonFile(filePath, out Values readData, out string errorMessage))
             {
-                if (!IsValidFormatVersion(readData.format)) throw new FormatException("Unhandled format version");
+                if (!IsValidFormatVersion(readData.format)) throw new FormatException($"Unsupported values format version: {(readData.format ?? "null")}");
                 return readData;
             }
             throw new FileLoadException(errorMessage);
@@ -210,17 +207,17 @@ namespace ARKBreedingStats.values
                 if (setModFileName) values.mod.FileName = Path.GetFileName(filePath);
                 return true;
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException ex)
             {
                 errorMessage = "Values-File '" + filePath + "' not found. "
                              + "This collection seems to have modified stat values that are saved in a separate file, "
                              + "which couldn't be found at the saved location.";
                 if (throwExceptionOnFail)
-                    throw new FileNotFoundException(errorMessage, e);
+                    throw new FileNotFoundException(errorMessage, ex);
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
-                errorMessage = "Values-File '" + filePath + "' has an invalid version. Try updating ARK Smart Breeding.";
+                errorMessage = "Values-File '" + filePath + $"' has an invalid version.\n{ex.Message}\nTry updating ARK Smart Breeding.";
                 if (throwExceptionOnFail)
                     throw new FormatException(errorMessage);
             }
@@ -288,7 +285,11 @@ namespace ARKBreedingStats.values
             loadedModsHash = CreatureCollection.CalculateModListHash(mods);
 
             if (speciesAdded == 0)
-                return true; // nothing changed
+            {
+                resultsMessage = resultsMessageSB.ToString();
+                // nothing changed
+                return false;
+            }
 
             // sort new species
             OrderSpeciesAndApplyCustomVariants();
@@ -323,22 +324,27 @@ namespace ARKBreedingStats.values
             foreach (string mf in modValueFileNames)
             {
                 string modFilePath = Path.Combine(valuesFolder, mf);
+
+                modsManifest.modsByFiles.TryGetValue(mf, out var modInfo);
+
                 if (!File.Exists(modFilePath))
                 {
-                    if (modsManifest.modsByFiles.ContainsKey(mf)
-                        && modsManifest.modsByFiles[mf].onlineAvailable)
+                    if (modInfo != null
+                        && modInfo.OnlineAvailable
+                        && IsValidFormatVersion(modInfo.format))
                         missingModValueFilesOnlineAvailable.Add(mf);
                     else
                         missingModValueFilesOnlineNotAvailable.Add(mf);
                 }
-                else if (modsManifest.modsByFiles.ContainsKey(mf))
+                else if (modInfo != null)
                 {
                     // check if an update is available
-                    if (modsManifest.modsByFiles[mf].onlineAvailable
-                        && modsManifest.modsByFiles[mf].Version != null
-                        && TryLoadValuesFile(modFilePath, setModFileName: false, throwExceptionOnFail: false,
+                    if (modInfo.OnlineAvailable
+                        && IsValidFormatVersion(modInfo.format)
+                        && modInfo.Version != null
+                        && (!TryLoadValuesFile(modFilePath, setModFileName: false, throwExceptionOnFail: false,
                             out Values modValues, errorMessage: out _)
-                        && modValues.Version < modsManifest.modsByFiles[mf].Version)
+                            || modValues.Version < modsManifest.modsByFiles[mf].Version))
                     {
                         modValueFilesWithAvailableUpdate.Add(mf);
                     }
@@ -457,7 +463,7 @@ namespace ARKBreedingStats.values
         public void ApplyMultipliers(CreatureCollection cc, bool eventMultipliers = false, bool applyStatMultipliers = true)
         {
             currentServerMultipliers = (eventMultipliers ? cc.serverMultipliersEvents : cc.serverMultipliers)?.Copy(false);
-            if (currentServerMultipliers == null) currentServerMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.OFFICIAL);
+            if (currentServerMultipliers == null) currentServerMultipliers = V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             if (currentServerMultipliers == null)
             {
                 throw new FileNotFoundException("No default server multiplier values found.\nIt's recommend to redownload ARK Smart Breeding.");
@@ -470,7 +476,7 @@ namespace ARKBreedingStats.values
                 // The singleplayer multipliers are saved as a regular multiplierpreset, but they work differently
                 // in the way they are multiplied on existing multipliers and won't work on their own.
                 // The preset name "singleplayer" should only be used for this purpose.
-                singlePlayerServerMultipliers = serverMultipliersPresets.GetPreset(ServerMultipliersPresets.SINGLEPLAYER);
+                singlePlayerServerMultipliers = serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Singleplayer);
                 if (singlePlayerServerMultipliers == null)
                     throw new FileNotFoundException("No server multiplier values for singleplayer settings found.\nIt's recommend to redownload ARK Smart Breeding.");
             }
@@ -493,6 +499,7 @@ namespace ARKBreedingStats.values
                 {
                     bool customOverrideExists = cc.CustomSpeciesStats?.ContainsKey(sp.blueprintPath) ?? false;
                     double?[][] customFullStatsRaw = customOverrideExists ? cc.CustomSpeciesStats[sp.blueprintPath] : null;
+                    bool useSpeedLevelup = currentServerMultipliers.AllowFlyerSpeedLeveling || !sp.isFlyer;
 
                     // stat-multiplier
                     for (int s = 0; s < STATS_COUNT; s++)
@@ -500,24 +507,64 @@ namespace ARKBreedingStats.values
                         double[] statMultipliers = cc.serverMultipliers?.statMultipliers?[s] ?? defaultMultipliers;
 
                         bool customOverrideForThisStatExists = customOverrideExists && customFullStatsRaw[s] != null;
+
                         sp.stats[s].BaseValue = GetRawStatValue(s, 0, customOverrideForThisStatExists);
+
                         // don't apply the multiplier if AddWhenTamed is negative (e.g. Giganotosaurus, Griffin)
                         double addWhenTamed = GetRawStatValue(s, 3, customOverrideForThisStatExists);
                         sp.stats[s].AddWhenTamed = addWhenTamed * (addWhenTamed > 0 ? statMultipliers[0] : 1);
+
                         // don't apply the multiplier if MultAffinity is negative (e.g. Aberration variants)
                         double multAffinity = GetRawStatValue(s, 4, customOverrideForThisStatExists);
                         sp.stats[s].MultAffinity = multAffinity * (multAffinity > 0 ? statMultipliers[1] : 1);
-                        sp.stats[s].IncPerTamedLevel = GetRawStatValue(s, 2, customOverrideForThisStatExists) * statMultipliers[2];
+
+                        if (useSpeedLevelup || s != (int)StatNames.SpeedMultiplier)
+                        {
+                            sp.stats[s].IncPerTamedLevel = GetRawStatValue(s, 2, customOverrideForThisStatExists) * statMultipliers[2];
+                        }
+                        else
+                        {
+                            sp.stats[s].IncPerTamedLevel = 0;
+                        }
+
                         sp.stats[s].IncPerWildLevel = GetRawStatValue(s, 1, customOverrideForThisStatExists) * statMultipliers[3];
+
+                        // set troodonism values
+                        if (sp.altStats?[s] != null && sp.stats[s].BaseValue != 0)
+                        {
+                            sp.altStats[s].BaseValue = sp.altBaseStatsRaw[s];
+
+                            // alt / troodonism values depend on the base value
+                            var altFactor = sp.altStats[s].BaseValue / sp.stats[s].BaseValue;
+
+                            sp.altStats[s].AddWhenTamed = altFactor * sp.stats[s].AddWhenTamed;
+                            sp.altStats[s].MultAffinity = altFactor * sp.stats[s].MultAffinity;
+                            sp.altStats[s].IncPerTamedLevel = altFactor * sp.stats[s].IncPerTamedLevel;
+                            sp.altStats[s].IncPerWildLevel = altFactor * sp.stats[s].IncPerWildLevel;
+                        }
 
                         if (singlePlayerServerMultipliers?.statMultipliers?[s] == null)
                             continue;
+
                         // don't apply the multiplier if AddWhenTamed is negative (e.g. Giganotosaurus, Griffin)
                         sp.stats[s].AddWhenTamed *= sp.stats[s].AddWhenTamed > 0 ? singlePlayerServerMultipliers.statMultipliers[s][0] : 1;
                         // don't apply the multiplier if MultAffinity is negative (e.g. Aberration variants)
                         sp.stats[s].MultAffinity *= sp.stats[s].MultAffinity > 0 ? singlePlayerServerMultipliers.statMultipliers[s][1] : 1;
                         sp.stats[s].IncPerTamedLevel *= singlePlayerServerMultipliers.statMultipliers[s][2];
                         sp.stats[s].IncPerWildLevel *= singlePlayerServerMultipliers.statMultipliers[s][3];
+
+                        // troodonism values
+                        if (sp.altStats?[s] != null)
+                        {
+                            sp.altStats[s].AddWhenTamed *= sp.altStats[s].AddWhenTamed > 0
+                                ? singlePlayerServerMultipliers.statMultipliers[s][0]
+                                : 1;
+                            sp.altStats[s].MultAffinity *= sp.altStats[s].MultAffinity > 0
+                                ? singlePlayerServerMultipliers.statMultipliers[s][1]
+                                : 1;
+                            sp.altStats[s].IncPerTamedLevel *= singlePlayerServerMultipliers.statMultipliers[s][2];
+                            sp.altStats[s].IncPerWildLevel *= singlePlayerServerMultipliers.statMultipliers[s][3];
+                        }
 
                         double GetRawStatValue(int statIndex, int statValueTypeIndex, bool customOverride)
                         {
@@ -612,8 +659,8 @@ namespace ARKBreedingStats.values
                         nameToSpecies.Add(name, s);
                     else if (
                         (!existingSpecies.IsDomesticable && s.IsDomesticable) // prefer species that are domesticable
-                        || (existingSpecies.variants != null && existingSpecies.variants.Any() && (s.variants == null || !s.variants.Any())) // prefer species that are not variants
                         || (existingSpecies.Mod == null && s.Mod != null) // prefer species from mods with the same name
+                        || ((existingSpecies.variants?.Length ?? 0) > (s.variants?.Length ?? 0)) // prefer species that are not variants
                         )
                     {
                         nameToSpecies[name] = s;
