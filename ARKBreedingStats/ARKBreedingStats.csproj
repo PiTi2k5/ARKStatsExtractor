@@ -39,6 +39,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -78,11 +79,52 @@
     <Compile Include="AboutBox1.Designer.cs">
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
+    <Compile Include="ArkConstants.cs" />
+    <Compile Include="Ark\GameConstants.cs" />
+    <Compile Include="BreedingPlanning\BreedingScore.cs" />
+    <Compile Include="library\AddDummyCreaturesSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="library\AddDummyCreaturesSettings.Designer.cs">
+      <DependentUpon>AddDummyCreaturesSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="library\CreatureSpawnCommand.cs" />
+    <Compile Include="library\DummyCreatures.cs" />
+    <Compile Include="multiplierTesting\CalculateMultipliers.cs" />
     <Compile Include="NamePatterns\NamePatternEntry.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="NamePatterns\PatternTemplate.cs" />
     <Compile Include="NamePatterns\PatternTemplates.cs" />
+    <Compile Include="Pedigree\PedigreeCreation.cs" />
+    <Compile Include="Pedigree\IPedigreeCreature.cs" />
+    <Compile Include="uiControls\CreatureAnalysis.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="uiControls\CreatureAnalysis.Designer.cs">
+      <DependentUpon>CreatureAnalysis.cs</DependentUpon>
+    </Compile>
+    <Compile Include="uiControls\Hatching.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="uiControls\Hatching.Designer.cs">
+      <DependentUpon>Hatching.cs</DependentUpon>
+    </Compile>
+    <Compile Include="uiControls\LibraryFilterTemplates.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="uiControls\LibraryFilterTemplates.Designer.cs">
+      <DependentUpon>LibraryFilterTemplates.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Pedigree\PedigreeCreatureCompact.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="uiControls\StatSelector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="uiControls\StatSelector.Designer.cs">
+      <DependentUpon>StatSelector.cs</DependentUpon>
+    </Compile>
     <Compile Include="Updater\AsbManifest.cs" />
     <Compile Include="Updater\AsbModule.cs" />
     <Compile Include="duplicates\MergingDuplicates.cs" />
@@ -99,8 +141,8 @@
       <DependentUpon>MergingDuplicatesWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="importExported\FileWatcherExports.cs" />
-    <Compile Include="library\CreatureExtensions.cs" />
-    <Compile Include="library\ExportCreatures.cs" />
+    <Compile Include="library\CreatureInfoGraphic.cs" />
+    <Compile Include="library\ExportImportCreatures.cs" />
     <Compile Include="mods\CustomStatOverridesEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,8 +222,8 @@
     <Compile Include="settings\FtpProgress.Designer.cs">
       <DependentUpon>FtpProgress.cs</DependentUpon>
     </Compile>
-    <Compile Include="species\ARKColor.cs" />
-    <Compile Include="species\ARKColors.cs" />
+    <Compile Include="species\ArkColor.cs" />
+    <Compile Include="species\ArkColors.cs" />
     <Compile Include="settings\FtpCredentials.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -205,7 +247,7 @@
     <Compile Include="ARKOverlay.Designer.cs">
       <DependentUpon>ARKOverlay.cs</DependentUpon>
     </Compile>
-    <Compile Include="ControlExtensions.cs" />
+    <Compile Include="utils\ControlExtensions.cs" />
     <Compile Include="IncubationTimerEntry.cs" />
     <Compile Include="library\Note.cs" />
     <Compile Include="NotesControl.cs">
@@ -244,10 +286,10 @@
     <Compile Include="BreedingInfo.Designer.cs">
       <DependentUpon>BreedingInfo.cs</DependentUpon>
     </Compile>
-    <Compile Include="BreedingPlan.cs">
+    <Compile Include="BreedingPlanning\BreedingPlan.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="BreedingPlan.Designer.cs">
+    <Compile Include="BreedingPlanning\BreedingPlan.Designer.cs">
       <DependentUpon>BreedingPlan.cs</DependentUpon>
     </Compile>
     <Compile Include="FileSync.cs" />
@@ -471,16 +513,16 @@
     <Compile Include="uiControls\ParentComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Pedigree.cs">
+    <Compile Include="Pedigree\PedigreeControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Pedigree.Designer.cs">
-      <DependentUpon>Pedigree.cs</DependentUpon>
+    <Compile Include="Pedigree\PedigreeControl.Designer.cs">
+      <DependentUpon>PedigreeControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="uiControls\PedigreeCreature.cs">
+    <Compile Include="Pedigree\PedigreeCreature.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="uiControls\PedigreeCreature.Designer.cs">
+    <Compile Include="Pedigree\PedigreeCreature.Designer.cs">
       <DependentUpon>PedigreeCreature.cs</DependentUpon>
     </Compile>
     <Compile Include="library\Player.cs" />
@@ -598,24 +640,52 @@
     <Compile Include="values\ServerMultipliers.cs" />
     <Compile Include="values\Values.cs" />
     <Compile Include="utils\Win32API.cs" />
+    <None Include="json\equalColorIds.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\success.wav" />
+    <None Include="Resources\topstat.wav" />
+    <None Include="Resources\failure.wav" />
+    <None Include="Resources\newtopstat.wav" />
+    <None Include="Resources\indifferent.wav" />
+    <None Include="json\variantsDefaultUnselected.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="_manifest.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>_manifest.json</LastGenOutput>
     </Content>
+    <EmbeddedResource Include="library\AddDummyCreaturesSettings.resx">
+      <DependentUpon>AddDummyCreaturesSettings.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="local\strings.ja.resx">
       <SubType>Designer</SubType>
       <LastGenOutput>strings.ja.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="local\strings.pt-br.resx" />
     <EmbeddedResource Include="local\strings.ru.resx" />
     <EmbeddedResource Include="local\strings.pl.resx" />
+    <EmbeddedResource Include="local\strings.zh-tw.resx" />
     <EmbeddedResource Include="ocr\PatternMatching\RecognitionTrainingForm.resx">
       <DependentUpon>RecognitionTrainingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\CreatureAnalysis.resx">
+      <DependentUpon>CreatureAnalysis.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="uiControls\CustomMessageBox.resx">
       <DependentUpon>CustomMessageBox.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\Hatching.resx">
+      <DependentUpon>Hatching.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\LibraryFilterTemplates.resx">
+      <DependentUpon>LibraryFilterTemplates.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="uiControls\ParentInheritance.resx">
       <DependentUpon>ParentInheritance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\StatSelector.resx">
+      <DependentUpon>StatSelector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="uiControls\VariantSelector.resx">
       <DependentUpon>VariantSelector.cs</DependentUpon>
@@ -791,8 +861,10 @@
     <None Include="json\kibbles.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="json\values\_manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\kofi.png" />
-    <Content Include="Resources\ARKExtractor.ico" />
     <Content Include="Resources\lock.png" />
     <Content Include="Resources\newPlayer.png" />
     <Content Include="Resources\newTribe.png" />
@@ -802,7 +874,7 @@
     <EmbeddedResource Include="AboutBox1.resx">
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="BreedingPlan.resx">
+    <EmbeddedResource Include="BreedingPlanning\BreedingPlan.resx">
       <DependentUpon>BreedingPlan.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CreatureBox.resx">
@@ -823,10 +895,10 @@
     <EmbeddedResource Include="uiControls\MyColorPicker.resx">
       <DependentUpon>MyColorPicker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Pedigree.resx">
-      <DependentUpon>Pedigree.cs</DependentUpon>
+    <EmbeddedResource Include="Pedigree\PedigreeControl.resx">
+      <DependentUpon>PedigreeControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="uiControls\PedigreeCreature.resx">
+    <EmbeddedResource Include="Pedigree\PedigreeCreature.resx">
       <DependentUpon>PedigreeCreature.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -919,6 +991,9 @@
 if $(ConfigurationName) == Release (
   del "$(TargetDir)*.pdb" 2&gt;nul
   del "$(TargetDir)*.xml" 2&gt;nul
+
+  if not exist "$(SolutionDir)_publish" mkdir "$(SolutionDir)_publish"
+
   powershell -nologo -noprofile -command "$version = (Get-Item '$(TargetPath)').VersionInfo.FileVersion; Compress-Archive -Force -Path '$(TargetDir)*' -DestinationPath """$(SolutionDir)_publish\ARK.Smart.Breeding_$version.zip""" "
 
   if exist "%25ProgramFiles(x86)%25\Inno Setup 5\ISCC.exe" (

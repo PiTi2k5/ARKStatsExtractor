@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -50,8 +51,8 @@ namespace ARKBreedingStats.values
         [JsonProperty("remaps")]
         private Dictionary<string, string> blueprintRemapping;
 
-        public ARKColors Colors;
-        public ARKColors Dyes;
+        public ArkColors Colors;
+        public ArkColors Dyes;
 
         public List<string> speciesNames = new List<string>();
         internal Dictionary<string, string> aliases;
@@ -109,7 +110,7 @@ namespace ARKBreedingStats.values
         /// <summary>
         /// Returns the stat-index for the given order index (like it is ordered ingame).
         /// </summary>
-        public static int[] statsDisplayOrder = new int[] {
+        public static readonly int[] statsDisplayOrder = {
             (int)StatNames.Health,
             (int)StatNames.Stamina,
             (int)StatNames.Oxygen,
@@ -123,8 +124,6 @@ namespace ARKBreedingStats.values
             (int)StatNames.CraftingSpeedMultiplier,
             (int)StatNames.Torpidity
             };
-
-        public Values() { }
 
         public static Values V => _V ?? (_V = new Values());
 
@@ -145,15 +144,17 @@ namespace ARKBreedingStats.values
             if (specialFoodData == null) specialFoodData = new Dictionary<string, TamingData>();
             _V.specialFoodData = specialFoodData;
 
-            if (setTamingFood && specialFoodData.ContainsKey("default"))
+            const string defaultFoodNameKey = "default";
+            if (setTamingFood && specialFoodData.ContainsKey(defaultFoodNameKey))
             {
-                _V.defaultFoodData = specialFoodData["default"].specialFoodValues;
+                _V.defaultFoodData = specialFoodData[defaultFoodNameKey].specialFoodValues;
             }
             else
             {
                 _V.defaultFoodData = new Dictionary<string, TamingFood>();
             }
 
+            //var speciesWoFoodData = new List<string>(); // to determine which species has no food data yet
             _V.speciesNames = new List<string>();
             foreach (Species sp in _V.species)
             {
@@ -161,9 +162,12 @@ namespace ARKBreedingStats.values
                 if (setTamingFood && specialFoodData.ContainsKey(sp.name))
                 {
                     sp.taming.eats = specialFoodData[sp.name].eats;
+                    sp.taming.eatsAlsoPostTame = specialFoodData[sp.name].eatsAlsoPostTame;
                     sp.taming.specialFoodValues = specialFoodData[sp.name].specialFoodValues;
                 }
+                //if (sp.IsDomesticable && !specialFoodData.ContainsKey(sp.name)) speciesWoFoodData.Add(sp.name);
             }
+            //System.Windows.Forms.Clipboard.SetText(speciesWoFoodData.Any() ? string.Join("\n", speciesWoFoodData) : string.Empty);
 
             OrderSpeciesAndApplyCustomVariants();
 
@@ -362,8 +366,8 @@ namespace ARKBreedingStats.values
             if (!Version.TryParse(version, out Version))
                 Version = new Version(0, 0);
 
-            Colors = new ARKColors(colorDefinitions, dyeDefinitions);
-            Dyes = new ARKColors(dyeDefinitions);
+            Colors = new ArkColors(colorDefinitions, dyeDefinitions);
+            Dyes = new ArkColors(dyeDefinitions);
 
             foreach (var s in species)
                 s.InitializeColors(Colors);
@@ -379,28 +383,49 @@ namespace ARKBreedingStats.values
             //    Clipboard.SetText(duplicateSpeciesNames);
         }
 
-        private void OrderSpeciesAndApplyCustomVariants()
+        private string SpeciesNameSortFilePath => FileService.GetJsonPath("sortNames.txt");
+
+        public void ResetDefaultSpeciesNameSorting()
         {
-            string fileName = FileService.GetJsonPath("sortNames.txt");
+            string filePath = SpeciesNameSortFilePath;
 
-            if (!File.Exists(fileName))
+            try
             {
-                // default sorting for aberrant variants.
-                try
-                {
-                    File.WriteAllText(fileName, "^Aberrant (.*)$@$1a\n");
-                }
-                catch
-                {
-                }
+                File.WriteAllText(filePath, "^(Aberrant |Tek |R\\-|X\\-)(.*)$@$2$1\n");
+                ApplySpeciesOrdering();
             }
+            catch
+            {
+                // ignored
+            }
+        }
 
-            if (File.Exists(fileName))
+        public void ResetSpeciesNameSorting()
+        {
+            string filePath = SpeciesNameSortFilePath;
+            if (FileService.TryDeleteFile(filePath))
+                ApplySpeciesOrdering();
+        }
+
+        public void OpenSpeciesNameSortingFile()
+        {
+            string filePath = SpeciesNameSortFilePath;
+            if (!File.Exists(filePath))
+                File.WriteAllText(filePath, string.Empty);
+            if (File.Exists(filePath))
+                Process.Start(filePath);
+        }
+
+        private void ApplySpeciesOrdering()
+        {
+            string filePath = SpeciesNameSortFilePath;
+
+            if (File.Exists(filePath))
             {
                 foreach (Species s in _V.species)
                     s.SortName = string.Empty;
 
-                string[] lines = File.ReadAllLines(fileName);
+                string[] lines = File.ReadAllLines(filePath);
                 foreach (string l in lines)
                 {
                     if (l.IndexOf("@", StringComparison.Ordinal) <= 0 ||
@@ -420,15 +445,27 @@ namespace ARKBreedingStats.values
                     }
                 }
 
-                // set each sortname of species without manual sortname to its speciesname
+                // set each sortName of species without manual sortName to its speciesName
                 foreach (Species s in _V.species)
                 {
                     if (string.IsNullOrEmpty(s.SortName))
-                        s.SortName = s.name;
+                        s.SortName = s.DescriptiveNameAndMod;
+                }
+            }
+            else
+            {
+                foreach (Species s in _V.species)
+                {
+                    s.SortName = s.DescriptiveNameAndMod;
                 }
             }
 
             _V.species = _V.species.OrderBy(s => s.SortName).ToList();
+        }
+
+        private void OrderSpeciesAndApplyCustomVariants()
+        {
+            ApplySpeciesOrdering();
             _V.speciesNames = _V.species.Select(s => s.name).ToList();
 
             // apply custom species variants
@@ -651,20 +688,18 @@ namespace ARKBreedingStats.values
                     if (!blueprintToSpecies.ContainsKey(s.blueprintPath))
                         blueprintToSpecies.Add(s.blueprintPath, s);
 
-                    string name = s.DescriptiveName;
-                    var existingSpecies = nameToSpecies.TryGetValue(name, out var exSp) ? exSp : null;
-
-
-                    if (existingSpecies == null)
-                        nameToSpecies.Add(name, s);
-                    else if (
-                        (!existingSpecies.IsDomesticable && s.IsDomesticable) // prefer species that are domesticable
-                        || (existingSpecies.Mod == null && s.Mod != null) // prefer species from mods with the same name
-                        || ((existingSpecies.variants?.Length ?? 0) > (s.variants?.Length ?? 0)) // prefer species that are not variants
-                        )
+                    string name = s.name;
+                    if (nameToSpecies.TryGetValue(name, out var existingSpecies))
                     {
-                        nameToSpecies[name] = s;
+                        if (
+                            (!existingSpecies.IsDomesticable && s.IsDomesticable) // prefer species that are domesticable
+                            || (existingSpecies.Mod == null && s.Mod != null) // prefer species from mods with the same name
+                            || ((existingSpecies.variants?.Length ?? 0) > (s.variants?.Length ?? 0)) // prefer species that are not variants
+                        )
+                            nameToSpecies[name] = s;
                     }
+                    else
+                        nameToSpecies.Add(name, s);
 
                     Match classNameMatch = rClassName.Match(s.blueprintPath);
                     if (classNameMatch.Success)
@@ -810,6 +845,22 @@ namespace ARKBreedingStats.values
             string speciesClassString = m.Groups[1].Value;
             if (!speciesClassString.EndsWith("_C")) speciesClassString += "_C";
             return IgnoreSpeciesClassesOnImport.Contains(speciesClassString);
+        }
+
+        /// <summary>
+        /// Returns the taming food data for a species.
+        /// Returns null if no data is found.
+        /// </summary>
+        internal TamingFood GetTamingFood(Species species, string foodName)
+        {
+            if (species?.taming?.specialFoodValues != null
+                && species.taming.specialFoodValues.TryGetValue(foodName, out var food))
+                return food;
+
+            if (defaultFoodData != null
+                && defaultFoodData.TryGetValue(foodName, out food))
+                return food;
+            return null;
         }
     }
 }

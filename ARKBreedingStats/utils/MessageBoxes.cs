@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using ARKBreedingStats.uiControls;
 
 namespace ARKBreedingStats.utils
 {
@@ -11,7 +12,7 @@ namespace ARKBreedingStats.utils
         /// <param name="message"></param>
         /// <param name="title">If empty, a word depending on the MessageBoxIcon will be used.</param>
         /// <param name="icon"></param>
-        internal static void ShowMessageBox(string message, string title = null, MessageBoxIcon icon = MessageBoxIcon.Error)
+        internal static void ShowMessageBox(string message, string title = null, MessageBoxIcon icon = MessageBoxIcon.Error, bool displayCopyMessageButton = false)
         {
             if (string.IsNullOrEmpty(title))
             {
@@ -28,19 +29,28 @@ namespace ARKBreedingStats.utils
                         break;
                 }
             }
-            MessageBox.Show(message, $"{title} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, icon);
+
+            if (displayCopyMessageButton)
+                CustomMessageBox.Show(message, title, "OK", icon: icon, showCopyToClipboard: true);
+            else
+                MessageBox.Show(message, $"{title} - {Utils.ApplicationNameVersion}", MessageBoxButtons.OK, icon);
         }
 
         /// <summary>
-        /// Displays an error message with the exception text and the application name and version.
+        /// Displays an error message with info about the exception and the application name and version.
         /// </summary>
-        /// <param name="ex"></param>
-        /// <param name="messageBeforeException"></param>
-        /// <param name="title"></param>
-        internal static void ExceptionMessageBox(Exception ex, string messageBeforeException = null, string title = null) =>
-            ShowMessageBox(
-                (string.IsNullOrEmpty(messageBeforeException) ? string.Empty : messageBeforeException + "\n\n")
-                + $"Errormessage:\n\n{ex.Message}" + (ex.InnerException == null ? string.Empty : $"\n\nInnerException:\n\n{ex.InnerException.Message}"),
-                title);
+        internal static void ExceptionMessageBox(Exception ex, string messageBeforeException = null, string title = null)
+        {
+            string message = ex.Message
+                             + "\n\n" + ex.GetType() + " in " + ex.Source
+                             + "\n\nMethod throwing the error: " + ex.TargetSite.DeclaringType?.FullName + "." +
+                             ex.TargetSite.Name
+                             + "\n\nStackTrace:\n" + ex.StackTrace
+                             + (ex.InnerException != null
+                                 ? "\n\nInner Exception:\n" + ex.InnerException.Message
+                                 : string.Empty);
+
+            ShowMessageBox((string.IsNullOrEmpty(messageBeforeException) ? string.Empty : messageBeforeException + "\n\n") + message, title, displayCopyMessageButton: true);
+        }
     }
 }

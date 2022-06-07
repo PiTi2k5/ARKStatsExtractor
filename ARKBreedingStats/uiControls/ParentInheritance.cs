@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.Pedigree;
 using ARKBreedingStats.species;
 
 namespace ARKBreedingStats.uiControls
@@ -13,14 +14,14 @@ namespace ARKBreedingStats.uiControls
         public ParentInheritance()
         {
             InitializeComponent();
-            _lines = new[] { new List<int[]>(), null };
+            _lines = new[] { new List<int[]>(), null, null };
             GbParents.Paint += ParentStats_Paint;
         }
 
         private void ParentStats_Paint(object sender, PaintEventArgs e)
         {
             if (ControlOffspring.Creature != null && _lines[0].Any())
-                Pedigree.DrawLines(e.Graphics, _lines);
+                PedigreeControl.DrawLines(e.Graphics, _lines);
         }
 
         internal void SetCreatures(Creature offspring = null, Creature mother = null, Creature father = null)
@@ -58,7 +59,7 @@ namespace ARKBreedingStats.uiControls
             }
 
             _lines[0].Clear();
-            Pedigree.CreateGeneInheritanceLines(offspring, mother, father, _lines, 6, 60);
+            PedigreeCreation.CreateGeneInheritanceLines(offspring, mother, father, _lines, 6, 60);
 
             Invalidate();
         }
@@ -70,6 +71,6 @@ namespace ARKBreedingStats.uiControls
 
         private void SetSpecies(Species species) => pedigreeCreatureHeaders.SetCustomStatNames(species?.statNames);
 
-        internal void UpdateColors(int[] colorIds) => ControlOffspring.UpdateColors(colorIds);
+        internal void UpdateColors(byte[] colorIds) => ControlOffspring.UpdateColors(colorIds);
     }
 }

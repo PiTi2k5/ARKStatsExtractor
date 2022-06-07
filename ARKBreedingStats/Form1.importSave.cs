@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -21,31 +22,32 @@ namespace ARKBreedingStats
         private async void SavegameImportClick(object sender, EventArgs e)
         {
             var error = await RunSavegameImport((ATImportFileLocation)((ToolStripMenuItem)sender).Tag);
-            if (error == null) return;
+            if (string.IsNullOrEmpty(error)) return;
             MessageBoxes.ShowMessageBox(error, "Savegame import error");
         }
 
         /// <summary>
-        /// Imports the creatures from the given savegame. ftp is possible.
+        /// Imports the creatures from the given saveGame. ftp is possible.
         /// </summary>
-        /// <param name="atImportFileLocation"></param>
+        /// <returns>null on success, else an error message to show, or an empty string if the error was already displayed.</returns>
         private async Task<string> RunSavegameImport(ATImportFileLocation atImportFileLocation)
         {
-            TsbImportLastSaveGame.Enabled = false;
-            TsbImportLastSaveGame.BackColor = Color.Yellow;
+            TsbQuickSaveGameImport.Enabled = false;
+            TsbQuickSaveGameImport.BackColor = Color.Yellow;
             ToolStripStatusLabelImport.Text = $"{Loc.S("ImportingSavegame")} {atImportFileLocation.ConvenientName}";
             ToolStripStatusLabelImport.Visible = true;
 
             try
             {
-                string workingCopyfilename = Properties.Settings.Default.savegameExtractionPath;
+                string workingCopyFolderPath = Properties.Settings.Default.savegameExtractionPath;
+                string workingCopyFilePath;
 
                 // working dir not configured? use temp dir
                 // luser configured savegame folder as working dir? use temp dir instead
-                if (string.IsNullOrWhiteSpace(workingCopyfilename) ||
-                    Path.GetDirectoryName(atImportFileLocation.FileLocation) == workingCopyfilename)
+                if (string.IsNullOrWhiteSpace(workingCopyFolderPath) ||
+                    Path.GetDirectoryName(atImportFileLocation.FileLocation) == workingCopyFolderPath)
                 {
-                    workingCopyfilename = Path.GetTempPath();
+                    workingCopyFolderPath = Path.GetTempPath();
                 }
 
 
@@ -55,9 +57,9 @@ namespace ARKBreedingStats
                     switch (uri.Scheme)
                     {
                         case "ftp":
-                            workingCopyfilename = await CopyFtpFileAsync(uri, atImportFileLocation.ConvenientName,
-                                workingCopyfilename);
-                            if (workingCopyfilename == null)
+                            workingCopyFilePath = await CopyFtpFileAsync(uri, atImportFileLocation.ConvenientName,
+                               workingCopyFolderPath);
+                            if (workingCopyFilePath == null)
                                 // the user didn't enter credentials
                                 return "no credentials";
                             break;
@@ -70,13 +72,23 @@ namespace ARKBreedingStats
                     if (!File.Exists(atImportFileLocation.FileLocation))
                         return $"File not found: {atImportFileLocation.FileLocation}";
 
-                    workingCopyfilename = Path.Combine(workingCopyfilename,
-                        Path.GetFileName(atImportFileLocation.FileLocation));
-                    File.Copy(atImportFileLocation.FileLocation, workingCopyfilename, true);
+                    workingCopyFilePath = Path.Combine(workingCopyFolderPath,
+                         Path.GetFileName(atImportFileLocation.FileLocation));
+                    try
+                    {
+                        File.Copy(atImportFileLocation.FileLocation, workingCopyFilePath, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBoxes.ExceptionMessageBox(ex, $"Error while copying the save game file to the working directory\n{workingCopyFolderPath}\nIt's recommended to leave the setting for the working folder empty.");
+                        return string.Empty;
+                    }
                 }
 
-                await ImportSavegame.ImportCollectionFromSavegame(_creatureCollection, workingCopyfilename,
+                await ImportSavegame.ImportCollectionFromSavegame(_creatureCollection, workingCopyFilePath,
                     atImportFileLocation.ServerName);
+
+                FileService.TryDeleteFile(workingCopyFilePath);
 
                 UpdateParents(_creatureCollection.creatures);
 
@@ -103,34 +115,21 @@ namespace ARKBreedingStats
                 if (_creatureCollection.ModValueReloadNeeded
                     && LoadModValuesOfCollection(_creatureCollection, true, true))
                     SetCollectionChanged(true);
-
-                Properties.Settings.Default.LastImportedSaveGame = atImportFileLocation.ToString();
-                SetLastSaveFileImportTooltip(atImportFileLocation);
             }
             catch (Exception ex)
             {
-                string message = ex.Message
-                                 + "\n\nException in " + ex.Source
-                                 + "\n\nMethod throwing the error: " + ex.TargetSite.DeclaringType.FullName + "." +
-                                 ex.TargetSite.Name
-                                 + "\n\nStackTrace:\n" + ex.StackTrace
-                                 + (ex.InnerException != null
-                                     ? "\n\nInner Exception:\n" + ex.InnerException.Message
-                                     : string.Empty)
-                    ;
-                MessageBoxes.ShowMessageBox($"An error occurred while importing. Message:\n\n{message}", "Save file import error");
+                MessageBoxes.ExceptionMessageBox(ex, $"An error occurred while importing the file {atImportFileLocation.FileLocation}.", "Save file import error");
+                return string.Empty;
             }
             finally
             {
-                TsbImportLastSaveGame.Enabled = true;
-                TsbImportLastSaveGame.BackColor = SystemColors.Control;
+                TsbQuickSaveGameImport.Enabled = true;
+                TsbQuickSaveGameImport.BackColor = SystemColors.Control;
                 ToolStripStatusLabelImport.Visible = false;
             }
 
             return null; // no error
         }
-
-        private void SetLastSaveFileImportTooltip(ATImportFileLocation importInfo) => TsbImportLastSaveGame.ToolTipText = $"Import savegame {importInfo.ConvenientName}\n{importInfo.FileLocation}";
 
         private async Task<string> CopyFtpFileAsync(Uri ftpUri, string serverName, string workingCopyFolder)
         {
@@ -168,7 +167,7 @@ namespace ARKBreedingStats
 
                     try
                     {
-                        progressDialog.StatusText = $"Authenticating";
+                        progressDialog.StatusText = $"Authenticating on server {serverName}";
                         if (!progressDialog.Visible)
                             progressDialog.Show(this);
 
@@ -179,7 +178,7 @@ namespace ARKBreedingStats
                         // Cannot access a disposed object. Object name: 'System.Net.Sockets.Socket'.
                         await client.ConnectAsync(token: cancellationTokenSource.Token);
 
-                        progressDialog.StatusText = $"Finding most recent file";
+                        progressDialog.StatusText = "Finding most recent file";
                         await Task.Yield();
 
                         var ftpPath = ftpUri.AbsolutePath;
@@ -224,21 +223,21 @@ namespace ARKBreedingStats
                     }
                     catch (OperationCanceledException)
                     {
-                        client?.Dispose();
+                        client.Dispose();
                         return null;
                     }
                     catch (Exception ex)
                     {
                         if (progressDialog.IsDisposed)
                         {
-                            client?.Dispose();
+                            client.Dispose();
                             return null;
                         }
                         progressDialog.StatusText = $"Unexpected error: {ex.Message}";
                     }
                     finally
                     {
-                        client?.Dispose();
+                        client.Dispose();
                     }
                 }
             }
@@ -263,7 +262,7 @@ namespace ARKBreedingStats
             }
             catch (Exception ex)
             {
-                MessageBoxes.ExceptionMessageBox(ex, $"An error occured while loading saved ftp credentials.");
+                MessageBoxes.ExceptionMessageBox(ex, $"An error occurred while loading saved ftp credentials.");
             }
 
             return new Dictionary<string, FtpCredentials>(StringComparer.OrdinalIgnoreCase);
@@ -297,34 +296,54 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Import the last imported save game.
+        /// Quick import of selected save games.
         /// </summary>
-        private async void TsbImportLastSaveGame_Click(object sender, EventArgs e)
+        private async void TsbQuickSaveGameImport_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(Properties.Settings.Default.LastImportedSaveGame))
+            var saveImports = Properties.Settings.Default.arkSavegamePaths;
+            if (saveImports?.Any() != true)
             {
-                MessageBoxes.ShowMessageBox(
-                "First import a savegame via the menu. After that you can import the last imported file with this button.",
-                    "First import a save file manually", MessageBoxIcon.Information);
+                if (MessageBox.Show(
+                    "No save game files are configured for importing.\nYou can do this in the settings. Do you want to open the according settings-page?",
+                    $"Save import not configured - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    OpenSettingsDialog(Settings.SettingsTabPages.SaveImport);
                 return;
             }
 
-            var importFile = ATImportFileLocation.CreateFromString(Properties.Settings.Default.LastImportedSaveGame);
+            var importLocations = Properties.Settings.Default.arkSavegamePaths
+                .Select(ATImportFileLocation.CreateFromString).Where(i => i.ImportWithQuickImport).ToArray();
 
-            if (string.IsNullOrEmpty(importFile.FileLocation)
-                || (!(Uri.TryCreate(importFile.FileLocation, UriKind.Absolute, out var uri) && uri.Scheme == "ftp")
-                    && !File.Exists(importFile.FileLocation)
-                ))
+            if (!importLocations.Any())
             {
-                MessageBoxes.ShowMessageBox(
-                    $"The file that was imported last time does not exist anymore:\n{importFile.FileLocation}\nImport the file you want to import at least once via the menu. After that you can import the last imported file with this button.",
-                    "File not existing");
+                if (MessageBox.Show(
+                    "No save game files for the quick import are selected.\nYou can do this in the settings. Do you want to open the according settings-page?",
+                    $"Quick import not configured - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    OpenSettingsDialog(Settings.SettingsTabPages.SaveImport);
                 return;
             }
 
-            var error = await RunSavegameImport(importFile);
-            if (error == null) return;
-            MessageBoxes.ShowMessageBox(error, "Savegame import error");
+            var results = new List<string>();
+
+            foreach (var importFile in importLocations)
+            {
+                if (string.IsNullOrEmpty(importFile.FileLocation)
+                    || (!(Uri.TryCreate(importFile.FileLocation, UriKind.Absolute, out var uri) && uri.Scheme == "ftp")
+                        && !File.Exists(importFile.FileLocation)
+                    ))
+                {
+                    results.Add($"{importFile.ConvenientName}: Error: the file does not exist:\n{importFile.FileLocation}");
+                    continue;
+                }
+
+                var error = await RunSavegameImport(importFile);
+
+                results.Add(error == null
+                        ? $"{importFile.ConvenientName}: Successfully imported."
+                        : $"{importFile.ConvenientName}: Error during import:" + (string.IsNullOrEmpty(error) ? string.Empty : $"\n{error}")
+                    );
+            }
+
+            MessageBoxes.ShowMessageBox(string.Join("\n\n--------\n\n", results), "Save game import done", MessageBoxIcon.Information);
         }
     }
 }

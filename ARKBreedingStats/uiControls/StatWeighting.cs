@@ -17,12 +17,12 @@ namespace ARKBreedingStats.uiControls
         private readonly Nud[] _weightNuds;
         public event Action WeightingsChanged;
         private readonly Debouncer _valueChangedDebouncer = new Debouncer();
+        private readonly ToolTip _tt = new ToolTip();
 
         public StatWeighting()
         {
             InitializeComponent();
-            ToolTip tt = new ToolTip();
-            tt.SetToolTip(groupBox1, "Increase the weights for stats that are more important to you to be high in the offspring.\nRight click for Presets.");
+            _tt.SetToolTip(groupBox1, "Increase the weights for stats that are more important to you to be high in the offspring.\nRight click for Presets.");
             _currentSpecies = null;
             _weightNuds = new Nud[Values.STATS_COUNT];
             _statLabels = new Label[Values.STATS_COUNT];
@@ -68,7 +68,10 @@ namespace ARKBreedingStats.uiControls
             _currentSpecies = species;
             for (int s = 0; s < Values.STATS_COUNT; s++)
                 if (_statLabels[s] != null)
+                {
                     _statLabels[s].Text = Utils.StatName(s, true, species.statNames);
+                    _tt.SetToolTip(_statLabels[s], Utils.StatName(s, false, species.statNames));
+                }
         }
 
         private void Input_ValueChanged(object sender, EventArgs e)
@@ -150,19 +153,18 @@ namespace ARKBreedingStats.uiControls
         }
 
         /// <summary>
-        /// Sets the statweighting to the preset with the given name, if that is available. If not available, nothing happens.
+        /// Sets the statWeighting to the preset with the given name, if that is available. If not available, nothing happens.
         /// </summary>
         /// <param name="presetName">Name of the preset</param>
         /// <returns>True if the preset was set, false if there is no preset with the given name</returns>
         private bool SelectPresetByName(string presetName)
         {
-            if (_customWeightings.ContainsKey(presetName))
-            {
-                WeightValues = _customWeightings[presetName];
-                return true;
-            }
-            return false;
+            if (!_customWeightings.TryGetValue(presetName, out var weightings)) return false;
+            WeightValues = weightings;
+            return true;
         }
+
+        public double[] GetWeightingByPresetName(string presetName) => _customWeightings.TryGetValue(presetName, out var weightings) ? weightings : null;
 
         private void btDelete_Click(object sender, EventArgs e)
         {
@@ -212,19 +214,13 @@ namespace ARKBreedingStats.uiControls
             get => _customWeightings;
             set
             {
-                if (value != null)
-                {
-                    _customWeightings = value;
-                    // clear custom presets
-                    cbbPresets.Items.Clear();
-                    cbbPresets.Items.Add("-");
-
-                    foreach (KeyValuePair<string, double[]> e in _customWeightings)
-                    {
-                        cbbPresets.Items.Add(e.Key);
-                    }
-                    cbbPresets.SelectedIndex = 0;
-                }
+                if (value == null) return;
+                _customWeightings = value;
+                // clear custom presets
+                cbbPresets.Items.Clear();
+                cbbPresets.Items.Add("-");
+                cbbPresets.Items.AddRange(_customWeightings.Keys.ToArray());
+                cbbPresets.SelectedIndex = 0;
             }
         }
     }

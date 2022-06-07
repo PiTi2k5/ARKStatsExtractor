@@ -1,5 +1,6 @@
 ﻿using ARKBreedingStats.Library;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -24,6 +25,8 @@ namespace ARKBreedingStats.ocr
         public string screenCaptureApplicationName;
         public int waitBeforeScreenCapture;
         public bool enableOutput = false;
+        private (string search, string replace)[] regexReplacings;
+        public string RegexReplacingsStatus;
 
         public static ArkOcr Ocr => _ocr ?? (_ocr = new ArkOcr());
 
@@ -302,7 +305,7 @@ namespace ARKBreedingStats.ocr
             return true;
         }
 
-        public double[] DoOcr(out string OcrText, out string dinoName, out string species, out string ownerName, out string tribeName, out Sex sex, string useImageFilePath = null, bool changeForegroundWindow = true)
+        public double[] DoOcr(out string OcrText, out string dinoName, out string species, out string ownerName, out string tribeName, out Sex sex, string useImageFilePath = null, bool changeForegroundWindow = true, bool screenShotFromClipboard = false)
         {
             string finishedText = string.Empty;
             dinoName = string.Empty;
@@ -349,9 +352,42 @@ namespace ARKBreedingStats.ocr
                 _ocrControl.ClearLists();
 
                 Bitmap bmp;
-                if (!string.IsNullOrEmpty(useImageFilePath) && File.Exists(useImageFilePath))
+                if (screenShotFromClipboard)
                 {
-                    bmp = (Bitmap)Image.FromFile(useImageFilePath);
+                    var im = Clipboard.GetImage();
+                    if (im == null)
+                    {
+                        errorText = "No image in the clipboard, OCR cannot be performed. Press the Print-key to create a screenshot and copy it to the clipboard";
+                        return null;
+                    }
+                    try
+                    {
+                        bmp = (Bitmap)im;
+                        var rec = Properties.Settings.Default.OCRFromRectangle;
+                        if (!rec.IsEmpty)
+                        {
+                            var croppedBmp = bmp.Clone(rec, bmp.PixelFormat);
+                            bmp.Dispose();
+                            bmp = croppedBmp;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorText = $"Error when trying to load the screenshot from the clipboard for the OCR.\n\n" + ex.Message + (ex.InnerException != null ? $" - InnerException: {ex.InnerException.Message}" : null);
+                        return null;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(useImageFilePath) && File.Exists(useImageFilePath))
+                {
+                    try
+                    {
+                        bmp = (Bitmap)Image.FromFile(useImageFilePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorText = $"Error when trying to load the file\n{useImageFilePath}\nfor the OCR.\n\n" + ex.Message + (ex.InnerException != null ? $" - InnerException: {ex.InnerException.Message}" : null);
+                        return null;
+                    }
                 }
                 else
                 {
@@ -560,20 +596,20 @@ namespace ARKBreedingStats.ocr
                         //species = r.Replace(species, " ");
 
                         finishedText += $"\t→ {sex}, {species}";
-                        dinoName = RemoveUnrecognizedCharacters(dinoName);
-                        species = RemoveUnrecognizedCharacters(species);
+                        dinoName = FinishCleanupOcrText(dinoName, ref finishedText);
+                        species = FinishCleanupOcrText(species, ref finishedText);
                     }
                     else if (label == OcrTemplate.OcrLabels.Owner && mc[0].Groups.Count > 0)
                     {
                         ownerName = mc[0].Groups[0].Value;
                         finishedText += $"\t→ {ownerName}";
-                        ownerName = RemoveUnrecognizedCharacters(ownerName);
+                        ownerName = FinishCleanupOcrText(ownerName, ref finishedText);
                     }
                     else if (label == OcrTemplate.OcrLabels.Tribe && mc[0].Groups.Count > 0)
                     {
                         tribeName = mc[0].Groups[0].Value;
                         finishedText += $"\t→ {tribeName}";
-                        tribeName = RemoveUnrecognizedCharacters(tribeName);
+                        tribeName = FinishCleanupOcrText(tribeName, ref finishedText);
                     }
                     continue;
                 }
@@ -599,7 +635,32 @@ namespace ARKBreedingStats.ocr
                 // TODO: test here that the read stat name corresponds to the stat supposed to be read
                 finalValues[stI] = v;
 
-                string RemoveUnrecognizedCharacters(string s) => s.Replace("�", string.Empty);
+                string FinishCleanupOcrText(string s, ref string outputText)
+                {
+                    var t = s.Replace("�", string.Empty);
+                    if (regexReplacings == null) return t;
+
+                    var beforeReplacements = t;
+
+                    try
+                    {
+                        foreach (var regexReplacing in regexReplacings)
+                        {
+                            t = Regex.Replace(t, regexReplacing.search, regexReplacing.replace);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBoxes.ShowMessageBox($"Custom OCR replacement error:\n{ex.Message}", "Custom OCR replacement");
+                    }
+
+                    if (beforeReplacements != t)
+                    {
+                        outputText += $"\t→ {t}";
+                    }
+
+                    return t;
+                }
             }
 
             OcrText = finishedText;
@@ -685,6 +746,34 @@ namespace ARKBreedingStats.ocr
             string statOCR = PatternOcr.ReadImageOcr(bmp, true, Properties.Settings.Default.OCRWhiteThreshold);
 
             return Regex.IsMatch(statOCR, @":\d+$");
+        }
+
+        /// <summary>
+        /// Loads the replacings file for manual regex corrections
+        /// </summary>
+        internal void LoadReplacingsFile()
+        {
+            var filePath = FileService.GetJsonPath(FileService.OcrFolderName, FileService.OcrReplacingsFile);
+            if (ocrConfig == null || string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                RegexReplacingsStatus = null;
+                return;
+            }
+
+            var lines = File.ReadAllLines(filePath);
+
+            var regex = new Regex(@"([^@]+)@(.*)");
+
+            var replacings = new List<(string, string)>();
+            foreach (var l in lines)
+            {
+                var m = regex.Match(l);
+                if (!m.Success) continue;
+                replacings.Add((m.Groups[1].Value, m.Groups[2].Value));
+            }
+
+            RegexReplacingsStatus = $"{replacings.Count} replacements loaded at {DateTime.Now}";
+            regexReplacings = replacings.Any() ? replacings.ToArray() : null;
         }
     }
 }

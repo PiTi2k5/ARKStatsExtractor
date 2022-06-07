@@ -32,7 +32,10 @@ namespace ARKBreedingStats
             var importUnclaimedBabies = Properties.Settings.Default.SaveFileImportUnclaimedBabies;
 
             IEnumerable<GameObject> tamedCreatureObjects = gameObjectContainer
-                    .Where(o => o.IsCreature() && o.IsTamed() && (importUnclaimedBabies || !o.IsUnclaimedBaby()) && !ignoreClasses.Contains(o.ClassString));
+                    .Where(o => o.IsCreature()
+                    && o.IsTamed()
+                    && (importUnclaimedBabies || (o.IsCryo && Properties.Settings.Default.SaveImportCryo) || !o.IsUnclaimedBaby())
+                    && !ignoreClasses.Contains(o.ClassString));
 
             if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.ImportTribeNameFilter))
             {
@@ -90,11 +93,14 @@ namespace ARKBreedingStats
             using (ArkArchive archive = new ArkArchive(stream))
             {
                 arkSavegame.ReadBinary(archive, ReadingOptions.Create()
-                        .WithDataFiles(false)
-                        .WithEmbeddedData(false)
-                        .WithDataFilesObjectMap(false)
-                        .WithObjectFilter(Properties.Settings.Default.SaveImportCryo ? new Predicate<GameObject>(PredicateCreaturesAndCryopods) : new Predicate<GameObject>(PredicateCreatures))
-                        .WithBuildComponentTree(true));
+                    .WithDataFiles(false)
+                    .WithEmbeddedData(false)
+                    .WithDataFilesObjectMap(false)
+                    .WithObjectFilter(Properties.Settings.Default.SaveImportCryo
+                        ? new Predicate<GameObject>(PredicateCreaturesAndCryopods)
+                        : new Predicate<GameObject>(PredicateCreatures))
+                    .WithCryopodCreatures(Properties.Settings.Default.SaveImportCryo)
+                    .WithBuildComponentTree(true));
             }
 
             if (!arkSavegame.HibernationEntries.Any())
@@ -138,7 +144,7 @@ namespace ARKBreedingStats
             if (!Values.V.TryGetSpeciesByClassName(creatureObject.ClassString, out Species species))
             {
                 // species is unknown, creature cannot be imported.
-                // use name-field to temporarily save the unknown classString to display in a messagebox
+                // use name-field to temporarily save the unknown classString to display in a messageBox
                 return new Creature { name = creatureObject.ClassString };
             }
 
@@ -168,6 +174,7 @@ namespace ARKBreedingStats
             float ti = statusObject.GetPropertyValue<float>("TamedIneffectivenessModifier", defaultValue: float.NaN);
             double te = 1f / (1 + (!float.IsNaN(ti) ? ti : creatureObject.GetPropertyValue<float>("TameIneffectivenessModifier")));
 
+            var arkId = creatureObject.GetDinoId();
             Creature creature = new Creature(species,
                     creatureObject.GetPropertyValue<string>("TamedName"), owner, creatureObject.GetPropertyValue<string>("TribeName"),
                     creatureObject.IsFemale() ? Sex.Female : Sex.Male,
@@ -178,23 +185,26 @@ namespace ARKBreedingStats
             )
             {
                 imprinterName = creatureObject.GetPropertyValue<string>("ImprinterName"),
-                guid = Utils.ConvertArkIdToGuid(creatureObject.GetDinoId()),
-                ArkId = creatureObject.GetDinoId(),
+                guid = Utils.ConvertArkIdToGuid(arkId),
+                ArkId = arkId,
                 ArkIdImported = true,
+                ArkIdInGame = Utils.ConvertImportedArkIdToIngameVisualization(arkId),
                 domesticatedAt = DateTime.Now, // TODO: possible to convert ingame-time to realtime?
                 addedToLibrary = DateTime.Now,
                 mutationsMaternal = creatureObject.GetPropertyValue<int>("RandomMutationsFemale"),
                 mutationsPaternal = creatureObject.GetPropertyValue<int>("RandomMutationsMale"),
-                flags = creatureObject.GetPropertyValue<bool>("bNeutered") ? CreatureFlags.Neutered : CreatureFlags.None
+                flags = (creatureObject.GetPropertyValue<bool>("bNeutered") ? CreatureFlags.Neutered : CreatureFlags.None)
+                      | (creatureObject.GetPropertyValue<bool>("MutagenApplied") ? CreatureFlags.MutagenApplied : CreatureFlags.None)
             };
 
             // If it's a baby and still growing, work out growingUntil
-            if (creatureObject.GetPropertyValue<bool>("bIsBaby") || !string.IsNullOrWhiteSpace(imprinterName))
+            float babyAge = creatureObject.GetPropertyValue<float>("BabyAge", defaultValue: 1);
+            if (babyAge < 1)
             {
-                double maturationTime = species.breeding?.maturationTimeAdjusted ?? 0;
-                float tamedTime = _gameTime - (float)creatureObject.GetPropertyValue<double>("TamedAtTime");
-                if (tamedTime < maturationTime - 120) // there seems to be a slight offset of one of these saved values, so don't display a creature as being in cooldown if it is about to leave it in the next 2 minutes
-                    creature.growingUntil = DateTime.Now.Add(TimeSpan.FromSeconds(maturationTime - tamedTime));
+                double maturationDuration = species.breeding?.maturationTimeAdjusted ?? 0;
+                float bornSecondsAgo = (float)maturationDuration * babyAge;
+                if (bornSecondsAgo < maturationDuration - 120) // there seems to be a slight offset of one of these saved values, so don't display a creature as being in cooldown if it is about to leave it in the next 2 minutes
+                    creature.growingUntil = DateTime.Now.Add(TimeSpan.FromSeconds(maturationDuration - bornSecondsAgo));
             }
             else
             {
@@ -227,7 +237,7 @@ namespace ARKBreedingStats
                 creature.isBred = true;
             }
 
-            creature.colors = new int[6];
+            creature.colors = new byte[Species.ColorRegionCount];
             for (int i = 0; i < 6; i++)
             {
                 creature.colors[i] = creatureObject.GetPropertyValue<ArkByteValue>("ColorSetIndices", i)?.ByteValue ?? 0;

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ARKBreedingStats.species;
 
@@ -52,7 +48,7 @@ namespace ARKBreedingStats.uiControls
             var variantCount = ClbVariants.Items.Count;
             if (variantCount == 0)
             {
-                DisabledVariants = Properties.Settings.Default.DisabledVariants?.ToList() ?? new List<string>();
+                DisabledVariants = Properties.Settings.Default.DisabledVariants?.ToList() ?? DefaultVariantDeselection();
             }
             else
             {
@@ -75,9 +71,16 @@ namespace ARKBreedingStats.uiControls
                 ClbVariants.Items.Add(v, checkAll || !DisabledVariants.Contains(v));
         }
 
+        internal void FilterToDefault()
+        {
+            DisabledVariants = DefaultVariantDeselection();
+        }
+
         private void ButtonOk_Click(object sender, EventArgs e)
         {
-            DisabledVariants.Clear();
+            if (DisabledVariants == null)
+                DisabledVariants = new List<string>();
+            else DisabledVariants.Clear();
             int c = ClbVariants.Items.Count;
             for (int i = 0; i < c; i++)
                 if (!ClbVariants.GetItemChecked(i))
@@ -85,6 +88,14 @@ namespace ARKBreedingStats.uiControls
 
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private static List<string> DefaultVariantDeselection()
+        {
+            var filePath = FileService.GetJsonPath("variantsDefaultUnselected.txt");
+            if (!File.Exists(filePath)) return null;
+
+            return File.ReadAllLines(filePath).Where(l => !string.IsNullOrEmpty(l)).ToList();
         }
     }
 }

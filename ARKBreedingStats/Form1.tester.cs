@@ -1,11 +1,11 @@
 ﻿using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
 using ARKBreedingStats.values;
-
 using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using ARKBreedingStats.library;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -42,7 +42,7 @@ namespace ARKBreedingStats
             numericUpDownImprintingBonusTester.ValueSave = (decimal)c.imprintingBonus * 100;
             if (c.isBred)
                 rbBredTester.Checked = true;
-            else if (c.tamingEff > 0 || c.tamingEff == -2) // -2 is unknown (e.g. Giganotosaurus)
+            else if (c.isDomesticated)
                 rbTamedTester.Checked = true;
             else
                 rbWildTester.Checked = true;
@@ -179,28 +179,11 @@ namespace ARKBreedingStats
             bool parentsChanged = _creatureTesterEdit.Mother != creatureInfoInputTester.Mother || _creatureTesterEdit.Father != creatureInfoInputTester.Father;
             _creatureTesterEdit.levelsWild = GetCurrentWildLevels(false);
             _creatureTesterEdit.levelsDom = GetCurrentDomLevels(false);
-            _creatureTesterEdit.tamingEff = (double)NumericUpDownTestingTE.Value / 100;
+            _creatureTesterEdit.tamingEff = TamingEffectivenessTester;
             _creatureTesterEdit.isBred = rbBredTester.Checked;
             _creatureTesterEdit.imprintingBonus = (double)numericUpDownImprintingBonusTester.Value / 100;
 
-            _creatureTesterEdit.name = creatureInfoInputTester.CreatureName;
-            _creatureTesterEdit.sex = creatureInfoInputTester.CreatureSex;
-            _creatureTesterEdit.owner = creatureInfoInputTester.CreatureOwner;
-            _creatureTesterEdit.tribe = creatureInfoInputTester.CreatureTribe;
-            _creatureTesterEdit.server = creatureInfoInputTester.CreatureServer;
-            _creatureTesterEdit.Mother = creatureInfoInputTester.Mother;
-            _creatureTesterEdit.Father = creatureInfoInputTester.Father;
-            _creatureTesterEdit.note = creatureInfoInputTester.CreatureNote;
-            _creatureTesterEdit.Status = creatureInfoInputTester.CreatureStatus;
-            _creatureTesterEdit.cooldownUntil = creatureInfoInputTester.CooldownUntil;
-            _creatureTesterEdit.growingUntil = creatureInfoInputTester.GrowingUntil;
-            _creatureTesterEdit.domesticatedAt = creatureInfoInputTester.DomesticatedAt;
-            _creatureTesterEdit.flags = creatureInfoInputTester.CreatureFlags;
-            _creatureTesterEdit.mutationsMaternal = creatureInfoInputTester.MutationCounterMother;
-            _creatureTesterEdit.mutationsPaternal = creatureInfoInputTester.MutationCounterFather;
-            _creatureTesterEdit.colors = creatureInfoInputTester.RegionColors;
-            _creatureTesterEdit.ArkId = creatureInfoInputTester.ArkId;
-            _creatureTesterEdit.InitializeArkInGame();
+            creatureInfoInputTester.SetCreatureData(_creatureTesterEdit);
 
             if (wildChanged)
                 CalculateTopStats(_creatureCollection.creatures.Where(c => c.Species == _creatureTesterEdit.Species).ToList());
@@ -208,6 +191,8 @@ namespace ARKBreedingStats
 
             if (parentsChanged)
                 _creatureTesterEdit.RecalculateAncestorGenerations();
+
+            _creatureTesterEdit.RecalculateNewMutations();
 
             // if maturation was changed, update raising-timers
             if (_creatureTesterEdit.growingUntil != creatureInfoInputTester.GrowingUntil)
@@ -224,8 +209,6 @@ namespace ARKBreedingStats
         /// <summary>
         /// Set the values in the creatureInfoInput control to the values of the creature or clears the inputs.
         /// </summary>
-        /// <param name="c"></param>
-        /// <param name="virtualCreature"></param>
         private void SetTesterInfoInputCreature(Creature c = null, bool virtualCreature = false)
         {
             bool enable = c != null; // set to a creature, or clear
@@ -272,7 +255,7 @@ namespace ARKBreedingStats
                 creatureInfoInputTester.DomesticatedAt = null;
                 creatureInfoInputTester.AddedToLibraryAt = null;
                 creatureInfoInputTester.CreatureFlags = CreatureFlags.None;
-                creatureInfoInputTester.RegionColors = new int[6];
+                creatureInfoInputTester.RegionColors = new byte[Species.ColorRegionCount];
                 creatureInfoInputTester.CreatureGuid = Guid.Empty;
                 creatureInfoInputTester.SetArkId(0, false);
                 creatureInfoInputTester.MutationCounterMother = 0;
@@ -283,37 +266,101 @@ namespace ARKBreedingStats
 
         private void SetCreatureValuesToExtractor(Creature c, bool onlyWild = false)
         {
-            if (c != null)
+            if (c == null) return;
+            Species species = c.Species;
+            if (species == null)
             {
-                Species species = c.Species;
-                if (species != null)
-                {
-                    ClearAll();
-                    // copy values over to extractor
-                    for (int s = 0; s < Values.STATS_COUNT; s++)
-                    {
-                        _statIOs[s].Input = onlyWild ? StatValueCalculation.CalculateValue(species, s, c.levelsWild[s], 0, true, c.tamingEff, c.imprintingBonus) : c.valuesDom[s];
-                        if (c.levelsDom[s] > 0) _statIOs[s].DomLevelLockedZero = false;
-                    }
-                    speciesSelector1.SetSpecies(species);
+                MessageBoxes.ShowMessageBox($"Unknown species\n{c.speciesBlueprint}\nTry to update the species-stats, or redownload the tool.");
+                return;
+            }
 
-                    if (c.isBred)
-                        rbBredExtractor.Checked = true;
-                    else if (c.tamingEff >= 0)
-                        rbTamedExtractor.Checked = true;
-                    else
-                        rbWildExtractor.Checked = true;
+            ClearAll();
+            speciesSelector1.SetSpecies(species);
+            // copy values over to extractor
+            for (int s = 0; s < Values.STATS_COUNT; s++)
+            {
+                _statIOs[s].Input = onlyWild
+                    ? StatValueCalculation.CalculateValue(species, s, c.levelsWild[s], 0, true, c.tamingEff,
+                        c.imprintingBonus)
+                    : c.valuesDom[s];
+                if (c.levelsDom[s] > 0) _statIOs[s].DomLevelLockedZero = false;
+            }
 
-                    numericUpDownImprintingBonusExtractor.ValueSave = (decimal)c.imprintingBonus * 100;
-                    // set total level
-                    int level = onlyWild ? c.levelsWild[(int)StatNames.Torpidity] : c.Level;
-                    numericUpDownLevel.ValueSave = level;
+            if (c.isBred)
+                rbBredExtractor.Checked = true;
+            else if (c.isDomesticated)
+                rbTamedExtractor.Checked = true;
+            else
+                rbWildExtractor.Checked = true;
 
-                    tabControlMain.SelectedTab = tabPageExtractor;
-                }
-                else
-                    MessageBoxes.ShowMessageBox("Unknown Species. Try to update the species-stats, or redownload the tool.");
+            numericUpDownImprintingBonusExtractor.ValueSave = (decimal)c.imprintingBonus * 100;
+            // set total level
+            int level = onlyWild ? c.levelsWild[(int)StatNames.Torpidity] : c.Level;
+            numericUpDownLevel.ValueSave = level;
+
+            // set colors
+            creatureInfoInputExtractor.RegionColors = c.colors;
+
+            tabControlMain.SelectedTab = tabPageExtractor;
+        }
+
+        private void SetRandomWildLevels(object sender, EventArgs e)
+        {
+            var species = speciesSelector1.SelectedSpecies;
+            if (species == null) return;
+
+            var maxLevel = CreatureCollection.CurrentCreatureCollection?.maxChartLevel ?? 50;
+            var r = new Random();
+            for (int si = 0; si < Values.STATS_COUNT; si++)
+            {
+                if (species.UsesStat(si))
+                    _testingIOs[si].LevelWild = r.Next(maxLevel);
             }
         }
+
+        private void pictureBoxColorRegionsTester_Click(object sender, EventArgs e)
+        {
+            var creature = new Creature
+            {
+                Species = speciesSelector1.SelectedSpecies,
+                levelsWild = GetCurrentWildLevels(false),
+                levelsDom = GetCurrentDomLevels(false),
+                tamingEff = TamingEffectivenessTester,
+                isBred = rbBredTester.Checked,
+                imprintingBonus = (double)numericUpDownImprintingBonusTester.Value / 100
+            };
+
+            creatureInfoInputTester.SetCreatureData(creature);
+            creature.RecalculateAncestorGenerations();
+            creature.RecalculateNewMutations();
+            creature.RecalculateCreatureValues(CreatureCollection.CurrentCreatureCollection.wildLevelStep);
+
+            creature.ExportInfoGraphicToClipboard(CreatureCollection.CurrentCreatureCollection);
+        }
+
+        private void PbCreatureColorsExtractor_Click(object sender, EventArgs e)
+        {
+            var creature = new Creature
+            {
+                Species = speciesSelector1.SelectedSpecies,
+                levelsWild = GetCurrentWildLevels(true),
+                levelsDom = GetCurrentDomLevels(true)
+            };
+
+            creature.tamingEff = _extractor.UniqueTamingEffectiveness();
+            creature.isBred = rbBredExtractor.Checked;
+            creature.imprintingBonus = _extractor.ImprintingBonus;
+            creatureInfoInputExtractor.SetCreatureData(creature);
+            creature.RecalculateAncestorGenerations();
+            creature.RecalculateNewMutations();
+            creature.RecalculateCreatureValues(CreatureCollection.CurrentCreatureCollection.wildLevelStep);
+
+            creature.ExportInfoGraphicToClipboard(CreatureCollection.CurrentCreatureCollection);
+        }
+
+        /// <summary>
+        /// Returns the taming effectiveness for the creature in the Tester. -3 indicates a wild creature.
+        /// </summary>
+        private double TamingEffectivenessTester => rbWildTester.Checked ? -3 : (double)NumericUpDownTestingTE.Value / 100;
     }
 }

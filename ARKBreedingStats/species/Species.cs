@@ -91,6 +91,11 @@ namespace ARKBreedingStats.species
         public TamingData taming;
         [JsonProperty]
         public BreedingData breeding;
+        /// <summary>
+        /// If the species uses no gender, ignore the sex in the breeding planner.
+        /// </summary>
+        [JsonProperty]
+        public bool noGender;
         [JsonProperty]
         public Dictionary<string, double> boneDamageAdjusters;
         [JsonProperty]
@@ -183,7 +188,8 @@ namespace ARKBreedingStats.species
                 boneDamageAdjusters = boneDamageAdjustersCleanedUp;
             }
 
-            IsDomesticable = (taming != null && (taming.nonViolent || taming.violent)) || breeding != null;
+            IsDomesticable = (taming != null && (taming.nonViolent || taming.violent))
+                             || (breeding != null && (breeding.incubationTime > 0 || breeding.gestationTime > 0));
 
             if (statImprintMult == null) statImprintMult = new double[] { 0.2, 0, 0.2, 0, 0.2, 0.2, 0, 0.2, 0.2, 0.2, 0, 0 }; // default values for the stat imprint multipliers
         }
@@ -199,12 +205,12 @@ namespace ARKBreedingStats.species
             }
 
             DescriptiveName = name + (string.IsNullOrEmpty(VariantInfo) ? string.Empty : " (" + VariantInfo + ")");
-            SortName = DescriptiveName;
             string modSuffix = string.IsNullOrEmpty(_mod?.title) ? string.Empty : _mod.title;
-            DescriptiveNameAndMod = DescriptiveName + (string.IsNullOrEmpty(modSuffix) ? "" : " (" + modSuffix + ")");
+            DescriptiveNameAndMod = DescriptiveName + (string.IsNullOrEmpty(modSuffix) ? string.Empty : " (" + modSuffix + ")");
+            SortName = DescriptiveNameAndMod;
         }
 
-        public void InitializeColors(ARKColors arkColors)
+        public void InitializeColors(ArkColors arkColors)
         {
             for (int i = 0; i < ColorRegionCount; i++)
                 colors[i]?.Initialize(arkColors);
@@ -272,7 +278,7 @@ namespace ARKBreedingStats.species
         public bool UsesStat(int statIndex) => (usedStats & 1 << statIndex) != 0;
 
         /// <summary>
-        /// Returns if the species displays a stat ingame, e.g. can be leveled.
+        /// Returns if the species displays a stat ingame in the inventory.
         /// </summary>
         /// <param name="statIndex"></param>
         /// <returns></returns>
@@ -311,6 +317,26 @@ namespace ARKBreedingStats.species
                 InitializeNames();
             }
             get => _mod;
+        }
+
+        /// <summary>
+        /// Returns an array of colors for a creature of this species with the naturally occurring colors.
+        /// </summary>
+        public byte[] RandomSpeciesColors(Random rand = null)
+        {
+            if (rand == null) rand = new Random();
+
+            var randomColors = new byte[ColorRegionCount];
+            for (int ci = 0; ci < ColorRegionCount; ci++)
+            {
+                if (!EnabledColorRegions[ci]) continue;
+                var colorCount = colors[ci]?.naturalColors?.Count ?? 0;
+                if (colorCount == 0)
+                    randomColors[ci] = (byte)(6 + rand.Next(50));
+                else randomColors[ci] = (byte)colors[ci].naturalColors[rand.Next(colorCount)].Id;
+            }
+
+            return randomColors;
         }
     }
 }

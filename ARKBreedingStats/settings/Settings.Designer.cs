@@ -78,6 +78,14 @@
             this.label10 = new System.Windows.Forms.Label();
             this.nudMaxDomLevels = new ARKBreedingStats.uiControls.Nud();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label57 = new System.Windows.Forms.Label();
+            this.label56 = new System.Windows.Forms.Label();
+            this.pbChartOddRange = new System.Windows.Forms.PictureBox();
+            this.pbChartEvenRange = new System.Windows.Forms.PictureBox();
+            this.nudChartLevelOddMax = new ARKBreedingStats.uiControls.Nud();
+            this.nudChartLevelOddMin = new ARKBreedingStats.uiControls.Nud();
+            this.nudChartLevelEvenMax = new ARKBreedingStats.uiControls.Nud();
+            this.nudChartLevelEvenMin = new ARKBreedingStats.uiControls.Nud();
             this.CbHighlightLevelEvenOdd = new System.Windows.Forms.CheckBox();
             this.CbHighlightLevel255 = new System.Windows.Forms.CheckBox();
             this.cbIgnoreSexInBreedingPlan = new System.Windows.Forms.CheckBox();
@@ -95,6 +103,8 @@
             this.nudTamingSpeed = new ARKBreedingStats.uiControls.Nud();
             this.label15 = new System.Windows.Forms.Label();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.label55 = new System.Windows.Forms.Label();
+            this.NudWaitBeforeAutoLoad = new ARKBreedingStats.uiControls.Nud();
             this.label54 = new System.Windows.Forms.Label();
             this.NudKeepBackupFilesCount = new ARKBreedingStats.uiControls.Nud();
             this.label53 = new System.Windows.Forms.Label();
@@ -130,19 +140,6 @@
             this.ClbExportSpreadsheetFields = new System.Windows.Forms.CheckedListBox();
             this.GbImgCacheLocalAppData = new System.Windows.Forms.GroupBox();
             this.CbImgCacheUseLocalAppData = new System.Windows.Forms.CheckBox();
-            this.groupBox28 = new System.Windows.Forms.GroupBox();
-            this.CbInfoGraphicMutations = new System.Windows.Forms.CheckBox();
-            this.CbInfoGraphicGenerations = new System.Windows.Forms.CheckBox();
-            this.CbInfoGraphicDomLevels = new System.Windows.Forms.CheckBox();
-            this.BtInfoGraphicBorderColor = new System.Windows.Forms.Button();
-            this.BtInfoGraphicBackColor = new System.Windows.Forms.Button();
-            this.BtInfoGraphicForeColor = new System.Windows.Forms.Button();
-            this.label51 = new System.Windows.Forms.Label();
-            this.TbInfoGraphicFontName = new System.Windows.Forms.TextBox();
-            this.CbInfoGraphicDisplayMaxWildLevel = new System.Windows.Forms.CheckBox();
-            this.label50 = new System.Windows.Forms.Label();
-            this.LbInfoGraphicSize = new System.Windows.Forms.Label();
-            this.nudInfoGraphicWidth = new ARKBreedingStats.uiControls.Nud();
             this.groupBox16 = new System.Windows.Forms.GroupBox();
             this.cbDevTools = new System.Windows.Forms.CheckBox();
             this.GbSpecies = new System.Windows.Forms.GroupBox();
@@ -151,12 +148,12 @@
             this.groupBox26 = new System.Windows.Forms.GroupBox();
             this.cbAdminConsoleCommandWithCheat = new System.Windows.Forms.CheckBox();
             this.groupBox25 = new System.Windows.Forms.GroupBox();
+            this.CbbAppDefaultFontName = new System.Windows.Forms.ComboBox();
             this.label48 = new System.Windows.Forms.Label();
             this.CbbColorMode = new System.Windows.Forms.ComboBox();
             this.nudDefaultFontSize = new ARKBreedingStats.uiControls.Nud();
             this.label33 = new System.Windows.Forms.Label();
             this.label32 = new System.Windows.Forms.Label();
-            this.tbDefaultFontName = new System.Windows.Forms.TextBox();
             this.groupBox20 = new System.Windows.Forms.GroupBox();
             this.cbPrettifyJSON = new System.Windows.Forms.CheckBox();
             this.groupBox17 = new System.Windows.Forms.GroupBox();
@@ -168,6 +165,27 @@
             this.cbLibraryHighlightTopCreatures = new System.Windows.Forms.CheckBox();
             this.cbApplyGlobalSpeciesToLibrary = new System.Windows.Forms.CheckBox();
             this.cbCreatureColorsLibrary = new System.Windows.Forms.CheckBox();
+            this.tabPageInfoGraphic = new System.Windows.Forms.TabPage();
+            this.label63 = new System.Windows.Forms.Label();
+            this.PbInfoGraphicPreview = new System.Windows.Forms.PictureBox();
+            this.groupBox32 = new System.Windows.Forms.GroupBox();
+            this.LbInfoGraphicSize = new System.Windows.Forms.Label();
+            this.CbbInfoGraphicFontName = new System.Windows.Forms.ComboBox();
+            this.nudInfoGraphicHeight = new ARKBreedingStats.uiControls.Nud();
+            this.BtInfoGraphicForeColor = new System.Windows.Forms.Button();
+            this.BtInfoGraphicBackColor = new System.Windows.Forms.Button();
+            this.BtInfoGraphicBorderColor = new System.Windows.Forms.Button();
+            this.label51 = new System.Windows.Forms.Label();
+            this.groupBox28 = new System.Windows.Forms.GroupBox();
+            this.CbInfoGraphicColorRegionNamesIfNoImage = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicStatValues = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicAddRegionNames = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicCreatureName = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicMutations = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicGenerations = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicDomLevels = new System.Windows.Forms.CheckBox();
+            this.CbInfoGraphicDisplayMaxWildLevel = new System.Windows.Forms.CheckBox();
+            this.label50 = new System.Windows.Forms.Label();
             this.tabPageImportSavegame = new System.Windows.Forms.TabPage();
             this.groupBox12 = new System.Windows.Forms.GroupBox();
             this.CbImportUnclaimedBabies = new System.Windows.Forms.CheckBox();
@@ -177,15 +195,16 @@
             this.label_Filter = new System.Windows.Forms.Label();
             this.cbImportUpdateCreatureStatus = new System.Windows.Forms.CheckBox();
             this.groupBox15 = new System.Windows.Forms.GroupBox();
-            this.labelSavegameFileLocationHint = new System.Windows.Forms.Label();
             this.dataGridView_FileLocations = new System.Windows.Forms.DataGridView();
             this.convenientNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.serverNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fileLocationDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgvFileLocation_Change = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ImportWithQuickImport = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.dgvFileLocation_Delete = new System.Windows.Forms.DataGridViewButtonColumn();
             this.aTImportFileLocationBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.btAddSavegameFileLocation = new System.Windows.Forms.Button();
+            this.labelSavegameFileLocationHint = new System.Windows.Forms.Label();
             this.groupBox14 = new System.Windows.Forms.GroupBox();
             this.fileSelectorExtractedSaveFolder = new ARKBreedingStats.uiControls.FileSelector();
             this.label24 = new System.Windows.Forms.Label();
@@ -200,6 +219,7 @@
             this.label30 = new System.Windows.Forms.Label();
             this.nudImportLowerBoundTE = new ARKBreedingStats.uiControls.Nud();
             this.groupBox22 = new System.Windows.Forms.GroupBox();
+            this.CbAutoExtractAddToLibrary = new System.Windows.Forms.CheckBox();
             this.CbAutoImportSuccessGotoLibrary = new System.Windows.Forms.CheckBox();
             this.TbExportFileRename = new System.Windows.Forms.TextBox();
             this.CbExportFileRenameAfterImport = new System.Windows.Forms.CheckBox();
@@ -275,6 +295,16 @@
             this.chkbSpeechRecognition = new System.Windows.Forms.CheckBox();
             this.tabPageOCR = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label62 = new System.Windows.Forms.Label();
+            this.label61 = new System.Windows.Forms.Label();
+            this.label60 = new System.Windows.Forms.Label();
+            this.label59 = new System.Windows.Forms.Label();
+            this.label58 = new System.Windows.Forms.Label();
+            this.NudOCRClipboardCropHeight = new ARKBreedingStats.uiControls.Nud();
+            this.NudOCRClipboardCropWidth = new ARKBreedingStats.uiControls.Nud();
+            this.NudOCRClipboardCropTop = new ARKBreedingStats.uiControls.Nud();
+            this.NudOCRClipboardCropLeft = new ARKBreedingStats.uiControls.Nud();
+            this.CbOCRFromClipboard = new System.Windows.Forms.CheckBox();
             this.button1 = new System.Windows.Forms.Button();
             this.cbOCRIgnoreImprintValue = new System.Windows.Forms.CheckBox();
             this.cbShowOCRButton = new System.Windows.Forms.CheckBox();
@@ -288,8 +318,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.NudWaitBeforeAutoLoad = new ARKBreedingStats.uiControls.Nud();
-            this.label55 = new System.Windows.Forms.Label();
             this.groupBoxMultiplier.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmountEvent)).BeginInit();
@@ -312,6 +340,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudMaxWildLevels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMaxDomLevels)).BeginInit();
             this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbChartOddRange)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbChartEvenRange)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelOddMax)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelOddMin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelEvenMax)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelEvenMin)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxBreedingSug)).BeginInit();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudDinoCharacterFoodDrainEvent)).BeginInit();
@@ -319,6 +353,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudDinoCharacterFoodDrain)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudTamingSpeed)).BeginInit();
             this.groupBox6.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudWaitBeforeAutoLoad)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NudKeepBackupFilesCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NudBackupEveryMinutes)).BeginInit();
             this.groupBox7.SuspendLayout();
@@ -331,8 +366,6 @@
             this.tabPageGeneral.SuspendLayout();
             this.groupBox30.SuspendLayout();
             this.GbImgCacheLocalAppData.SuspendLayout();
-            this.groupBox28.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicWidth)).BeginInit();
             this.groupBox16.SuspendLayout();
             this.GbSpecies.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.NudSpeciesSelectorCountLastUsed)).BeginInit();
@@ -342,6 +375,11 @@
             this.groupBox20.SuspendLayout();
             this.groupBox17.SuspendLayout();
             this.groupBox9.SuspendLayout();
+            this.tabPageInfoGraphic.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PbInfoGraphicPreview)).BeginInit();
+            this.groupBox32.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicHeight)).BeginInit();
+            this.groupBox28.SuspendLayout();
             this.tabPageImportSavegame.SuspendLayout();
             this.groupBox12.SuspendLayout();
             this.groupBox15.SuspendLayout();
@@ -375,10 +413,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlayInfoDuration)).BeginInit();
             this.tabPageOCR.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropHeight)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropWidth)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropLeft)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaitBeforeScreenCapture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWhiteThreshold)).BeginInit();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.NudWaitBeforeAutoLoad)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxMultiplier
@@ -1097,6 +1138,14 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label57);
+            this.groupBox4.Controls.Add(this.label56);
+            this.groupBox4.Controls.Add(this.pbChartOddRange);
+            this.groupBox4.Controls.Add(this.pbChartEvenRange);
+            this.groupBox4.Controls.Add(this.nudChartLevelOddMax);
+            this.groupBox4.Controls.Add(this.nudChartLevelOddMin);
+            this.groupBox4.Controls.Add(this.nudChartLevelEvenMax);
+            this.groupBox4.Controls.Add(this.nudChartLevelEvenMin);
             this.groupBox4.Controls.Add(this.CbHighlightLevelEvenOdd);
             this.groupBox4.Controls.Add(this.CbHighlightLevel255);
             this.groupBox4.Controls.Add(this.cbIgnoreSexInBreedingPlan);
@@ -1107,10 +1156,145 @@
             this.groupBox4.Controls.Add(this.numericUpDownMaxBreedingSug);
             this.groupBox4.Location = new System.Drawing.Point(6, 233);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(317, 138);
+            this.groupBox4.Size = new System.Drawing.Size(317, 172);
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Breeding Planner";
+            // 
+            // label57
+            // 
+            this.label57.AutoSize = true;
+            this.label57.Location = new System.Drawing.Point(6, 139);
+            this.label57.Name = "label57";
+            this.label57.Size = new System.Drawing.Size(31, 26);
+            this.label57.TabIndex = 15;
+            this.label57.Text = "hue\r\neven";
+            // 
+            // label56
+            // 
+            this.label56.AutoSize = true;
+            this.label56.Location = new System.Drawing.Point(178, 139);
+            this.label56.Name = "label56";
+            this.label56.Size = new System.Drawing.Size(25, 26);
+            this.label56.TabIndex = 14;
+            this.label56.Text = "hue\r\nodd";
+            // 
+            // pbChartOddRange
+            // 
+            this.pbChartOddRange.Location = new System.Drawing.Point(209, 158);
+            this.pbChartOddRange.Name = "pbChartOddRange";
+            this.pbChartOddRange.Size = new System.Drawing.Size(100, 10);
+            this.pbChartOddRange.TabIndex = 13;
+            this.pbChartOddRange.TabStop = false;
+            // 
+            // pbChartEvenRange
+            // 
+            this.pbChartEvenRange.Location = new System.Drawing.Point(43, 158);
+            this.pbChartEvenRange.Name = "pbChartEvenRange";
+            this.pbChartEvenRange.Size = new System.Drawing.Size(100, 10);
+            this.pbChartEvenRange.TabIndex = 12;
+            this.pbChartEvenRange.TabStop = false;
+            // 
+            // nudChartLevelOddMax
+            // 
+            this.nudChartLevelOddMax.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudChartLevelOddMax.Location = new System.Drawing.Point(268, 137);
+            this.nudChartLevelOddMax.Maximum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            0});
+            this.nudChartLevelOddMax.Minimum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            -2147483648});
+            this.nudChartLevelOddMax.Name = "nudChartLevelOddMax";
+            this.nudChartLevelOddMax.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudChartLevelOddMax.Size = new System.Drawing.Size(41, 20);
+            this.nudChartLevelOddMax.TabIndex = 11;
+            this.nudChartLevelOddMax.Value = new decimal(new int[] {
+            360,
+            0,
+            0,
+            0});
+            this.nudChartLevelOddMax.ValueChanged += new System.EventHandler(this.nudChartLevelOddMax_ValueChanged);
+            // 
+            // nudChartLevelOddMin
+            // 
+            this.nudChartLevelOddMin.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudChartLevelOddMin.Location = new System.Drawing.Point(209, 137);
+            this.nudChartLevelOddMin.Maximum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            0});
+            this.nudChartLevelOddMin.Minimum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            -2147483648});
+            this.nudChartLevelOddMin.Name = "nudChartLevelOddMin";
+            this.nudChartLevelOddMin.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudChartLevelOddMin.Size = new System.Drawing.Size(41, 20);
+            this.nudChartLevelOddMin.TabIndex = 10;
+            this.nudChartLevelOddMin.ValueChanged += new System.EventHandler(this.nudChartLevelOddMin_ValueChanged);
+            // 
+            // nudChartLevelEvenMax
+            // 
+            this.nudChartLevelEvenMax.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudChartLevelEvenMax.Location = new System.Drawing.Point(102, 137);
+            this.nudChartLevelEvenMax.Maximum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            0});
+            this.nudChartLevelEvenMax.Minimum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            -2147483648});
+            this.nudChartLevelEvenMax.Name = "nudChartLevelEvenMax";
+            this.nudChartLevelEvenMax.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudChartLevelEvenMax.Size = new System.Drawing.Size(41, 20);
+            this.nudChartLevelEvenMax.TabIndex = 9;
+            this.nudChartLevelEvenMax.ValueChanged += new System.EventHandler(this.nudChartLevelEvenMax_ValueChanged);
+            // 
+            // nudChartLevelEvenMin
+            // 
+            this.nudChartLevelEvenMin.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudChartLevelEvenMin.Location = new System.Drawing.Point(43, 137);
+            this.nudChartLevelEvenMin.Maximum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            0});
+            this.nudChartLevelEvenMin.Minimum = new decimal(new int[] {
+            360,
+            0,
+            0,
+            -2147483648});
+            this.nudChartLevelEvenMin.Name = "nudChartLevelEvenMin";
+            this.nudChartLevelEvenMin.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudChartLevelEvenMin.Size = new System.Drawing.Size(41, 20);
+            this.nudChartLevelEvenMin.TabIndex = 8;
+            this.nudChartLevelEvenMin.ValueChanged += new System.EventHandler(this.nudChartLevelEvenMin_ValueChanged);
             // 
             // CbHighlightLevelEvenOdd
             // 
@@ -1331,12 +1515,11 @@
             // 
             // label15
             // 
-            this.label15.Location = new System.Drawing.Point(453, 540);
+            this.label15.Location = new System.Drawing.Point(453, 527);
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(289, 48);
+            this.label15.Size = new System.Drawing.Size(289, 77);
             this.label15.TabIndex = 9;
-            this.label15.Text = "If you have the files Game.ini or GameUserSettings.ini from your server, you can " +
-    "drag&&drop them on this window to insert their values.";
+            this.label15.Text = resources.GetString("label15.Text");
             // 
             // groupBox6
             // 
@@ -1360,6 +1543,33 @@
             this.groupBox6.TabIndex = 0;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Save / Load";
+            // 
+            // label55
+            // 
+            this.label55.AutoSize = true;
+            this.label55.Location = new System.Drawing.Point(193, 20);
+            this.label55.Name = "label55";
+            this.label55.Size = new System.Drawing.Size(118, 13);
+            this.label55.TabIndex = 13;
+            this.label55.Text = "wait before loading [ms]";
+            // 
+            // NudWaitBeforeAutoLoad
+            // 
+            this.NudWaitBeforeAutoLoad.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.NudWaitBeforeAutoLoad.Location = new System.Drawing.Point(255, 41);
+            this.NudWaitBeforeAutoLoad.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.NudWaitBeforeAutoLoad.Name = "NudWaitBeforeAutoLoad";
+            this.NudWaitBeforeAutoLoad.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudWaitBeforeAutoLoad.Size = new System.Drawing.Size(56, 20);
+            this.NudWaitBeforeAutoLoad.TabIndex = 12;
             // 
             // label54
             // 
@@ -1448,7 +1658,7 @@
             // groupBox7
             // 
             this.groupBox7.Controls.Add(this.checkBoxDisplayHiddenStats);
-            this.groupBox7.Location = new System.Drawing.Point(6, 377);
+            this.groupBox7.Location = new System.Drawing.Point(6, 411);
             this.groupBox7.Name = "groupBox7";
             this.groupBox7.Size = new System.Drawing.Size(317, 43);
             this.groupBox7.TabIndex = 2;
@@ -1469,6 +1679,7 @@
             // 
             this.tabControlSettings.Controls.Add(this.tabPageMultipliers);
             this.tabControlSettings.Controls.Add(this.tabPageGeneral);
+            this.tabControlSettings.Controls.Add(this.tabPageInfoGraphic);
             this.tabControlSettings.Controls.Add(this.tabPageImportSavegame);
             this.tabControlSettings.Controls.Add(this.tabPageImportExported);
             this.tabControlSettings.Controls.Add(this.tabPageTimers);
@@ -1531,9 +1742,9 @@
             // 
             // label34
             // 
-            this.label34.Location = new System.Drawing.Point(419, 601);
+            this.label34.Location = new System.Drawing.Point(419, 605);
             this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(320, 38);
+            this.label34.Size = new System.Drawing.Size(320, 34);
             this.label34.TabIndex = 10;
             this.label34.Text = "You can export the settings on this page to a file, e.g. to share it with tribe m" +
     "embers or for bug reports.";
@@ -1582,7 +1793,7 @@
             // 
             this.label27.AutoSize = true;
             this.label27.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label27.Location = new System.Drawing.Point(417, 540);
+            this.label27.Location = new System.Drawing.Point(417, 527);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(30, 26);
             this.label27.TabIndex = 12;
@@ -1683,7 +1894,6 @@
             this.tabPageGeneral.AutoScroll = true;
             this.tabPageGeneral.Controls.Add(this.groupBox30);
             this.tabPageGeneral.Controls.Add(this.GbImgCacheLocalAppData);
-            this.tabPageGeneral.Controls.Add(this.groupBox28);
             this.tabPageGeneral.Controls.Add(this.groupBox16);
             this.tabPageGeneral.Controls.Add(this.GbSpecies);
             this.tabPageGeneral.Controls.Add(this.groupBox26);
@@ -1708,9 +1918,9 @@
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveDown);
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveUp);
             this.groupBox30.Controls.Add(this.ClbExportSpreadsheetFields);
-            this.groupBox30.Location = new System.Drawing.Point(329, 400);
+            this.groupBox30.Location = new System.Drawing.Point(329, 283);
             this.groupBox30.Name = "groupBox30";
-            this.groupBox30.Size = new System.Drawing.Size(413, 213);
+            this.groupBox30.Size = new System.Drawing.Size(413, 330);
             this.groupBox30.TabIndex = 13;
             this.groupBox30.TabStop = false;
             this.groupBox30.Text = "Info to export for spreadsheet";
@@ -1749,15 +1959,15 @@
             // ClbExportSpreadsheetFields
             // 
             this.ClbExportSpreadsheetFields.FormattingEnabled = true;
-            this.ClbExportSpreadsheetFields.Location = new System.Drawing.Point(36, 50);
+            this.ClbExportSpreadsheetFields.Location = new System.Drawing.Point(36, 41);
             this.ClbExportSpreadsheetFields.Name = "ClbExportSpreadsheetFields";
-            this.ClbExportSpreadsheetFields.Size = new System.Drawing.Size(371, 154);
+            this.ClbExportSpreadsheetFields.Size = new System.Drawing.Size(371, 274);
             this.ClbExportSpreadsheetFields.TabIndex = 12;
             // 
             // GbImgCacheLocalAppData
             // 
             this.GbImgCacheLocalAppData.Controls.Add(this.CbImgCacheUseLocalAppData);
-            this.GbImgCacheLocalAppData.Location = new System.Drawing.Point(329, 351);
+            this.GbImgCacheLocalAppData.Location = new System.Drawing.Point(329, 185);
             this.GbImgCacheLocalAppData.Name = "GbImgCacheLocalAppData";
             this.GbImgCacheLocalAppData.Size = new System.Drawing.Size(413, 43);
             this.GbImgCacheLocalAppData.TabIndex = 11;
@@ -1774,163 +1984,10 @@
             this.CbImgCacheUseLocalAppData.Text = "Use LocalAppData for Image cache";
             this.CbImgCacheUseLocalAppData.UseVisualStyleBackColor = true;
             // 
-            // groupBox28
-            // 
-            this.groupBox28.Controls.Add(this.CbInfoGraphicMutations);
-            this.groupBox28.Controls.Add(this.CbInfoGraphicGenerations);
-            this.groupBox28.Controls.Add(this.CbInfoGraphicDomLevels);
-            this.groupBox28.Controls.Add(this.BtInfoGraphicBorderColor);
-            this.groupBox28.Controls.Add(this.BtInfoGraphicBackColor);
-            this.groupBox28.Controls.Add(this.BtInfoGraphicForeColor);
-            this.groupBox28.Controls.Add(this.label51);
-            this.groupBox28.Controls.Add(this.TbInfoGraphicFontName);
-            this.groupBox28.Controls.Add(this.CbInfoGraphicDisplayMaxWildLevel);
-            this.groupBox28.Controls.Add(this.label50);
-            this.groupBox28.Controls.Add(this.LbInfoGraphicSize);
-            this.groupBox28.Controls.Add(this.nudInfoGraphicWidth);
-            this.groupBox28.Location = new System.Drawing.Point(329, 90);
-            this.groupBox28.Name = "groupBox28";
-            this.groupBox28.Size = new System.Drawing.Size(413, 111);
-            this.groupBox28.TabIndex = 7;
-            this.groupBox28.TabStop = false;
-            this.groupBox28.Text = "Infographic";
-            // 
-            // CbInfoGraphicMutations
-            // 
-            this.CbInfoGraphicMutations.AutoSize = true;
-            this.CbInfoGraphicMutations.Location = new System.Drawing.Point(217, 58);
-            this.CbInfoGraphicMutations.Name = "CbInfoGraphicMutations";
-            this.CbInfoGraphicMutations.Size = new System.Drawing.Size(43, 17);
-            this.CbInfoGraphicMutations.TabIndex = 5;
-            this.CbInfoGraphicMutations.Text = "mut";
-            this.CbInfoGraphicMutations.UseVisualStyleBackColor = true;
-            // 
-            // CbInfoGraphicGenerations
-            // 
-            this.CbInfoGraphicGenerations.AutoSize = true;
-            this.CbInfoGraphicGenerations.Location = new System.Drawing.Point(267, 58);
-            this.CbInfoGraphicGenerations.Name = "CbInfoGraphicGenerations";
-            this.CbInfoGraphicGenerations.Size = new System.Drawing.Size(44, 17);
-            this.CbInfoGraphicGenerations.TabIndex = 6;
-            this.CbInfoGraphicGenerations.Text = "gen";
-            this.CbInfoGraphicGenerations.UseVisualStyleBackColor = true;
-            // 
-            // CbInfoGraphicDomLevels
-            // 
-            this.CbInfoGraphicDomLevels.AutoSize = true;
-            this.CbInfoGraphicDomLevels.Location = new System.Drawing.Point(135, 58);
-            this.CbInfoGraphicDomLevels.Name = "CbInfoGraphicDomLevels";
-            this.CbInfoGraphicDomLevels.Size = new System.Drawing.Size(76, 17);
-            this.CbInfoGraphicDomLevels.TabIndex = 4;
-            this.CbInfoGraphicDomLevels.Text = "dom levels";
-            this.CbInfoGraphicDomLevels.UseVisualStyleBackColor = true;
-            // 
-            // BtInfoGraphicBorderColor
-            // 
-            this.BtInfoGraphicBorderColor.Location = new System.Drawing.Point(332, 77);
-            this.BtInfoGraphicBorderColor.Name = "BtInfoGraphicBorderColor";
-            this.BtInfoGraphicBorderColor.Size = new System.Drawing.Size(75, 23);
-            this.BtInfoGraphicBorderColor.TabIndex = 11;
-            this.BtInfoGraphicBorderColor.Text = "BorderColor";
-            this.BtInfoGraphicBorderColor.UseVisualStyleBackColor = true;
-            this.BtInfoGraphicBorderColor.Click += new System.EventHandler(this.ColorButtonClick);
-            // 
-            // BtInfoGraphicBackColor
-            // 
-            this.BtInfoGraphicBackColor.Location = new System.Drawing.Point(332, 48);
-            this.BtInfoGraphicBackColor.Name = "BtInfoGraphicBackColor";
-            this.BtInfoGraphicBackColor.Size = new System.Drawing.Size(75, 23);
-            this.BtInfoGraphicBackColor.TabIndex = 10;
-            this.BtInfoGraphicBackColor.Text = "BackColor";
-            this.BtInfoGraphicBackColor.UseVisualStyleBackColor = true;
-            this.BtInfoGraphicBackColor.Click += new System.EventHandler(this.ColorButtonClick);
-            // 
-            // BtInfoGraphicForeColor
-            // 
-            this.BtInfoGraphicForeColor.Location = new System.Drawing.Point(332, 19);
-            this.BtInfoGraphicForeColor.Name = "BtInfoGraphicForeColor";
-            this.BtInfoGraphicForeColor.Size = new System.Drawing.Size(75, 23);
-            this.BtInfoGraphicForeColor.TabIndex = 9;
-            this.BtInfoGraphicForeColor.Text = "ForeColor";
-            this.BtInfoGraphicForeColor.UseVisualStyleBackColor = true;
-            this.BtInfoGraphicForeColor.Click += new System.EventHandler(this.ColorButtonClick);
-            // 
-            // label51
-            // 
-            this.label51.AutoSize = true;
-            this.label51.Location = new System.Drawing.Point(6, 84);
-            this.label51.Name = "label51";
-            this.label51.Size = new System.Drawing.Size(28, 13);
-            this.label51.TabIndex = 7;
-            this.label51.Text = "Font";
-            // 
-            // TbInfoGraphicFontName
-            // 
-            this.TbInfoGraphicFontName.Location = new System.Drawing.Point(74, 81);
-            this.TbInfoGraphicFontName.Name = "TbInfoGraphicFontName";
-            this.TbInfoGraphicFontName.Size = new System.Drawing.Size(222, 20);
-            this.TbInfoGraphicFontName.TabIndex = 8;
-            // 
-            // CbInfoGraphicDisplayMaxWildLevel
-            // 
-            this.CbInfoGraphicDisplayMaxWildLevel.AutoSize = true;
-            this.CbInfoGraphicDisplayMaxWildLevel.Location = new System.Drawing.Point(6, 58);
-            this.CbInfoGraphicDisplayMaxWildLevel.Name = "CbInfoGraphicDisplayMaxWildLevel";
-            this.CbInfoGraphicDisplayMaxWildLevel.Size = new System.Drawing.Size(123, 17);
-            this.CbInfoGraphicDisplayMaxWildLevel.TabIndex = 3;
-            this.CbInfoGraphicDisplayMaxWildLevel.Text = "max wild server level";
-            this.CbInfoGraphicDisplayMaxWildLevel.UseVisualStyleBackColor = true;
-            // 
-            // label50
-            // 
-            this.label50.AutoSize = true;
-            this.label50.Location = new System.Drawing.Point(6, 16);
-            this.label50.Name = "label50";
-            this.label50.Size = new System.Drawing.Size(298, 13);
-            this.label50.TabIndex = 0;
-            this.label50.Text = "Styling of the infographic that can be exported from the library.";
-            // 
-            // LbInfoGraphicSize
-            // 
-            this.LbInfoGraphicSize.AutoSize = true;
-            this.LbInfoGraphicSize.Location = new System.Drawing.Point(6, 34);
-            this.LbInfoGraphicSize.Name = "LbInfoGraphicSize";
-            this.LbInfoGraphicSize.Size = new System.Drawing.Size(110, 13);
-            this.LbInfoGraphicSize.TabIndex = 1;
-            this.LbInfoGraphicSize.Text = "InfoGraphic width [px]";
-            // 
-            // nudInfoGraphicWidth
-            // 
-            this.nudInfoGraphicWidth.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudInfoGraphicWidth.Location = new System.Drawing.Point(122, 32);
-            this.nudInfoGraphicWidth.Maximum = new decimal(new int[] {
-            99999,
-            0,
-            0,
-            0});
-            this.nudInfoGraphicWidth.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudInfoGraphicWidth.Name = "nudInfoGraphicWidth";
-            this.nudInfoGraphicWidth.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudInfoGraphicWidth.Size = new System.Drawing.Size(57, 20);
-            this.nudInfoGraphicWidth.TabIndex = 2;
-            this.nudInfoGraphicWidth.Value = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
-            // 
             // groupBox16
             // 
             this.groupBox16.Controls.Add(this.cbDevTools);
-            this.groupBox16.Location = new System.Drawing.Point(329, 302);
+            this.groupBox16.Location = new System.Drawing.Point(329, 234);
             this.groupBox16.Name = "groupBox16";
             this.groupBox16.Size = new System.Drawing.Size(413, 43);
             this.groupBox16.TabIndex = 10;
@@ -1951,7 +2008,7 @@
             // 
             this.GbSpecies.Controls.Add(this.LbSpeciesSelectorCountLastUsed);
             this.GbSpecies.Controls.Add(this.NudSpeciesSelectorCountLastUsed);
-            this.GbSpecies.Location = new System.Drawing.Point(6, 426);
+            this.GbSpecies.Location = new System.Drawing.Point(6, 460);
             this.GbSpecies.Name = "GbSpecies";
             this.GbSpecies.Size = new System.Drawing.Size(317, 43);
             this.GbSpecies.TabIndex = 3;
@@ -1983,7 +2040,7 @@
             // groupBox26
             // 
             this.groupBox26.Controls.Add(this.cbAdminConsoleCommandWithCheat);
-            this.groupBox26.Location = new System.Drawing.Point(329, 207);
+            this.groupBox26.Location = new System.Drawing.Point(329, 90);
             this.groupBox26.Name = "groupBox26";
             this.groupBox26.Size = new System.Drawing.Size(413, 43);
             this.groupBox26.TabIndex = 8;
@@ -2002,18 +2059,28 @@
             // 
             // groupBox25
             // 
+            this.groupBox25.Controls.Add(this.CbbAppDefaultFontName);
             this.groupBox25.Controls.Add(this.label48);
             this.groupBox25.Controls.Add(this.CbbColorMode);
             this.groupBox25.Controls.Add(this.nudDefaultFontSize);
             this.groupBox25.Controls.Add(this.label33);
             this.groupBox25.Controls.Add(this.label32);
-            this.groupBox25.Controls.Add(this.tbDefaultFontName);
             this.groupBox25.Location = new System.Drawing.Point(329, 6);
             this.groupBox25.Name = "groupBox25";
             this.groupBox25.Size = new System.Drawing.Size(413, 78);
             this.groupBox25.TabIndex = 6;
             this.groupBox25.TabStop = false;
-            this.groupBox25.Text = "Visuals";
+            this.groupBox25.Text = "Visuals (needs application restart)";
+            // 
+            // CbbAppDefaultFontName
+            // 
+            this.CbbAppDefaultFontName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.CbbAppDefaultFontName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.CbbAppDefaultFontName.FormattingEnabled = true;
+            this.CbbAppDefaultFontName.Location = new System.Drawing.Point(74, 17);
+            this.CbbAppDefaultFontName.Name = "CbbAppDefaultFontName";
+            this.CbbAppDefaultFontName.Size = new System.Drawing.Size(222, 21);
+            this.CbbAppDefaultFontName.TabIndex = 17;
             // 
             // label48
             // 
@@ -2037,7 +2104,7 @@
             // 
             this.nudDefaultFontSize.DecimalPlaces = 2;
             this.nudDefaultFontSize.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudDefaultFontSize.Location = new System.Drawing.Point(335, 19);
+            this.nudDefaultFontSize.Location = new System.Drawing.Point(335, 18);
             this.nudDefaultFontSize.Name = "nudDefaultFontSize";
             this.nudDefaultFontSize.NeutralNumber = new decimal(new int[] {
             0,
@@ -2050,7 +2117,7 @@
             // label33
             // 
             this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(302, 22);
+            this.label33.Location = new System.Drawing.Point(302, 20);
             this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(27, 13);
             this.label33.TabIndex = 2;
@@ -2065,17 +2132,10 @@
             this.label32.TabIndex = 0;
             this.label32.Text = "Default font";
             // 
-            // tbDefaultFontName
-            // 
-            this.tbDefaultFontName.Location = new System.Drawing.Point(74, 19);
-            this.tbDefaultFontName.Name = "tbDefaultFontName";
-            this.tbDefaultFontName.Size = new System.Drawing.Size(222, 20);
-            this.tbDefaultFontName.TabIndex = 1;
-            // 
             // groupBox20
             // 
             this.groupBox20.Controls.Add(this.cbPrettifyJSON);
-            this.groupBox20.Location = new System.Drawing.Point(329, 256);
+            this.groupBox20.Location = new System.Drawing.Point(329, 139);
             this.groupBox20.Name = "groupBox20";
             this.groupBox20.Size = new System.Drawing.Size(413, 40);
             this.groupBox20.TabIndex = 9;
@@ -2120,9 +2180,9 @@
             this.groupBox9.Controls.Add(this.cbLibraryHighlightTopCreatures);
             this.groupBox9.Controls.Add(this.cbApplyGlobalSpeciesToLibrary);
             this.groupBox9.Controls.Add(this.cbCreatureColorsLibrary);
-            this.groupBox9.Location = new System.Drawing.Point(6, 475);
+            this.groupBox9.Location = new System.Drawing.Point(6, 509);
             this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(317, 195);
+            this.groupBox9.Size = new System.Drawing.Size(317, 161);
             this.groupBox9.TabIndex = 4;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "Library";
@@ -2186,6 +2246,256 @@
             this.cbCreatureColorsLibrary.TabIndex = 0;
             this.cbCreatureColorsLibrary.Text = "Show Creature-Colors columns in library";
             this.cbCreatureColorsLibrary.UseVisualStyleBackColor = true;
+            // 
+            // tabPageInfoGraphic
+            // 
+            this.tabPageInfoGraphic.Controls.Add(this.label63);
+            this.tabPageInfoGraphic.Controls.Add(this.PbInfoGraphicPreview);
+            this.tabPageInfoGraphic.Controls.Add(this.groupBox32);
+            this.tabPageInfoGraphic.Controls.Add(this.groupBox28);
+            this.tabPageInfoGraphic.Controls.Add(this.label50);
+            this.tabPageInfoGraphic.Location = new System.Drawing.Point(4, 22);
+            this.tabPageInfoGraphic.Name = "tabPageInfoGraphic";
+            this.tabPageInfoGraphic.Size = new System.Drawing.Size(750, 676);
+            this.tabPageInfoGraphic.TabIndex = 7;
+            this.tabPageInfoGraphic.Text = "Info Graphic";
+            this.tabPageInfoGraphic.UseVisualStyleBackColor = true;
+            // 
+            // label63
+            // 
+            this.label63.AutoSize = true;
+            this.label63.Location = new System.Drawing.Point(11, 300);
+            this.label63.Name = "label63";
+            this.label63.Size = new System.Drawing.Size(45, 13);
+            this.label63.TabIndex = 18;
+            this.label63.Text = "Preview";
+            // 
+            // PbInfoGraphicPreview
+            // 
+            this.PbInfoGraphicPreview.Location = new System.Drawing.Point(8, 325);
+            this.PbInfoGraphicPreview.Name = "PbInfoGraphicPreview";
+            this.PbInfoGraphicPreview.Size = new System.Drawing.Size(333, 143);
+            this.PbInfoGraphicPreview.TabIndex = 9;
+            this.PbInfoGraphicPreview.TabStop = false;
+            // 
+            // groupBox32
+            // 
+            this.groupBox32.Controls.Add(this.LbInfoGraphicSize);
+            this.groupBox32.Controls.Add(this.CbbInfoGraphicFontName);
+            this.groupBox32.Controls.Add(this.nudInfoGraphicHeight);
+            this.groupBox32.Controls.Add(this.BtInfoGraphicForeColor);
+            this.groupBox32.Controls.Add(this.BtInfoGraphicBackColor);
+            this.groupBox32.Controls.Add(this.BtInfoGraphicBorderColor);
+            this.groupBox32.Controls.Add(this.label51);
+            this.groupBox32.Location = new System.Drawing.Point(488, 47);
+            this.groupBox32.Name = "groupBox32";
+            this.groupBox32.Size = new System.Drawing.Size(254, 197);
+            this.groupBox32.TabIndex = 17;
+            this.groupBox32.TabStop = false;
+            this.groupBox32.Text = "Visuals";
+            // 
+            // LbInfoGraphicSize
+            // 
+            this.LbInfoGraphicSize.AutoSize = true;
+            this.LbInfoGraphicSize.Location = new System.Drawing.Point(6, 20);
+            this.LbInfoGraphicSize.Name = "LbInfoGraphicSize";
+            this.LbInfoGraphicSize.Size = new System.Drawing.Size(114, 13);
+            this.LbInfoGraphicSize.TabIndex = 1;
+            this.LbInfoGraphicSize.Text = "InfoGraphic height [px]";
+            // 
+            // CbbInfoGraphicFontName
+            // 
+            this.CbbInfoGraphicFontName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.CbbInfoGraphicFontName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.CbbInfoGraphicFontName.FormattingEnabled = true;
+            this.CbbInfoGraphicFontName.Location = new System.Drawing.Point(6, 154);
+            this.CbbInfoGraphicFontName.Name = "CbbInfoGraphicFontName";
+            this.CbbInfoGraphicFontName.Size = new System.Drawing.Size(242, 21);
+            this.CbbInfoGraphicFontName.TabIndex = 16;
+            this.CbbInfoGraphicFontName.SelectedIndexChanged += new System.EventHandler(this.CbbInfoGraphicFontName_SelectedIndexChanged);
+            // 
+            // nudInfoGraphicHeight
+            // 
+            this.nudInfoGraphicHeight.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudInfoGraphicHeight.Location = new System.Drawing.Point(126, 18);
+            this.nudInfoGraphicHeight.Maximum = new decimal(new int[] {
+            99999,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicHeight.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicHeight.Name = "nudInfoGraphicHeight";
+            this.nudInfoGraphicHeight.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicHeight.Size = new System.Drawing.Size(57, 20);
+            this.nudInfoGraphicHeight.TabIndex = 2;
+            this.nudInfoGraphicHeight.Value = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.nudInfoGraphicHeight.ValueChanged += new System.EventHandler(this.nudInfoGraphicHeight_ValueChanged);
+            // 
+            // BtInfoGraphicForeColor
+            // 
+            this.BtInfoGraphicForeColor.Location = new System.Drawing.Point(9, 44);
+            this.BtInfoGraphicForeColor.Name = "BtInfoGraphicForeColor";
+            this.BtInfoGraphicForeColor.Size = new System.Drawing.Size(75, 23);
+            this.BtInfoGraphicForeColor.TabIndex = 9;
+            this.BtInfoGraphicForeColor.Text = "ForeColor";
+            this.BtInfoGraphicForeColor.UseVisualStyleBackColor = true;
+            this.BtInfoGraphicForeColor.Click += new System.EventHandler(this.ColorButtonClick);
+            // 
+            // BtInfoGraphicBackColor
+            // 
+            this.BtInfoGraphicBackColor.Location = new System.Drawing.Point(9, 73);
+            this.BtInfoGraphicBackColor.Name = "BtInfoGraphicBackColor";
+            this.BtInfoGraphicBackColor.Size = new System.Drawing.Size(75, 23);
+            this.BtInfoGraphicBackColor.TabIndex = 10;
+            this.BtInfoGraphicBackColor.Text = "BackColor";
+            this.BtInfoGraphicBackColor.UseVisualStyleBackColor = true;
+            this.BtInfoGraphicBackColor.Click += new System.EventHandler(this.ColorButtonClick);
+            // 
+            // BtInfoGraphicBorderColor
+            // 
+            this.BtInfoGraphicBorderColor.Location = new System.Drawing.Point(9, 102);
+            this.BtInfoGraphicBorderColor.Name = "BtInfoGraphicBorderColor";
+            this.BtInfoGraphicBorderColor.Size = new System.Drawing.Size(75, 23);
+            this.BtInfoGraphicBorderColor.TabIndex = 11;
+            this.BtInfoGraphicBorderColor.Text = "BorderColor";
+            this.BtInfoGraphicBorderColor.UseVisualStyleBackColor = true;
+            this.BtInfoGraphicBorderColor.Click += new System.EventHandler(this.ColorButtonClick);
+            // 
+            // label51
+            // 
+            this.label51.AutoSize = true;
+            this.label51.Location = new System.Drawing.Point(6, 138);
+            this.label51.Name = "label51";
+            this.label51.Size = new System.Drawing.Size(57, 13);
+            this.label51.TabIndex = 7;
+            this.label51.Text = "Font name";
+            // 
+            // groupBox28
+            // 
+            this.groupBox28.Controls.Add(this.CbInfoGraphicColorRegionNamesIfNoImage);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicStatValues);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicAddRegionNames);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicCreatureName);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicMutations);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicGenerations);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicDomLevels);
+            this.groupBox28.Controls.Add(this.CbInfoGraphicDisplayMaxWildLevel);
+            this.groupBox28.Location = new System.Drawing.Point(8, 47);
+            this.groupBox28.Name = "groupBox28";
+            this.groupBox28.Size = new System.Drawing.Size(474, 224);
+            this.groupBox28.TabIndex = 8;
+            this.groupBox28.TabStop = false;
+            this.groupBox28.Text = "Include Info";
+            // 
+            // CbInfoGraphicColorRegionNamesIfNoImage
+            // 
+            this.CbInfoGraphicColorRegionNamesIfNoImage.AutoSize = true;
+            this.CbInfoGraphicColorRegionNamesIfNoImage.Location = new System.Drawing.Point(6, 157);
+            this.CbInfoGraphicColorRegionNamesIfNoImage.Name = "CbInfoGraphicColorRegionNamesIfNoImage";
+            this.CbInfoGraphicColorRegionNamesIfNoImage.Size = new System.Drawing.Size(224, 17);
+            this.CbInfoGraphicColorRegionNamesIfNoImage.TabIndex = 15;
+            this.CbInfoGraphicColorRegionNamesIfNoImage.Text = "color region names if no image is available";
+            this.CbInfoGraphicColorRegionNamesIfNoImage.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicColorRegionNamesIfNoImage.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicStatValues
+            // 
+            this.CbInfoGraphicStatValues.AutoSize = true;
+            this.CbInfoGraphicStatValues.Location = new System.Drawing.Point(6, 65);
+            this.CbInfoGraphicStatValues.Name = "CbInfoGraphicStatValues";
+            this.CbInfoGraphicStatValues.Size = new System.Drawing.Size(192, 17);
+            this.CbInfoGraphicStatValues.TabIndex = 14;
+            this.CbInfoGraphicStatValues.Text = "stat values additionally to the levels";
+            this.CbInfoGraphicStatValues.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicStatValues.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicAddRegionNames
+            // 
+            this.CbInfoGraphicAddRegionNames.AutoSize = true;
+            this.CbInfoGraphicAddRegionNames.Location = new System.Drawing.Point(6, 134);
+            this.CbInfoGraphicAddRegionNames.Name = "CbInfoGraphicAddRegionNames";
+            this.CbInfoGraphicAddRegionNames.Size = new System.Drawing.Size(115, 17);
+            this.CbInfoGraphicAddRegionNames.TabIndex = 13;
+            this.CbInfoGraphicAddRegionNames.Text = "color region names";
+            this.CbInfoGraphicAddRegionNames.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicAddRegionNames.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicCreatureName
+            // 
+            this.CbInfoGraphicCreatureName.AutoSize = true;
+            this.CbInfoGraphicCreatureName.Location = new System.Drawing.Point(6, 19);
+            this.CbInfoGraphicCreatureName.Name = "CbInfoGraphicCreatureName";
+            this.CbInfoGraphicCreatureName.Size = new System.Drawing.Size(94, 17);
+            this.CbInfoGraphicCreatureName.TabIndex = 12;
+            this.CbInfoGraphicCreatureName.Text = "creature name";
+            this.CbInfoGraphicCreatureName.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicCreatureName.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicMutations
+            // 
+            this.CbInfoGraphicMutations.AutoSize = true;
+            this.CbInfoGraphicMutations.Location = new System.Drawing.Point(6, 88);
+            this.CbInfoGraphicMutations.Name = "CbInfoGraphicMutations";
+            this.CbInfoGraphicMutations.Size = new System.Drawing.Size(71, 17);
+            this.CbInfoGraphicMutations.TabIndex = 5;
+            this.CbInfoGraphicMutations.Text = "mutations";
+            this.CbInfoGraphicMutations.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicMutations.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicGenerations
+            // 
+            this.CbInfoGraphicGenerations.AutoSize = true;
+            this.CbInfoGraphicGenerations.Location = new System.Drawing.Point(6, 111);
+            this.CbInfoGraphicGenerations.Name = "CbInfoGraphicGenerations";
+            this.CbInfoGraphicGenerations.Size = new System.Drawing.Size(148, 17);
+            this.CbInfoGraphicGenerations.TabIndex = 6;
+            this.CbInfoGraphicGenerations.Text = "generation of the creature";
+            this.CbInfoGraphicGenerations.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicGenerations.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicDomLevels
+            // 
+            this.CbInfoGraphicDomLevels.AutoSize = true;
+            this.CbInfoGraphicDomLevels.Location = new System.Drawing.Point(6, 42);
+            this.CbInfoGraphicDomLevels.Name = "CbInfoGraphicDomLevels";
+            this.CbInfoGraphicDomLevels.Size = new System.Drawing.Size(460, 17);
+            this.CbInfoGraphicDomLevels.TabIndex = 4;
+            this.CbInfoGraphicDomLevels.Text = "levels and values of the current state (if disabled the values relevant for breed" +
+    "ing are shown)";
+            this.CbInfoGraphicDomLevels.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicDomLevels.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // CbInfoGraphicDisplayMaxWildLevel
+            // 
+            this.CbInfoGraphicDisplayMaxWildLevel.AutoSize = true;
+            this.CbInfoGraphicDisplayMaxWildLevel.Location = new System.Drawing.Point(6, 180);
+            this.CbInfoGraphicDisplayMaxWildLevel.Name = "CbInfoGraphicDisplayMaxWildLevel";
+            this.CbInfoGraphicDisplayMaxWildLevel.Size = new System.Drawing.Size(123, 17);
+            this.CbInfoGraphicDisplayMaxWildLevel.TabIndex = 3;
+            this.CbInfoGraphicDisplayMaxWildLevel.Text = "max wild server level";
+            this.CbInfoGraphicDisplayMaxWildLevel.UseVisualStyleBackColor = true;
+            this.CbInfoGraphicDisplayMaxWildLevel.CheckedChanged += new System.EventHandler(this.CbInfoGraphicCheckBoxChanged);
+            // 
+            // label50
+            // 
+            this.label50.AutoSize = true;
+            this.label50.Location = new System.Drawing.Point(11, 18);
+            this.label50.Name = "label50";
+            this.label50.Size = new System.Drawing.Size(298, 13);
+            this.label50.TabIndex = 0;
+            this.label50.Text = "Styling of the infographic that can be exported from the library.";
             // 
             // tabPageImportSavegame
             // 
@@ -2277,9 +2587,9 @@
             // 
             // groupBox15
             // 
-            this.groupBox15.Controls.Add(this.labelSavegameFileLocationHint);
             this.groupBox15.Controls.Add(this.dataGridView_FileLocations);
             this.groupBox15.Controls.Add(this.btAddSavegameFileLocation);
+            this.groupBox15.Controls.Add(this.labelSavegameFileLocationHint);
             this.groupBox15.Location = new System.Drawing.Point(6, 278);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Size = new System.Drawing.Size(730, 386);
@@ -2287,18 +2597,10 @@
             this.groupBox15.TabStop = false;
             this.groupBox15.Text = "ARK save-game files";
             // 
-            // labelSavegameFileLocationHint
-            // 
-            this.labelSavegameFileLocationHint.AutoSize = true;
-            this.labelSavegameFileLocationHint.Location = new System.Drawing.Point(6, 16);
-            this.labelSavegameFileLocationHint.Name = "labelSavegameFileLocationHint";
-            this.labelSavegameFileLocationHint.Size = new System.Drawing.Size(595, 13);
-            this.labelSavegameFileLocationHint.TabIndex = 0;
-            this.labelSavegameFileLocationHint.Text = "Location example for The Island: ...\\Steam\\steamapps\\common\\ARK\\ShooterGame\\Saved" +
-    "\\SavedArksLocal\\TheIsland.ark";
-            // 
             // dataGridView_FileLocations
             // 
+            this.dataGridView_FileLocations.AllowUserToAddRows = false;
+            this.dataGridView_FileLocations.AllowUserToDeleteRows = false;
             this.dataGridView_FileLocations.AutoGenerateColumns = false;
             this.dataGridView_FileLocations.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView_FileLocations.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -2306,12 +2608,15 @@
             this.serverNameDataGridViewTextBoxColumn,
             this.fileLocationDataGridViewTextBoxColumn,
             this.dgvFileLocation_Change,
+            this.ImportWithQuickImport,
             this.dgvFileLocation_Delete});
             this.dataGridView_FileLocations.DataSource = this.aTImportFileLocationBindingSource;
-            this.dataGridView_FileLocations.Location = new System.Drawing.Point(3, 61);
+            this.dataGridView_FileLocations.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView_FileLocations.Location = new System.Drawing.Point(3, 62);
+            this.dataGridView_FileLocations.MultiSelect = false;
             this.dataGridView_FileLocations.Name = "dataGridView_FileLocations";
             this.dataGridView_FileLocations.RowHeadersVisible = false;
-            this.dataGridView_FileLocations.Size = new System.Drawing.Size(718, 319);
+            this.dataGridView_FileLocations.Size = new System.Drawing.Size(724, 321);
             this.dataGridView_FileLocations.TabIndex = 2;
             this.dataGridView_FileLocations.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_FileLocations_CellClick);
             // 
@@ -2349,6 +2654,16 @@
             this.dgvFileLocation_Change.UseColumnTextForButtonValue = true;
             this.dgvFileLocation_Change.Width = 50;
             // 
+            // ImportWithQuickImport
+            // 
+            this.ImportWithQuickImport.DataPropertyName = "ImportWithQuickImport";
+            this.ImportWithQuickImport.HeaderText = "QuickImport";
+            this.ImportWithQuickImport.Name = "ImportWithQuickImport";
+            this.ImportWithQuickImport.ReadOnly = true;
+            this.ImportWithQuickImport.ToolTipText = "If checked the savegame will be imported with the quick import button in the menu" +
+    " bar.";
+            this.ImportWithQuickImport.Width = 70;
+            // 
             // dgvFileLocation_Delete
             // 
             this.dgvFileLocation_Delete.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
@@ -2368,13 +2683,26 @@
             // 
             // btAddSavegameFileLocation
             // 
-            this.btAddSavegameFileLocation.Location = new System.Drawing.Point(3, 32);
+            this.btAddSavegameFileLocation.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btAddSavegameFileLocation.Location = new System.Drawing.Point(3, 39);
             this.btAddSavegameFileLocation.Name = "btAddSavegameFileLocation";
-            this.btAddSavegameFileLocation.Size = new System.Drawing.Size(718, 23);
+            this.btAddSavegameFileLocation.Size = new System.Drawing.Size(724, 23);
             this.btAddSavegameFileLocation.TabIndex = 1;
             this.btAddSavegameFileLocation.Text = "Add Savegame File Location";
             this.btAddSavegameFileLocation.UseVisualStyleBackColor = true;
             this.btAddSavegameFileLocation.Click += new System.EventHandler(this.btAddSavegameFileLocation_Click);
+            // 
+            // labelSavegameFileLocationHint
+            // 
+            this.labelSavegameFileLocationHint.AutoSize = true;
+            this.labelSavegameFileLocationHint.Dock = System.Windows.Forms.DockStyle.Top;
+            this.labelSavegameFileLocationHint.Location = new System.Drawing.Point(3, 16);
+            this.labelSavegameFileLocationHint.Name = "labelSavegameFileLocationHint";
+            this.labelSavegameFileLocationHint.Padding = new System.Windows.Forms.Padding(5);
+            this.labelSavegameFileLocationHint.Size = new System.Drawing.Size(605, 23);
+            this.labelSavegameFileLocationHint.TabIndex = 0;
+            this.labelSavegameFileLocationHint.Text = "Location example for The Island: ...\\Steam\\steamapps\\common\\ARK\\ShooterGame\\Saved" +
+    "\\SavedArksLocal\\TheIsland.ark";
             // 
             // groupBox14
             // 
@@ -2384,7 +2712,8 @@
             this.groupBox14.Size = new System.Drawing.Size(730, 47);
             this.groupBox14.TabIndex = 6;
             this.groupBox14.TabStop = false;
-            this.groupBox14.Text = "Target folder for save-game working copy (user\'s temp dir if empty)";
+            this.groupBox14.Text = "Target folder for save-game working copy (user\'s temp dir if empty). It\'s recomme" +
+    "nded to leave this setting empty.";
             // 
             // fileSelectorExtractedSaveFolder
             // 
@@ -2521,6 +2850,7 @@
             // 
             // groupBox22
             // 
+            this.groupBox22.Controls.Add(this.CbAutoExtractAddToLibrary);
             this.groupBox22.Controls.Add(this.CbAutoImportSuccessGotoLibrary);
             this.groupBox22.Controls.Add(this.TbExportFileRename);
             this.groupBox22.Controls.Add(this.CbExportFileRenameAfterImport);
@@ -2538,6 +2868,16 @@
             this.groupBox22.TabIndex = 6;
             this.groupBox22.TabStop = false;
             this.groupBox22.Text = "Auto import";
+            // 
+            // CbAutoExtractAddToLibrary
+            // 
+            this.CbAutoExtractAddToLibrary.AutoSize = true;
+            this.CbAutoExtractAddToLibrary.Location = new System.Drawing.Point(189, 19);
+            this.CbAutoExtractAddToLibrary.Name = "CbAutoExtractAddToLibrary";
+            this.CbAutoExtractAddToLibrary.Size = new System.Drawing.Size(87, 17);
+            this.CbAutoExtractAddToLibrary.TabIndex = 10;
+            this.CbAutoExtractAddToLibrary.Text = "Add to library";
+            this.CbAutoExtractAddToLibrary.UseVisualStyleBackColor = true;
             // 
             // CbAutoImportSuccessGotoLibrary
             // 
@@ -2692,9 +3032,9 @@
             this.cbAutoImportExported.AutoSize = true;
             this.cbAutoImportExported.Location = new System.Drawing.Point(9, 19);
             this.cbAutoImportExported.Name = "cbAutoImportExported";
-            this.cbAutoImportExported.Size = new System.Drawing.Size(170, 17);
+            this.cbAutoImportExported.Size = new System.Drawing.Size(174, 17);
             this.cbAutoImportExported.TabIndex = 0;
-            this.cbAutoImportExported.Text = "Auto import exported creatures";
+            this.cbAutoImportExported.Text = "Auto extract exported creatures";
             this.cbAutoImportExported.UseVisualStyleBackColor = true;
             // 
             // groupBox21
@@ -2988,7 +3328,7 @@
             this.customSCCustom.Location = new System.Drawing.Point(6, 139);
             this.customSCCustom.Name = "customSCCustom";
             this.customSCCustom.Size = new System.Drawing.Size(401, 23);
-            this.customSCCustom.SoundFile = null;
+            this.customSCCustom.SoundFile = "";
             this.customSCCustom.TabIndex = 4;
             // 
             // customSCWakeup
@@ -2996,7 +3336,7 @@
             this.customSCWakeup.Location = new System.Drawing.Point(6, 81);
             this.customSCWakeup.Name = "customSCWakeup";
             this.customSCWakeup.Size = new System.Drawing.Size(401, 23);
-            this.customSCWakeup.SoundFile = "";
+            this.customSCWakeup.SoundFile = null;
             this.customSCWakeup.TabIndex = 2;
             // 
             // customSCBirth
@@ -3004,7 +3344,7 @@
             this.customSCBirth.Location = new System.Drawing.Point(6, 110);
             this.customSCBirth.Name = "customSCBirth";
             this.customSCBirth.Size = new System.Drawing.Size(401, 23);
-            this.customSCBirth.SoundFile = "";
+            this.customSCBirth.SoundFile = null;
             this.customSCBirth.TabIndex = 3;
             // 
             // customSCStarving
@@ -3012,7 +3352,7 @@
             this.customSCStarving.Location = new System.Drawing.Point(6, 52);
             this.customSCStarving.Name = "customSCStarving";
             this.customSCStarving.Size = new System.Drawing.Size(401, 23);
-            this.customSCStarving.SoundFile = null;
+            this.customSCStarving.SoundFile = "";
             this.customSCStarving.TabIndex = 1;
             // 
             // label20
@@ -3360,6 +3700,16 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label62);
+            this.groupBox1.Controls.Add(this.label61);
+            this.groupBox1.Controls.Add(this.label60);
+            this.groupBox1.Controls.Add(this.label59);
+            this.groupBox1.Controls.Add(this.label58);
+            this.groupBox1.Controls.Add(this.NudOCRClipboardCropHeight);
+            this.groupBox1.Controls.Add(this.NudOCRClipboardCropWidth);
+            this.groupBox1.Controls.Add(this.NudOCRClipboardCropTop);
+            this.groupBox1.Controls.Add(this.NudOCRClipboardCropLeft);
+            this.groupBox1.Controls.Add(this.CbOCRFromClipboard);
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.cbOCRIgnoreImprintValue);
             this.groupBox1.Controls.Add(this.cbShowOCRButton);
@@ -3373,14 +3723,163 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(6, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(734, 310);
+            this.groupBox1.Size = new System.Drawing.Size(734, 352);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "OCR";
             // 
+            // label62
+            // 
+            this.label62.AutoSize = true;
+            this.label62.Location = new System.Drawing.Point(34, 211);
+            this.label62.Name = "label62";
+            this.label62.Size = new System.Drawing.Size(616, 13);
+            this.label62.TabIndex = 20;
+            this.label62.Text = "Set an area of the clipboard screenshot to be used for the actual OCR. Set all fi" +
+    "elds to 0 to disable and use the whole screenshot.";
+            // 
+            // label61
+            // 
+            this.label61.AutoSize = true;
+            this.label61.Location = new System.Drawing.Point(151, 229);
+            this.label61.Name = "label61";
+            this.label61.Size = new System.Drawing.Size(26, 13);
+            this.label61.TabIndex = 19;
+            this.label61.Text = "Top";
+            // 
+            // label60
+            // 
+            this.label60.AutoSize = true;
+            this.label60.Location = new System.Drawing.Point(258, 229);
+            this.label60.Name = "label60";
+            this.label60.Size = new System.Drawing.Size(35, 13);
+            this.label60.TabIndex = 18;
+            this.label60.Text = "Width";
+            // 
+            // label59
+            // 
+            this.label59.AutoSize = true;
+            this.label59.Location = new System.Drawing.Point(374, 229);
+            this.label59.Name = "label59";
+            this.label59.Size = new System.Drawing.Size(38, 13);
+            this.label59.TabIndex = 17;
+            this.label59.Text = "Height";
+            // 
+            // label58
+            // 
+            this.label58.AutoSize = true;
+            this.label58.Location = new System.Drawing.Point(45, 229);
+            this.label58.Name = "label58";
+            this.label58.Size = new System.Drawing.Size(25, 13);
+            this.label58.TabIndex = 16;
+            this.label58.Text = "Left";
+            // 
+            // NudOCRClipboardCropHeight
+            // 
+            this.NudOCRClipboardCropHeight.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.NudOCRClipboardCropHeight.Location = new System.Drawing.Point(418, 227);
+            this.NudOCRClipboardCropHeight.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropHeight.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.NudOCRClipboardCropHeight.Name = "NudOCRClipboardCropHeight";
+            this.NudOCRClipboardCropHeight.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropHeight.Size = new System.Drawing.Size(69, 20);
+            this.NudOCRClipboardCropHeight.TabIndex = 15;
+            // 
+            // NudOCRClipboardCropWidth
+            // 
+            this.NudOCRClipboardCropWidth.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.NudOCRClipboardCropWidth.Location = new System.Drawing.Point(299, 227);
+            this.NudOCRClipboardCropWidth.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropWidth.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.NudOCRClipboardCropWidth.Name = "NudOCRClipboardCropWidth";
+            this.NudOCRClipboardCropWidth.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropWidth.Size = new System.Drawing.Size(69, 20);
+            this.NudOCRClipboardCropWidth.TabIndex = 14;
+            // 
+            // NudOCRClipboardCropTop
+            // 
+            this.NudOCRClipboardCropTop.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.NudOCRClipboardCropTop.Location = new System.Drawing.Point(183, 227);
+            this.NudOCRClipboardCropTop.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropTop.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.NudOCRClipboardCropTop.Name = "NudOCRClipboardCropTop";
+            this.NudOCRClipboardCropTop.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropTop.Size = new System.Drawing.Size(69, 20);
+            this.NudOCRClipboardCropTop.TabIndex = 13;
+            // 
+            // NudOCRClipboardCropLeft
+            // 
+            this.NudOCRClipboardCropLeft.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.NudOCRClipboardCropLeft.Location = new System.Drawing.Point(76, 227);
+            this.NudOCRClipboardCropLeft.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropLeft.Minimum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            -2147483648});
+            this.NudOCRClipboardCropLeft.Name = "NudOCRClipboardCropLeft";
+            this.NudOCRClipboardCropLeft.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudOCRClipboardCropLeft.Size = new System.Drawing.Size(69, 20);
+            this.NudOCRClipboardCropLeft.TabIndex = 12;
+            // 
+            // CbOCRFromClipboard
+            // 
+            this.CbOCRFromClipboard.AutoSize = true;
+            this.CbOCRFromClipboard.Location = new System.Drawing.Point(6, 191);
+            this.CbOCRFromClipboard.Name = "CbOCRFromClipboard";
+            this.CbOCRFromClipboard.Size = new System.Drawing.Size(506, 17);
+            this.CbOCRFromClipboard.TabIndex = 11;
+            this.CbOCRFromClipboard.Text = "Use image in clipboard for the OCR. You can press the Print-key to copy a screens" +
+    "hot to the cliphoard";
+            this.CbOCRFromClipboard.UseVisualStyleBackColor = true;
+            // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(6, 217);
+            this.button1.Location = new System.Drawing.Point(6, 292);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(139, 23);
             this.button1.TabIndex = 8;
@@ -3391,7 +3890,7 @@
             // cbOCRIgnoreImprintValue
             // 
             this.cbOCRIgnoreImprintValue.AutoSize = true;
-            this.cbOCRIgnoreImprintValue.Location = new System.Drawing.Point(9, 168);
+            this.cbOCRIgnoreImprintValue.Location = new System.Drawing.Point(6, 168);
             this.cbOCRIgnoreImprintValue.Name = "cbOCRIgnoreImprintValue";
             this.cbOCRIgnoreImprintValue.Size = new System.Drawing.Size(287, 17);
             this.cbOCRIgnoreImprintValue.TabIndex = 6;
@@ -3401,7 +3900,7 @@
             // cbShowOCRButton
             // 
             this.cbShowOCRButton.AutoSize = true;
-            this.cbShowOCRButton.Location = new System.Drawing.Point(9, 96);
+            this.cbShowOCRButton.Location = new System.Drawing.Point(6, 96);
             this.cbShowOCRButton.Name = "cbShowOCRButton";
             this.cbShowOCRButton.Size = new System.Drawing.Size(228, 17);
             this.cbShowOCRButton.TabIndex = 1;
@@ -3462,7 +3961,7 @@
             // 
             // tbOCRCaptureApp
             // 
-            this.tbOCRCaptureApp.Location = new System.Drawing.Point(151, 219);
+            this.tbOCRCaptureApp.Location = new System.Drawing.Point(151, 294);
             this.tbOCRCaptureApp.Name = "tbOCRCaptureApp";
             this.tbOCRCaptureApp.Size = new System.Drawing.Size(577, 20);
             this.tbOCRCaptureApp.TabIndex = 9;
@@ -3470,7 +3969,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 201);
+            this.label4.Location = new System.Drawing.Point(6, 276);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(289, 13);
             this.label4.TabIndex = 7;
@@ -3480,7 +3979,7 @@
             // 
             this.cbbOCRApp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbbOCRApp.FormattingEnabled = true;
-            this.cbbOCRApp.Location = new System.Drawing.Point(6, 246);
+            this.cbbOCRApp.Location = new System.Drawing.Point(6, 321);
             this.cbbOCRApp.Name = "cbbOCRApp";
             this.cbbOCRApp.Size = new System.Drawing.Size(722, 21);
             this.cbbOCRApp.TabIndex = 10;
@@ -3503,32 +4002,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(758, 30);
             this.panel1.TabIndex = 12;
-            // 
-            // NudWaitBeforeAutoLoad
-            // 
-            this.NudWaitBeforeAutoLoad.Location = new System.Drawing.Point(255, 41);
-            this.NudWaitBeforeAutoLoad.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.NudWaitBeforeAutoLoad.Name = "NudWaitBeforeAutoLoad";
-            this.NudWaitBeforeAutoLoad.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.NudWaitBeforeAutoLoad.Size = new System.Drawing.Size(56, 20);
-            this.NudWaitBeforeAutoLoad.TabIndex = 12;
-            // 
-            // label55
-            // 
-            this.label55.AutoSize = true;
-            this.label55.Location = new System.Drawing.Point(193, 20);
-            this.label55.Name = "label55";
-            this.label55.Size = new System.Drawing.Size(118, 13);
-            this.label55.TabIndex = 13;
-            this.label55.Text = "wait before loading [ms]";
             // 
             // Settings
             // 
@@ -3572,6 +4045,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudMaxDomLevels)).EndInit();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbChartOddRange)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbChartEvenRange)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelOddMax)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelOddMin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelEvenMax)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudChartLevelEvenMin)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxBreedingSug)).EndInit();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
@@ -3581,6 +4060,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudTamingSpeed)).EndInit();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudWaitBeforeAutoLoad)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.NudKeepBackupFilesCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.NudBackupEveryMinutes)).EndInit();
             this.groupBox7.ResumeLayout(false);
@@ -3598,9 +4078,6 @@
             this.groupBox30.ResumeLayout(false);
             this.groupBox30.PerformLayout();
             this.GbImgCacheLocalAppData.ResumeLayout(false);
-            this.groupBox28.ResumeLayout(false);
-            this.groupBox28.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicWidth)).EndInit();
             this.groupBox16.ResumeLayout(false);
             this.GbSpecies.ResumeLayout(false);
             this.GbSpecies.PerformLayout();
@@ -3615,6 +4092,14 @@
             this.groupBox17.ResumeLayout(false);
             this.groupBox9.ResumeLayout(false);
             this.groupBox9.PerformLayout();
+            this.tabPageInfoGraphic.ResumeLayout(false);
+            this.tabPageInfoGraphic.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PbInfoGraphicPreview)).EndInit();
+            this.groupBox32.ResumeLayout(false);
+            this.groupBox32.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInfoGraphicHeight)).EndInit();
+            this.groupBox28.ResumeLayout(false);
+            this.groupBox28.PerformLayout();
             this.tabPageImportSavegame.ResumeLayout(false);
             this.groupBox12.ResumeLayout(false);
             this.groupBox12.PerformLayout();
@@ -3662,10 +4147,13 @@
             this.tabPageOCR.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropHeight)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropWidth)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropTop)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOCRClipboardCropLeft)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaitBeforeScreenCapture)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWhiteThreshold)).EndInit();
             this.panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.NudWaitBeforeAutoLoad)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -3772,11 +4260,6 @@
         private System.Windows.Forms.DataGridView dataGridViewExportFolders;
         private System.Windows.Forms.Button btAddExportFolder;
         private System.Windows.Forms.BindingSource aTExportFolderLocationsBindingSource;
-        private System.Windows.Forms.DataGridViewTextBoxColumn convenientNameDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn serverNameDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn fileLocationDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewButtonColumn dgvFileLocation_Change;
-        private System.Windows.Forms.DataGridViewButtonColumn dgvFileLocation_Delete;
         private System.Windows.Forms.CheckBox cbApplyGlobalSpeciesToLibrary;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelStatMultipliers;
         private System.Windows.Forms.ComboBox cbbStatMultiplierPresets;
@@ -3805,7 +4288,6 @@
         private uiControls.Nud nudDefaultFontSize;
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.Label label32;
-        private System.Windows.Forms.TextBox tbDefaultFontName;
         private System.Windows.Forms.CheckBox cbIgnoreUnknownBPOnSaveImport;
         private System.Windows.Forms.Button btExportMultipliers;
         private System.Windows.Forms.Label label34;
@@ -3868,8 +4350,6 @@
         private System.Windows.Forms.CheckBox CbOverlayDisplayInheritance;
         private System.Windows.Forms.Label label48;
         private System.Windows.Forms.ComboBox CbbColorMode;
-        private uiControls.Nud nudInfoGraphicWidth;
-        private System.Windows.Forms.Label LbInfoGraphicSize;
         private System.Windows.Forms.CheckBox CbApplyNamingPatternOnImportAlways;
         private System.Windows.Forms.CheckBox CbHighlightLevelEvenOdd;
         private System.Windows.Forms.CheckBox CbHighlightLevel255;
@@ -3877,14 +4357,6 @@
         private uiControls.Nud nudBabyImprintAmountEvent;
         private System.Windows.Forms.Label label49;
         private uiControls.Nud nudBabyImprintAmount;
-        private System.Windows.Forms.CheckBox CbInfoGraphicDisplayMaxWildLevel;
-        private System.Windows.Forms.GroupBox groupBox28;
-        private System.Windows.Forms.Button BtInfoGraphicBorderColor;
-        private System.Windows.Forms.Button BtInfoGraphicBackColor;
-        private System.Windows.Forms.Button BtInfoGraphicForeColor;
-        private System.Windows.Forms.Label label51;
-        private System.Windows.Forms.TextBox TbInfoGraphicFontName;
-        private System.Windows.Forms.Label label50;
         private System.Windows.Forms.ColorDialog colorDialog1;
         private System.Windows.Forms.Button BtClearBackupFolder;
         private System.Windows.Forms.Label label52;
@@ -3892,9 +4364,6 @@
         private System.Windows.Forms.Label label54;
         private uiControls.Nud NudKeepBackupFilesCount;
         private System.Windows.Forms.Label label53;
-        private System.Windows.Forms.CheckBox CbInfoGraphicDomLevels;
-        private System.Windows.Forms.CheckBox CbInfoGraphicMutations;
-        private System.Windows.Forms.CheckBox CbInfoGraphicGenerations;
         private System.Windows.Forms.TabPage tabPageTimers;
         private System.Windows.Forms.GroupBox groupBox24;
         private System.Windows.Forms.CheckBox cbKeepExpiredTimersInOverlay;
@@ -3932,5 +4401,52 @@
         private System.Windows.Forms.CheckBox CbImportUnclaimedBabies;
         private System.Windows.Forms.Label label55;
         private uiControls.Nud NudWaitBeforeAutoLoad;
+        private System.Windows.Forms.DataGridViewTextBoxColumn convenientNameDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn serverNameDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn fileLocationDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewButtonColumn dgvFileLocation_Change;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn ImportWithQuickImport;
+        private System.Windows.Forms.DataGridViewButtonColumn dgvFileLocation_Delete;
+        private System.Windows.Forms.ComboBox CbbAppDefaultFontName;
+        private System.Windows.Forms.PictureBox pbChartEvenRange;
+        private uiControls.Nud nudChartLevelOddMax;
+        private uiControls.Nud nudChartLevelOddMin;
+        private uiControls.Nud nudChartLevelEvenMax;
+        private uiControls.Nud nudChartLevelEvenMin;
+        private System.Windows.Forms.PictureBox pbChartOddRange;
+        private System.Windows.Forms.Label label57;
+        private System.Windows.Forms.Label label56;
+        private System.Windows.Forms.CheckBox CbAutoExtractAddToLibrary;
+        private System.Windows.Forms.Label label62;
+        private System.Windows.Forms.Label label61;
+        private System.Windows.Forms.Label label60;
+        private System.Windows.Forms.Label label59;
+        private System.Windows.Forms.Label label58;
+        private uiControls.Nud NudOCRClipboardCropHeight;
+        private uiControls.Nud NudOCRClipboardCropWidth;
+        private uiControls.Nud NudOCRClipboardCropTop;
+        private uiControls.Nud NudOCRClipboardCropLeft;
+        private System.Windows.Forms.CheckBox CbOCRFromClipboard;
+        private System.Windows.Forms.TabPage tabPageInfoGraphic;
+        private System.Windows.Forms.GroupBox groupBox28;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicFontName;
+        private System.Windows.Forms.CheckBox CbInfoGraphicColorRegionNamesIfNoImage;
+        private System.Windows.Forms.CheckBox CbInfoGraphicStatValues;
+        private System.Windows.Forms.CheckBox CbInfoGraphicAddRegionNames;
+        private System.Windows.Forms.CheckBox CbInfoGraphicCreatureName;
+        private System.Windows.Forms.CheckBox CbInfoGraphicMutations;
+        private System.Windows.Forms.CheckBox CbInfoGraphicGenerations;
+        private System.Windows.Forms.CheckBox CbInfoGraphicDomLevels;
+        private System.Windows.Forms.Button BtInfoGraphicBorderColor;
+        private System.Windows.Forms.Button BtInfoGraphicBackColor;
+        private System.Windows.Forms.Button BtInfoGraphicForeColor;
+        private System.Windows.Forms.Label label51;
+        private System.Windows.Forms.CheckBox CbInfoGraphicDisplayMaxWildLevel;
+        private System.Windows.Forms.Label label50;
+        private System.Windows.Forms.Label LbInfoGraphicSize;
+        private uiControls.Nud nudInfoGraphicHeight;
+        private System.Windows.Forms.GroupBox groupBox32;
+        private System.Windows.Forms.PictureBox PbInfoGraphicPreview;
+        private System.Windows.Forms.Label label63;
     }
 }

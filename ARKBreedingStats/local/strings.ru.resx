@@ -299,9 +299,6 @@
   <data name="importingFromARKToolsToolStripMenuItem" xml:space="preserve">
     <value>Импорт из ARK-Tools</value>
   </data>
-  <data name="importValuesFromClipboardToolStripMenuItem" xml:space="preserve">
-    <value>Импортировать значения из буфера обмена</value>
-  </data>
   <data name="imprintingBonus" xml:space="preserve">
     <value>Бонус за привязанность</value>
   </data>
@@ -901,7 +898,7 @@
   <data name="na" xml:space="preserve">
     <value>n/a</value>
   </data>
-  <data name="showOnlyNaturalOccuring" xml:space="preserve">
+  <data name="showOnlyNaturalOccurring" xml:space="preserve">
     <value>Показывать только естественные цвета</value>
   </data>
   <data name="apply" xml:space="preserve">

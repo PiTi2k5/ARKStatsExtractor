@@ -15,7 +15,7 @@ namespace ARKBreedingStats.ocr
     public partial class OCRControl : UserControl
     {
         public event Action<byte> UpdateWhiteThreshold;
-        public event Action<string, bool> DoOcr;
+        public event Action<string, bool, bool> DoOcr;
         public readonly FlowLayoutPanel debugPanel;
         public readonly TextBox output;
         private readonly List<Pattern> _recognizedPatterns = new List<Pattern>();
@@ -46,8 +46,7 @@ namespace ARKBreedingStats.ocr
         private void InitLabelEntries()
         {
             listBoxLabelRectangles.Items.Clear();
-            foreach (var l in Enum.GetNames(typeof(OcrTemplate.OcrLabels)))
-                listBoxLabelRectangles.Items.Add(l);
+            listBoxLabelRectangles.Items.AddRange(Enum.GetNames(typeof(OcrTemplate.OcrLabels)).ToArray());
 
             // resolution
             nudResolutionWidth.Value = ArkOcr.Ocr.ocrConfig.resolutionWidth;
@@ -104,7 +103,7 @@ namespace ARKBreedingStats.ocr
                     if (!ArkOcr.Ocr.ocrConfig?.RecognitionPatterns?.Texts?.Any() ?? false)
                         ArkOcr.Ocr.ocrConfig.RecognitionPatterns.TrainingSettings.IsTrainingEnabled = true;
 
-                    DoOcr?.Invoke(files[0], true);
+                    DoOcr?.Invoke(files[0], true, false);
                 }
                 else
                 {
@@ -524,7 +523,7 @@ namespace ARKBreedingStats.ocr
                 return;
             }
             ArkOcr.Ocr.ocrConfig.SaveFile(filePath);
-            UpdateOCRLabel(filePath);
+            UpdateOcrLabel(filePath);
         }
 
         private void btnSaveOCRConfigAs_Click(object sender, EventArgs e)
@@ -585,7 +584,7 @@ namespace ARKBreedingStats.ocr
         {
             Properties.Settings.Default.ocrFile = null;
             ArkOcr.Ocr.ocrConfig = null;
-            UpdateOCRLabel();
+            UpdateOcrLabel();
         }
 
         private void BtNewOcrConfig_Click(object sender, EventArgs e)
@@ -602,7 +601,7 @@ namespace ARKBreedingStats.ocr
         {
             if (string.IsNullOrEmpty(filePath))
             {
-                UpdateOCRLabel();
+                UpdateOcrLabel();
                 return false;
             }
 
@@ -613,7 +612,8 @@ namespace ARKBreedingStats.ocr
             }
 
             ArkOcr.Ocr.ocrConfig = loadedOcrConfig;
-            UpdateOCRLabel(filePath);
+            ArkOcr.Ocr.LoadReplacingsFile();
+            UpdateOcrLabel(filePath);
             if (loadedOcrConfig == null) return false;
 
             InitLabelEntries();
@@ -622,10 +622,11 @@ namespace ARKBreedingStats.ocr
             CbSkipNameRecognition.Checked = ArkOcr.Ocr.ocrConfig.RecognitionPatterns.TrainingSettings.SkipName;
             CbSkipTribeRecognition.Checked = ArkOcr.Ocr.ocrConfig.RecognitionPatterns.TrainingSettings.SkipTribe;
             CbSkipOwnerRecognition.Checked = ArkOcr.Ocr.ocrConfig.RecognitionPatterns.TrainingSettings.SkipOwner;
+
             return true;
         }
 
-        private void UpdateOCRLabel(string fileName = null)
+        private void UpdateOcrLabel(string fileName = null)
         {
             var ocrAvailable = !string.IsNullOrEmpty(fileName) && ArkOcr.Ocr.ocrConfig != null;
             labelOCRFile.Text = !ocrAvailable
@@ -636,6 +637,7 @@ namespace ARKBreedingStats.ocr
                 $"Screenshot-Resizing-Factor: {ArkOcr.Ocr.ocrConfig.resize}";
 
             UpdateResizeResultLabel();
+            LbReplacingsFileStatus.Text = ArkOcr.Ocr.RegexReplacingsStatus;
 
             if (ocrAvailable)
             {
@@ -977,6 +979,26 @@ namespace ARKBreedingStats.ocr
         private void LlOcrManual_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             RepositoryInfo.OpenWikiPage("OCR");
+        }
+
+        private void BtReplacingOpenFile_Click(object sender, EventArgs e)
+        {
+            var filePath = FileService.GetJsonPath(FileService.OcrFolderName, FileService.OcrReplacingsFile);
+            if (string.IsNullOrEmpty(filePath)) return;
+
+
+            if (!File.Exists(filePath))
+            {
+                File.Create(filePath).Dispose();
+            }
+
+            Process.Start(filePath);
+        }
+
+        private void BtReplacingLoadFile_Click(object sender, EventArgs e)
+        {
+            ArkOcr.Ocr.LoadReplacingsFile();
+            LbReplacingsFileStatus.Text = ArkOcr.Ocr.RegexReplacingsStatus;
         }
     }
 }

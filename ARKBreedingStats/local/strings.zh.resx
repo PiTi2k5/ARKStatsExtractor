@@ -462,9 +462,6 @@
   <data name="importingFromARKToolsToolStripMenuItem" xml:space="preserve">
     <value>从ARK工具导入生物</value>
   </data>
-  <data name="importValuesFromClipboardToolStripMenuItem" xml:space="preserve">
-    <value>从剪切板导入</value>
-  </data>
   <data name="imprintingBonus" xml:space="preserve">
     <value>留痕加成</value>
   </data>
@@ -936,7 +933,7 @@
   <data name="servers" xml:space="preserve">
     <value>伺服器</value>
   </data>
-  <data name="showOnlyNaturalOccuring" xml:space="preserve">
+  <data name="showOnlyNaturalOccurring" xml:space="preserve">
     <value>仅显示自然发生的颜色</value>
   </data>
   <data name="addedAt" xml:space="preserve">

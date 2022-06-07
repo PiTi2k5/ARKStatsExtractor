@@ -2,6 +2,7 @@
 using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -38,7 +39,7 @@ namespace ARKBreedingStats.importExported
                 "Crafting Skill"
             };
 
-            var numberStyle = System.Globalization.NumberStyles.AllowDecimalPoint | System.Globalization.NumberStyles.AllowLeadingSign;
+            const NumberStyles numberStyle = System.Globalization.NumberStyles.AllowDecimalPoint | System.Globalization.NumberStyles.AllowLeadingSign;
             var dotSeparatorCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
 
             bool inStatSection = false;
@@ -157,22 +158,22 @@ namespace ARKBreedingStats.importExported
                         break;
                     // Colorization
                     case "ColorSet[0]":
-                        cv.colorIDs[0] = ParseColor(text);
+                        cv.colorIDs[0] = ParseColorId(text);
                         break;
                     case "ColorSet[1]":
-                        cv.colorIDs[1] = ParseColor(text);
+                        cv.colorIDs[1] = ParseColorId(text);
                         break;
                     case "ColorSet[2]":
-                        cv.colorIDs[2] = ParseColor(text);
+                        cv.colorIDs[2] = ParseColorId(text);
                         break;
                     case "ColorSet[3]":
-                        cv.colorIDs[3] = ParseColor(text);
+                        cv.colorIDs[3] = ParseColorId(text);
                         break;
                     case "ColorSet[4]":
-                        cv.colorIDs[4] = ParseColor(text);
+                        cv.colorIDs[4] = ParseColorId(text);
                         break;
                     case "ColorSet[5]":
-                        cv.colorIDs[5] = ParseColor(text);
+                        cv.colorIDs[5] = ParseColorId(text);
                         break;
                     case "Health":
                         cv.statValues[(int)StatNames.Health] = value;
@@ -223,24 +224,10 @@ namespace ARKBreedingStats.importExported
                 }
             }
 
-            // if parent ArkIds are set, create creature placeholder
-            if (cv.motherArkId != 0)
-            {
-                cv.Mother = new Creature(cv.motherArkId)
-                {
-                    Species = cv.Species
-                };
-            }
-            if (cv.fatherArkId != 0)
-            {
-                cv.Father = new Creature(cv.fatherArkId)
-                {
-                    Species = cv.Species
-                };
-            }
-
             // if file was not recognized, return null
             if (string.IsNullOrEmpty(cv.speciesBlueprint)) return null;
+
+            cv.ColorIdsAlsoPossible = ArkColors.GetAlternativeColorIds(cv.colorIDs);
 
             return cv;
         }
@@ -249,7 +236,7 @@ namespace ARKBreedingStats.importExported
         /// Determines the ARK color id represented by the given text in the format
         /// (R=0.000000,G=0.000000,B=0.000000,A=1.000000)
         /// </summary>
-        private static int ParseColor(string text)
+        private static byte ParseColorId(string text)
         {
             if (text.Length < 33) return 0;
 

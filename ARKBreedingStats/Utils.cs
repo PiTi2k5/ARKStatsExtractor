@@ -4,10 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.Reflection;
-using System.Resources;
 using System.Threading.Tasks;
-using System.Web.ModelBinding;
 using System.Windows.Forms;
 using ARKBreedingStats.values;
 
@@ -200,6 +197,14 @@ namespace ARKBreedingStats
         /// Color that represents a mutation number over the limit.
         /// </summary>
         public static Color MutationColorOverLimit => Color.FromArgb(255, 200, 200);
+        /// <summary>
+        /// Color that represents a mutation marker or line, is more vibrant than the MutationColor.
+        /// </summary>
+        public static Color MutationMarkerColor => Color.Magenta;
+        /// <summary>
+        /// Color that represents a possible (not guaranteed) mutation marker or line.
+        /// </summary>
+        public static Color MutationMarkerPossibleColor => Color.FromArgb(204, 123, 255);
 
         /// <summary>
         /// String icon that represents a sex.

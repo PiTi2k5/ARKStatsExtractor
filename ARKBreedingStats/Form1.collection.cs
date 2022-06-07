@@ -67,7 +67,7 @@ namespace ARKBreedingStats
             creatureBoxListView.Clear();
             Properties.Settings.Default.LastSaveFile = null;
             _currentFileName = null;
-            _fileSync.ChangeFile(_currentFileName);
+            _fileSync?.ChangeFile(_currentFileName);
             SetCollectionChanged(false);
         }
 
@@ -85,7 +85,7 @@ namespace ARKBreedingStats
             }
             else
             {
-                LoadCollectionFile(_currentFileName, true, true);
+                LoadCollectionFile(_currentFileName, true, true, true);
             }
         }
 
@@ -182,7 +182,8 @@ namespace ARKBreedingStats
                 {
                     _currentFileName = dlg.FileName;
                     SaveCollectionToFileName(_currentFileName);
-                    _fileSync.ChangeFile(_currentFileName);
+                    AddPathToRecentlyUsed(_currentFileName);
+                    _fileSync?.ChangeFile(_currentFileName);
                 }
             }
         }
@@ -202,7 +203,7 @@ namespace ARKBreedingStats
 
             var tempSavePath = filePath + ".tmp";
 
-            _fileSync.SavingStarts();
+            _fileSync?.SavingStarts();
             for (int i = 0; i < numberOfRetries; ++i)
             {
                 try
@@ -258,7 +259,7 @@ namespace ARKBreedingStats
                     break;
                 }
             }
-            _fileSync.SavingEnds();
+            _fileSync?.SavingEnds();
 
             if (fileSaved)
                 SetCollectionChanged(false);
@@ -276,18 +277,28 @@ namespace ARKBreedingStats
             string backupFileName = $"{fileNameWoExt}_backup_{new FileInfo(currentSaveFilePath).LastWriteTime:yyyy-MM-dd_HH-mm-ss}{CollectionFileExtension}";
 
             var backupFolderPath = Properties.Settings.Default.BackupFolder;
-            if (string.IsNullOrEmpty(backupFolderPath))
-                backupFolderPath = Path.GetDirectoryName(currentSaveFilePath);
-            else
-                Directory.CreateDirectory(backupFolderPath);
 
-            string backupFilePath = Path.Combine(backupFolderPath, backupFileName);
-            if (File.Exists(backupFilePath))
+            try
             {
-                return false; // backup file of that timestamp already exists, no extra backup needed.
+                if (string.IsNullOrEmpty(backupFolderPath))
+                    backupFolderPath = Path.GetDirectoryName(currentSaveFilePath);
+                else
+                    Directory.CreateDirectory(backupFolderPath);
+
+                string backupFilePath = Path.Combine(backupFolderPath, backupFileName);
+                if (File.Exists(backupFilePath))
+                {
+                    return false; // backup file of that timestamp already exists, no extra backup needed.
+                }
+
+                File.Move(currentSaveFilePath, backupFilePath);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, "Error while creating backup files of the save file.\nMaybe the backup folder is protected or an antivirus application blocks the file moving.");
+                return false;
             }
 
-            File.Move(currentSaveFilePath, backupFilePath);
             _lastAutoSaveBackup = DateTime.Now;
 
             // delete oldest backup file if more than a certain number
@@ -319,7 +330,7 @@ namespace ARKBreedingStats
         /// <param name="keepCurrentCreatures">add the creatures of the loaded file to the current ones</param>
         /// <param name="keepCurrentSelections">don't change the species selection or tab, use if a synchronized library is loaded</param>
         /// <returns></returns>
-        private bool LoadCollectionFile(string filePath, bool keepCurrentCreatures = false, bool keepCurrentSelections = false)
+        private bool LoadCollectionFile(string filePath, bool keepCurrentCreatures = false, bool keepCurrentSelections = false, bool triggeredByFileWatcher = false)
         {
             Species selectedSpecies = speciesSelector1.SelectedSpecies;
             Species selectedLibrarySpecies = listBoxSpeciesLib.SelectedItem as Species;
@@ -393,7 +404,7 @@ namespace ARKBreedingStats
                             }
 
                             _creatureCollection = oldLibraryFormat.FormatConverter.ConvertXml2Asb(creatureCollectionOld, filePath);
-                            _creatureCollection.ModList = mods;
+                            _creatureCollection.ModList = mods ?? new List<Mod>(0);
 
                             if (_creatureCollection == null) throw new Exception("Conversion failed");
 
@@ -420,7 +431,7 @@ namespace ARKBreedingStats
                                || !Version.TryParse(CreatureCollection.CurrentLibraryFormatVersion, out Version currentVersion)
                                || ccVersion > currentVersion)
                             {
-                                throw new FormatException($"Unsupported format version: {(readCollection.FormatVersion ?? "null")}");
+                                throw new FormatException($"Unsupported format version: {readCollection.FormatVersion ?? "null"}");
                             }
                             _creatureCollection = readCollection;
                         }
@@ -441,7 +452,7 @@ namespace ARKBreedingStats
                 catch (FormatException ex)
                 {
                     // This FormatVersion is not understood, abort
-                    MessageBoxes.ShowMessageBox($"This library format is unsupported in this version of ARK Smart Breeding." +
+                    MessageBoxes.ShowMessageBox("This library format is unsupported in this version of ARK Smart Breeding." +
                                                  $"\n\n{ex.Message}\n\nTry updating to a newer version.");
                     if ((DateTime.Now - Properties.Settings.Default.lastUpdateCheck).TotalMinutes < 10)
                         CheckForUpdates();
@@ -470,6 +481,7 @@ namespace ARKBreedingStats
             if (_creatureCollection.ModValueReloadNeeded
                 && !LoadModValuesOfCollection(_creatureCollection, false, false))
             {
+                MessageBoxes.ShowMessageBox("Mod values of the library file couldn't be loaded.", icon: MessageBoxIcon.Error);
                 NewCollection(true);
                 return false;
             }
@@ -498,7 +510,7 @@ namespace ARKBreedingStats
             else
             {
                 _currentFileName = filePath;
-                _fileSync.ChangeFile(_currentFileName);
+                _fileSync?.ChangeFile(_currentFileName);
                 creatureBoxListView.Clear();
             }
 
@@ -508,19 +520,25 @@ namespace ARKBreedingStats
             _creatureCollection.creatures = _creatureCollection.creatures
                 .Where(c => !string.IsNullOrEmpty(c.speciesBlueprint)).ToList();
 
-            InitializeCollection(keepCurrentSelections);
+            var duplicatesWereRemoved = InitializeCollection(keepCurrentSelections);
 
             _filterListAllowed = false;
 
-            SetCollectionChanged(creatureWasAdded); // setCollectionChanged only if there really were creatures added from the old library to the just opened one
+            SetCollectionChanged(creatureWasAdded || duplicatesWereRemoved, triggeredByFileWatcher: triggeredByFileWatcher); // setCollectionChanged only if there really were creatures added from the old library to the just opened one
 
             ///// creatures loaded.
 
             // calculate creature values
             RecalculateAllCreaturesValues();
 
-            // set flags for all creatures. this is needed for backwards compatibility (added 05/2020)
-            foreach (Creature c in _creatureCollection.creatures) c.InitializeFlags();
+            // set flags for all creatures. this is needed for backwards compatibility (added 05/2020) TODO: remove in late 2021.
+            foreach (Creature c in _creatureCollection.creatures)
+            {
+                c.InitializeFlags();
+                c.RecalculateNewMutations();
+                if (c.ArkIdImported && c.ArkIdInGame == null)
+                    c.ArkIdInGame = Utils.ConvertImportedArkIdToIngameVisualization(c.ArkId);
+            }
 
             if (!keepCurrentSelections && _creatureCollection.creatures.Any())
                 tabControlMain.SelectedTab = tabPageLibrary;
@@ -577,7 +595,8 @@ namespace ARKBreedingStats
         /// </summary>
         /// <param name="changed">is the collection changed?</param>
         /// <param name="species">set to a specific species if only this species needs updates in the pedigree / breeding-planner. Set to null if no species needs updates</param>
-        private void SetCollectionChanged(bool changed, Species species = null)
+        /// <param name="triggeredByFileWatcher">If true, the call was invoked by the fileWatcher, a file save should not performed then.</param>
+        private void SetCollectionChanged(bool changed, Species species = null, bool triggeredByFileWatcher = false)
         {
             if (changed)
             {
@@ -587,7 +606,7 @@ namespace ARKBreedingStats
                     breedingPlan1.BreedingPlanNeedsUpdate = true;
             }
 
-            var currentFileNotEmpty = !string.IsNullOrEmpty(_currentFileName);
+            if (triggeredByFileWatcher) return;
 
             if (changed && Properties.Settings.Default.autosave)
             {
@@ -597,6 +616,7 @@ namespace ARKBreedingStats
                 return;
             }
 
+            var currentFileNotEmpty = !string.IsNullOrEmpty(_currentFileName);
             _collectionDirty = changed;
             string fileName = currentFileNotEmpty ? Path.GetFileName(_currentFileName) : null;
             Text = $"{Utils.ApplicationNameVersion}{(currentFileNotEmpty ? " - " + fileName : string.Empty)}{(changed ? " *" : string.Empty)}";

@@ -8,7 +8,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Windows.Threading;
 using ARKBreedingStats.library;
+using ARKBreedingStats.species;
+using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.settings
@@ -30,6 +33,7 @@ namespace ARKBreedingStats.settings
             LoadSettings(cc);
             Localization();
             tabControlSettings.SelectTab((int)page);
+            DialogResult = DialogResult.Ignore;
         }
 
         private const string DefaultOcrProcessName = "ShooterGame";
@@ -156,14 +160,20 @@ namespace ARKBreedingStats.settings
                 { "Italiano", "it"},
                 { "日本語", "ja"},
                 { "Polski", "pl"},
+                { "Português do Brasil", "pt-BR"},
                 { "русский", "ru"},
-                { "中文", "zh"}
+                { "简体中文", "zh"},
+                { "繁體中文", "zh-tw"}
             };
             foreach (string l in _languages.Keys)
                 cbbLanguage.Items.Add(l);
 
             foreach (var cm in Enum.GetNames(typeof(ColorModeColors.AsbColorMode)))
                 CbbColorMode.Items.Add(cm);
+
+            var availableFonts = FontFamily.Families.Select(f => f.Name).ToArray();
+            CbbInfoGraphicFontName.Items.AddRange(availableFonts);
+            CbbAppDefaultFontName.Items.AddRange(availableFonts);
         }
 
         private void LoadSettings(CreatureCollection cc)
@@ -229,7 +239,7 @@ namespace ARKBreedingStats.settings
             else radioButtonFahrenheit.Checked = true;
             cbIgnoreSexInBreedingPlan.Checked = Properties.Settings.Default.IgnoreSexInBreedingPlan;
             checkBoxDisplayHiddenStats.Checked = Properties.Settings.Default.DisplayHiddenStats;
-            tbDefaultFontName.Text = Properties.Settings.Default.DefaultFontName;
+            CbbAppDefaultFontName.Text = Properties.Settings.Default.DefaultFontName;
             nudDefaultFontSize.Value = (decimal)Properties.Settings.Default.DefaultFontSize;
 
             GbImgCacheLocalAppData.Visible = !Updater.Updater.IsProgramInstalled; // setting is only relevant for portable app
@@ -258,7 +268,12 @@ namespace ARKBreedingStats.settings
             nudWaitBeforeScreenCapture.ValueSave = Properties.Settings.Default.waitBeforeScreenCapture;
             nudWhiteThreshold.ValueSave = Properties.Settings.Default.OCRWhiteThreshold;
             tbOCRCaptureApp.Text = Properties.Settings.Default.OCRApp;
-
+            CbOCRFromClipboard.Checked = Properties.Settings.Default.OCRFromClipboard;
+            var rec = Properties.Settings.Default.OCRFromRectangle;
+            NudOCRClipboardCropLeft.ValueSave = rec.Left;
+            NudOCRClipboardCropTop.ValueSave = rec.Top;
+            NudOCRClipboardCropWidth.ValueSave = rec.Width;
+            NudOCRClipboardCropHeight.ValueSave = rec.Height;
             cbOCRIgnoreImprintValue.Checked = Properties.Settings.Default.OCRIgnoresImprintValue;
             #endregion
 
@@ -275,18 +290,26 @@ namespace ARKBreedingStats.settings
             cbAllowMoreThanHundredImprinting.Checked = cc.allowMoreThanHundredImprinting;
             CbHighlightLevel255.Checked = Properties.Settings.Default.Highlight255Level;
             CbHighlightLevelEvenOdd.Checked = Properties.Settings.Default.HighlightEvenOdd;
+            nudChartLevelEvenMin.ValueSave = Properties.Settings.Default.ChartHueEvenMin;
+            nudChartLevelEvenMax.ValueSave = Properties.Settings.Default.ChartHueEvenMax;
+            nudChartLevelOddMin.ValueSave = Properties.Settings.Default.ChartHueOddMin;
+            nudChartLevelOddMax.ValueSave = Properties.Settings.Default.ChartHueOddMax;
 
             #region InfoGraphic
 
-            nudInfoGraphicWidth.ValueSave = Properties.Settings.Default.InfoGraphicWidth;
+            nudInfoGraphicHeight.ValueSave = Properties.Settings.Default.InfoGraphicHeight;
             CbInfoGraphicDisplayMaxWildLevel.Checked = Properties.Settings.Default.InfoGraphicShowMaxWildLevel;
             CbInfoGraphicDomLevels.Checked = Properties.Settings.Default.InfoGraphicWithDomLevels;
-            TbInfoGraphicFontName.Text = Properties.Settings.Default.InfoGraphicFontName;
+            CbbInfoGraphicFontName.Text = Properties.Settings.Default.InfoGraphicFontName;
             CbInfoGraphicMutations.Checked = Properties.Settings.Default.InfoGraphicDisplayMutations;
             CbInfoGraphicGenerations.Checked = Properties.Settings.Default.InfoGraphicDisplayGeneration;
+            CbInfoGraphicCreatureName.Checked = Properties.Settings.Default.InfoGraphicDisplayName;
             BtInfoGraphicBackColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicBackColor);
             BtInfoGraphicForeColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicForeColor);
             BtInfoGraphicBorderColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicBorderColor);
+            CbInfoGraphicAddRegionNames.Checked = Properties.Settings.Default.InfoGraphicExtraRegionNames;
+            CbInfoGraphicColorRegionNamesIfNoImage.Checked = Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage;
+            CbInfoGraphicStatValues.Checked = Properties.Settings.Default.InfoGraphicShowStatValues;
 
             #endregion
 
@@ -311,12 +334,14 @@ namespace ARKBreedingStats.settings
 
             }
             dataGridViewExportFolders.DataBindingComplete += (s, e) => HighlightDefaultImportExportFolderEntry();
+            dataGridView_FileLocations.DataBindingComplete += (s, e) => HighlightMissingFilesInImportSaveFileView();
             nudWarnImportMoreThan.Value = Properties.Settings.Default.WarnWhenImportingMoreCreaturesThan;
             CbApplyNamingPatternOnImportAlways.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportAlways;
             cbApplyNamePatternOnImportOnEmptyNames.Checked = Properties.Settings.Default.applyNamePatternOnImportIfEmptyName;
             cbApplyNamePatternOnImportOnNewCreatures.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures;
             cbCopyPatternNameToClipboard.Checked = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied;
             cbAutoImportExported.Checked = Properties.Settings.Default.AutoImportExportedCreatures;
+            CbAutoExtractAddToLibrary.Checked = Properties.Settings.Default.OnAutoImportAddToLibrary;
             cbPlaySoundOnAutomaticImport.Checked = Properties.Settings.Default.PlaySoundOnAutoImport;
             cbMoveImportedFileToSubFolder.Checked = Properties.Settings.Default.MoveAutoImportedFileToSubFolder;
             SetFolderSelectionButton(BtImportArchiveFolder, Properties.Settings.Default.ImportExportedArchiveFolder);
@@ -353,11 +378,11 @@ namespace ARKBreedingStats.settings
             var exportFields = Properties.Settings.Default.CreatureTableExportFields;
             if (exportFields != null)
             {
-                foreach (ExportCreatures.TableExportFields f in exportFields)
+                foreach (ExportImportCreatures.TableExportFields f in exportFields)
                     ClbExportSpreadsheetFields.Items.Add(f, true);
             }
 
-            foreach (ExportCreatures.TableExportFields f in Enum.GetValues(typeof(ExportCreatures.TableExportFields)))
+            foreach (ExportImportCreatures.TableExportFields f in Enum.GetValues(typeof(ExportImportCreatures.TableExportFields)))
             {
                 if (exportFields?.Contains((int)f) ?? false) continue;
                 ClbExportSpreadsheetFields.Items.Add(f, false);
@@ -450,7 +475,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.SpeechRecognition = chkbSpeechRecognition.Checked;
             Properties.Settings.Default.celsius = radioButtonCelsius.Checked;
             Properties.Settings.Default.DisplayHiddenStats = checkBoxDisplayHiddenStats.Checked;
-            Properties.Settings.Default.DefaultFontName = tbDefaultFontName.Text;
+            Properties.Settings.Default.DefaultFontName = CbbAppDefaultFontName.Text;
             Properties.Settings.Default.DefaultFontSize = (float)nudDefaultFontSize.Value;
 
             Properties.Settings.Default.ImgCacheUseLocalAppData = CbImgCacheUseLocalAppData.Checked;
@@ -475,7 +500,8 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.waitBeforeScreenCapture = (int)nudWaitBeforeScreenCapture.Value;
             Properties.Settings.Default.OCRWhiteThreshold = (byte)nudWhiteThreshold.Value;
             Properties.Settings.Default.OCRApp = tbOCRCaptureApp.Text;
-
+            Properties.Settings.Default.OCRFromClipboard = CbOCRFromClipboard.Checked;
+            Properties.Settings.Default.OCRFromRectangle = new Rectangle((int)NudOCRClipboardCropLeft.Value, (int)NudOCRClipboardCropTop.Value, (int)NudOCRClipboardCropWidth.Value, (int)NudOCRClipboardCropHeight.Value);
             Properties.Settings.Default.OCRIgnoresImprintValue = cbOCRIgnoreImprintValue.Checked;
             #endregion
 
@@ -492,18 +518,26 @@ namespace ARKBreedingStats.settings
             _cc.allowMoreThanHundredImprinting = cbAllowMoreThanHundredImprinting.Checked;
             Properties.Settings.Default.Highlight255Level = CbHighlightLevel255.Checked;
             Properties.Settings.Default.HighlightEvenOdd = CbHighlightLevelEvenOdd.Checked;
+            Properties.Settings.Default.ChartHueEvenMin = (int)nudChartLevelEvenMin.Value;
+            Properties.Settings.Default.ChartHueEvenMax = (int)nudChartLevelEvenMax.Value;
+            Properties.Settings.Default.ChartHueOddMin = (int)nudChartLevelOddMin.Value;
+            Properties.Settings.Default.ChartHueOddMax = (int)nudChartLevelOddMax.Value;
 
             #region InfoGraphic
 
-            Properties.Settings.Default.InfoGraphicWidth = (int)nudInfoGraphicWidth.Value;
+            Properties.Settings.Default.InfoGraphicHeight = (int)nudInfoGraphicHeight.Value;
             Properties.Settings.Default.InfoGraphicShowMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked;
             Properties.Settings.Default.InfoGraphicWithDomLevels = CbInfoGraphicDomLevels.Checked;
-            Properties.Settings.Default.InfoGraphicFontName = TbInfoGraphicFontName.Text;
+            Properties.Settings.Default.InfoGraphicFontName = CbbInfoGraphicFontName.Text;
             Properties.Settings.Default.InfoGraphicDisplayMutations = CbInfoGraphicMutations.Checked;
             Properties.Settings.Default.InfoGraphicDisplayGeneration = CbInfoGraphicGenerations.Checked;
+            Properties.Settings.Default.InfoGraphicDisplayName = CbInfoGraphicCreatureName.Checked;
             Properties.Settings.Default.InfoGraphicBackColor = BtInfoGraphicBackColor.BackColor;
             Properties.Settings.Default.InfoGraphicForeColor = BtInfoGraphicForeColor.BackColor;
             Properties.Settings.Default.InfoGraphicBorderColor = BtInfoGraphicBorderColor.BackColor;
+            Properties.Settings.Default.InfoGraphicExtraRegionNames = CbInfoGraphicAddRegionNames.Checked;
+            Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked;
+            Properties.Settings.Default.InfoGraphicShowStatValues = CbInfoGraphicStatValues.Checked;
 
             #endregion
 
@@ -522,13 +556,14 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.WarnWhenImportingMoreCreaturesThan = (int)nudWarnImportMoreThan.Value;
             Properties.Settings.Default.ExportCreatureFolders = aTExportFolderLocationsBindingSource.OfType<ATImportExportedFolderLocation>()
                     .Where(location => !string.IsNullOrWhiteSpace(location.FolderPath))
-                    .Select(location => $"{location.ConvenientName}|{location.OwnerSuffix}|{location.FolderPath}").ToArray();
+                    .Select(location => location.ToString()).ToArray();
 
             Properties.Settings.Default.applyNamePatternOnAutoImportAlways = CbApplyNamingPatternOnImportAlways.Checked;
             Properties.Settings.Default.applyNamePatternOnImportIfEmptyName = cbApplyNamePatternOnImportOnEmptyNames.Checked;
             Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures = cbApplyNamePatternOnImportOnNewCreatures.Checked;
             Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied = cbCopyPatternNameToClipboard.Checked;
             Properties.Settings.Default.AutoImportExportedCreatures = cbAutoImportExported.Checked;
+            Properties.Settings.Default.OnAutoImportAddToLibrary = CbAutoExtractAddToLibrary.Checked;
             Properties.Settings.Default.PlaySoundOnAutoImport = cbPlaySoundOnAutomaticImport.Checked;
             Properties.Settings.Default.MoveAutoImportedFileToSubFolder = cbMoveImportedFileToSubFolder.Checked;
             Properties.Settings.Default.ImportExportedArchiveFolder = BtImportArchiveFolder.Tag as string;
@@ -561,7 +596,7 @@ namespace ARKBreedingStats.settings
             for (int i = 0; i < exportFieldCount; i++)
             {
                 if (ClbExportSpreadsheetFields.GetItemChecked(i))
-                    exportFields.Add((int)Enum.Parse(typeof(ExportCreatures.TableExportFields), ClbExportSpreadsheetFields.Items[i].ToString()));
+                    exportFields.Add((int)Enum.Parse(typeof(ExportImportCreatures.TableExportFields), ClbExportSpreadsheetFields.Items[i].ToString()));
             }
             Properties.Settings.Default.CreatureTableExportFields = exportFields.ToArray();
 
@@ -595,6 +630,9 @@ namespace ARKBreedingStats.settings
             }
         }
 
+        /// <summary>
+        /// Checks if the set path to a savegame is actually an ark save file and warns if not.
+        /// </summary>
         private void CheckSaveImportPath(string filePath)
         {
             if (!filePath.EndsWith(".ark"))
@@ -647,12 +685,35 @@ namespace ARKBreedingStats.settings
             Match m;
             var cultureForStrings = System.Globalization.CultureInfo.GetCultureInfo("en-US");
 
-            // get stat-multipliers
-            // if there are stat-multipliers, set all to the official-values first
-            if (text.Contains("PerLevelStatsMultiplier_Dino"))
-                ApplyMultiplierPreset(Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official),
-                    onlyStatMultipliers: true);
+            // reset values to the default
 
+            if (text.Contains("ASBMaxGraphLevels"))
+            {
+                // the file is exported by this application and contains all needed values
+            }
+            else
+            {
+                var result = CustomMessageBox.Show(
+                    "Do you wish to reset all multipliers to their defaults before importing this file, or merge with the current ones?",
+                    "Importing settings", "Reset then import", "Merge with current", Loc.S("Cancel"),
+                    MessageBoxIcon.Information);
+
+                switch (result)
+                {
+                    case DialogResult.Yes:
+                        ApplyMultiplierPreset(Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official));
+                        break;
+                    case DialogResult.Cancel: return;
+                }
+
+                if (result != DialogResult.Yes && text.Contains("PerLevelStatsMultiplier_Dino"))
+                {
+                    // the file contains stat multipliers, reset all non-existing to the default first
+                    ApplyMultiplierPreset(Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official), true);
+                }
+            }
+
+            // get stat-multipliers
             // if an ini file is imported the server is most likely unofficial wit no level cap, if the server has a max level, it will be parsed.
             nudMaxServerLevel.ValueSave = 0;
 
@@ -683,6 +744,7 @@ namespace ARKBreedingStats.settings
             ParseAndSetValue(nudMatingSpeed, @"MatingSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyMatureSpeed, @"BabyMatureSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyImprintingStatScale, @"BabyImprintingStatScaleMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyImprintAmount, @"BabyImprintAmountMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyCuddleInterval, @"BabyCuddleIntervalMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyFoodConsumptionSpeed, @"BabyFoodConsumptionSpeedMultiplier ?= ?(\d*\.?\d+)");
 
@@ -818,6 +880,12 @@ namespace ARKBreedingStats.settings
             {
                 aTImportFileLocationBindingSource.RemoveAt(e.RowIndex);
             }
+            else if (e.ColumnIndex == ImportWithQuickImport.Index)
+            {
+                // the control itself locks the checkbox to readonly, it seems only possible like this
+                if (aTImportFileLocationBindingSource[e.RowIndex] is ATImportFileLocation il)
+                    il.ImportWithQuickImport = !il.ImportWithQuickImport;
+            }
         }
 
         private void dataGridViewExportFolders_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -935,6 +1003,21 @@ namespace ARKBreedingStats.settings
 
         private void Settings_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason == CloseReason.UserClosing
+                && ActiveControl != buttonOK
+                && ActiveControl != buttonCancel)
+            {
+                switch (MessageBox.Show("Save settings?", "Save settings?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning))
+                {
+                    case DialogResult.Yes:
+                        SaveSettings();
+                        break;
+                    case DialogResult.No: break;
+                    default:
+                        e.Cancel = true;
+                        return;
+                }
+            }
             LastTabPageIndex = (SettingsTabPages)tabControlSettings.SelectedIndex;
         }
 
@@ -990,6 +1073,7 @@ namespace ARKBreedingStats.settings
             sb.AppendLine($"MatingSpeedMultiplier = {nudMatingSpeed.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"BabyMatureSpeedMultiplier = {nudBabyMatureSpeed.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"BabyImprintingStatScaleMultiplier = {nudBabyImprintingStatScale.Value.ToString(cultureForStrings)}");
+            sb.AppendLine($"BabyImprintAmountMultiplier = {nudBabyImprintAmount.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"BabyCuddleIntervalMultiplier = {nudBabyCuddleInterval.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"BabyFoodConsumptionSpeedMultiplier = {nudBabyFoodConsumptionSpeed.Value.ToString(cultureForStrings)}");
 
@@ -1034,11 +1118,12 @@ namespace ARKBreedingStats.settings
             Unknown = -1,
             Multipliers = 0,
             General = 1,
-            SaveImport = 2,
-            ExportedImport = 3,
-            Timers = 4,
-            Overlay = 5,
-            Ocr = 6,
+            InfoGraphicPreview = 2,
+            SaveImport = 3,
+            ExportedImport = 4,
+            Timers = 5,
+            Overlay = 6,
+            Ocr = 7
         }
 
         private void cbCustomOverlayLocation_CheckedChanged(object sender, EventArgs e)
@@ -1136,12 +1221,33 @@ namespace ARKBreedingStats.settings
 
         private void BtGetExportFolderAutomatically_Click(object sender, EventArgs e)
         {
-            if (ExportFolderLocation.GetListOfExportFolders(out (string path, string steamPlayerName)[] arkInstallFolders, out string error))
+            if (ExportFolderLocation.GetListOfExportFolders(out (string path, string steamPlayerName)[] arkExportFolders, out string error))
             {
-                int i = 0;
-                foreach (var p in arkInstallFolders)
-                    aTExportFolderLocationsBindingSource.Insert(i++, ATImportExportedFolderLocation.CreateFromString(
-                        $"default ({p.steamPlayerName})||{p.path}"));
+                var anyFolderExists = false;
+                // only add folders if they exist and are not yet in the list
+                var exportFolderLocations = aTExportFolderLocationsBindingSource.OfType<ATImportExportedFolderLocation>().ToList();
+                foreach (var location in arkExportFolders)
+                {
+                    if (Directory.Exists(location.path))
+                    {
+                        anyFolderExists = true;
+                        if (exportFolderLocations.All(f => f.FolderPath != location.path))
+                            exportFolderLocations.Add(ATImportExportedFolderLocation.CreateFromString(
+                                   $"{location.steamPlayerName}||{location.path}"));
+                    }
+                }
+
+                if (!anyFolderExists) MessageBoxes.ShowMessageBox("No export folders found. Did you already export a creature in game?\nTo do that, walk to a creature, hold the E key and select Options - Export Data.\nThis works only on the Steam and the Epic version of the game.");
+
+                if (!exportFolderLocations.Any()) return;
+
+                // order the entries so that the folder with the newest file is the default
+                var orderedList = ExportFolderLocation.OrderByNewestFileInFolders(exportFolderLocations.Select(l => (l.FolderPath, l)));
+
+                aTExportFolderLocationsBindingSource.Clear();
+
+                foreach (var iel in orderedList)
+                    aTExportFolderLocationsBindingSource.Add(iel);
             }
             else
             {
@@ -1164,6 +1270,7 @@ namespace ARKBreedingStats.settings
             if (colorDialog1.ShowDialog() != DialogResult.OK) return;
 
             bt.SetBackColorAndAccordingForeColor(colorDialog1.Color);
+            ShowInfoGraphicPreview();
         }
 
         private void BtBackupFolder_Click(object sender, EventArgs e)
@@ -1191,8 +1298,7 @@ namespace ARKBreedingStats.settings
             nudBabyImprintAmount.SetExtraHighlightNonDefault(highlight);
             nudBabyImprintingStatScale.SetExtraHighlightNonDefault(highlight);
             nudBabyFoodConsumptionSpeed.SetExtraHighlightNonDefault(highlight);
-            cbSingleplayerSettings.BackColor = highlight && cbSingleplayerSettings.Checked ? Color.FromArgb(190, 40, 20) : Color.Transparent;
-            cbSingleplayerSettings.ForeColor = Utils.ForeColor(cbSingleplayerSettings.BackColor);
+            cbSingleplayerSettings.SetBackColorAndAccordingForeColor(highlight && cbSingleplayerSettings.Checked ? Color.FromArgb(190, 40, 20) : Color.Transparent);
         }
 
         private void BExportSpreadsheetMoveUp_Click(object sender, EventArgs e)
@@ -1246,15 +1352,131 @@ namespace ARKBreedingStats.settings
         }
 
         private readonly DataGridViewCellStyle _styleDefaultEntry = new DataGridViewCellStyle { BackColor = Color.FromArgb(211, 247, 211) };
+        private readonly DataGridViewCellStyle _styleFolderNotFound = new DataGridViewCellStyle { BackColor = Color.FromArgb(247, 215, 211) };
 
         private void HighlightDefaultImportExportFolderEntry()
         {
             var rowCount = dataGridViewExportFolders.RowCount;
             if (rowCount == 0) return;
 
-            dataGridViewExportFolders.Rows[0].DefaultCellStyle = _styleDefaultEntry;
+            dataGridViewExportFolders.Rows[0].DefaultCellStyle = DirectoryExists(0) ? _styleDefaultEntry : _styleFolderNotFound;
             for (int i = 1; i < rowCount; i++)
-                dataGridViewExportFolders.Rows[i].DefaultCellStyle = null;
+                dataGridViewExportFolders.Rows[i].DefaultCellStyle = DirectoryExists(i) ? null : _styleFolderNotFound;
+
+            bool DirectoryExists(int r) => dataGridViewExportFolders.Rows[r].Cells[2].Value is string path &&
+                                           Directory.Exists(path);
+        }
+
+        private void HighlightMissingFilesInImportSaveFileView()
+        {
+            var rowCount = dataGridView_FileLocations.RowCount;
+            for (int i = 0; i < rowCount; i++)
+            {
+                dataGridView_FileLocations.Rows[i].DefaultCellStyle = dataGridView_FileLocations.Rows[i].Cells[2].Value is string filePath
+                    && !filePath.StartsWith("ftp") && !File.Exists(filePath)
+                    ? _styleFolderNotFound
+                    : null;
+            }
+        }
+
+        private void nudChartLevelEvenMin_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateChartLevelColors(pbChartEvenRange, (int)nudChartLevelEvenMin.Value, (int)nudChartLevelEvenMax.Value);
+        }
+
+        private void nudChartLevelEvenMax_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateChartLevelColors(pbChartEvenRange, (int)nudChartLevelEvenMin.Value, (int)nudChartLevelEvenMax.Value);
+        }
+
+        private void nudChartLevelOddMin_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateChartLevelColors(pbChartOddRange, (int)nudChartLevelOddMin.Value, (int)nudChartLevelOddMax.Value);
+        }
+
+        private void nudChartLevelOddMax_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateChartLevelColors(pbChartOddRange, (int)nudChartLevelOddMin.Value, (int)nudChartLevelOddMax.Value);
+        }
+
+        private void UpdateChartLevelColors(PictureBox pb, int minHue, int maxHue)
+        {
+            var img = new Bitmap(pb.Width, pb.Height);
+            using (var g = Graphics.FromImage(img))
+            using (var brush = new SolidBrush(Color.Black))
+            {
+                var hueRange = maxHue - minHue;
+                const int segments = 10;
+                var segmentWidth = img.Width / segments;
+                for (int i = 0; i < segments; i++)
+                {
+                    brush.Color = Utils.ColorFromHue(minHue + hueRange * i / segments);
+                    g.FillRectangle(brush, i * segmentWidth, 0, segmentWidth, img.Height);
+                }
+            }
+            pb.SetImageAndDisposeOld(img);
+        }
+
+        #region InfoGraphic Preview
+
+        private Creature _infoGraphicPreviewCreature;
+        private readonly Debouncer _infoGraphicPreviewDebouncer = new Debouncer();
+
+        private void CbInfoGraphicCheckBoxChanged(object sender, EventArgs e)
+        {
+            _infoGraphicPreviewDebouncer.Debounce(300, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+        }
+
+        private void ShowInfoGraphicPreview()
+        {
+            if (_infoGraphicPreviewCreature == null)
+            {
+                _infoGraphicPreviewCreature = DummyCreatures.CreateCreatures(1)?.FirstOrDefault();
+                if (_infoGraphicPreviewCreature == null) return;
+                // add some dom levels
+                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.Health] = 5;
+                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.Weight] = 15;
+                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.MeleeDamageMultiplier] = 8;
+                _infoGraphicPreviewCreature.RecalculateCreatureValues(_cc.wildLevelStep);
+            }
+
+            var speciesImage = _infoGraphicPreviewCreature.InfoGraphic(_cc,
+                (int)nudInfoGraphicHeight.Value,
+                CbbInfoGraphicFontName.Text,
+                BtInfoGraphicForeColor.BackColor,
+                BtInfoGraphicBackColor.BackColor,
+                BtInfoGraphicBorderColor.BackColor,
+                CbInfoGraphicCreatureName.Checked,
+                CbInfoGraphicDomLevels.Checked,
+                CbInfoGraphicMutations.Checked,
+                CbInfoGraphicGenerations.Checked,
+                CbInfoGraphicStatValues.Checked,
+                CbInfoGraphicDisplayMaxWildLevel.Checked,
+                CbInfoGraphicAddRegionNames.Checked,
+                CbInfoGraphicColorRegionNamesIfNoImage.Checked
+            );
+
+            if (speciesImage == null) return;
+
+            PbInfoGraphicPreview.Size = speciesImage.Size;
+            PbInfoGraphicPreview.SetImageAndDisposeOld(speciesImage);
+        }
+
+        private void nudInfoGraphicHeight_ValueChanged(object sender, EventArgs e)
+        {
+            _infoGraphicPreviewDebouncer.Debounce(500, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+        }
+
+        private void CbbInfoGraphicFontName_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _infoGraphicPreviewDebouncer.Debounce(300, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+        }
+
+        #endregion
+
+        private void nudInfoGraphicWidth_ValueChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

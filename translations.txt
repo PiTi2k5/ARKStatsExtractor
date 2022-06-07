@@ -101,6 +101,7 @@ Colors	Colors
 cooldown	Cooldown
 cooldownGrowing	Cooldown/Growing
 copyCreatureToolStripMenuItem	Copy Creature
+copyInfoGraphicToClipboard  Copy info graphic to clipboard
 copyToMultiplierTesterToolStripButton	Copy to MultiplierTester
 copyToMultiplierTesterToolStripButtonTT	All the levels, TE and IB from the Tester, and the stat-values from the Extractor will be copied to the Stat-Multiplier-Tester
 Crafting Speed	Crafting Speed
@@ -159,6 +160,7 @@ gbCreatureInfo	Creature-info
 gbKOInfo	Knockout Info
 gbWeaponDamage	Weapon Damage [%]
 generation  generation
+generations  generations
 Generation_Abb	Gen
 gpPreviewEdit	Preview / Edit
 gpStarvingTime	Starving-Time
@@ -171,7 +173,8 @@ Health	Health
 Health_Abb	HP
 helpToolStripMenuItem	?
 hideStatus  hide status
-holdCtrlForRandomColors  Hold Ctrl for random colors
+holdCtrlForRandomColors  "Hold Ctrl for random natural colors
+Hold Ctrl + Shift for random colors"
 ImmobilizedBy	Immobilized by
 importCreatedJsonfileToolStripMenuItem	Import created json-file…
 importExportedCreaturesToolStripMenuItem	Import exported Creatures
@@ -179,12 +182,12 @@ importingFromARKToolsToolStripMenuItem	Importing from ARK-Tools
 importingFromSavegameEmptyToolStripMenuItem	At first configure "Import Savegame"
 importingFromSavegameToolStripMenuItem	Importing from savegame
 ImportingSavegame  Importing savegame
-importValuesFromClipboardToolStripMenuItem	Import Values from Clipboard
 imprintingBonus	Imprinting Bonus
 incubation  incubation
 issueCauseArkStatIssue  This species is known to show wrong stat values ingame, this can prevent a successful extraction.
 issueCauseCreatureLevel  "Check if the total level of the creature is entered correctly.
 If the creature is bred, also check if the BabyImprintingStatScaleMultiplier is set correctly."
+issueCauseImpossibleTe  The level results in an impossible taming effectiveness. Did you enter the levels arbitrarily? It might work if you set the creature to bred.
 issueCauseImprintingLocked  You locked the imprinting-value by checking "Exactly, don't adjust" and the tool won't adjust it, this may cause the extraction to fail.
 issueCauseImprintingNotPossible  "The imprinting-percentage given is not possible with the current multipliers and may cause wrong values during the extraction-process.
 Make sure the BabyCuddleIntervallMultiplier and the BabyMatureSpeedMultiplier are set correctly.
@@ -204,6 +207,7 @@ issueMaxWildLevelTooLow	"The extraction is potentially possible, but it seems th
 The current value is {0} and this creature seems to have a higher wild level than this.
 
 For other reasons of the failing of the extraction, see the list on the right after closing this messagebox."
+LbAlternativeColor  Hold Ctrl to select an alternative color id (red border). Hold Ctrl and click on No Color to unset it.
 lbBPBreedingScore	Breeding Score
 lbBPBreedingScoreTT	"The Breeding-Score of a pairing is not comparable to the Breeding-Score of another breeding-mode.
 The numbers in the different modes are generated in incompatible ways."
@@ -223,6 +227,7 @@ lbNotYetTamed	*Creature is not yet tamed and may get better values then.
 lbOwnerTT	"Click to toggle if the OCR can change the owner-field.
 Enable it if the OCR doesn't recognize the owner-name correctly and you want to add multiple creatures with the same owner."
 lbPedigreeEmpty	Select a creature in the Library to see its pedigree here.
+lbServerTT  Click to toggle freezing this field. If the field is frozen its background is grey and importing a creature won't update this field.
 lbShouldBe	Should be
 lbSum	Sum
 lbSumDomSBTT	This is the number that the sum of all manual levelups should be equal to.
@@ -252,6 +257,8 @@ matingTime  Mating Time
 Maturation	Maturation
 mature  mature
 max wild level  max wild level
+maxLevelForLevelUp  max level that allows domestic levelups
+maxLevelSaved  max wild level that will be saved
 modValueManagerToolStripMenuItem	Load additional values…
 Mother	Mother
 multiSetterToolStripMenuItem	MultiSetter…
@@ -282,6 +289,8 @@ noValidData  No valid data
 noValidExtractedCreatureToExport  There is no valid extracted creature to export.
 nudBPMutationLimitTT	"Consider only creatures with at most this many mutations.
 Set to -1 for any number of mutation."
+Nursing Effectiveness  Nursing Effectiveness
+Nursing Effectiveness_Abb NE
 obeliskCreaturesToolStripMenuItem	Obelisk Creatures
 OK	OK
 onlinehelpToolStripMenuItem	Online Manual…
@@ -332,7 +341,7 @@ servers  servers
 setStatusToolStripMenuItem	Set Status
 Sex	Sex
 ShockingTranqDarts	Shocking Tranq Darts
-showOnlyNaturalOccuring  Show only natural occuring colors
+showOnlyNaturalOccurring  Show only natural occuring colors
 Slingshot	Slingshot
 SlingshotHits	Slingshot Hits
 Spayed	Spayed
@@ -399,6 +408,7 @@ Tribe	Tribe
 tribeFilterFromLibrary  Tribe filter from library
 tribes  tribes
 tsBtAddAsExtractionTest	Add as Test
+ultraMaxLevel  Warning: The level is higher than the possible max value and will not be saved.
 unavailableCreaturesToolStripMenuItem	Unavailable Creatures
 Unknown	Unknown
 unknownSpecies  unknown species

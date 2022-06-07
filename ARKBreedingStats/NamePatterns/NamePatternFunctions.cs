@@ -16,7 +16,7 @@ namespace ARKBreedingStats.NamePatterns
         {
             var functionName = match.Groups[1].Value.ToLower();
 
-            if (!string.IsNullOrEmpty(functionName) && _functions.TryGetValue(functionName, out var func))
+            if (!string.IsNullOrEmpty(functionName) && Functions.TryGetValue(functionName, out var func))
             {
                 return func(match, parameters);
             }
@@ -34,7 +34,7 @@ namespace ARKBreedingStats.NamePatterns
         }
 
 
-        private static Dictionary<string, Func<Match, NamePatternParameters, string>> _functions =
+        private static readonly Dictionary<string, Func<Match, NamePatternParameters, string>> Functions =
             new Dictionary<string, Func<Match, NamePatternParameters, string>>
             {
                 {"if", FunctionIf},
@@ -50,6 +50,7 @@ namespace ARKBreedingStats.NamePatterns
                 {"div", FunctionDiv},
                 {"casing", FunctionCasing},
                 {"replace", FunctionReplace},
+                {"regexreplace", FunctionRegExReplace},
                 {"customreplace", FunctionCustomReplace},
                 {"time", FunctionTime},
                 {"color", FunctionColor},
@@ -138,21 +139,25 @@ namespace ARKBreedingStats.NamePatterns
             if (!int.TryParse(m.Groups[3].Value, out var pos))
                 return m.Groups[2].Value;
 
-            bool fromEnd = pos < 0;
-            pos = Math.Min(Math.Abs(pos), m.Groups[2].Value.Length);
+            var text = m.Groups[2].Value;
+            var textLength = text.Length;
+
+            if (pos < 0) pos += textLength;
+            if (pos < 0) pos = 0;
+            if (pos >= textLength) return string.Empty;
+
             if (string.IsNullOrEmpty(m.Groups[4].Value))
-            {
-                if (fromEnd)
-                    return m.Groups[2].Value.Substring(m.Groups[2].Value.Length - pos);
-                return m.Groups[2].Value.Substring(pos);
-            }
-            else
-            {
-                int length = Math.Min(Convert.ToInt32(Convert.ToInt32(m.Groups[4].Value)), fromEnd ? pos : m.Groups[2].Value.Length - pos);
-                if (fromEnd)
-                    return m.Groups[2].Value.Substring(m.Groups[2].Value.Length - pos, length);
-                return m.Groups[2].Value.Substring(pos, length);
-            }
+                return text.Substring(pos);
+
+            var substringLength = int.TryParse(m.Groups[4].Value, out var v) ? v : 0;
+            if (substringLength < 0)
+                substringLength += textLength - pos;
+
+            if (substringLength <= 0) return string.Empty;
+            if (pos + substringLength > textLength)
+                substringLength = textLength - pos;
+
+            return text.Substring(pos, substringLength);
         }
 
         private static string FunctionFormat(Match m, NamePatternParameters p)
@@ -246,6 +251,25 @@ namespace ARKBreedingStats.NamePatterns
                 return m.Groups[2].Value;
             return m.Groups[2].Value.Replace(m.Groups[3].Value.Replace("&nbsp;", " "), m.Groups[4].Value.Replace("&nbsp;", " "));
         }
+
+        private static string FunctionRegExReplace(Match m, NamePatternParameters p)
+        {
+            // parameter: 1: replace, 2: text, 3: regEx pattern, 4: replace
+
+            try
+            {
+                return Regex.Replace(UnEscapeSpecialCharacters(m.Groups[2].Value), UnEscapeSpecialCharacters(m.Groups[3].Value), UnEscapeSpecialCharacters(m.Groups[4].Value));
+            }
+            catch (Exception ex)
+            {
+                return ParametersInvalid($"The regex \"{m.Groups[3].Value}\" caused the exception: {ex.Message}", m.Groups[0].Value, p.DisplayError);
+            }
+        }
+
+        /// <summary>
+        /// Functions cannot process the characters {|} directly, they have to be replaced to be used.
+        /// </summary>
+        public static string UnEscapeSpecialCharacters(string text) => text?.Replace("&lcub;", "{").Replace("&vline;", "|").Replace("&rcub;", "}");
 
         private static string FunctionCustomReplace(Match m, NamePatternParameters p)
         {

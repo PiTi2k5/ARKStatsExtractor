@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ARKBreedingStats.utils;
@@ -17,7 +16,6 @@ namespace ARKBreedingStats
     /// <summary>
     /// Methods for handling values files. Mainly contains methods that display MessageBoxes.
     /// </summary>
-
     public partial class Form1
     {
         /// <summary>
@@ -35,7 +33,7 @@ namespace ARKBreedingStats
             // first ensure that all mod-files are available
             CheckAvailabilityAndUpdateModFiles(modValueFileNames, Values.V);
 
-            bool modFilesLoaded = Values.V.LoadModValues(modValueFileNames, throwExceptionOnFail: true, out mods, out string resultsMessage);
+            bool modFilesLoaded = Values.V.LoadModValues(modValueFileNames, true, out mods, out string resultsMessage);
 
             if (modFilesLoaded)
             {
@@ -54,8 +52,7 @@ namespace ARKBreedingStats
         /// <summary>
         /// Check if mod files for the missing species are available.
         /// </summary>
-        /// <param name="unknownSpeciesBlueprints"></param>
-        public static void CheckForMissingModFiles(CreatureCollection creatureCollection, List<string> unknownSpeciesBlueprints)
+        private static void CheckForMissingModFiles(CreatureCollection creatureCollection, List<string> unknownSpeciesBlueprints, string exportFilePath = null, string creatureName = null)
         {
             var (locallyAvailableModFiles, onlineAvailableModFiles, unavailableModFiles, alreadyLoadedModFilesWithoutNeededClass) = HandleUnknownMods.CheckForMissingModFiles(unknownSpeciesBlueprints, creatureCollection.ModList);
 
@@ -82,7 +79,10 @@ namespace ARKBreedingStats
                     "\n\nThe values for species for the following mods are unknown even though an according mod file was already loaded, i.e. the species blueprint path is not in the mod file. If it is a manual mod file, make sure the blueprint path is correct.\n\n- "
                     + string.Join("\n- ", alreadyLoadedModFilesWithoutNeededClass) + "\n\nThe following blueprint paths were not found in the mod file:\n\n"
                     + string.Join("\n", unknownSpeciesBlueprints.Where(bp => alreadyLoadedModFilesWithoutNeededClass.Any(m => bp.StartsWith($"/Game/Mods/{m}/"))))
-                    : string.Empty),
+                    : string.Empty)
+                + (string.IsNullOrEmpty(exportFilePath) ? null : $"\n\nThe according export file is located at\n{exportFilePath}")
+                + (string.IsNullOrEmpty(creatureName) ? null : $"\n\nThe creature is named\n{creatureName}")
+                ,
                 "Unknown species", MessageBoxIcon.Information);
 
             if ((locallyAvailableModsExist || onlineAvailableModsExist)
@@ -111,7 +111,7 @@ namespace ARKBreedingStats
             bool filesDownloaded = false;
 
             if (modValueFilesWithAvailableUpdate.Any()
-                && MessageBox.Show("For " + modValueFilesWithAvailableUpdate.Count.ToString() + " value files there is an update available. It is strongly recommended to use the updated versions.\n"
+                && MessageBox.Show("For " + modValueFilesWithAvailableUpdate.Count + " value files there is an update available. It is strongly recommended to use the updated versions.\n"
                 + "The updated files can be downloaded automatically if you want.\n"
                 + "The following files can be downloaded\n\n"
                 + string.Join("\n", modValueFilesWithAvailableUpdate)
@@ -123,7 +123,7 @@ namespace ARKBreedingStats
             }
 
             if (missingModValueFilesOnlineAvailable.Any()
-                && MessageBox.Show(missingModValueFilesOnlineAvailable.Count.ToString() + " mod-value files are not available locally. Without these files the library will not display all creatures.\n"
+                && MessageBox.Show(missingModValueFilesOnlineAvailable.Count + " mod-value files are not available locally. Without these files the library will not display all creatures.\n"
                 + "The missing files can be downloaded automatically if you want.\n"
                 + "The following files can be downloaded\n\n"
                 + string.Join("\n", missingModValueFilesOnlineAvailable)

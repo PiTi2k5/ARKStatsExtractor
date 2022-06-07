@@ -2,7 +2,6 @@
 using ARKBreedingStats.settings;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -10,7 +9,6 @@ using System.Text;
 using System.Windows.Forms;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.species;
-using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
@@ -87,7 +85,7 @@ namespace ARKBreedingStats
                 return;
             }
 
-            if (MessageBox.Show("There is no folder set where the exported creatures are located. Set this folder in the settings. " +
+            if (MessageBox.Show("There is no folder set where the exported creatures are located, or the set folder does not exist. Set this folder in the settings. " +
                                 "Usually the folder is\n" + @"…\Steam\steamapps\common\ARK\ShooterGame\Saved\DinoExports\<ID>" + "\n\nOpen the settings-page?",
                                 $"No default export-folder set - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
             {
@@ -99,14 +97,7 @@ namespace ARKBreedingStats
         {
             tabControlMain.SelectedTab = tabPageExtractor;
 
-            bool updateExtractorVisualKeeper = _updateExtractorVisualData;
-            if (addToLibraryIfUnique)
-                _updateExtractorVisualData = false;
-
             ExtractExportedFileInExtractor(exportedCreatureControl, updateParentVisuals: !addToLibraryIfUnique);
-
-            if (addToLibraryIfUnique)
-                _updateExtractorVisualData = updateExtractorVisualKeeper;
 
             // add to library automatically if batch-extracting exportedImported values and uniqueLevels
             if (addToLibraryIfUnique)
@@ -147,7 +138,9 @@ namespace ARKBreedingStats
             if (!loadResult.HasValue) return;
 
             bool alreadyExists = loadResult.Value;
-            bool added = false;
+            bool addedToLibrary = false;
+            bool uniqueExtraction = _extractor.UniqueResults
+                                    || (alreadyExists && _extractor.ValidResults);
             bool copyNameToClipboard = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied
                 && (Properties.Settings.Default.applyNamePatternOnAutoImportAlways
                     || Properties.Settings.Default.applyNamePatternOnImportIfEmptyName
@@ -156,12 +149,12 @@ namespace ARKBreedingStats
             Species species = speciesSelector1.SelectedSpecies;
             Creature creature = null;
 
-            if (_extractor.UniqueResults
-                || (alreadyExists && _extractor.ValidResults))
+            if (uniqueExtraction
+                && Properties.Settings.Default.OnAutoImportAddToLibrary)
             {
                 creature = AddCreatureToCollection(true, goToLibraryTab: Properties.Settings.Default.AutoImportGotoLibraryAfterSuccess);
                 SetMessageLabelText($"Successful {(alreadyExists ? "updated" : "added")} {creature.name} ({species.name}) of the exported file\n" + filePath, MessageBoxIcon.Information, filePath);
-                added = true;
+                addedToLibrary = true;
             }
 
             bool topLevels = false;
@@ -171,11 +164,11 @@ namespace ARKBreedingStats
             string infoText;
             Color textColor;
             const int colorSaturation = 200;
-            if (added)
+            if (uniqueExtraction)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine($"{species.name} \"{creature.name}\" {(alreadyExists ? "updated in " : "added to")} the library.");
-                if (copyNameToClipboard)
+                sb.AppendLine($"{species.name} \"{creatureInfoInputExtractor.CreatureName}\" {(alreadyExists ? "updated in " : "added to")} the library.");
+                if (addedToLibrary && copyNameToClipboard)
                     sb.AppendLine("Name copied to clipboard.");
 
                 for (int s = 0; s < values.Values.STATS_COUNT; s++)
@@ -184,12 +177,12 @@ namespace ARKBreedingStats
                     if (!species.UsesStat(statIndex)) continue;
 
                     sb.Append($"{Utils.StatName(statIndex, true, species.statNames)}: { _statIOs[statIndex].LevelWild} ({_statIOs[statIndex].BreedingValue})");
-                    if (_statIOs[statIndex].TopLevel == StatIOStatus.NewTopLevel)
+                    if (_statIOs[statIndex].TopLevel.HasFlag(LevelStatus.NewTopLevel))
                     {
                         sb.Append($" {Loc.S("newTopLevel")}");
                         newTopLevels = true;
                     }
-                    else if (_statIOs[statIndex].TopLevel == StatIOStatus.TopLevel)
+                    else if (_statIOs[statIndex].TopLevel.HasFlag(LevelStatus.TopLevel))
                     {
                         sb.Append($" {Loc.S("topLevel")}");
                         topLevels = true;
@@ -213,7 +206,7 @@ namespace ARKBreedingStats
                     _overlay.SetInheritanceCreatures(creature, creature.Mother, creature.Father);
             }
 
-            if (added)
+            if (addedToLibrary)
             {
                 if (Properties.Settings.Default.DeleteAutoImportedFile)
                 {
@@ -242,6 +235,11 @@ namespace ARKBreedingStats
                             _customReplacingNamingPattern, false, -1, false, namePattern)
                         : Path.GetFileName(filePath);
 
+                    // remove invalid characters
+                    var invalidCharacters = Path.GetInvalidFileNameChars();
+                    foreach (var invalidChar in invalidCharacters)
+                        newFileName = newFileName.Replace(invalidChar, '_');
+
                     string newFileNameWithoutExtension = Path.GetFileNameWithoutExtension(newFileName);
                     string newFileNameExtension = Path.GetExtension(newFileName);
                     string newFilePath = Path.Combine(newPath, newFileName);
@@ -255,7 +253,7 @@ namespace ARKBreedingStats
                         _librarySelectionInfoClickPath = newFilePath;
                 }
             }
-            else if (copyNameToClipboard)
+            else if (!uniqueExtraction && copyNameToClipboard)
             {
                 // extraction failed, user might expect the name of the new creature in the clipboard
                 Clipboard.SetText("Automatic extraction was not possible");
@@ -263,7 +261,7 @@ namespace ARKBreedingStats
 
             if (Properties.Settings.Default.PlaySoundOnAutoImport)
             {
-                if (added)
+                if (uniqueExtraction)
                 {
                     if (alreadyExists)
                         SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Indifferent);
@@ -305,12 +303,52 @@ namespace ARKBreedingStats
                 _exportedCreatureList = new importExported.ExportedCreatureList();
                 _exportedCreatureList.CopyValuesToExtractor += ExportedCreatureList_CopyValuesToExtractor;
                 _exportedCreatureList.CheckArkIdInLibrary += ExportedCreatureList_CheckGuidInLibrary;
+                _exportedCreatureList.UpdateVisualData += UpdateVisualDataInExtractor;
+                _exportedCreatureList.AddFolderToPresets += AddExportFolderToMenu;
                 Utils.SetWindowRectangle(_exportedCreatureList, Properties.Settings.Default.ImportExportedFormRectangle);
                 _exportedCreatureList.CheckForUnknownMods += ExportedCreatureList_CheckForUnknownMods;
             }
-            _exportedCreatureList.ownerSuffix = "";
+            _exportedCreatureList.ownerSuffix = string.Empty;
             _exportedCreatureList.Show();
             _exportedCreatureList.BringToFront();
+        }
+
+        private void AddExportFolderToMenu(string folderPath)
+        {
+            var folders = Properties.Settings.Default.ExportCreatureFolders?.ToList() ?? new List<string>();
+            bool alreadyExists = false;
+            foreach (var f in folders)
+            {
+                var impExpFolder = ATImportExportedFolderLocation.CreateFromString(f);
+                if (impExpFolder.FolderPath == folderPath)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            if (alreadyExists) return;
+
+            folders.Add(new ATImportExportedFolderLocation(Path.GetFileName(folderPath), null, folderPath).ToString());
+            Properties.Settings.Default.ExportCreatureFolders = folders.ToArray();
+            CreateImportExportedMenu();
+        }
+
+        private void UpdateVisualDataInExtractor(bool updateData)
+        {
+            if (!updateData)
+            {
+                creatureInfoInputExtractor.DontUpdateVisuals = true;
+                _dontUpdateExtractorVisualData = true;
+            }
+            else
+            {
+                creatureInfoInputExtractor.DontUpdateVisuals = true;
+                var colors = creatureInfoInputExtractor.RegionColors;
+                creatureInfoInputExtractor.DontUpdateVisuals = false;
+                _dontUpdateExtractorVisualData = false;
+                creatureInfoInputExtractor.RegionColors = colors;
+            }
         }
 
         private void ExportedCreatureList_CheckForUnknownMods(List<string> unknownSpeciesBlueprintPaths)
@@ -320,6 +358,42 @@ namespace ARKBreedingStats
             if (_creatureCollection.ModValueReloadNeeded
                 && LoadModValuesOfCollection(_creatureCollection, true, true))
                 _exportedCreatureList.LoadFilesInFolder();
+        }
+
+        /// <summary>
+        /// Recreates the menu entries to import exported creatures.
+        /// </summary>
+        private void CreateImportExportedMenu()
+        {
+            importExportedCreaturesToolStripMenuItem.DropDownItems.Clear();
+            if (Properties.Settings.Default.ExportCreatureFolders?.Any() == true)
+            {
+                foreach (string f in Properties.Settings.Default.ExportCreatureFolders)
+                {
+                    ATImportExportedFolderLocation aTImportExportedFolderLocation =
+                        ATImportExportedFolderLocation.CreateFromString(f);
+                    string menuItemHeader = string.IsNullOrEmpty(aTImportExportedFolderLocation.ConvenientName)
+                        ? "<unnamed>"
+                        : aTImportExportedFolderLocation.ConvenientName;
+                    ToolStripMenuItem tsmi = new ToolStripMenuItem(menuItemHeader
+                                                                   + (string.IsNullOrEmpty(
+                                                                       aTImportExportedFolderLocation.OwnerSuffix)
+                                                                       ? string.Empty
+                                                                       : " - " + aTImportExportedFolderLocation.OwnerSuffix))
+                    {
+                        Tag = aTImportExportedFolderLocation
+                    };
+                    tsmi.Click += OpenImportExportForm;
+                    importExportedCreaturesToolStripMenuItem.DropDownItems.Add(tsmi);
+                }
+
+                importExportedCreaturesToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            }
+
+            // open folder for importExport
+            ToolStripMenuItem tsmif = new ToolStripMenuItem("Open folder for importing exported files");
+            tsmif.Click += ImportAllCreaturesInSelectedFolder;
+            importExportedCreaturesToolStripMenuItem.DropDownItems.Add(tsmif);
         }
     }
 }

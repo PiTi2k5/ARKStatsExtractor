@@ -42,7 +42,6 @@ namespace ARKBreedingStats
             Loc.ControlText(quitToolStripMenuItem);
             Loc.ControlText(editToolStripMenuItem);
             Loc.ControlText(exportValuesToClipboardToolStripMenuItem);
-            Loc.ControlText(importValuesFromClipboardToolStripMenuItem);
             Loc.ControlText(setStatusToolStripMenuItem);
             Loc.ControlText(multiSetterToolStripMenuItem);
             Loc.ControlText(deleteSelectedToolStripMenuItem);
@@ -64,6 +63,7 @@ namespace ARKBreedingStats
             Loc.ControlText(toolStripButtonDeleteTempCreature);
             Loc.ControlText(tsBtAddAsExtractionTest);
             Loc.ControlText(copyToMultiplierTesterToolStripButton);
+            Loc.ControlText(copyInfographicToClipboardToolStripMenuItem, "copyInfoGraphicToClipboard");
 
             // top bar
             Loc.ControlText(cbEventMultipliers, "Event");

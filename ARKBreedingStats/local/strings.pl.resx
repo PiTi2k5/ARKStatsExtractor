@@ -602,10 +602,7 @@
     <data name="gbWeaponDamage" xml:space="preserve">
         <value>Obrażenia broni [%]</value>
     </data>
-    <data name="importValuesFromClipboardToolStripMenuItem" xml:space="preserve">
-        <value>Zaimportuj wartości ze schowka</value>
-    </data>
-    <data name="importingFromSavegameToolStripMenuItem" xml:space="preserve">
+  <data name="importingFromSavegameToolStripMenuItem" xml:space="preserve">
         <value>Zaimportuj z zapisu gry</value>
     </data>
     <data name="importingFromSavegameEmptyToolStripMenuItem" xml:space="preserve">
@@ -917,7 +914,7 @@ Wybierz tryb "Wysokie statystyki", by otrzymać lepsze sugestie.</value>
     <data name="ShockingTranqDarts" xml:space="preserve">
         <value>Porażające lotki usypiające</value>
     </data>
-    <data name="showOnlyNaturalOccuring" xml:space="preserve">
+    <data name="showOnlyNaturalOccurring" xml:space="preserve">
         <value>tylko naturalnie występujące kolory</value>
     </data>
     <data name="VariantSelector" xml:space="preserve">

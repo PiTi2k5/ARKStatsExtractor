@@ -41,9 +41,9 @@ namespace ARKBreedingStats.oldLibraryFormat
             var newToOldIndices = new int[] { 0, 1, 7, 2, 3, -1, -1, 4, 5, 6, -1, -1 };
             if (ccOld.multipliers != null && ccOld.multipliers.Length == 8)
             {
-                /// old order was
-                /// HP, Stam, Ox, Fo, We, Dm, Sp, To
-                /// new order is
+                // old order was
+                // HP, Stam, Ox, Fo, We, Dm, Sp, To
+                // new order is
                 // 0: Health
                 // 1: Stamina / Charge Capacity
                 // 2: Torpidity
@@ -83,12 +83,12 @@ namespace ARKBreedingStats.oldLibraryFormat
 
             foreach (CreatureOld c in ccOld.creatures)
             {
-                Creature newC = new Creature()
+                Creature newC = new Creature
                 {
                     addedToLibrary = c.addedToLibrary.Year < 2000 ? default(DateTime?) : c.addedToLibrary,
                     ArkId = c.ArkId,
                     ArkIdImported = c.ArkIdImported,
-                    colors = c.colors,
+                    colors = c.colors.Select(ci => (byte)ci).ToArray(),
                     cooldownUntil = c.cooldownUntil.Year < 2000 ? default(DateTime?) : c.cooldownUntil,
                     domesticatedAt = c.domesticatedAt.Year < 2000 ? default(DateTime?) : c.domesticatedAt,
                     fatherGuid = c.fatherGuid,
@@ -114,6 +114,7 @@ namespace ARKBreedingStats.oldLibraryFormat
                     tamingEff = c.tamingEff,
                     tribe = c.tribe
                 };
+                newC.InitializeArkInGame();
                 ccNew.creatures.Add(newC);
 
                 if (c.IsPlaceholder) newC.flags |= CreatureFlags.Placeholder;
@@ -138,10 +139,10 @@ namespace ARKBreedingStats.oldLibraryFormat
 
             foreach (var cvOld in ccOld.creaturesValues)
             {
-                var cv = new CreatureValues()
+                var cv = new CreatureValues
                 {
                     ARKID = cvOld.ARKID,
-                    colorIDs = cvOld.colorIDs,
+                    colorIDs = cvOld.colorIDs.Select(ci => (byte)ci).ToArray(),
                     cooldownUntil = cvOld.cooldownUntil.Year < 2000 ? default(DateTime?) : cvOld.cooldownUntil,
                     domesticatedAt = cvOld.domesticatedAt.Year < 2000 ? default(DateTime?) : cvOld.domesticatedAt,
                     fatherArkId = cvOld.fatherArkId,
@@ -163,7 +164,6 @@ namespace ARKBreedingStats.oldLibraryFormat
                     owner = cvOld.owner,
                     server = cvOld.server,
                     sex = cvOld.sex,
-                    speciesName = cvOld.species,
                     statValues = cvOld.statValues,
                     tamingEffMax = cvOld.tamingEffMax,
                     tamingEffMin = cvOld.tamingEffMin,

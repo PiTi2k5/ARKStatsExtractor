@@ -81,9 +81,12 @@ namespace ARKBreedingStats.Updater
             if (IsFolder)
             {
                 var filePath = FileService.GetPath(LocalPath, "_ver.txt");
-                LocallyAvailable = File.Exists(filePath) &&
-                                   Version.TryParse(File.ReadAllText(filePath), out VersionLocal);
-                UpdateAvailable = VersionOnline > VersionLocal;
+                if (File.Exists(filePath) &&
+                    Version.TryParse(File.ReadAllText(filePath), out VersionLocal))
+                {
+                    LocallyAvailable = true;
+                    UpdateAvailable = VersionOnline > VersionLocal;
+                }
             }
             else
             {
@@ -120,7 +123,7 @@ namespace ARKBreedingStats.Updater
             if (string.IsNullOrEmpty(Url))
                 return (false, "Url is empty, couldn't download anything.");
 
-            string moduleFolderPath = FileService.GetPath(FileService.DataFolderName, LocalPath);
+            string moduleFolderPath = FileService.GetPath(LocalPath);
             string tempFilePath = Path.GetTempFileName();
             var (success, _) = await Updater.DownloadAsync(Url, tempFilePath);
             if (!success)
@@ -160,7 +163,7 @@ namespace ARKBreedingStats.Updater
                 FileService.TryDeleteFile(tempFilePath);
             }
 
-            return (true, $"Files of {Name} were downloaded successfully.\n{fileCountExtracted} files extracted\n{fileCountSkipped} already existing files skipped");
+            return (true, $"Files of {Name} were downloaded successfully.\n{fileCountExtracted} files extracted{(fileCountSkipped != 0 ? $"\n{fileCountSkipped} already existing files skipped" : string.Empty)}.");
         }
     }
 }

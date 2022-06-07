@@ -18,7 +18,7 @@ namespace ARKBreedingStats.Updater
 
             var manifestFilePath = FileService.GetPath(FileService.ManifestFileName);
             if (!File.Exists(manifestFilePath))
-                Task.Run(async () => await Updater.DownloadManifest());
+                return;
 
             _asbManifest = AsbManifest.FromJsonFile(manifestFilePath);
             if (_asbManifest?.modules == null) return;
@@ -39,15 +39,19 @@ namespace ARKBreedingStats.Updater
                 header.Font = new Font(header.Font.FontFamily, header.Font.Size * 2);
                 FlpModules.Controls.Add(header);
                 var group = g.OrderBy(m => !m.LocallyAvailable).ThenBy(m => m.Name).ToArray();
+                var onlyOneEntry = group.Length == 1;
                 foreach (var m in group)
                 {
-                    var moduleDisplay = CreateModuleControl(m);
+                    var moduleDisplay = CreateModuleControl(m, onlyOneEntry);
                     FlpModules.Controls.Add(moduleDisplay);
                 }
             }
+
+            InitiallySelectedSpeciesImageCollectionId = _checkboxesSelectModule.Where(cb => cb.Checked).Select(cb => cb.Tag as AsbModule)
+                .FirstOrDefault(m => (m?.LocallyAvailable ?? false) && m?.Category == "Species Images")?.Id;
         }
 
-        private Control CreateModuleControl(AsbModule module)
+        private Control CreateModuleControl(AsbModule module, bool onlyOneEntry)
         {
             var c = new TableLayoutPanel { AutoSize = true, BorderStyle = BorderStyle.FixedSingle, MinimumSize = new Size(500, 100) };
             c.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -82,18 +86,18 @@ namespace ARKBreedingStats.Updater
             { Text = $"Version\nLocal: {(module.LocallyAvailable ? module.VersionLocal.ToString() : "not downloaded")}\nOnline: {module.VersionOnline}", AutoSize = true, Margin = new Padding(3) };
             c.Controls.Add(l, 1, 1);
 
-            string checkBoxText = null;
+            string checkBoxDownloadText = null;
             if (!module.LocallyAvailable)
-                checkBoxText = "Download";
+                checkBoxDownloadText = "Download";
             else if (module.UpdateAvailable)
             {
-                checkBoxText = "Update";
+                checkBoxDownloadText = "Update";
                 UpdateAvailable = true;
             }
 
-            if (checkBoxText != null)
+            if (checkBoxDownloadText != null)
             {
-                var cb = new CheckBox { Text = checkBoxText, Tag = module, Padding = new Padding(3) };
+                var cb = new CheckBox { Text = checkBoxDownloadText, Tag = module, Padding = new Padding(3) };
                 if (module.UpdateAvailable) cb.BackColor = Color.Yellow;
                 cb.CheckedChanged += (s, e) => cb.BackColor = cb.Checked ? Color.LightGreen : ((cb.Tag as AsbModule)?.UpdateAvailable ?? false) ? Color.Yellow : SystemColors.Control;
 
@@ -112,16 +116,21 @@ namespace ARKBreedingStats.Updater
                 var cb = new CheckBox { Text = "Select", Tag = module, Padding = new Padding(3) };
                 cb.CheckedChanged += (s, e) => cb.BackColor = cb.Checked ? Color.LightGreen : SystemColors.Control;
 
-                if (checkBoxText == null)
+                if (checkBoxDownloadText == null)
                 {
                     c.Click += (s, e) => ClickCheckBox(cb);
                     foreach (Control cc in c.Controls)
                         cc.Click += (s, e) => ClickCheckBox(cb);
                 }
 
-                c.Controls.Add(cb);
-                c.SetRow(cb, 3);
-                c.SetColumn(cb, 1);
+                // if there's only one option, choose that
+                if (onlyOneEntry)
+                {
+                    cb.Visible = false;
+                    cb.Checked = true;
+                }
+
+                c.Controls.Add(cb, 1, 3);
                 _checkboxesSelectModule.Add(cb);
             }
 
@@ -130,10 +139,28 @@ namespace ARKBreedingStats.Updater
 
         private void ClickCheckBox(CheckBox cb) => cb.Checked = !cb.Checked;
 
+        internal void SelectDefaultImages()
+        {
+            var cbImages = _checkboxesUpdateModule.FirstOrDefault(cb => cb.Tag is AsbModule mod && mod.Category == "Species Images");
+            if (cbImages == null) return;
+            var moduleImages = cbImages.Tag as AsbModule;
+            if (moduleImages == null) return;
+            if (!moduleImages.LocallyAvailable)
+                cbImages.Checked = true;
+        }
+
         /// <summary>
         /// Is only true if for an already downloaded module an update is available.
         /// </summary>
         internal bool UpdateAvailable { get; private set; }
+
+        private string InitiallySelectedSpeciesImageCollectionId;
+
+        /// <summary>
+        /// The species images were changed and need to be initialized again.
+        /// </summary>
+        public bool ImagesWereChanged => InitiallySelectedSpeciesImageCollectionId != _checkboxesSelectModule.Where(cb => cb.Checked).Select(cb => cb.Tag as AsbModule)
+            .FirstOrDefault(m => m?.Category == "Species Images")?.Id;
 
         private AsbManifest _asbManifest;
         private readonly List<CheckBox> _checkboxesUpdateModule;
@@ -151,6 +178,14 @@ namespace ARKBreedingStats.Updater
                 var (success, message) = await module.DownloadAsync(true);
                 sb.AppendLine();
                 sb.AppendLine((success ? "Success: " : "Failed: ") + message);
+
+                // if downloaded successfully, also select the module
+                if (success)
+                {
+                    var checkBox = _checkboxesSelectModule.FirstOrDefault(cb => (cb.Tag as AsbModule) == module);
+                    if (checkBox != null)
+                        checkBox.Checked = true;
+                }
             }
 
             return sb.ToString();

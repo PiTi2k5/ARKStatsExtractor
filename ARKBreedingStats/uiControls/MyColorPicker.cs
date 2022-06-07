@@ -4,45 +4,51 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
     public partial class MyColorPicker : Form
     {
-        public int SelectedColorId;
-        private List<int> _naturalColorIDs;
+        public byte SelectedColorId;
+        public byte SelectedColorIdAlternative;
+        private byte[] _naturalColorIDs;
         public bool isShown;
-        private readonly ToolTip tt;
+        private readonly ToolTip _tt;
 
         public MyColorPicker()
         {
             InitializeComponent();
-            tt = new ToolTip { AutomaticDelay = 200 };
+            _tt = new ToolTip { AutomaticDelay = 200 };
 
-            BtNoColor.Tag = 0; // id of no color
+            BtNoColor.Tag = (byte)0; // id of no color
             BtNoColor.Text = Loc.S("noColor");
+            LbAlternativeColor.Text = Loc.S("LbAlternativeColor");
+            _tt.SetToolTip(BtNoColor, "0: no color");
 
             buttonCancel.Text = Loc.S("Cancel");
 
             Disposed += MyColorPicker_Disposed;
 
-            checkBoxOnlyNatural.Text = Loc.S("showOnlyNaturalOccuring");
+            checkBoxOnlyNatural.Text = Loc.S("showOnlyNaturalOccurring");
 
             TopMost = true;
         }
 
         private void MyColorPicker_Disposed(object sender, EventArgs e)
         {
-            tt.RemoveAll();
+            _tt.RemoveAll();
+            _tt.Dispose();
         }
 
-        public void SetColors(int selectedColorId, string regionName, List<ArkColor> naturalColors = null)
+        public void PickColor(byte selectedColorId, string headerText, List<ArkColor> naturalColors = null, byte selectedColorIdAlternative = 0)
         {
-            label1.Text = regionName;
+            label1.Text = headerText;
             var colors = values.Values.V.Colors.colorsList;
 
             SelectedColorId = selectedColorId;
-            _naturalColorIDs = naturalColors?.Select(ac => ac.Id).ToList();
+            SelectedColorIdAlternative = selectedColorIdAlternative;
+            _naturalColorIDs = naturalColors?.Select(ac => ac.Id).ToArray();
             checkBoxOnlyNatural.Visible = _naturalColorIDs != null;
             if (_naturalColorIDs == null)
                 checkBoxOnlyNatural.Checked = true;
@@ -54,36 +60,61 @@ namespace ARKBreedingStats.uiControls
                 int controlIndex = colorIndex - 1;
                 if (flowLayoutPanel1.Controls.Count <= controlIndex)
                 {
-                    Panel np = new Panel
+                    var np = new NoPaddingButton
                     {
-                        Width = 40,
-                        Height = 20
+                        Width = 44,
+                        Height = 24,
+                        Margin = new Padding(0)
                     };
                     np.Click += ColorChosen;
                     flowLayoutPanel1.Controls.Add(np);
                 }
-                Panel p = flowLayoutPanel1.Controls[controlIndex] as Panel;
-                p.BackColor = colors[colorIndex].Color;
-                p.Tag = colors[colorIndex].Id;
-                p.BorderStyle = SelectedColorId == colors[colorIndex].Id ? BorderStyle.Fixed3D : BorderStyle.None;
-                p.Visible = ColorVisible(colors[colorIndex].Id);
-                tt.SetToolTip(p, colors[colorIndex].Id + ": " + colors[colorIndex].Name);
+
+                if (flowLayoutPanel1.Controls[controlIndex] is NoPaddingButton bt)
+                {
+                    bt.Visible = ColorVisible(colors[colorIndex].Id);
+                    bt.Selected = SelectedColorId == colors[colorIndex].Id;
+                    bt.SelectedAlternative = SelectedColorIdAlternative == colors[colorIndex].Id;
+                    bt.SetBackColorAndAccordingForeColor(colors[colorIndex].Color);
+                    bt.Tag = colors[colorIndex].Id;
+                    bt.Text = colors[colorIndex].Id.ToString();
+                    _tt.SetToolTip(bt, colors[colorIndex].Id + ": " + colors[colorIndex].Name);
+                }
             }
 
             flowLayoutPanel1.ResumeLayout();
             isShown = true;
         }
 
-        private bool ColorVisible(int id) => !checkBoxOnlyNatural.Checked || (_naturalColorIDs?.Contains(id) ?? true);
+        private bool ColorVisible(byte id) => !checkBoxOnlyNatural.Checked || (_naturalColorIDs?.Contains(id) ?? true);
 
         /// <summary>
         /// Color was chosen and saved in the property SelectedColorId. Window then will be hidden.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ColorChosen(object sender, EventArgs e)
         {
-            SelectedColorId = (int)((Control)sender).Tag;
+            if ((ModifierKeys & Keys.Control) != 0)
+            {
+                // only set alternative color
+                SelectedColorIdAlternative = (byte)((Control)sender).Tag;
+
+                foreach (var ct in flowLayoutPanel1.Controls)
+                {
+                    if (ct is NoPaddingButton bt)
+                    {
+                        var selectedColorIdAlternative = SelectedColorIdAlternative == (byte)bt.Tag;
+                        if (bt.SelectedAlternative != selectedColorIdAlternative)
+                        {
+                            bt.SelectedAlternative = selectedColorIdAlternative;
+                            bt.Invalidate();
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            SelectedColorId = (byte)((Control)sender).Tag;
             HideWindow(true);
         }
 
@@ -123,8 +154,54 @@ namespace ARKBreedingStats.uiControls
         {
             flowLayoutPanel1.SuspendLayout();
             for (int c = 0; c < flowLayoutPanel1.Controls.Count; c++)
-                flowLayoutPanel1.Controls[c].Visible = ColorVisible((int)flowLayoutPanel1.Controls[c].Tag);
+                flowLayoutPanel1.Controls[c].Visible = ColorVisible((byte)flowLayoutPanel1.Controls[c].Tag);
             flowLayoutPanel1.ResumeLayout();
+        }
+
+        private class NoPaddingButton : Button
+        {
+            public bool Selected { get; set; }
+            public bool SelectedAlternative { get; set; }
+
+            protected override void OnPaint(PaintEventArgs pe)
+            {
+                pe.Graphics.Clear(SystemColors.Control);
+
+                var defaultVisibleRectangle = ClientRectangle;
+                defaultVisibleRectangle.Inflate(-3, -3);
+                using (var b = new SolidBrush(BackColor))
+                    pe.Graphics.FillRectangle(b, defaultVisibleRectangle);
+
+                if (Selected)
+                {
+                    using (var p = new Pen(Color.Black, 2))
+                    {
+                        defaultVisibleRectangle.Inflate(2, 2);
+                        pe.Graphics.DrawRectangle(p, defaultVisibleRectangle);
+                        p.Color = Color.White;
+                        defaultVisibleRectangle.Inflate(-2, -2);
+                        pe.Graphics.DrawRectangle(p, defaultVisibleRectangle);
+                    }
+                }
+                else if (SelectedAlternative)
+                {
+                    using (var p = new Pen(Color.Red, 2))
+                    {
+                        defaultVisibleRectangle.Inflate(2, 2);
+                        pe.Graphics.DrawRectangle(p, defaultVisibleRectangle);
+                        p.Color = Color.White;
+                        defaultVisibleRectangle.Inflate(-2, -2);
+                        pe.Graphics.DrawRectangle(p, defaultVisibleRectangle);
+                    }
+                }
+
+                if (string.IsNullOrEmpty(Text)) return;
+                StringFormat stringFormat = new StringFormat();
+                stringFormat.Alignment = StringAlignment.Center;
+                stringFormat.LineAlignment = StringAlignment.Center;
+                using (var b = new SolidBrush(ForeColor))
+                    pe.Graphics.DrawString(Text, Font, b, ClientRectangle, stringFormat);
+            }
         }
     }
 }

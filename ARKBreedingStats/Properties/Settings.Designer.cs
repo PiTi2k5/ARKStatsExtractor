@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -517,6 +517,18 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["TribeNameLocked"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ServerNameLocked {
+            get {
+                return ((bool)(this["ServerNameLocked"]));
+            }
+            set {
+                this["ServerNameLocked"] = value;
             }
         }
         
@@ -1163,9 +1175,9 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int FilterOnlyIfColorId {
+        public byte FilterOnlyIfColorId {
             get {
-                return ((int)(this["FilterOnlyIfColorId"]));
+                return ((byte)(this["FilterOnlyIfColorId"]));
             }
             set {
                 this["FilterOnlyIfColorId"] = value;
@@ -1353,13 +1365,13 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("330")]
-        public int InfoGraphicWidth {
+        [global::System.Configuration.DefaultSettingValueAttribute("180")]
+        public int InfoGraphicHeight {
             get {
-                return ((int)(this["InfoGraphicWidth"]));
+                return ((int)(this["InfoGraphicHeight"]));
             }
             set {
-                this["InfoGraphicWidth"] = value;
+                this["InfoGraphicHeight"] = value;
             }
         }
         
@@ -1384,18 +1396,6 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["applyNamePatternOnAutoImportAlways"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastImportedSaveGame {
-            get {
-                return ((string)(this["LastImportedSaveGame"]));
-            }
-            set {
-                this["LastImportedSaveGame"] = value;
             }
         }
         
@@ -1718,6 +1718,337 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["WaitBeforeAutoLoadMs"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InfoGraphicDisplayName {
+            get {
+                return ((bool)(this["InfoGraphicDisplayName"]));
+            }
+            set {
+                this["InfoGraphicDisplayName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public string[] LibraryFilterPresets {
+            get {
+                return ((string[])(this["LibraryFilterPresets"]));
+            }
+            set {
+                this["LibraryFilterPresets"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PedigreeViewMode {
+            get {
+                return ((int)(this["PedigreeViewMode"]));
+            }
+            set {
+                this["PedigreeViewMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int PedigreeCompactViewGenerations {
+            get {
+                return ((int)(this["PedigreeCompactViewGenerations"]));
+            }
+            set {
+                this["PedigreeCompactViewGenerations"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InfoGraphicExtraRegionNames {
+            get {
+                return ((bool)(this["InfoGraphicExtraRegionNames"]));
+            }
+            set {
+                this["InfoGraphicExtraRegionNames"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PedigreeWidthLeftColum {
+            get {
+                return ((int)(this["PedigreeWidthLeftColum"]));
+            }
+            set {
+                this["PedigreeWidthLeftColum"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public int[] PedigreeListViewColumnWidths {
+            get {
+                return ((int[])(this["PedigreeListViewColumnWidths"]));
+            }
+            set {
+                this["PedigreeListViewColumnWidths"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public float PedigreeZoomFactor {
+            get {
+                return ((float)(this["PedigreeZoomFactor"]));
+            }
+            set {
+                this["PedigreeZoomFactor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public string[] TimerPresets {
+            get {
+                return ((string[])(this["TimerPresets"]));
+            }
+            set {
+                this["TimerPresets"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TamingFoodOrderByTime {
+            get {
+                return ((bool)(this["TamingFoodOrderByTime"]));
+            }
+            set {
+                this["TamingFoodOrderByTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool InfoGraphicShowStatValues {
+            get {
+                return ((bool)(this["InfoGraphicShowStatValues"]));
+            }
+            set {
+                this["InfoGraphicShowStatValues"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InfoGraphicShowRegionNamesIfNoImage {
+            get {
+                return ((bool)(this["InfoGraphicShowRegionNamesIfNoImage"]));
+            }
+            set {
+                this["InfoGraphicShowRegionNamesIfNoImage"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ChartHueMin {
+            get {
+                return ((int)(this["ChartHueMin"]));
+            }
+            set {
+                this["ChartHueMin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("120")]
+        public int ChartHueMax {
+            get {
+                return ((int)(this["ChartHueMax"]));
+            }
+            set {
+                this["ChartHueMax"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("120")]
+        public int ChartHueEvenMin {
+            get {
+                return ((int)(this["ChartHueEvenMin"]));
+            }
+            set {
+                this["ChartHueEvenMin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        public int ChartHueEvenMax {
+            get {
+                return ((int)(this["ChartHueEvenMax"]));
+            }
+            set {
+                this["ChartHueEvenMax"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("240")]
+        public int ChartHueOddMin {
+            get {
+                return ((int)(this["ChartHueOddMin"]));
+            }
+            set {
+                this["ChartHueOddMin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("320")]
+        public int ChartHueOddMax {
+            get {
+                return ((int)(this["ChartHueOddMax"]));
+            }
+            set {
+                this["ChartHueOddMax"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PatternNameToClipboardAfterManualApplication {
+            get {
+                return ((bool)(this["PatternNameToClipboardAfterManualApplication"]));
+            }
+            set {
+                this["PatternNameToClipboardAfterManualApplication"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool OnAutoImportAddToLibrary {
+            get {
+                return ((bool)(this["OnAutoImportAddToLibrary"]));
+            }
+            set {
+                this["OnAutoImportAddToLibrary"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool OCRFromClipboard {
+            get {
+                return ((bool)(this["OCRFromClipboard"]));
+            }
+            set {
+                this["OCRFromClipboard"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0, 0, 0")]
+        public global::System.Drawing.Rectangle OCRFromRectangle {
+            get {
+                return ((global::System.Drawing.Rectangle)(this["OCRFromRectangle"]));
+            }
+            set {
+                this["OCRFromRectangle"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RaisingFoodLastSelected {
+            get {
+                return ((string)(this["RaisingFoodLastSelected"]));
+            }
+            set {
+                this["RaisingFoodLastSelected"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool BreedingPlanDontSuggestOverLimitOffspring {
+            get {
+                return ((bool)(this["BreedingPlanDontSuggestOverLimitOffspring"]));
+            }
+            set {
+                this["BreedingPlanDontSuggestOverLimitOffspring"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PlayerListSortColumn {
+            get {
+                return ((int)(this["PlayerListSortColumn"]));
+            }
+            set {
+                this["PlayerListSortColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PlayerListSortAsc {
+            get {
+                return ((bool)(this["PlayerListSortAsc"]));
+            }
+            set {
+                this["PlayerListSortAsc"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public int[] PlayerListColumnWidths {
+            get {
+                return ((int[])(this["PlayerListColumnWidths"]));
+            }
+            set {
+                this["PlayerListColumnWidths"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public int[] PlayerListColumnDisplayIndices {
+            get {
+                return ((int[])(this["PlayerListColumnDisplayIndices"]));
+            }
+            set {
+                this["PlayerListColumnDisplayIndices"] = value;
             }
         }
     }

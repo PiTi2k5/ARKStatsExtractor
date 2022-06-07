@@ -1,7 +1,6 @@
 ﻿using ARKBreedingStats.Library;
 using ARKBreedingStats.miscClasses;
 using ARKBreedingStats.species;
-using ARKBreedingStats.utils;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
@@ -35,6 +34,7 @@ namespace ARKBreedingStats
         public int LevelWildSum;
         public int LevelDomSum;
         private MinMaxDouble _imprintingBonusRange;
+        public bool ResultWasSortedOutBecauseOfImpossibleTe { private set; get; }
 
         public Extraction()
         {
@@ -64,6 +64,7 @@ namespace ARKBreedingStats
             }
             ValidResults = false;
             UniqueResults = false;
+            ResultWasSortedOutBecauseOfImpossibleTe = false;
             StatsWithTE.Clear();
             _imprintingBonusRange = new MinMaxDouble(0);
             ImprintingBonus = 0;
@@ -92,13 +93,14 @@ namespace ARKBreedingStats
         /// <param name="imprintingChanged"></param>
         public void ExtractLevels(Species species, int level, List<StatIO> statIOs, double lowerTEBound, double upperTEBound,
             bool tamed, bool bred, double imprintingBonusRounded, bool adjustImprinting, bool allowMoreThanHundredImprinting, double imprintingBonusMultiplier,
-            bool considerWildLevelSteps, int wildLevelSteps, bool highPrecisionInputs, out bool imprintingChanged)
+            bool considerWildLevelSteps, int wildLevelSteps, bool highPrecisionInputs, bool mutagenApplied, out bool imprintingChanged)
         {
             var stats = species.stats;
             ValidResults = true;
             imprintingChanged = false;
             considerWildLevelSteps = considerWildLevelSteps
                 && !bred
+                && !mutagenApplied
                 && species.name.Substring(0, 3) != "Tek"
                 && species.name != "Jerboa"
                 ;
@@ -265,6 +267,7 @@ namespace ARKBreedingStats
                         continue;
                     }
 
+                    bool resultWasSortedOutBecauseOfImpossibleTe = false;
                     for (int lw = minLW; lw < maxLW + 1; lw++)
                     {
                         // imprinting bonus is applied to all stats except stamina (s==1) and oxygen (s==2) and speed (s==6)
@@ -309,29 +312,41 @@ namespace ARKBreedingStats
 
                                 if (!bred)
                                 {
-                                    // check if the totalLevel and the TE is possible by using the TE-levelbonus (credits for this check which sorts out more impossible results: https://github.com/VolatilePulse , thanks!)
-                                    int levelPostTame = LevelWildSum + 1;
-                                    MinMaxInt levelPreTameRange = new MinMaxInt(Creature.CalculatePreTameWildLevel(levelPostTame, tamingEffectiveness.Max),
-                                                                           Creature.CalculatePreTameWildLevel(levelPostTame, tamingEffectiveness.Min));
+                                    // check if the total level and the TE is possible by using the TE-level bonus (credits for this check which sorts out more impossible results: https://github.com/VolatilePulse , thanks!)
+                                    // if mutagen is applied, a fixed number of wild levels is added to specific stats
+                                    int levelPostTame = LevelWildSum + 1 - (mutagenApplied ? ArkConstants.MutagenLevelsAppliedTamedCreature : 0);
+                                    MinMaxInt levelPreTameRange = new MinMaxInt(
+                                        Creature.CalculatePreTameWildLevel(levelPostTame, tamingEffectiveness.Max),
+                                        Creature.CalculatePreTameWildLevel(levelPostTame, tamingEffectiveness.Min));
 
                                     bool impossibleTE = true;
-                                    for (int wildLevel = levelPreTameRange.Min; wildLevel <= levelPreTameRange.Max; wildLevel++)
+                                    for (int wildLevel = levelPreTameRange.Min;
+                                        wildLevel <= levelPreTameRange.Max;
+                                        wildLevel++)
                                     {
-                                        MinMaxInt levelPostTameRange = new MinMaxInt((int)Math.Floor(wildLevel * (1 + tamingEffectiveness.Min / 2)),
-                                                                                (int)Math.Floor(wildLevel * (1 + tamingEffectiveness.Max / 2)));
+                                        MinMaxInt levelPostTameRange = new MinMaxInt(
+                                            (int)Math.Floor(wildLevel * (1 + tamingEffectiveness.Min / 2)),
+                                            (int)Math.Floor(wildLevel * (1 + tamingEffectiveness.Max / 2)));
                                         if (levelPostTameRange.Includes(levelPostTame))
                                         {
                                             impossibleTE = false;
                                             break;
                                         }
                                     }
-                                    if (impossibleTE) continue;
+
+                                    if (impossibleTE)
+                                    {
+                                        resultWasSortedOutBecauseOfImpossibleTe = true;
+                                        continue;
+                                    }
 
                                     // test if TE with torpor-level of tamed-creatures results in a valid wild-level according to the possible levelSteps
                                     if (considerWildLevelSteps)
                                     {
                                         bool validWildLevel = false;
-                                        for (int wildLevel = levelPreTameRange.Min; wildLevel <= levelPreTameRange.Max; wildLevel++)
+                                        for (int wildLevel = levelPreTameRange.Min;
+                                            wildLevel <= levelPreTameRange.Max;
+                                            wildLevel++)
                                         {
                                             if (wildLevel % wildLevelSteps == 0)
                                             {
@@ -339,6 +354,7 @@ namespace ARKBreedingStats
                                                 break;
                                             }
                                         }
+
                                         if (!validWildLevel) continue;
                                     }
 
@@ -362,6 +378,10 @@ namespace ARKBreedingStats
                             }
                         }
                     }
+
+                    if (resultWasSortedOutBecauseOfImpossibleTe && !Results[s].Any())
+                        ResultWasSortedOutBecauseOfImpossibleTe = true;
+
                 }
                 if (bred)
                 {
@@ -762,9 +782,16 @@ namespace ARKBreedingStats
             }
         }
 
-        public double UniqueTE()
+        /// <summary>
+        /// Returns the taming effectiveness for the selected stat levels.
+        /// A value =&gt;0 is a valid value.
+        /// -1 indicates the TE cannot be determined.
+        /// -2 indicates the TE of the stats that use it is different, i.e. there's an issue with the stat values.
+        /// </summary>
+        /// <returns></returns>
+        public double UniqueTamingEffectiveness()
         {
-            double eff = -2;
+            double eff = -1;
             if (StatsWithTE.Any() && Results[StatsWithTE[0]].Count > ChosenResults[StatsWithTE[0]])
             {
                 for (int s = 0; s < StatsWithTE.Count; s++)
@@ -776,7 +803,7 @@ namespace ARKBreedingStats
                             || !MinMaxDouble.Overlaps(Results[StatsWithTE[s]][ChosenResults[StatsWithTE[s]]].TE,
                                                       Results[StatsWithTE[ss]][ChosenResults[StatsWithTE[ss]]].TE))
                         {
-                            return -1; // no unique TE
+                            return -2; // no unique TE
                         }
                     }
                 }

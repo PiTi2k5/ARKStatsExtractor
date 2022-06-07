@@ -461,14 +461,11 @@ Les niveaux sont ensuite affichés sans le processus d'extraction (et sans valid
   <data name="importingFromARKToolsToolStripMenuItem" xml:space="preserve">
     <value>Importer à partir d'ARK-Tools</value>
   </data>
-  <data name="importValuesFromClipboardToolStripMenuItem" xml:space="preserve">
-    <value>Importer les valeurs du pressse-papier</value>
-  </data>
   <data name="imprintingBonus" xml:space="preserve">
     <value>Bonus d'élevage</value>
   </data>
   <data name="issueMaxWildLevelTooLow" xml:space="preserve">
-    <value>L'extraction est potentiellement possible, mais il semble que le niveau sauvage max soit trop bas pour une extraction valide. Vérifiez si vous avez défini la valeur correcte dans les paramètres.
+    <value>L'extraction est potentiellement possible, mais il semble que le niveau sauvage maximum soit trop bas pour une extraction valide. Vérifiez si vous avez défini la valeur correcte dans les paramètres.
 La valeur actuelle est {0} et cette créature semble avoir un niveau sauvage supérieur à celui-ci.
 Pour d'autres raisons de l'échec de l'extraction, voir la liste sur la droite après avoir fermé cette boîte de message.</value>
   </data>
@@ -1002,7 +999,7 @@ Certaines progénitures peuvent être moins bonnes qu'en mode Statistiques Elev�
   <data name="na" xml:space="preserve">
     <value>n/a</value>
   </data>
-  <data name="showOnlyNaturalOccuring" xml:space="preserve">
+  <data name="showOnlyNaturalOccurring" xml:space="preserve">
     <value>N'afficher que les couleurs naturelles</value>
   </data>
   <data name="apply" xml:space="preserve">
@@ -1124,7 +1121,7 @@ Le préréglage peut être appliqué par le bouton Appliquer le préréglage</va
     <value>Définir les valeurs pour le Propriétaire, la Tribu et le Serveur à partir du préréglage enregistré</value>
   </data>
   <data name="noColor" xml:space="preserve">
-    <value>sans couleur</value>
+    <value>aucune couleur</value>
   </data>
   <data name="topLevel" xml:space="preserve">
     <value>meilleur niveau</value>
@@ -1136,7 +1133,8 @@ Le préréglage peut être appliqué par le bouton Appliquer le préréglage</va
     <value>effacer les couleurs</value>
   </data>
   <data name="holdCtrlForRandomColors" xml:space="preserve">
-    <value>Maintenez Ctrl pour des couleurs aléatoires</value>
+    <value>Maintenez Ctrl pour des couleurs naturelles aléatoires
+Maintenez Ctrl + Shift pour des couleurs aléatoires</value>
   </data>
   <data name="BtBeepFailure" xml:space="preserve">
     <value>échec de l'importation</value>
@@ -1240,6 +1238,9 @@ Le préréglage peut être appliqué par le bouton Appliquer le préréglage</va
   <data name="SystemLanguage" xml:space="preserve">
     <value>Langue du système</value>
   </data>
+  <data name="max wild level" xml:space="preserve">
+    <value>niveau sauvage maximum</value>
+  </data>
   <data name="Levels" xml:space="preserve">
     <value>Niveaux</value>
   </data>
@@ -1299,5 +1300,35 @@ Filtre pour les couleurs avec c{region}: {colorValue} {colorValue2}, par exemple
   </data>
   <data name="Add Note" xml:space="preserve">
     <value>Ajouter une remarque</value>
+  </data>
+  <data name="maxLevelForLevelUp" xml:space="preserve">
+    <value>niveau maximum qui permet des augmentations de niveau d'apprivoisement</value>
+  </data>
+  <data name="maxLevelSaved" xml:space="preserve">
+    <value>niveau sauvage maximum qui sera sauvegardé</value>
+  </data>
+  <data name="ultraMaxLevel" xml:space="preserve">
+    <value>Attention : Le niveau est supérieur à la valeur maximale possible et ne sera pas sauvegardé.</value>
+  </data>
+  <data name="issueCauseImpossibleTe" xml:space="preserve">
+    <value>Le niveau se traduit par une efficacité d'apprivoisement impossible. Avez-vous saisi les niveaux arbitrairement ? Cela pourrait fonctionner si vous configurez la créature pour se reproduire.</value>
+  </data>
+  <data name="generations" xml:space="preserve">
+    <value>générations</value>
+  </data>
+  <data name="copyInfoGraphicToClipboard" xml:space="preserve">
+    <value>Copier le graphique d'informations dans le presse-papiers</value>
+  </data>
+  <data name="Nursing Effectiveness" xml:space="preserve">
+    <value>Efficacité de l'allaitement</value>
+  </data>
+  <data name="Nursing Effectiveness_Abb" xml:space="preserve">
+    <value>EA</value>
+  </data>
+  <data name="lbServerTT" xml:space="preserve">
+    <value>Cliquer pour basculer le gel de ce champ. Si le champ est gelé, son arrière-plan est gris et l'importation d'une créature ne mettra pas ce champ à jour.</value>
+  </data>
+  <data name="LbAlternativeColor" xml:space="preserve">
+    <value>Maintenir la touche Ctrl enfoncée pour sélectionner un autre identifiant de couleur (bordure rouge). Maintenir Ctrl et cliquer sur aucune couleur pour le désactiver.</value>
   </data>
 </root>

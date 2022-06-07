@@ -15,26 +15,32 @@ namespace ARKBreedingStats.importExported
         public event ExportedCreatureControl.CheckArkIdInLibraryEventHandler CheckArkIdInLibrary;
         public delegate void CheckForUnknownModsEventHandler(List<string> unknownSpeciesBlueprintPaths);
         public event CheckForUnknownModsEventHandler CheckForUnknownMods;
+        public event Action<string> AddFolderToPresets;
 
-        private List<ExportedCreatureControl> eccs;
-        private string selectedFolder;
+        /// <summary>
+        /// Call this before and after a bulk import to (not) update the visuals to the last imported creature.
+        /// </summary>
+        public event Action<bool> UpdateVisualData;
+
+        private List<ExportedCreatureControl> _eccs;
+        private string _selectedFolder;
         public string ownerSuffix;
-        private List<string> hiddenSpecies;
-        private List<ToolStripMenuItem> speciesHideItems;
-        private bool allowFiltering;
-        private EccComparer eccComparer;
+        private readonly List<string> _hiddenSpecies;
+        private readonly List<ToolStripMenuItem> _speciesHideItems;
+        private bool _allowFiltering;
+        private readonly EccComparer _eccComparer;
 
         public ExportedCreatureList()
         {
             InitializeComponent();
-            eccs = new List<ExportedCreatureControl>();
-            hiddenSpecies = new List<string>();
-            speciesHideItems = new List<ToolStripMenuItem>();
-            allowFiltering = true;
+            _eccs = new List<ExportedCreatureControl>();
+            _hiddenSpecies = new List<string>();
+            _speciesHideItems = new List<ToolStripMenuItem>();
+            _allowFiltering = true;
 
             FormClosing += ExportedCreatureList_FormClosing;
 
-            eccComparer = new EccComparer();
+            _eccComparer = new EccComparer();
 
             // TODO implement
             loadServerSettingsOfFolderToolStripMenuItem.Visible = false;
@@ -76,10 +82,10 @@ namespace ARKBreedingStats.importExported
         /// <param name="folderPath"></param>
         public void LoadFilesInFolder(string folderPath = null)
         {
-            if (string.IsNullOrEmpty(folderPath)) folderPath = selectedFolder;
+            if (string.IsNullOrEmpty(folderPath)) folderPath = _selectedFolder;
             if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return;
 
-            selectedFolder = folderPath;
+            _selectedFolder = folderPath;
 
             string[] files = Directory.GetFiles(folderPath, "*dinoexport*.ini");
             // check if there are many files to import, then ask because that can take time
@@ -93,9 +99,9 @@ namespace ARKBreedingStats.importExported
 
             SuspendLayout();
             ClearControls();
-            hiddenSpecies.Clear();
-            foreach (var i in speciesHideItems) i.Dispose();
-            speciesHideItems.Clear();
+            _hiddenSpecies.Clear();
+            foreach (var i in _speciesHideItems) i.Dispose();
+            _speciesHideItems.Clear();
 
             List<string> unknownSpeciesBlueprintPaths = new List<string>();
             List<string> ignoreSpeciesBlueprintPaths = new List<string>();
@@ -110,9 +116,9 @@ namespace ARKBreedingStats.importExported
                     ecc.CheckArkIdInLibrary += CheckArkIdInLibrary;
                     ecc.DisposeThis += Ecc_DisposeIt;
                     ecc.DoCheckArkIdInLibrary();
-                    eccs.Add(ecc);
-                    if (!string.IsNullOrEmpty(ecc.creatureValues.Species?.name) && !hiddenSpecies.Contains(ecc.creatureValues.Species.name))
-                        hiddenSpecies.Add(ecc.creatureValues.Species.name);
+                    _eccs.Add(ecc);
+                    if (!string.IsNullOrEmpty(ecc.creatureValues.Species?.name) && !_hiddenSpecies.Contains(ecc.creatureValues.Species.name))
+                        _hiddenSpecies.Add(ecc.creatureValues.Species.name);
                 }
                 else if (!string.IsNullOrEmpty(ecc.speciesBlueprintPath))
                 {
@@ -134,8 +140,8 @@ namespace ARKBreedingStats.importExported
 
             OrderList();
 
-            hiddenSpecies.Sort();
-            foreach (var s in hiddenSpecies)
+            _hiddenSpecies.Sort();
+            foreach (var s in _hiddenSpecies)
             {
                 var item = new ToolStripMenuItem(s)
                 {
@@ -144,9 +150,9 @@ namespace ARKBreedingStats.importExported
                 };
                 item.Click += ItemHideSpecies_Click;
                 filterToolStripMenuItem.DropDownItems.Add(item);
-                speciesHideItems.Add(item);
+                _speciesHideItems.Add(item);
             }
-            hiddenSpecies.Clear();
+            _hiddenSpecies.Clear();
 
             Text = "Exported creatures in " + Utils.ShortPath(folderPath, 100);
             UpdateStatusBarLabelAndControls();
@@ -167,19 +173,19 @@ namespace ARKBreedingStats.importExported
             var i = (ToolStripMenuItem)sender;
             if (i.Checked)
             {
-                hiddenSpecies.Remove(i.Text);
+                _hiddenSpecies.Remove(i.Text);
             }
             else
             {
-                if (!hiddenSpecies.Contains(i.Text))
-                    hiddenSpecies.Add(i.Text);
+                if (!_hiddenSpecies.Contains(i.Text))
+                    _hiddenSpecies.Add(i.Text);
             }
             FilterList();
         }
 
         private void ClearControls()
         {
-            eccs.Clear();
+            _eccs.Clear();
             SuspendLayout();
             try
             {
@@ -201,9 +207,9 @@ namespace ARKBreedingStats.importExported
                 hiddenCreatures = 0,
                 totalFiles = 0;
 
-            eccs = eccs.Where(ecc => !ecc.IsDisposed).ToList();
+            _eccs = _eccs.Where(ecc => !ecc.IsDisposed).ToList();
 
-            foreach (var ecc in eccs)
+            foreach (var ecc in _eccs)
             {
                 totalFiles++;
                 if (!ecc.Visible) hiddenCreatures++;
@@ -216,12 +222,12 @@ namespace ARKBreedingStats.importExported
                 }
             }
 
-            toolStripStatusLabel1.Text = totalFiles.ToString() + " total files"
-                + (hiddenCreatures > 0 ? " (" + hiddenCreatures.ToString() + " of them hidden)" : "") + ". "
-                + (notImported + issuesWhileImporting).ToString() + " not imported, "
-                + issuesWhileImporting.ToString() + " of these need manual level selection. "
-                + justImported.ToString() + " just imported. "
-                + oldImported.ToString() + " old imported.";
+            toolStripStatusLabel1.Text = totalFiles + " total files"
+                + (hiddenCreatures > 0 ? " (" + hiddenCreatures + " of them hidden)" : "") + ". "
+                + (notImported + issuesWhileImporting) + " not imported, "
+                + issuesWhileImporting + " of these need manual level selection. "
+                + justImported + " just imported. "
+                + oldImported + " old imported.";
 
         }
 
@@ -246,18 +252,20 @@ namespace ARKBreedingStats.importExported
         private void ImportAll(bool onlyUnimported)
         {
             // check if there are many creatures to import, then ask because that can take time
-            if (eccs.Count(c => c.Visible) > 50 &&
-                    MessageBox.Show($"There are many creature-files to import ({eccs.Count}) which can take some time.\n" +
+            if (_eccs.Count(c => c.Visible) > 50 &&
+                    MessageBox.Show($"There are many creature-files to import ({_eccs.Count}) which can take some time.\n" +
                             "Do you really want to import all these creature at once?",
                             "Many creatures to import", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
 
-            foreach (var ecc in eccs)
+            UpdateVisualData?.Invoke(false);
+            foreach (var ecc in _eccs)
             {
                 if (ecc.Visible
                     && (!onlyUnimported || ecc.Status == ExportedCreatureControl.ImportStatus.NotImported))
-                    ecc.extractAndAddToLibrary(goToLibrary: false);
+                    ecc.extractAndAddToLibrary(false);
             }
             UpdateStatusBarLabelAndControls();
+            UpdateVisualData?.Invoke(true);
         }
 
         private void deleteAllImportedFilesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -272,7 +280,7 @@ namespace ARKBreedingStats.importExported
             if (suppressMessages || MessageBox.Show("Move all exported files in the current folder that are already imported in this library to the subfolder \"imported\"?",
                     "Move imported files?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                string importedPath = Path.Combine(selectedFolder, "imported");
+                string importedPath = Path.Combine(_selectedFolder, "imported");
                 if (!FileService.TryCreateDirectory(importedPath, out string errorMessage))
                 {
                     MessageBoxes.ShowMessageBox($"Subfolder\n{importedPath}\ncould not be created.\n{errorMessage}");
@@ -280,7 +288,7 @@ namespace ARKBreedingStats.importExported
                 }
 
                 int movedFilesCount = 0;
-                foreach (var ecc in eccs)
+                foreach (var ecc in _eccs)
                 {
                     if (ecc.Status == ExportedCreatureControl.ImportStatus.JustImported || ecc.Status == ExportedCreatureControl.ImportStatus.OldImported)
                     {
@@ -319,7 +327,7 @@ namespace ARKBreedingStats.importExported
                     "Delete imported files?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 int deletedFilesCount = 0;
-                foreach (var ecc in eccs)
+                foreach (var ecc in _eccs)
                 {
                     if (ecc.Status == ExportedCreatureControl.ImportStatus.JustImported || ecc.Status == ExportedCreatureControl.ImportStatus.OldImported)
                     {
@@ -350,7 +358,7 @@ namespace ARKBreedingStats.importExported
                     "Delete ALL files?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 int deletedFilesCount = 0;
-                foreach (ExportedCreatureControl ecc in eccs)
+                foreach (ExportedCreatureControl ecc in _eccs)
                 {
                     if (ecc.RemoveFile(false))
                     {
@@ -389,8 +397,8 @@ namespace ARKBreedingStats.importExported
 
         private void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(selectedFolder) && Directory.Exists(selectedFolder))
-                System.Diagnostics.Process.Start(selectedFolder);
+            if (!string.IsNullOrEmpty(_selectedFolder) && Directory.Exists(_selectedFolder))
+                System.Diagnostics.Process.Start(_selectedFolder);
         }
 
         private void toolStripCbHideImported_Click(object sender, EventArgs e)
@@ -400,14 +408,14 @@ namespace ARKBreedingStats.importExported
 
         private void FilterList()
         {
-            if (!allowFiltering) return;
+            if (!_allowFiltering) return;
 
             SuspendLayout();
-            foreach (var ecc in eccs)
+            foreach (var ecc in _eccs)
             {
                 if ((!showImportedCreaturesToolStripMenuItem.Checked &&
                     (ecc.Status == ExportedCreatureControl.ImportStatus.JustImported || ecc.Status == ExportedCreatureControl.ImportStatus.OldImported))
-                    || (!string.IsNullOrEmpty(ecc.creatureValues.Species?.name) && hiddenSpecies.Contains(ecc.creatureValues.Species.name)))
+                    || (!string.IsNullOrEmpty(ecc.creatureValues.Species?.name) && _hiddenSpecies.Contains(ecc.creatureValues.Species.name)))
                 {
                     ecc.Hide();
                 }
@@ -425,16 +433,16 @@ namespace ARKBreedingStats.importExported
         /// </summary>
         private void OrderList()
         {
-            eccs.Sort(eccComparer);
+            _eccs.Sort(_eccComparer);
 
-            foreach (var ecc in eccs)
+            foreach (var ecc in _eccs)
                 panel1.Controls.Add(ecc);
 
             // update button order index
             for (int i = 0; i < 5; i++)
             {
-                string text = (i + 1).ToString() + ". " + (eccComparer.OrderOrderList[i] ? "⯅" : "⯆") + " ";
-                switch (eccComparer.OrderPropertyList[i])
+                string text = (i + 1).ToString() + ". " + (_eccComparer.OrderOrderList[i] ? "⯅" : "⯆") + " ";
+                switch (_eccComparer.OrderPropertyList[i])
                 {
                     case OrderProperties.CreatureName:
                         creatureNameToolStripMenuItem1.Text = text + "Creature name";
@@ -463,15 +471,15 @@ namespace ARKBreedingStats.importExported
 
         private void filterAllSpeciestoolStripMenuItem_Click(object sender, EventArgs e)
         {
-            allowFiltering = false;
-            hiddenSpecies.Clear();
+            _allowFiltering = false;
+            _hiddenSpecies.Clear();
             bool check = ((ToolStripMenuItem)sender).Checked;
-            foreach (var i in speciesHideItems)
+            foreach (var i in _speciesHideItems)
             {
                 i.Checked = check;
-                if (!check) hiddenSpecies.Add(i.Text);
+                if (!check) _hiddenSpecies.Add(i.Text);
             }
-            allowFiltering = true;
+            _allowFiltering = true;
             FilterList();
         }
 
@@ -481,7 +489,7 @@ namespace ARKBreedingStats.importExported
         /// <param name="exportTime"></param>
         private void UpdateOrderLists(OrderProperties orderProperty)
         {
-            eccComparer.UpdateOrderList(orderProperty);
+            _eccComparer.UpdateOrderList(orderProperty);
             OrderList();
         }
 
@@ -513,6 +521,12 @@ namespace ARKBreedingStats.importExported
         private void refreshListToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadFilesInFolder();
+        }
+
+        private void saveCurrentFolderInMainMenuToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedFolder) && Directory.Exists(_selectedFolder))
+                AddFolderToPresets?.Invoke(_selectedFolder);
         }
     }
 
@@ -558,7 +572,7 @@ namespace ARKBreedingStats.importExported
                 case OrderProperties.CreatureName:
                     result = string.Compare(a.creatureValues.name, b.creatureValues.name); break;
                 case OrderProperties.Species:
-                    result = string.Compare(a.creatureValues.speciesName, b.creatureValues.speciesName); break;
+                    result = string.Compare(a.creatureValues.Species?.name, b.creatureValues.Species?.name); break;
                 case OrderProperties.OwnerName:
                     result = string.Compare(a.creatureValues.owner, b.creatureValues.owner); break;
                 case OrderProperties.ImportStatus:

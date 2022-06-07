@@ -2,6 +2,7 @@
 using ARKBreedingStats.values;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 
 namespace ARKBreedingStats.Library
 {
@@ -16,11 +17,6 @@ namespace ARKBreedingStats.Library
         /// </summary>
         [JsonProperty]
         internal string speciesBlueprint;
-        /// <summary>
-        /// Used for displaying the speciesName
-        /// </summary>
-        [JsonProperty]
-        internal string speciesName;
         private Species _species;
         [JsonProperty]
         public Guid guid;
@@ -45,7 +41,7 @@ namespace ARKBreedingStats.Library
         [JsonProperty]
         public int[] levelsDom = new int[Values.STATS_COUNT];
         [JsonProperty]
-        public int level = 0;
+        public int level;
         [JsonProperty]
         public double tamingEffMin, tamingEffMax;
         [JsonProperty]
@@ -53,13 +49,15 @@ namespace ARKBreedingStats.Library
         [JsonProperty]
         public bool isTamed, isBred;
         [JsonProperty]
-        public string owner = "";
+        public string owner;
         [JsonProperty]
-        public string imprinterName = "";
+        public string imprinterName;
         [JsonProperty]
-        public string tribe = "";
+        public string tribe;
         [JsonProperty]
-        public string server = "";
+        public string server;
+        [JsonProperty]
+        public string note;
         [JsonProperty]
         public long fatherArkId; // used when importing creatures, parents are indicated by this id
         [JsonProperty]
@@ -80,8 +78,26 @@ namespace ARKBreedingStats.Library
         public CreatureFlags flags;
         [JsonProperty]
         public int mutationCounter, mutationCounterMother, mutationCounterFather;
-        [JsonProperty]
-        public int[] colorIDs = new int[6];
+        [JsonIgnore]
+        public byte[] colorIDs = new byte[species.Species.ColorRegionCount];
+        [JsonProperty("colorIDs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        private int[] colorIDsSerialization
+        {
+            set => colorIDs = value?.Select(i => (byte)i).ToArray();
+            get => colorIDs?.Select(i => (int)i).ToArray();
+        }
+        /// <summary>
+        /// Some color ids cannot be determined uniquely because of equal color values.
+        /// If this property is set it contains the other possible color ids.
+        /// </summary>
+        [JsonIgnore]
+        public byte[] ColorIdsAlsoPossible;
+        [JsonProperty("altCol", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        private int[] ColorIdsAlsoPossibleSerialization
+        {
+            set => ColorIdsAlsoPossible = value?.Select(i => (byte)i).ToArray();
+            get => ColorIdsAlsoPossible?.Select(i => (int)i).ToArray();
+        }
 
         public CreatureValues() { }
 
@@ -136,7 +152,6 @@ namespace ARKBreedingStats.Library
                 if (value != null)
                 {
                     speciesBlueprint = value.blueprintPath;
-                    speciesName = value.name;
                 }
             }
             get

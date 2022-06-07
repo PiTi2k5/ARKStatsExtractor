@@ -53,6 +53,7 @@ namespace ARKBreedingStats.NamePatterns
             _customReplacings = customReplacings;
             _reloadCallback = reloadCallback;
             txtboxPattern.Text = Properties.Settings.Default.NamingPatterns?[namingPatternIndex] ?? string.Empty;
+            CbPatternNameToClipboardAfterManualApplication.Checked = Properties.Settings.Default.PatternNameToClipboardAfterManualApplication;
             txtboxPattern.SelectionStart = txtboxPattern.Text.Length;
 
             Text = $"Naming Pattern Editor: pattern {(namingPatternIndex + 1)}";
@@ -409,6 +410,8 @@ namespace ARKBreedingStats.NamePatterns
 
         public string NamePattern => txtboxPattern.Text;
 
+        public bool PatternNameToClipboardAfterManualApplication => CbPatternNameToClipboardAfterManualApplication.Checked;
+
         private static Dictionary<string, string> PatternExplanations(Dictionary<string, string> customStatNames) => new Dictionary<string, string>()
             {
                 { "species", "species name" },
@@ -466,7 +469,9 @@ namespace ARKBreedingStats.NamePatterns
 
                 { "topPercent", "Percentage of the considered stat levels compared to the top levels of the species in the library" },
                 { "baselvl", "Base-level (level without manually added ones), i.e. level right after taming / hatching" },
-                { "muta", "Mutations. Numbers larger than 99 will be displayed as 99" },
+                { "muta", "Mutations" },
+                { "mutam", "maternal mutations" },
+                { "mutap", "paternal mutations" },
                 { "gen", "Generation" },
                 { "gena", "Generation in letters (0=A, 1=B, 26=AA, 27=AB)" },
                 { "genn", "The number of creatures with the same species and the same generation plus one" },
@@ -497,8 +502,9 @@ namespace ARKBreedingStats.NamePatterns
             {"ifexpr", "{{#ifexpr: expression | true | false }}, to check if an expression with two operands and one operator is true or false. Possible operators are ==, !=, <, <=, <, >=.\n{{#ifexpr: {topPercent} > 80 | true | false }}" },
             {"expr", "{{#expr: expression }}, simple calculation with two operands and one operator. Possible operators are +, -, *, /.\n{{#expr: {hp} * 2 }}" },
             {"len", "{{#len: string }}, returns the length of the passed string.\n{{#len: {isTophp}{isTopdm}{isTopwe} }}" },
-            {"substring","{{#substring: text | start | length }}. Length can be omitted. If start is negative it takes the characters from the end.\n{{#substring: {species} | 0 | 4 }}"},
-            {"replace","{{#replace: text | find | replaceBy }}\n{{#replace: {species} | Abberant | Ab }}"},
+            {"substring","{{#substring: text | start | length }}. Length can be omitted. If start is negative it takes the characters from the end. If length is negative it takes the characters until that position from the end\n{{#substring: {species} | 0 | 4 }}"},
+            {"replace","{{#replace: text | find | replaceBy }}\n{{#replace: {species} | Aberrant | Ab }}"},
+            {"regexreplace","{{#regexreplace: text | pattern | replaceBy }}\nUse &&lcub; instead {, &&vline; instead | and &&rcub; instead of }.\n{{#regexreplace: hp-st-we- | \\-$ | }}"},
             {"customreplace","{{#customreplace: text }}. Replaces the text with a value saved in the file customReplacings.json.\nIf a second parameter is given, that is returned if the key is not available.\n{{#customreplace: {species} }}"},
             {"float divide by","{{#float_div: number | divisor | formatString }}, can be used to display stat-values in thousands, e.g. '{{#float_div: {hp_vb} | 1000 | F2 }}kHP'.\n{{#float_div: {hp_vb} | 1000 | F2 }}"},
             {"divide by","{{#div: number | divisor }}, can be used to display stat-values in thousands, e.g. '{{#div: {hp_vb} | 1000 }}kHP'.\n{{#div: {hp_vb} | 1000 }}"},

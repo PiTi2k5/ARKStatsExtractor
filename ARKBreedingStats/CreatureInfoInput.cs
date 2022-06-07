@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using ARKBreedingStats.Ark;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.Properties;
@@ -17,6 +18,8 @@ namespace ARKBreedingStats
         public event Action<CreatureInfoInput> Add2LibraryClicked;
         public event Action<CreatureInfoInput> Save2LibraryClicked;
         public event Action<CreatureInfoInput> ParentListRequested;
+        public event Form1.SetMessageLabelTextEventHandler SetMessageLabelText;
+
         /// <summary>
         /// Check for existing color id of the given region is requested. if the region is -1, all regions are requested.
         /// </summary>
@@ -35,7 +38,8 @@ namespace ARKBreedingStats
         private Creature[] _sameSpecies;
         public List<string> NamesOfAllCreatures;
         private string[] _ownersTribes;
-        private int[] _regionColorIDs;
+        private byte[] _regionColorIDs;
+        private byte[] _colorIdsAlsoPossible;
         private bool _tribeLock, _ownerLock;
         public long MotherArkId, FatherArkId; // is only used when importing creatures with set parents. these ids are set externally after the creature data is set in the info input
         /// <summary>
@@ -51,9 +55,16 @@ namespace ARKBreedingStats
         public PictureBox PbColorRegion;
 
         /// <summary>
+        /// If false, the visualization of the colors and the image are not updated.
+        /// </summary>
+        public bool DontUpdateVisuals;
+
+        /// <summary>
         /// Displays the parents and inherited stats.
         /// </summary>
         public ParentInheritance ParentInheritance;
+
+        private Button[] ButtonsNamingPattern => new[] { btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6 };
 
         public CreatureInfoInput()
         {
@@ -67,13 +78,13 @@ namespace ARKBreedingStats
             parentComboBoxMother.SelectedIndex = 0;
             parentComboBoxFather.SelectedIndex = 0;
             _updateMaturation = true;
-            _regionColorIDs = new int[6];
+            _regionColorIDs = new byte[Species.ColorRegionCount];
             CooldownUntil = new DateTime(2000, 1, 1);
             GrowingUntil = new DateTime(2000, 1, 1);
             NamesOfAllCreatures = new List<string>();
 
-            var namingPatternButtons = new List<Button> { btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6 };
-            for (int bi = 0; bi < namingPatternButtons.Count; bi++)
+            var namingPatternButtons = ButtonsNamingPattern;
+            for (int bi = 0; bi < namingPatternButtons.Length; bi++)
             {
                 int localIndex = bi;
                 // apply naming pattern
@@ -161,6 +172,16 @@ namespace ARKBreedingStats
                 buttonSex.BackColor = Utils.SexColor(_sex);
                 _tt.SetToolTip(buttonSex, $"{Loc.S("Sex")}: {Loc.S(_sex.ToString())}");
                 cbNeutered.Text = Loc.S(_sex == Sex.Female ? "Spayed" : "Neutered");
+                if (value == Sex.Female)
+                {
+                    _creatureFlags |= CreatureFlags.Female;
+                    _creatureFlags &= ~CreatureFlags.Male;
+                }
+                else if (value == Sex.Male)
+                {
+                    _creatureFlags |= CreatureFlags.Male;
+                    _creatureFlags &= ~CreatureFlags.Female;
+                }
             }
         }
 
@@ -366,12 +387,12 @@ namespace ARKBreedingStats
         {
             set
             {
+                if (value == null) return;
                 var l = new AutoCompleteStringCollection();
                 l.AddRange(value);
                 cbServer.AutoCompleteCustomSource = l;
                 cbServer.Items.Clear();
-                foreach (string s in value)
-                    cbServer.Items.Add(s);
+                cbServer.Items.AddRange(value);
             }
         }
 
@@ -400,12 +421,16 @@ namespace ARKBreedingStats
                 if (cbNeutered.Checked)
                     _creatureFlags |= CreatureFlags.Neutered;
                 else _creatureFlags &= ~CreatureFlags.Neutered;
+                if (CbMutagen.Checked)
+                    _creatureFlags |= CreatureFlags.MutagenApplied;
+                else _creatureFlags &= ~CreatureFlags.MutagenApplied;
                 return _creatureFlags;
             }
             set
             {
                 _creatureFlags = value;
                 cbNeutered.Checked = _creatureFlags.HasFlag(CreatureFlags.Neutered);
+                CbMutagen.Checked = _creatureFlags.HasFlag(CreatureFlags.MutagenApplied);
             }
         }
 
@@ -449,17 +474,45 @@ namespace ARKBreedingStats
             }
         }
 
-        public int[] RegionColors
+        public byte[] RegionColors
         {
-            get => regionColorChooser1.ColorIDs;
+            get => DontUpdateVisuals ? _regionColorIDs : regionColorChooser1.ColorIds;
             set
             {
-                if (_selectedSpecies != null)
+                if (_selectedSpecies == null) return;
+                _regionColorIDs = (byte[])value?.Clone() ?? new byte[Species.ColorRegionCount];
+                if (DontUpdateVisuals) return;
+                regionColorChooser1.SetSpecies(_selectedSpecies, _regionColorIDs);
+                UpdateRegionColorImage();
+            }
+        }
+
+        public byte[] ColorIdsAlsoPossible
+        {
+            get
+            {
+                var arr = DontUpdateVisuals ? _colorIdsAlsoPossible : regionColorChooser1.ColorIdsAlsoPossible;
+                if (arr == null) return null;
+
+                // if array is empty, return null
+                var isEmpty = true;
+                for (int i = 0; i < arr.Length; i++)
                 {
-                    _regionColorIDs = (int[])value?.Clone() ?? new int[6];
-                    regionColorChooser1.SetSpecies(_selectedSpecies, _regionColorIDs);
-                    UpdateRegionColorImage();
+                    if (arr[i] != 0)
+                    {
+                        isEmpty = false;
+                        break;
+                    }
                 }
+
+                return isEmpty ? null : arr;
+            }
+            set
+            {
+                if (_selectedSpecies == null) return;
+                _colorIdsAlsoPossible = (byte[])value?.Clone() ?? new byte[Species.ColorRegionCount];
+                if (DontUpdateVisuals) return;
+                regionColorChooser1.ColorIdsAlsoPossible = _colorIdsAlsoPossible;
             }
         }
 
@@ -468,6 +521,7 @@ namespace ARKBreedingStats
             set
             {
                 _selectedSpecies = value;
+                if (DontUpdateVisuals) return;
                 bool breedingPossible = _selectedSpecies.breeding != null;
 
                 dhmsInputCooldown.Visible = breedingPossible;
@@ -526,14 +580,15 @@ namespace ARKBreedingStats
         public void GenerateCreatureName(Creature creature, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, bool showDuplicateNameWarning, int namingPatternIndex)
         {
             SetCreatureData(creature);
-            CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex);
+            CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex, false);
+            if (CreatureName.Length > 24)
+                SetMessageLabelText?.Invoke("The generated name is longer than 24 characters, the name will look like this in game:\n" + CreatureName.Substring(0, 24), MessageBoxIcon.Error);
         }
 
         public void OpenNamePatternEditor(Creature creature, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback)
         {
             if (!parentListValid)
                 ParentListRequested?.Invoke(this);
-            SetCreatureData(creature);
             using (var pe = new PatternEditor(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, namingPatternIndex, reloadCallback))
             {
                 if (pe.ShowDialog() == DialogResult.OK)
@@ -541,6 +596,7 @@ namespace ARKBreedingStats
                     var namingPatterns = Settings.Default.NamingPatterns ?? new string[6];
                     namingPatterns[namingPatternIndex] = pe.NamePattern;
                     Settings.Default.NamingPatterns = namingPatterns;
+                    Settings.Default.PatternNameToClipboardAfterManualApplication = pe.PatternNameToClipboardAfterManualApplication;
                 }
 
                 (Settings.Default.PatternEditorFormRectangle, _) = Utils.GetWindowRectangle(pe);
@@ -551,19 +607,27 @@ namespace ARKBreedingStats
         /// <summary>
         /// Sets the data of the given creature to the values of the controls.
         /// </summary>
-        /// <param name="cr"></param>
-        private void SetCreatureData(Creature cr)
+        public void SetCreatureData(Creature cr)
         {
-            cr.Mother = Mother;
-            cr.Father = Father;
+            cr.name = CreatureName;
             cr.sex = _sex;
-            cr.mutationsMaternal = MutationCounterMother;
-            cr.mutationsPaternal = MutationCounterFather;
             cr.owner = CreatureOwner;
             cr.tribe = CreatureTribe;
             cr.server = CreatureServer;
+            cr.note = CreatureNote;
             cr.flags = CreatureFlags;
+            cr.Status = CreatureStatus;
+            cr.Mother = Mother;
+            cr.Father = Father;
+            cr.mutationsMaternal = MutationCounterMother;
+            cr.mutationsPaternal = MutationCounterFather;
             cr.colors = RegionColors;
+            cr.ColorIdsAlsoPossible = ColorIdsAlsoPossible;
+            cr.cooldownUntil = CooldownUntil;
+            cr.growingUntil = GrowingUntil;
+            cr.domesticatedAt = DomesticatedAt;
+            cr.ArkId = ArkId;
+            cr.InitializeArkInGame();
         }
 
         private void textBoxOwner_Leave(object sender, EventArgs e)
@@ -589,6 +653,20 @@ namespace ARKBreedingStats
             {
                 _ownerLock = value;
                 textBoxOwner.BackColor = value ? Color.LightGray : SystemColors.Window;
+            }
+        }
+
+        private bool _lockServer;
+        /// <summary>
+        /// If true the importing will not change the server field.
+        /// </summary>
+        public bool LockServer
+        {
+            get => _lockServer;
+            set
+            {
+                _lockServer = value;
+                cbServer.BackColor = value ? Color.LightGray : SystemColors.Window;
             }
         }
 
@@ -634,10 +712,9 @@ namespace ARKBreedingStats
                 : Color.LightSkyBlue;
         }
 
-        private void lblOwner_Click(object sender, EventArgs e)
-        {
-            OwnerLock = !OwnerLock;
-        }
+        private void lblOwner_Click(object sender, EventArgs e) => OwnerLock = !OwnerLock;
+
+        private void lbServer_Click(object sender, EventArgs e) => LockServer = !LockServer;
 
         private void lblName_Click(object sender, EventArgs e)
         {
@@ -647,8 +724,10 @@ namespace ARKBreedingStats
 
         private void btClearColors_Click(object sender, EventArgs e)
         {
-            if ((ModifierKeys & Keys.Control) != 0)
+            if (ModifierKeys == (Keys.Control | Keys.Shift))
                 regionColorChooser1.RandomColors();
+            else if ((ModifierKeys & Keys.Control) != 0)
+                regionColorChooser1.RandomNaturalColors(_selectedSpecies);
             else
                 ClearColors();
         }
@@ -666,7 +745,7 @@ namespace ARKBreedingStats
         private void textBoxName_TextChanged(object sender, EventArgs e)
         {
             // feedback if name already exists
-            if (NamesOfAllCreatures != null && NamesOfAllCreatures.Contains(textBoxName.Text))
+            if (!string.IsNullOrEmpty(textBoxName.Text) && NamesOfAllCreatures != null && NamesOfAllCreatures.Contains(textBoxName.Text))
             {
                 textBoxName.BackColor = Color.Khaki;
             }
@@ -679,15 +758,17 @@ namespace ARKBreedingStats
         private void CalculateNewMutations()
         {
             int newMutations = 0;
-            if (parentComboBoxMother.SelectedParent != null
-                && nudMutationsMother.Value > parentComboBoxMother.SelectedParent.Mutations)
+            if (parentComboBoxMother.SelectedParent != null)
+                newMutations += NewMutations(parentComboBoxMother.SelectedParent.Mutations, (int)nudMutationsMother.Value);
+            if (parentComboBoxFather.SelectedParent != null)
+                newMutations += NewMutations(parentComboBoxFather.SelectedParent.Mutations, (int)nudMutationsFather.Value);
+
+            int NewMutations(int mutationCountParent, int mutationCountChild)
             {
-                newMutations += (int)nudMutationsMother.Value - parentComboBoxMother.SelectedParent.Mutations;
-            }
-            if (parentComboBoxFather.SelectedParent != null
-                && nudMutationsFather.Value > parentComboBoxFather.SelectedParent.Mutations)
-            {
-                newMutations += (int)nudMutationsFather.Value - parentComboBoxFather.SelectedParent.Mutations;
+                var newMutationsFromParent = mutationCountChild - mutationCountParent;
+                if (newMutationsFromParent > 0 && newMutationsFromParent <= GameConstants.MutationRolls)
+                    return mutationCountChild - mutationCountParent;
+                return 0;
             }
 
             lbNewMutations.Text = $"+{newMutations} mut";
@@ -711,6 +792,22 @@ namespace ARKBreedingStats
             CreatureOwner = Settings.Default.DefaultOwnerName;
             CreatureTribe = Settings.Default.DefaultTribeName;
             CreatureServer = Settings.Default.DefaultServerName;
+        }
+
+        /// <summary>
+        /// Sets the background of the naming pattern buttons to indicate if they contain a pattern or are empty.
+        /// </summary>
+        internal void SetNamePatternButtons(string[] patterns)
+        {
+            if (patterns == null) return;
+            var namingPatternButtons = ButtonsNamingPattern;
+            var l = Math.Min(namingPatternButtons.Length, patterns.Length);
+            for (int i = 0; i < namingPatternButtons.Length; i++)
+            {
+                namingPatternButtons[i].BackColor = (patterns?.Length ?? 0) > i && !string.IsNullOrWhiteSpace(patterns[i])
+                    ? Color.FromArgb(150, 110, 255, 104)
+                    : Color.Transparent;
+            }
         }
 
         internal void Clear(bool keepGeneralInfo = false)
@@ -745,7 +842,7 @@ namespace ARKBreedingStats
             Loc.ControlText(lbName, "Name", _tt);
             Loc.ControlText(lbOwner, "Owner", _tt);
             Loc.ControlText(lbTribe, "Tribe", _tt);
-            Loc.ControlText(lbServer, "Server");
+            Loc.ControlText(lbServer, "Server", _tt);
             Loc.ControlText(lbMother, "Mother");
             Loc.ControlText(lbFather, "Father");
             Loc.ControlText(lbNote, "Note");
@@ -754,6 +851,7 @@ namespace ARKBreedingStats
             lbMaturationPerc.Text = $"{Loc.S("Maturation")} [%]";
             Loc.ControlText(lbMutations, "Mutations");
             Loc.ControlText(lbSex, "Sex");
+            Loc.ControlText(cbNeutered, _sex == Sex.Female ? "Spayed" : "Neutered");
             Loc.ControlText(lbStatus, "Status");
             Loc.ControlText(btClearColors, "clearColors");
             _tt.SetToolTip(btClearColors, Loc.S("clearColors") + "\n" + Loc.S("holdCtrlForRandomColors"));
@@ -773,11 +871,12 @@ namespace ARKBreedingStats
                 _tt.SetToolTip(namingPatternButtons[bi], Loc.S("btnGenerateUniqueNameTT", false));
         }
 
-        internal void SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable = null)
+        internal (bool newInRegion, bool newInSpecies) SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable = null)
         {
             regionColorChooser1.SetRegionColorsExisting(colorAlreadyAvailable);
             LbColorNewInRegion.Visible = regionColorChooser1.ColorNewInRegion;
             LbColorNewInSpecies.Visible = regionColorChooser1.ColorNewInSpecies;
+            return (regionColorChooser1.ColorNewInRegion, regionColorChooser1.ColorNewInSpecies);
         }
     }
 }

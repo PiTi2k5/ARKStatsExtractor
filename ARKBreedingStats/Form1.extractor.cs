@@ -16,10 +16,10 @@ namespace ARKBreedingStats
     public partial class Form1
     {
         /// <summary>
-        /// Set to false if many creatures are processed automatically, e.g. a bulk import.
+        /// Set to true if many creatures are processed automatically, e.g. a bulk import.
         /// It will prevent visual feedback updates.
         /// </summary>
-        private bool _updateExtractorVisualData;
+        private bool _dontUpdateExtractorVisualData;
 
         private void UpdateExtractorDetails()
         {
@@ -64,7 +64,7 @@ namespace ARKBreedingStats
                     valid = false;
                     break;
                 }
-                _statIOs[s].TopLevel = StatIOStatus.Neutral;
+                _statIOs[s].TopLevel = LevelStatus.Neutral;
             }
             if (valid)
             {
@@ -115,24 +115,88 @@ namespace ARKBreedingStats
                 radarChartExtractor.SetLevels(_statIOs.Select(s => s.LevelWild).ToArray());
                 toolStripButtonSaveCreatureValuesTemp.Visible = false;
                 cbExactlyImprinting.BackColor = Color.Transparent;
-                if (_topLevels.TryGetValue(speciesSelector1.SelectedSpecies, out int[] topSpeciesLevels))
+                var species = speciesSelector1.SelectedSpecies;
+                var checkTopLevels = _topLevels.TryGetValue(species, out int[] topSpeciesLevels);
+                var checkLowLevels = _lowestLevels.TryGetValue(species, out int[] lowSpeciesLevels);
+
+                var customStatNames = species.statNames;
+                var statWeights = breedingPlan1.StatWeighting.GetWeightingByPresetName(species.name);
+                if (statWeights == null) checkLowLevels = false;
+                var analysisState = LevelStatus.Neutral;
+                var newTopStatsText = new List<string>();
+                var topStatsText = new List<string>();
+
+                for (int s = 0; s < Values.STATS_COUNT; s++)
                 {
-                    for (int s = 0; s < Values.STATS_COUNT; s++)
+                    if (s == (int)StatNames.Torpidity
+                        || _statIOs[s].LevelWild <= 0)
+                        continue;
+
+                    var levelStatus = LevelStatus.Neutral;
+
+                    if (checkTopLevels && (statWeights?[s] ?? 0) >= 0)
                     {
-                        if (s == (int)StatNames.Torpidity)
-                            continue;
-                        if (_statIOs[s].LevelWild > 0)
+                        // higher stats are considered to be good. If no custom weightings are available, consider higher levels to be better.
+                        if (_statIOs[s].LevelWild == topSpeciesLevels[s])
                         {
-                            if (_statIOs[s].LevelWild == topSpeciesLevels[s])
-                                _statIOs[s].TopLevel = StatIOStatus.TopLevel;
-                            else if (topSpeciesLevels[s] != -1 && _statIOs[s].LevelWild > topSpeciesLevels[s])
-                                _statIOs[s].TopLevel = StatIOStatus.NewTopLevel;
+                            levelStatus = LevelStatus.TopLevel;
+                            topStatsText.Add(Utils.StatName(s, false, customStatNames));
+                            if (analysisState != LevelStatus.NewTopLevel)
+                                analysisState = LevelStatus.TopLevel;
+                        }
+                        else if (topSpeciesLevels[s] != -1 && _statIOs[s].LevelWild > topSpeciesLevels[s])
+                        {
+                            levelStatus = LevelStatus.NewTopLevel;
+                            newTopStatsText.Add(Utils.StatName(s, false, customStatNames));
+                            analysisState = LevelStatus.NewTopLevel;
                         }
                     }
+                    else if (checkLowLevels && statWeights[s] < 0)
+                    {
+                        // lower stats are considered to be good
+                        if (_statIOs[s].LevelWild == lowSpeciesLevels[s])
+                        {
+                            levelStatus = LevelStatus.TopLevel;
+                            topStatsText.Add(Utils.StatName(s, false, customStatNames));
+                            if (analysisState != LevelStatus.NewTopLevel)
+                                analysisState = LevelStatus.TopLevel;
+                        }
+                        else if (_statIOs[s].LevelWild < lowSpeciesLevels[s])
+                        {
+                            levelStatus = LevelStatus.NewTopLevel;
+                            newTopStatsText.Add(Utils.StatName(s, false, customStatNames));
+                            analysisState = LevelStatus.NewTopLevel;
+                        }
+                    }
+
+                    if (_statIOs[s].LevelWild > 255)
+                        levelStatus |= LevelStatus.UltraMaxLevel;
+                    else if (_statIOs[s].LevelWild == 255)
+                        levelStatus |= LevelStatus.MaxLevel;
+                    else if (_statIOs[s].LevelWild == 254)
+                        levelStatus |= LevelStatus.MaxLevelForLevelUp;
+
+                    if (levelStatus != LevelStatus.Neutral)
+                        _statIOs[s].TopLevel = levelStatus;
                 }
+
+                string infoText = null;
+                if (newTopStatsText.Any())
+                {
+                    infoText = $"New top stats: {string.Join(", ", newTopStatsText)}";
+                }
+                if (topStatsText.Any())
+                {
+                    infoText += $"{(infoText == null ? null : "\n")}Existing top stats: {string.Join(", ", topStatsText)}";
+                }
+
+                if (infoText == null) infoText = "No top stats";
+
+                creatureAnalysis1.SetStatsAnalysis(analysisState, infoText);
             }
             creatureInfoInputExtractor.ButtonEnabled = allValid;
             groupBoxRadarChartExtractor.Visible = allValid;
+            creatureAnalysis1.Visible = allValid;
             CreatureInfoInput_CreatureDataRequested(creatureInfoInputExtractor, false, true, false, 0);
         }
 
@@ -160,6 +224,8 @@ namespace ARKBreedingStats
             creatureInfoInputExtractor.ButtonEnabled = false;
             groupBoxPossibilities.Visible = false;
             groupBoxRadarChartExtractor.Visible = false;
+            creatureAnalysis1.Visible = false;
+            creatureAnalysis1.Clear();
             lbInfoYellowStats.Visible = false;
             button2TamingCalc.Visible = cbQuickWildCheck.Checked;
             groupBoxTamingInfo.Visible = cbQuickWildCheck.Checked;
@@ -190,18 +256,22 @@ namespace ARKBreedingStats
         /// </summary>
         /// <param name="autoExtraction"></param>
         /// <param name="statInputsHighPrecision">Set to true if the data is from an export file which has a higher precision for stat-values so the tolerance of calculations can be smaller.</param>
+        /// <param name="possiblyMutagenApplied">Set to true if the creature may have Mutagen applied.
+        /// This needs to be set true if the creature is imported from an exported file, because there's no way to know if there is Mutagen applied, and if set falsely to false it can sort out level combinations during the extraction.</param>
         /// <returns></returns>
-        private bool ExtractLevels(bool autoExtraction = false, bool statInputsHighPrecision = false, bool showLevelsInOverlay = false, Creature existingCreature = null)
+        private bool ExtractLevels(bool autoExtraction = false, bool statInputsHighPrecision = false, bool showLevelsInOverlay = false, Creature existingCreature = null, bool possiblyMutagenApplied = false)
         {
             int activeStatKeeper = _activeStatIndex;
             ClearAll(_clearExtractionCreatureData);
+            var mutagenApplied = possiblyMutagenApplied || creatureInfoInputExtractor.CreatureFlags.HasFlag(CreatureFlags.MutagenApplied);
+            var bred = rbBredExtractor.Checked;
 
             _extractor.ExtractLevels(speciesSelector1.SelectedSpecies, (int)numericUpDownLevel.Value, _statIOs,
                     (double)numericUpDownLowerTEffBound.Value / 100, (double)numericUpDownUpperTEffBound.Value / 100,
-                    rbTamedExtractor.Checked, rbBredExtractor.Checked,
+                    rbTamedExtractor.Checked, bred,
                     (double)numericUpDownImprintingBonusExtractor.Value / 100, !cbExactlyImprinting.Checked,
                     _creatureCollection.allowMoreThanHundredImprinting, _creatureCollection.serverMultipliers.BabyImprintingStatScaleMultiplier,
-                    _creatureCollection.considerWildLevelSteps, _creatureCollection.wildLevelStep, statInputsHighPrecision, out bool imprintingBonusChanged);
+                    _creatureCollection.considerWildLevelSteps, _creatureCollection.wildLevelStep, statInputsHighPrecision, mutagenApplied, out bool imprintingBonusChanged);
 
             numericUpDownImprintingBonusExtractor.ValueSave = (decimal)_extractor.ImprintingBonus * 100;
             numericUpDownImprintingBonusExtractor_ValueChanged(null, null);
@@ -221,7 +291,8 @@ namespace ARKBreedingStats
 
             // remove all results that require a total wild-level higher than the max
             // Tek-variants have 20% higher levels
-            _extractor.RemoveImpossibleTEsAccordingToMaxWildLevel((int)Math.Ceiling(_creatureCollection.maxWildLevel * (speciesSelector1.SelectedSpecies.name.StartsWith("Tek ") ? 1.2 : 1)));
+            var additionalWildLevelsDueToMutagen = mutagenApplied ? (bred ? 5 : 20) : 0;
+            _extractor.RemoveImpossibleTEsAccordingToMaxWildLevel((int)Math.Ceiling((_creatureCollection.maxWildLevel + additionalWildLevelsDueToMutagen) * (speciesSelector1.SelectedSpecies.name.StartsWith("Tek ") ? 1.2 : 1)));
 
             if (everyStatHasAtLeastOneResult && !_extractor.EveryStatHasAtLeastOneResult)
             {
@@ -264,7 +335,7 @@ namespace ARKBreedingStats
                         {
                             if (_extractor.Results[s][b].levelWild == existingCreature.levelsWild[s]
                                 && _extractor.Results[s][b].levelDom >= existingCreature.levelsDom[s]
-                                && _extractor.Results[s][b].TE.Includes(existingCreature.tamingEff))
+                                && (_extractor.Results[s][b].TE.Mean < 0 || _extractor.Results[s][b].TE.Includes(existingCreature.tamingEff)))
                             {
                                 r = b;
                                 break;
@@ -483,11 +554,15 @@ namespace ARKBreedingStats
                 if (rbTamedExtractor.Checked && _creatureCollection.considerWildLevelSteps)
                     issues |= IssueNotes.Issue.WildLevelSteps;
 
+                if (_extractor.ResultWasSortedOutBecauseOfImpossibleTe)
+                    issues |= IssueNotes.Issue.ImpossibleTe;
+
                 labelErrorHelp.Text = $"{Loc.S("extractionFailedHeader")}:\n\n{IssueNotes.getHelpTexts(issues)}";
                 labelErrorHelp.Visible = true;
                 llOnlineHelpExtractionIssues.Visible = true;
                 groupBoxPossibilities.Visible = false;
                 groupBoxRadarChartExtractor.Visible = false;
+                creatureAnalysis1.Visible = false;
                 lbInfoYellowStats.Visible = false;
                 BtCopyIssueDumpToClipboard.Visible = true;
                 string redInfoText = null;
@@ -540,17 +615,21 @@ namespace ARKBreedingStats
         /// </summary>
         private void SetUniqueTE()
         {
-            double te = Math.Round(_extractor.UniqueTE(), 5);
+            double te = Math.Round(_extractor.UniqueTamingEffectiveness(), 5);
             if (te >= 0)
             {
                 labelTE.Text = $"Extracted: {Math.Round(100 * te, 2)} %";
                 if (rbTamedExtractor.Checked && _extractor.PostTamed)
-                    labelTE.Text += $" (wildlevel: {Creature.CalculatePreTameWildLevel(_statIOs[(int)StatNames.Torpidity].LevelWild + 1, te)})";
+                {
+                    var postTameLevelWithoutMutagen = _statIOs[(int)StatNames.Torpidity].LevelWild + 1
+                                                      - (creatureInfoInputExtractor.CreatureFlags.HasFlag(CreatureFlags.MutagenApplied) ? ArkConstants.MutagenLevelsAppliedTamedCreature : 0);
+                    labelTE.Text += $" (wildlevel: {Creature.CalculatePreTameWildLevel(postTameLevelWithoutMutagen, te)})";
+                }
                 labelTE.BackColor = Color.Transparent;
             }
             else
             {
-                if (te == -1)
+                if (te == -2)
                 {
                     labelTE.Text = "TE differs in chosen possibilities";
                     labelTE.BackColor = Color.LightSalmon;
@@ -563,31 +642,29 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// When clicking on a stat show the possibilites in the listbox.
+        /// When clicking on a stat show the possibilities in the listbox.
         /// </summary>
         /// <param name="statIndex"></param>
         private void SetActiveStat(int statIndex)
         {
-            if (statIndex != _activeStatIndex)
+            if (statIndex == _activeStatIndex) return;
+            _activeStatIndex = -1;
+            listViewPossibilities.BeginUpdate();
+            listViewPossibilities.Items.Clear();
+            for (int s = 0; s < Values.STATS_COUNT; s++)
             {
-                _activeStatIndex = -1;
-                listViewPossibilities.BeginUpdate();
-                listViewPossibilities.Items.Clear();
-                for (int s = 0; s < Values.STATS_COUNT; s++)
+                if (s == statIndex && _statIOs[s].Status == StatIOStatus.NonUnique)
                 {
-                    if (s == statIndex && _statIOs[s].Status == StatIOStatus.NonUnique)
-                    {
-                        _statIOs[s].Selected = true;
-                        SetPossibilitiesListview(s);
-                        _activeStatIndex = statIndex;
-                    }
-                    else
-                    {
-                        _statIOs[s].Selected = false;
-                    }
+                    _statIOs[s].Selected = true;
+                    SetPossibilitiesListview(s);
+                    _activeStatIndex = statIndex;
                 }
-                listViewPossibilities.EndUpdate();
+                else
+                {
+                    _statIOs[s].Selected = false;
+                }
             }
+            listViewPossibilities.EndUpdate();
         }
 
         /// <summary>
@@ -712,7 +789,7 @@ namespace ARKBreedingStats
                 string rowValues = string.Empty;
                 // if taming effectiveness is unique, display it, too
                 string effString = string.Empty;
-                double eff = _extractor.UniqueTE();
+                double eff = _extractor.UniqueTamingEffectiveness();
                 if (eff >= 0)
                 {
                     effString = "\tTamingEff:\t" + (100 * eff) + "%";
@@ -800,14 +877,16 @@ namespace ARKBreedingStats
             // check if last exported file is a species that should be ignored, e.g. a raft
             if (Values.V.IgnoreSpeciesBlueprint(cv.speciesBlueprint))
             {
-                MessageBox.Show("Species of last exported creature is ignored" + (cv.speciesBlueprint.Contains("Raft") ? " because it's a raft" : string.Empty) + ":\n" + cv.speciesBlueprint, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxes.ShowMessageBox(
+                    $"Species of last exported creature is ignored{(cv.speciesBlueprint.Contains("Raft") ? " because it's a raft" : null)}:\n{cv.speciesBlueprint}\n\nMaybe the export folder is not configured correctly in this application.\nThe file is located in\n{exportFilePath}",
+                    "Species is ignored");
                 return false;
             }
 
             // check if species is supported.
             if (cv.Species == null)
             {
-                CheckForMissingModFiles(_creatureCollection, new List<string> { cv.speciesBlueprint });
+                CheckForMissingModFiles(_creatureCollection, new List<string> { cv.speciesBlueprint }, exportFilePath, cv.name);
 
                 int oldModHash = _creatureCollection.modListHash;
                 // if mods were added, try to import the creature values again
@@ -875,23 +954,65 @@ namespace ARKBreedingStats
 
         /// <summary>
         /// Sets the values of a creature to the extractor and extracts its levels.
-        /// It returns if the creature is already present in the library.
+        /// It returns true if the creature is already present in the library.
         /// </summary>
         /// <param name="cv"></param>
         /// <param name="filePath">If given, the file path will be displayed as info.</param>
         /// <param name="autoExtraction"></param>
-        /// <param name="highPrecisionValues"></param>
+        /// <param name="highPrecisionValues">If values from an export file with increased precision are given, extraction can be improved by using that.</param>
         /// <returns></returns>
         private bool ExtractValuesInExtractor(CreatureValues cv, string filePath, bool autoExtraction, bool highPrecisionValues = true)
         {
+            bool creatureExists = IsCreatureAlreadyInLibrary(cv.guid, cv.ARKID, out Creature existingCreature);
+
+            if (creatureExists)
+            {
+                // don't clear existing info of the creature
+                //if (string.IsNullOrEmpty(cv.server) && !string.IsNullOrEmpty(existingCreature.server))
+                //    cv.server = existingCreature.server;
+
+                SetExistingValueIfNewValueIsEmpty(ref cv.server, ref existingCreature.server);
+                SetExistingValueIfNewValueIsEmpty(ref cv.tribe, ref existingCreature.tribe);
+                SetExistingValueIfNewValueIsEmpty(ref cv.note, ref existingCreature.note);
+
+                void SetExistingValueIfNewValueIsEmpty(ref string newValue, ref string oldValue)
+                {
+                    if (string.IsNullOrEmpty(newValue) && !string.IsNullOrEmpty(oldValue))
+                        newValue = oldValue;
+                }
+
+                // ARK doesn't export parent and mutation info always
+                // if export file doesn't contain parent info, use the existing ones
+                if (cv.Mother == null && cv.motherArkId == 0 && existingCreature.Mother != null)
+                    cv.Mother = existingCreature.Mother;
+                if (cv.Father == null && cv.fatherArkId == 0 && existingCreature.Father != null)
+                    cv.Father = existingCreature.Father;
+
+                // if export file doesn't contain mutation info and existing creature does, use that
+                if (cv.mutationCounterMother == 0 && existingCreature.mutationsMaternal != 0)
+                    cv.mutationCounterMother = existingCreature.mutationsMaternal;
+                if (cv.mutationCounterFather == 0 && existingCreature.mutationsPaternal != 0)
+                    cv.mutationCounterFather = existingCreature.mutationsPaternal;
+
+                // if existing creature has no altColorIds, don't add them again
+                if (existingCreature.ColorIdsAlsoPossible == null)
+                    cv.ColorIdsAlsoPossible = null;
+                else if (cv.ColorIdsAlsoPossible != null)
+                {
+                    var l = Math.Min(cv.ColorIdsAlsoPossible.Length, existingCreature.ColorIdsAlsoPossible.Length);
+                    for (int i = 0; i < l; i++)
+                    {
+                        cv.ColorIdsAlsoPossible[i] = existingCreature.ColorIdsAlsoPossible[i];
+                    }
+                }
+            }
+
             SetCreatureValuesToExtractor(cv, false);
 
             // exported stat-files have values for all stats, so activate all stats the species uses
             SetStatsActiveAccordingToUsage(cv.Species);
 
-            bool creatureExists = IsCreatureAlreadyInLibrary(cv.guid, cv.ARKID, out Creature existingCreature);
-
-            ExtractLevels(autoExtraction, highPrecisionValues, existingCreature: existingCreature);
+            ExtractLevels(autoExtraction, highPrecisionValues, existingCreature: existingCreature, possiblyMutagenApplied: cv.flags.HasFlag(CreatureFlags.MutagenApplied));
             SetCreatureValuesToInfoInput(cv, creatureInfoInputExtractor);
             UpdateParentListInput(creatureInfoInputExtractor); // this function is only used for single-creature extractions, e.g. LastExport
             creatureInfoInputExtractor.UpdateExistingCreature = creatureExists;
@@ -923,7 +1044,7 @@ namespace ARKBreedingStats
             // at this point, if the creatureValues has parent-ArkIds, make sure these parent-creatures exist
             if (cv.Mother == null)
             {
-                if (_creatureCollection.CreatureById(cv.motherGuid, cv.motherArkId, cv.Species, cv.sex, out Creature mother))
+                if (_creatureCollection.CreatureById(cv.motherGuid, cv.motherArkId, cv.Species, out Creature mother))
                 {
                     cv.Mother = mother;
                 }
@@ -935,7 +1056,7 @@ namespace ARKBreedingStats
             }
             if (cv.Father == null)
             {
-                if (_creatureCollection.CreatureById(cv.fatherGuid, cv.fatherArkId, cv.Species, cv.sex, out Creature father))
+                if (_creatureCollection.CreatureById(cv.fatherGuid, cv.fatherArkId, cv.Species, out Creature father))
                 {
                     cv.Father = father;
                 }
@@ -975,8 +1096,7 @@ namespace ARKBreedingStats
         {
             existingCreature = null;
             bool creatureAlreadyExistsInLibrary = false;
-            if (creatureGuid != Guid.Empty
-                                                  && Utils.IsArkIdImported(arkId, creatureGuid))
+            if (creatureGuid != Guid.Empty && Utils.IsArkIdImported(arkId, creatureGuid))
             {
                 existingCreature = _creatureCollection.creatures.FirstOrDefault(c => c.guid == creatureGuid
                                                            && !c.flags.HasFlag(CreatureFlags.Placeholder)
@@ -992,10 +1112,13 @@ namespace ARKBreedingStats
             AddCreatureToCollection();
         }
 
-        private void CreatureInfoInputExtractor_ColorsChanged(CreatureInfoInput input)
+        private void CreatureInfoInputColorsChanged(CreatureInfoInput input)
         {
-            if (_updateExtractorVisualData)
-                input.SetRegionColorsExisting(_creatureCollection.ColorAlreadyAvailable(speciesSelector1.SelectedSpecies, input.RegionColors));
+            if (_dontUpdateExtractorVisualData) return;
+            var newColorStatus = input.SetRegionColorsExisting(_creatureCollection.ColorAlreadyAvailable(speciesSelector1.SelectedSpecies, input.RegionColors, out string infoText));
+
+            if (input == creatureInfoInputExtractor)
+                creatureAnalysis1.SetColorAnalysis(newColorStatus.newInSpecies ? LevelStatus.NewTopLevel : newColorStatus.newInRegion ? LevelStatus.TopLevel : LevelStatus.Neutral, infoText);
         }
 
         private void copyLibrarydumpToClipboardToolStripMenuItem_Click(object sender, EventArgs e)

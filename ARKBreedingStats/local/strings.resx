@@ -405,9 +405,6 @@ The levels are then shown without the extraction-process (and without validation
   <data name="importingFromARKToolsToolStripMenuItem" xml:space="preserve">
     <value>Importing from ARK-Tools</value>
   </data>
-  <data name="importValuesFromClipboardToolStripMenuItem" xml:space="preserve">
-    <value>Import Values from Clipboard</value>
-  </data>
   <data name="imprintingBonus" xml:space="preserve">
     <value>Imprinting Bonus</value>
   </data>
@@ -1004,7 +1001,7 @@ Some offsprings might be worse than in High-Stats-Mode, but you also have a chan
   <data name="na" xml:space="preserve">
     <value>n/a</value>
   </data>
-  <data name="showOnlyNaturalOccuring" xml:space="preserve">
+  <data name="showOnlyNaturalOccurring" xml:space="preserve">
     <value>Show only natural occuring colors</value>
   </data>
   <data name="apply" xml:space="preserve">
@@ -1138,7 +1135,8 @@ The preset can be applied by the Apply Preset button</value>
     <value>clear colors</value>
   </data>
   <data name="holdCtrlForRandomColors" xml:space="preserve">
-    <value>Hold Ctrl for random colors</value>
+    <value>Hold Ctrl for random natural colors
+Hold Ctrl + Shift for random colors</value>
   </data>
   <data name="BtBeepFailure" xml:space="preserve">
     <value>import failed</value>
@@ -1304,5 +1302,35 @@ Filter for colors with c{region}: {colorValue} {colorValue2}, e.g. c0: 20, c5: 3
   </data>
   <data name="Add Note" xml:space="preserve">
     <value>Add Note</value>
+  </data>
+  <data name="maxLevelForLevelUp" xml:space="preserve">
+    <value>max level that allows domestic levelups</value>
+  </data>
+  <data name="maxLevelSaved" xml:space="preserve">
+    <value>max wild level that will be saved</value>
+  </data>
+  <data name="ultraMaxLevel" xml:space="preserve">
+    <value>Warning: The level is higher than the possible max value and will not be saved.</value>
+  </data>
+  <data name="issueCauseImpossibleTe" xml:space="preserve">
+    <value>The level results in an impossible taming effectiveness. Did you enter the levels arbitrarily? It might work if you set the creature to bred.</value>
+  </data>
+  <data name="generations" xml:space="preserve">
+    <value>generations</value>
+  </data>
+  <data name="copyInfoGraphicToClipboard" xml:space="preserve">
+    <value>Copy info graphic to clipboard</value>
+  </data>
+  <data name="Nursing Effectiveness" xml:space="preserve">
+    <value>Nursing Effectiveness</value>
+  </data>
+  <data name="Nursing Effectiveness_Abb" xml:space="preserve">
+    <value>NE</value>
+  </data>
+  <data name="lbServerTT" xml:space="preserve">
+    <value>Click to toggle freezing this field. If the field is frozen its background is grey and importing a creature won't update this field.</value>
+  </data>
+  <data name="LbAlternativeColor" xml:space="preserve">
+    <value>Hold Ctrl to select an alternative color id (red border). Hold Ctrl and click on No Color to unset it.</value>
   </data>
 </root>

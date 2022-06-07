@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace ARKBreedingStats.species
 {
-    public class ARKColors
+    public class ArkColors
     {
         private readonly Dictionary<int, ArkColor> colorsByHash;
         private readonly Dictionary<string, ArkColor> colorsByName;
         public readonly List<ArkColor> colorsList;
-        private readonly Dictionary<int, ArkColor> colorsById;
+        private readonly Dictionary<byte, ArkColor> colorsById;
 
-        public ARKColors(List<List<object>> colorDefinitions, List<List<object>> colorDefinitions2 = null)
+        public ArkColors(List<List<object>> colorDefinitions, List<List<object>> colorDefinitions2 = null)
         {
             colorsByHash = new Dictionary<int, ArkColor>();
             colorsByName = new Dictionary<string, ArkColor>();
-            colorsList = new List<ArkColor>() {
-                new ArkColor()
-            };
+            colorsList = new List<ArkColor> { new ArkColor() };
 
             if (colorDefinitions == null) return;
 
@@ -25,7 +24,7 @@ namespace ARKBreedingStats.species
             if (colorDefinitions2 != null)
                 ParseColors(colorDefinitions2, 201); // dye colors can appear as color mutation, they start with id 201
 
-            void ParseColors(List<List<object>> colorDefs, int idStart)
+            void ParseColors(List<List<object>> colorDefs, byte idStart)
             {
                 foreach (List<object> cd in colorDefs)
                 {
@@ -61,16 +60,16 @@ namespace ARKBreedingStats.species
             colorsById = colorsList.ToDictionary(c => c.Id, c => c);
         }
 
-        public ArkColor ById(int id) => colorsById.ContainsKey(id) ? colorsById[id] : new ArkColor();
+        public ArkColor ById(byte id) => colorsById.TryGetValue(id, out var color) ? color : new ArkColor();
 
-        public ArkColor ByName(string name) => colorsByName.ContainsKey(name) ? colorsByName[name] : new ArkColor();
+        public ArkColor ByName(string name) => colorsByName.TryGetValue(name, out var color) ? color : new ArkColor();
 
-        public ArkColor ByHash(int hash) => colorsByHash.ContainsKey(hash) ? colorsByHash[hash] : new ArkColor();
+        public ArkColor ByHash(int hash) => colorsByHash.TryGetValue(hash, out var color) ? color : new ArkColor();
 
         /// <summary>
         /// Returns the ARK-id of the color that is closest to the sRGB values.
         /// </summary>
-        public int ClosestColorId(double r, double g, double b, double a)
+        public byte ClosestColorId(double r, double g, double b, double a)
             => ClosestColor(r, g, b, a).Id;
 
         /// <summary>
@@ -111,5 +110,52 @@ namespace ARKBreedingStats.species
                                 + (srgb[2] - b) * (srgb[2] - b)
                                 + (srgb[3] - a) * (srgb[3] - a)
                                 );
+
+        private static byte[][] _equalColorIds;
+
+        /// <summary>
+        /// If the color ids contain ids that represent colors with multiple ids, returns an array with the alternative ids.
+        /// </summary>
+        public static byte[] GetAlternativeColorIds(byte[] colorIds)
+        {
+            if (colorIds == null) return null;
+
+            if (_equalColorIds == null)
+            {
+                var filePath = FileService.GetJsonPath(FileService.EqualColorIdsFile);
+                if (!File.Exists(filePath)) return null;
+                if (!FileService.LoadJsonFile(filePath, out _equalColorIds, out _))
+                    return null;
+            }
+
+            var altColorIds = new byte[colorIds.Length];
+
+            var altColorIdExists = false;
+
+            byte GetAlternativeId(byte id)
+            {
+                for (int j = 0; j < _equalColorIds.Length; j++)
+                {
+                    for (int k = 0; k < _equalColorIds[j].Length; k++)
+                    {
+                        if (_equalColorIds[j][k] == id)
+                            return k == 0 ? _equalColorIds[j][1] : _equalColorIds[j][0];
+                    }
+                }
+
+                return 0;
+            }
+
+            for (int i = 0; i < colorIds.Length; i++)
+            {
+                var altId = GetAlternativeId(colorIds[i]);
+                if (altId == 0) continue;
+
+                altColorIds[i] = altId;
+                altColorIdExists = true;
+            }
+
+            return altColorIdExists ? altColorIds : null;
+        }
     }
 }
