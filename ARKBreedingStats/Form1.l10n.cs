@@ -1,7 +1,4 @@
-﻿using ARKBreedingStats.species;
-using ARKBreedingStats.values;
-
-namespace ARKBreedingStats
+﻿namespace ARKBreedingStats
 {
     public partial class Form1
     {
@@ -14,10 +11,10 @@ namespace ARKBreedingStats
         /// <summary>
         /// Sets the localizations, i.e. translated texts in the application.
         /// </summary>
-        /// <param name="init">If true</param>
-        private void SetLocalizations(bool init = true)
+        /// <param name="initialize">If the language was changed set to true to load the according strings.</param>
+        private void SetLocalizations(bool initialize = true)
         {
-            if (init)
+            if (initialize)
                 InitLocalization();
 
             // menu
@@ -126,18 +123,18 @@ namespace ARKBreedingStats
             columnHeaderTribe.Text = Loc.S("Tribe");
             columnHeaderNote.Text = Loc.S("Note");
             columnHeaderServer.Text = Loc.S("Server");
-            columnHeaderHP.Text = Utils.StatName(StatNames.Health, true);
-            columnHeaderSt.Text = Utils.StatName(StatNames.Stamina, true);
-            columnHeaderOx.Text = Utils.StatName(StatNames.Oxygen, true);
-            columnHeaderFo.Text = Utils.StatName(StatNames.Food, true);
-            columnHeaderWe.Text = Utils.StatName(StatNames.Weight, true);
-            columnHeaderDm.Text = Utils.StatName(StatNames.MeleeDamageMultiplier, true);
-            columnHeaderSp.Text = Utils.StatName(StatNames.SpeedMultiplier, true);
-            columnHeaderTo.Text = Utils.StatName(StatNames.Torpidity, true);
-            columnHeaderWa.Text = Utils.StatName(StatNames.CraftingSpeedMultiplier, true);
-            columnHeaderTemp.Text = Utils.StatName(StatNames.Temperature, true);
-            columnHeaderCr.Text = Utils.StatName(StatNames.Water, true);
-            columnHeaderFr.Text = Utils.StatName(StatNames.TemperatureFortitude, true);
+            columnHeaderHP.Text = Utils.StatName(Stats.Health, true);
+            columnHeaderSt.Text = Utils.StatName(Stats.Stamina, true);
+            columnHeaderOx.Text = Utils.StatName(Stats.Oxygen, true);
+            columnHeaderFo.Text = Utils.StatName(Stats.Food, true);
+            columnHeaderWe.Text = Utils.StatName(Stats.Weight, true);
+            columnHeaderDm.Text = Utils.StatName(Stats.MeleeDamageMultiplier, true);
+            columnHeaderSp.Text = Utils.StatName(Stats.SpeedMultiplier, true);
+            columnHeaderTo.Text = Utils.StatName(Stats.Torpidity, true);
+            columnHeaderWa.Text = Utils.StatName(Stats.CraftingSpeedMultiplier, true);
+            columnHeaderTemp.Text = Utils.StatName(Stats.Temperature, true);
+            columnHeaderCr.Text = Utils.StatName(Stats.Water, true);
+            columnHeaderFr.Text = Utils.StatName(Stats.TemperatureFortitude, true);
             columnHeaderTopStatsNr.Text = Loc.S("Top");
             columnHeaderTopness.Text = Loc.S("topPercentage");
             columnHeaderGen.Text = Loc.S("Generation_Abb");
@@ -152,6 +149,9 @@ namespace ARKBreedingStats
             columnHeaderColor4.Text = Loc.S("C4");
             columnHeaderColor5.Text = Loc.S("C5");
             Loc.ControlText(ToolStripLabelFilter);
+
+            _tt.SetToolTip(LbBlueprintPath, "Click to copy blueprint path to clipboard.");
+            _tt.SetToolTip(listBoxSpeciesLib, "Ctrl + Click on a species to select / unselect as favorite.\nFavorites are sorted at the top.");
 
             // other tabs
             Loc.ControlText(tabPagePedigree, "pedigree");

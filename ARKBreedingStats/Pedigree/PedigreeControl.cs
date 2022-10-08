@@ -10,7 +10,6 @@ using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
-using ARKBreedingStats.values;
 
 namespace ARKBreedingStats.Pedigree
 {
@@ -50,11 +49,32 @@ namespace ARKBreedingStats.Pedigree
         private int _displayedGenerations;
         private int _highlightInheritanceStatIndex = -1;
         private int _yBottomOfPedigree; // used for descendents
+        private readonly PedigreeCreature _pedigreeHeader, _pedigreeHeaderMaternal, _pedigreeHeaderPaternal;
 
         public PedigreeControl()
         {
             InitializeComponent();
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
+
+            _pedigreeHeader = new PedigreeCreature
+            {
+                Left = PedigreeCreation.LeftMargin + PedigreeCreation.PedigreeElementWidth + PedigreeCreation.Margin,
+                Top = PedigreeCreation.TopMargin
+            };
+            splitContainer1.Panel2.Controls.Add(_pedigreeHeader);
+            _pedigreeHeaderMaternal = new PedigreeCreature
+            {
+                Left = PedigreeCreation.LeftMargin,
+                Top = PedigreeCreation.TopMargin
+            };
+            splitContainer1.Panel2.Controls.Add(_pedigreeHeaderMaternal);
+            _pedigreeHeaderPaternal = new PedigreeCreature
+            {
+                Left = PedigreeCreation.LeftMargin + 2 * (PedigreeCreation.PedigreeElementWidth + PedigreeCreation.Margin),
+                Top = PedigreeCreation.TopMargin
+            };
+            splitContainer1.Panel2.Controls.Add(_pedigreeHeaderPaternal);
+
             _lines = new[] { new List<int[]>(), new List<int[]>(), new List<int[]>() };
             NoCreatureSelected();
             listViewCreatures.ListViewItemSorter = new ListViewColumnSorter();
@@ -243,7 +263,9 @@ namespace ARKBreedingStats.Pedigree
 
             var classicViewMode = viewMode == PedigreeViewMode.Classic;
 
-            pedigreeCreatureHeaders.Visible = classicViewMode;
+            _pedigreeHeader.Visible = classicViewMode;
+            _pedigreeHeaderMaternal.Visible = classicViewMode;
+            _pedigreeHeaderPaternal.Visible = classicViewMode;
             nudGenerations.Visible = !classicViewMode;
             TbZoom.Visible = !classicViewMode;
             LbCreatureName.Visible = !classicViewMode;
@@ -288,7 +310,9 @@ namespace ARKBreedingStats.Pedigree
                 return;
             }
 
-            pedigreeCreatureHeaders.SetCustomStatNames(_selectedCreature.Species?.statNames);
+            _pedigreeHeader.SetCustomStatNames(_selectedCreature.Species?.statNames);
+            _pedigreeHeaderMaternal.SetCustomStatNames(_selectedCreature.Species?.statNames);
+            _pedigreeHeaderPaternal.SetCustomStatNames(_selectedCreature.Species?.statNames);
             statSelector1.SetStatNames(_selectedCreature.Species);
 
             lbPedigreeEmpty.Visible = false;
@@ -299,7 +323,7 @@ namespace ARKBreedingStats.Pedigree
             if (_pedigreeViewMode == PedigreeViewMode.Classic)
             {
                 PedigreeCreation.CreateDetailedView(_selectedCreature, _lines, _pedigreeControls, _enabledColorRegions);
-                _yBottomOfPedigree = 170;
+                _yBottomOfPedigree = PedigreeCreation.TopMargin + 4 * PedigreeCreation.PedigreeElementHeight;
             }
             else
             {
@@ -317,7 +341,7 @@ namespace ARKBreedingStats.Pedigree
 
                 _pedigreeControls.Add(new PedigreeCreature(_selectedCreature, _enabledColorRegions)
                 {
-                    Location = new Point(PedigreeCreation.LeftBorder, _yBottomOfPedigree + PedigreeCreation.Margin)
+                    Location = new Point(PedigreeCreation.LeftMargin, _yBottomOfPedigree + PedigreeCreation.Margin)
                 });
                 _yBottomOfPedigree += 50;
             }
@@ -329,7 +353,7 @@ namespace ARKBreedingStats.Pedigree
             {
                 PedigreeCreature pc = new PedigreeCreature(c, _enabledColorRegions)
                 {
-                    Location = new Point(PedigreeCreation.LeftBorder, yDescendants + 35 * row)
+                    Location = new Point(PedigreeCreation.LeftMargin, yDescendants + 35 * row)
                 };
                 if (c.levelsWild != null && _selectedCreature.levelsWild != null)
                 {
@@ -340,8 +364,8 @@ namespace ARKBreedingStats.Pedigree
                             _selectedCreature.levelsWild[si] == c.levelsWild[si])
                             _lines[0].Add(new[]
                             {
-                                PedigreeCreation.LeftBorder + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 6,
-                                PedigreeCreation.LeftBorder + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 15, 0, 0
+                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 6,
+                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 15, 0, 0
                         });
                     }
                 }
@@ -398,7 +422,7 @@ namespace ARKBreedingStats.Pedigree
                 g.FillEllipse(brush, statLeftTopCoords.X, statLeftTopCoords.Y, statRadius * 2, statRadius * 2);
                 brush.Color = Color.Black;
 
-                var usedStats = Enumerable.Range(0, Values.STATS_COUNT).Where(si => si != (int)StatNames.Torpidity && species.UsesStat(si)).ToArray();
+                var usedStats = Enumerable.Range(0, Stats.StatsCount).Where(si => si != Stats.Torpidity && species.UsesStat(si)).ToArray();
                 var anglePerStat = 360f / usedStats.Length;
                 var i = 0;
                 foreach (var si in usedStats)
@@ -560,7 +584,7 @@ namespace ARKBreedingStats.Pedigree
         {
             set
             {
-                if (value != null && value.Length == 6)
+                if (value?.Length == Ark.ColorRegionCount)
                 {
                     _enabledColorRegions = value;
                 }

@@ -124,6 +124,9 @@ namespace ARKBreedingStats.mods
             modsByTag = new Dictionary<string, ModInfo>();
             modsByID = new Dictionary<string, ModInfo>();
 
+            // generic entry for "other mod", this is needed to correctly determine the available color set.
+            modsByFiles.Add(Mod.OtherMod.FileName, new ModInfo { mod = Mod.OtherMod });
+
             string valuesPath = FileService.GetJsonPath(FileService.ValuesFolder);
 
             foreach (KeyValuePair<string, ModInfo> fmi in modsByFiles)
@@ -150,9 +153,7 @@ namespace ARKBreedingStats.mods
         /// <summary>
         /// Downloads the modFiles. Returns true if a file was downloaded.
         /// </summary>
-        /// <param name="modValueFiles"></param>
-        /// <returns></returns>
-        public bool DownloadModFiles(List<string> modValueFiles)
+        public bool DownloadModFiles(IEnumerable<string> modValueFiles)
         {
             bool filesDownloaded = false;
             foreach (var mf in modValueFiles)

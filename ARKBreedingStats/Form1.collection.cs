@@ -531,11 +531,9 @@ namespace ARKBreedingStats
             // calculate creature values
             RecalculateAllCreaturesValues();
 
-            // set flags for all creatures. this is needed for backwards compatibility (added 05/2020) TODO: remove in late 2021.
-            foreach (Creature c in _creatureCollection.creatures)
+            foreach (var c in _creatureCollection.creatures)
             {
                 c.InitializeFlags();
-                c.RecalculateNewMutations();
                 if (c.ArkIdImported && c.ArkIdInGame == null)
                     c.ArkIdInGame = Utils.ConvertImportedArkIdToIngameVisualization(c.ArkId);
             }
@@ -568,7 +566,7 @@ namespace ARKBreedingStats
             FilterLibRecalculate();
 
             // apply last sorting
-            listViewLibrary.Sort();
+            SortLibrary();
 
             UpdateTempCreatureDropDown();
 
@@ -752,6 +750,14 @@ namespace ARKBreedingStats
             recentlyUsedToolStripMenuItem.DropDownItems.AddRange(
                 Properties.Settings.Default.LastUsedLibraryFiles.Select(f => new ToolStripMenuItem(f, null, OpenRecentlyUsedFile)).ToArray()
             );
+        }
+
+        private void RemoveNonExistingFilesInRecentlyUsedFiles()
+        {
+            var files = Properties.Settings.Default.LastUsedLibraryFiles;
+            if (files?.Any() != true) return;
+
+            Properties.Settings.Default.LastUsedLibraryFiles = files.Where(File.Exists).ToArray();
         }
 
         private void OpenRecentlyUsedFile(object sender, EventArgs e)

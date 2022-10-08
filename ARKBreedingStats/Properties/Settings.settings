@@ -296,9 +296,6 @@
     <Setting Name="FilterOnlyIfColorId" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="LibraryGroupBySpecies" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="LibraryFilterWindowRect" Type="System.Drawing.Rectangle" Scope="User">
       <Value Profile="(Default)">50, 50, 800, 600</Value>
     </Setting>
@@ -514,6 +511,30 @@
     </Setting>
     <Setting Name="PlayerListColumnDisplayIndices" Type="System.Int32[]" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ImportExportedBringToFrontOnIssue" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="HideInvisibleColorRegions" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseTribeFilterForBreedingPlan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FilterHideAdults" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FilterHideNonAdults" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FilterHideCooldowns" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FilterHideNonCooldowns" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LibraryGroupBySpecies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

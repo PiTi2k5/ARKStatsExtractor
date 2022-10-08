@@ -2,6 +2,7 @@
 using ARKBreedingStats.settings;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -72,21 +73,56 @@ namespace ARKBreedingStats
             if (Utils.GetFirstImportExportFolder(out string folder))
             {
                 var files = Directory.GetFiles(folder);
-                if (files.Length > 0)
+                if (files.Length == 0)
                 {
-                    ExtractExportedFileInExtractor(files.OrderByDescending(f => File.GetLastWriteTime(f)).First());
+                    // some users forget to select the id folder where the export files are located. Check if that's the case
+                    FileInfo lastExportFile = null;
+                    if (Path.GetFileName(folder) == "DinoExports")
+                    {
+                        // check subfolders for export files
+                        var subFolders = Directory.GetDirectories(folder);
+                        foreach (var sf in subFolders)
+                        {
+                            var d = new DirectoryInfo(sf);
+                            var fs = d.GetFiles("*.ini");
+                            if (!fs.Any()) continue;
+                            var expFile = fs.OrderByDescending(f => f.LastWriteTime).First();
+                            if (lastExportFile == null || expFile.LastWriteTime > lastExportFile.LastWriteTime)
+                                lastExportFile = expFile;
+                        }
+                    }
+
+                    if (lastExportFile == null)
+                    {
+                        MessageBoxes.ShowMessageBox(
+                            $"No exported creature-file found in the set folder\n{folder}\nYou have to export a creature first ingame.\n\n" +
+                            "You may also want to check the set folder in the settings. Usually the folder path ends with\n" +
+                            @"…\ARK\ShooterGame\Saved\DinoExports\<ID>",
+                            $"No files found");
+                        return;
+                    }
+
+                    if (MessageBox.Show(
+                            $"No exported creature-file found in the set folder\n{folder}\n\nThere seems to be an export file in a subfolder, do you want to use this folder instead?\n{lastExportFile.DirectoryName}",
+                            $"Use subfolder with export file? - {Utils.ApplicationNameVersion}",
+                            MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        var exportFolders = Properties.Settings.Default.ExportCreatureFolders;
+                        var firstExportFolder = ATImportExportedFolderLocation.CreateFromString(exportFolders[0]);
+                        firstExportFolder.FolderPath = lastExportFile.DirectoryName;
+                        exportFolders[0] = firstExportFolder.ToString();
+
+                        ExtractExportedFileInExtractor(lastExportFile.FullName);
+                    }
                     return;
                 }
 
-                MessageBoxes.ShowMessageBox($"No exported creature-file found in the set folder\n{folder}\nYou have to export a creature first ingame.\n\n" +
-                                             "You may also want to check the set folder in the settings. Usually the folder is\n" +
-                                             @"…\Steam\steamapps\common\ARK\ShooterGame\Saved\DinoExports\<ID>",
-                    $"No files found");
+                ExtractExportedFileInExtractor(files.OrderByDescending(File.GetLastWriteTime).First());
                 return;
             }
 
             if (MessageBox.Show("There is no folder set where the exported creatures are located, or the set folder does not exist. Set this folder in the settings. " +
-                                "Usually the folder is\n" + @"…\Steam\steamapps\common\ARK\ShooterGame\Saved\DinoExports\<ID>" + "\n\nOpen the settings-page?",
+                                "Usually the folder path ends with\n" + @"…\ARK\ShooterGame\Saved\DinoExports\<ID>" + "\n\nOpen the settings-page?",
                                 $"No default export-folder set - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
             {
                 OpenSettingsDialog(Settings.SettingsTabPages.ExportedImport);
@@ -171,9 +207,9 @@ namespace ARKBreedingStats
                 if (addedToLibrary && copyNameToClipboard)
                     sb.AppendLine("Name copied to clipboard.");
 
-                for (int s = 0; s < values.Values.STATS_COUNT; s++)
+                for (int s = 0; s < Stats.StatsCount; s++)
                 {
-                    int statIndex = values.Values.statsDisplayOrder[s];
+                    int statIndex = Stats.DisplayOrder[s];
                     if (!species.UsesStat(statIndex)) continue;
 
                     sb.Append($"{Utils.StatName(statIndex, true, species.statNames)}: { _statIOs[statIndex].LevelWild} ({_statIOs[statIndex].BreedingValue})");
@@ -277,11 +313,17 @@ namespace ARKBreedingStats
                     SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Failure);
                 }
             }
+
+            if (!uniqueExtraction && Properties.Settings.Default.ImportExportedBringToFrontOnIssue)
+            {
+                TopMost = true;
+                TopMost = false;
+            }
         }
 
         private void ExportedCreatureList_CheckGuidInLibrary(importExported.ExportedCreatureControl exportedCreatureControl)
         {
-            Creature cr = _creatureCollection.creatures.SingleOrDefault(c => c.guid == exportedCreatureControl.creatureValues.guid);
+            Creature cr = _creatureCollection.creatures.FirstOrDefault(c => c.guid == exportedCreatureControl.creatureValues.guid);
             if (cr != null && !cr.flags.HasFlag(CreatureFlags.Placeholder))
                 exportedCreatureControl.setStatus(importExported.ExportedCreatureControl.ImportStatus.OldImported, cr.addedToLibrary);
             else

@@ -73,6 +73,7 @@ namespace ARKBreedingStats.library
             using (var fontBrush = new SolidBrush(foreColor))
             using (var borderAroundColors = new Pen(Utils.ForeColor(backColor), 1))
             using (var stringFormatRight = new StringFormat { Alignment = StringAlignment.Far })
+            using (var stringFormatRightUp = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Far })
             {
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 int currentYPosition = frameThickness * 3;
@@ -137,10 +138,10 @@ namespace ARKBreedingStats.library
                 if (displayStatValues)
                     g.DrawString(Loc.S("Values"), font, fontBrush, xRightBrValue, currentYPosition, stringFormatRight);
                 int statDisplayIndex = 0;
-                for (int si = 0; si < Values.STATS_COUNT; si++)
+                for (int si = 0; si < Stats.StatsCount; si++)
                 {
-                    int statIndex = Values.statsDisplayOrder[si];
-                    if (statIndex == (int)StatNames.Torpidity || !creature.Species.UsesStat(statIndex))
+                    int statIndex = Stats.DisplayOrder[si];
+                    if (statIndex == Stats.Torpidity || !creature.Species.UsesStat(statIndex))
                         continue;
 
                     int y = currentYPosition + (height / 9) + (statDisplayIndex++) * statLineHeight;
@@ -200,8 +201,6 @@ namespace ARKBreedingStats.library
                 }
 
                 // colors
-                var enabledColorRegions = creature.Species.EnabledColorRegions;
-
                 int xColor = (int)(xRightBrValue + meanLetterWidth * 3.5);
                 int circleDiameter = height * 4 / 45;
                 int colorRowHeight = circleDiameter + 2;
@@ -213,7 +212,7 @@ namespace ARKBreedingStats.library
                 if (imageSize > 5)
                 {
                     using (var crBmp =
-                        CreatureColored.GetColoredCreature(creature.colors, creature.Species, enabledColorRegions,
+                        CreatureColored.GetColoredCreature(creature.colors, creature.Species, creature.Species.EnabledColorRegions,
                             imageSize, onlyImage: true, creatureSex: creature.sex))
                     {
                         if (crBmp != null)
@@ -232,9 +231,9 @@ namespace ARKBreedingStats.library
                 {
                     g.DrawString(Loc.S("Colors"), font, fontBrush, xColor, currentYPosition);
                     int colorRow = 0;
-                    for (int ci = 0; ci < Species.ColorRegionCount; ci++)
+                    for (int ci = 0; ci < Ark.ColorRegionCount; ci++)
                     {
-                        if (!enabledColorRegions[ci])
+                        if (!creature.Species.EnabledColorRegions[ci])
                             continue;
 
                         int y = currentYPosition + (height / 9) + (colorRow++) * colorRowHeight;
@@ -251,20 +250,23 @@ namespace ARKBreedingStats.library
 
                         if (displayExtraRegionNames || (!creatureImageShown && displayRegionNamesIfNoImage))
                         {
-                            colorRegionName = creature.Species.colors[ci].name;
-                            int totalColorLength = colorRegionName.Length + 11;
-                            if (totalColorLength > maxColorNameLength)
+                            colorRegionName = creature.Species.colors?[ci]?.name;
+                            if (colorRegionName != null)
                             {
-                                // shorten color region name
-                                int lengthForRegionName =
-                                    colorRegionName.Length - (totalColorLength - maxColorNameLength);
-                                colorRegionName = lengthForRegionName < 2
-                                    ? string.Empty
-                                    : colorRegionName.Substring(0, lengthForRegionName - 1) + "…";
-                            }
+                                int totalColorLength = colorRegionName.Length + 11;
+                                if (totalColorLength > maxColorNameLength)
+                                {
+                                    // shorten color region name
+                                    int lengthForRegionName =
+                                        colorRegionName.Length - (totalColorLength - maxColorNameLength);
+                                    colorRegionName = lengthForRegionName < 2
+                                        ? string.Empty
+                                        : colorRegionName.Substring(0, lengthForRegionName - 1) + "…";
+                                }
 
-                            if (!string.IsNullOrEmpty(colorRegionName))
-                                colorRegionName = " (" + colorRegionName + ")";
+                                if (!string.IsNullOrEmpty(colorRegionName))
+                                    colorRegionName = " (" + colorRegionName + ")";
+                            }
                         }
 
                         g.DrawString($"{creature.colors[ci]} - [{ci}]{colorRegionName}",
@@ -290,7 +292,7 @@ namespace ARKBreedingStats.library
                 if (cc != null && displayMaxWildLevel)
                 {
                     g.DrawString($"{Loc.S("max wild level")}: {cc.maxWildLevel}",
-                        fontSmall, fontBrush, width - 2 * frameThickness, height - fontSizeSmall - 4 * frameThickness, stringFormatRight);
+                        fontSmall, fontBrush, width - 2 * frameThickness, height - frameThickness, stringFormatRightUp);
                 }
 
                 // frame
@@ -318,7 +320,7 @@ namespace ARKBreedingStats.library
         private static int MaxCharLength(double[] values)
         {
             int max = 0;
-            for (int si = 0; si < Values.STATS_COUNT; si++)
+            for (int si = 0; si < Stats.StatsCount; si++)
             {
                 int l = values[si].ToString("0").Length + Utils.Precision(si);
                 if (l > max) max = l;

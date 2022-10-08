@@ -12,8 +12,25 @@ namespace ARKBreedingStats
         [STAThread]
         static void Main()
         {
+#if !DEBUG
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += UnhandledExceptionHandler;
+#endif
+
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 1; i < args.Length; i++)
+            {
+                switch (args[i].ToLowerInvariant())
+                {
+                    case "cleanupupdater":
+                        FileService.TryDeleteFile(Path.Combine(Path.GetTempPath(), Updater.Updater.UpdaterExe));
+                        break;
+                    case "-setlanguage":
+                        var language = args.Length > ++i ? args[i] : null;
+                        Properties.Settings.Default.language = language;
+                        break;
+                }
+            }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

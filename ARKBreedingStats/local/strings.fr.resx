@@ -1026,9 +1026,6 @@ Certaines progénitures peuvent être moins bonnes qu'en mode Statistiques Elev�
   <data name="clearColorsFilters" xml:space="preserve">
     <value>Effacer les filtres de couleur</value>
   </data>
-  <data name="groupLibraryBySpecies" xml:space="preserve">
-    <value>Grouper la bibliothèque par espèces</value>
-  </data>
   <data name="libraryFilterToolStripMenuItem" xml:space="preserve">
     <value>Filtres de la bibliothèque…</value>
   </data>
@@ -1289,8 +1286,9 @@ Remarque
 Ark id dans le jeu
 Serveur
 Tags
-Filtre pour les stats avec {statAbb} [==|&lt;|&gt;] {value}, par exemple pv &gt; 20, en == 35
-Filtre pour les couleurs avec c{region}: {colorValue} {colorValue2}, par exemple c0: 20, c5: 3 4 5 6, c1: 13 14</value>
+Filtre pour les stats avec {statAbb} [==|&amp;lt;|&amp;gt;] {value}, par exemple pv &amp;gt; 20, en == 35
+Filtre pour les couleurs avec c{region}: {colorValue} {colorValue2}, par exemple c0: 20, c5: 3 4 5 6, c1: 13 14
+It's also possible to filter for creatures with a color in one of multiple possible regions. E.g. to display all creatures with the color 10 or 20 in any region use: c0 1 2 3 4 5: 10 20</value>
   </data>
   <data name="ClickDisplayFile" xml:space="preserve">
     <value>Cliquer pour afficher le fichier dans l'explorateur</value>
@@ -1330,5 +1328,8 @@ Filtre pour les couleurs avec c{region}: {colorValue} {colorValue2}, par exemple
   </data>
   <data name="LbAlternativeColor" xml:space="preserve">
     <value>Maintenir la touche Ctrl enfoncée pour sélectionner un autre identifiant de couleur (bordure rouge). Maintenir Ctrl et cliquer sur aucune couleur pour le désactiver.</value>
+  </data>
+  <data name="groupLibraryBySpecies" xml:space="preserve">
+    <value>Grouper la bibliothèque par espèces</value>
   </data>
 </root>

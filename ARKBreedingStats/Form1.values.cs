@@ -1,6 +1,5 @@
 ﻿using ARKBreedingStats.Library;
 using ARKBreedingStats.mods;
-using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
@@ -21,19 +20,19 @@ namespace ARKBreedingStats
         /// <summary>
         /// Loads the mod value files for the creatureCollection. If a file is not available locally, it's tried to download it.
         /// </summary>
-        /// <param name="modValueFileNames"></param>
+        /// <param name="modFilesToLoad"></param>
         /// <param name="showResult"></param>
         /// <param name="applySettings"></param>
         /// <param name="mods"></param>
         /// <returns></returns>
-        private bool LoadModValueFiles(List<string> modValueFileNames, bool showResult, bool applySettings, out List<Mod> mods)
+        private bool LoadModValueFiles(List<string> modFilesToLoad, bool showResult, bool applySettings, out List<Mod> mods)
         {
-            if (modValueFileNames == null) throw new ArgumentNullException();
+            if (modFilesToLoad == null) throw new ArgumentNullException();
 
             // first ensure that all mod-files are available
-            CheckAvailabilityAndUpdateModFiles(modValueFileNames, Values.V);
+            CheckAvailabilityAndUpdateModFiles(modFilesToLoad, Values.V);
 
-            bool modFilesLoaded = Values.V.LoadModValues(modValueFileNames, true, out mods, out string resultsMessage);
+            bool modFilesLoaded = Values.V.LoadModValues(modFilesToLoad, true, out mods, out string resultsMessage);
 
             if (modFilesLoaded)
             {
@@ -102,11 +101,9 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns true if files were downloaded.
         /// </summary>
-        /// <param name="modValueFileNames"></param>
-        /// <returns></returns>
-        private static bool CheckAvailabilityAndUpdateModFiles(List<string> modValueFileNames, Values values)
+        private static bool CheckAvailabilityAndUpdateModFiles(List<string> modFilesToCheck, Values values)
         {
-            var (missingModValueFilesOnlineAvailable, missingModValueFilesOnlineNotAvailable, modValueFilesWithAvailableUpdate) = values.CheckAvailabilityAndUpdateModFiles(modValueFileNames);
+            var (missingModValueFilesOnlineAvailable, missingModValueFilesOnlineNotAvailable, modValueFilesWithAvailableUpdate) = values.CheckAvailabilityAndUpdateModFiles(modFilesToCheck);
 
             bool filesDownloaded = false;
 
@@ -147,6 +144,7 @@ namespace ARKBreedingStats
         private static async Task<bool> LoadModsManifestAsync(Values values, bool forceUpdate = false)
         {
             ModsManifest modsManifest = null;
+
             try
             {
                 try
@@ -183,31 +181,22 @@ namespace ARKBreedingStats
             return true;
         }
 
-        private static void LoadServerMultiplierPresets(Values values)
-        {
-            if (!ServerMultipliersPresets.TryLoadServerMultipliersPresets(out values.serverMultipliersPresets))
-            {
-                MessageBoxes.ShowMessageBox("The file with the server multipliers couldn't be loaded. Changed settings, e.g. for the singleplayer will be not available.\nIt's recommended to download the application again.",
-                    $"Server multiplier file not loaded");
-            }
-        }
-
         /// <summary>
         /// Loads the default stat values. Returns true if successful.
         /// </summary>
         /// <returns></returns>
-        private bool LoadStatValues(Values values)
+        private bool LoadStatValues(Values values, bool forceReload)
         {
             bool success = false;
 
             try
             {
-                values = values.LoadValues();
-
                 if (values.modsManifest == null)
-                    _ = Task.Run(async () => await LoadModsManifestAsync(values));
-                if (values.serverMultipliersPresets == null)
-                    LoadServerMultiplierPresets(values);
+                    LoadModsManifestAsync(values).Wait();
+
+                values.LoadValues(forceReload, out var errorMessage, out var errorMessageTitle);
+                if (!string.IsNullOrEmpty(errorMessage))
+                    MessageBoxes.ShowMessageBox(errorMessage, errorMessageTitle);
 
                 success = true;
             }

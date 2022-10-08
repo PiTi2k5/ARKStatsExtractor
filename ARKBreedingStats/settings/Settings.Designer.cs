@@ -133,6 +133,8 @@
             this.buttonEventToDefault = new System.Windows.Forms.Button();
             this.labelEvent = new System.Windows.Forms.Label();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
+            this.groupBox31 = new System.Windows.Forms.GroupBox();
+            this.CbHideInvisibleColorRegions = new System.Windows.Forms.CheckBox();
             this.groupBox30 = new System.Windows.Forms.GroupBox();
             this.CbExportTableFieldsAll = new System.Windows.Forms.CheckBox();
             this.BExportSpreadsheetMoveDown = new System.Windows.Forms.Button();
@@ -219,6 +221,7 @@
             this.label30 = new System.Windows.Forms.Label();
             this.nudImportLowerBoundTE = new ARKBreedingStats.uiControls.Nud();
             this.groupBox22 = new System.Windows.Forms.GroupBox();
+            this.CbBringToFrontOnImportExportIssue = new System.Windows.Forms.CheckBox();
             this.CbAutoExtractAddToLibrary = new System.Windows.Forms.CheckBox();
             this.CbAutoImportSuccessGotoLibrary = new System.Windows.Forms.CheckBox();
             this.TbExportFileRename = new System.Windows.Forms.TextBox();
@@ -318,6 +321,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.BtNewRandomInfoGraphicCreature = new System.Windows.Forms.Button();
             this.groupBoxMultiplier.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudBabyImprintAmountEvent)).BeginInit();
@@ -364,6 +368,7 @@
             this.groupBox11.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudWildLevelStep)).BeginInit();
             this.tabPageGeneral.SuspendLayout();
+            this.groupBox31.SuspendLayout();
             this.groupBox30.SuspendLayout();
             this.GbImgCacheLocalAppData.SuspendLayout();
             this.groupBox16.SuspendLayout();
@@ -1892,6 +1897,7 @@
             // tabPageGeneral
             // 
             this.tabPageGeneral.AutoScroll = true;
+            this.tabPageGeneral.Controls.Add(this.groupBox31);
             this.tabPageGeneral.Controls.Add(this.groupBox30);
             this.tabPageGeneral.Controls.Add(this.GbImgCacheLocalAppData);
             this.tabPageGeneral.Controls.Add(this.groupBox16);
@@ -1912,15 +1918,35 @@
             this.tabPageGeneral.Text = "General";
             this.tabPageGeneral.UseVisualStyleBackColor = true;
             // 
+            // groupBox31
+            // 
+            this.groupBox31.Controls.Add(this.CbHideInvisibleColorRegions);
+            this.groupBox31.Location = new System.Drawing.Point(329, 283);
+            this.groupBox31.Name = "groupBox31";
+            this.groupBox31.Size = new System.Drawing.Size(413, 43);
+            this.groupBox31.TabIndex = 14;
+            this.groupBox31.TabStop = false;
+            this.groupBox31.Text = "ColorRegions";
+            // 
+            // CbHideInvisibleColorRegions
+            // 
+            this.CbHideInvisibleColorRegions.AutoSize = true;
+            this.CbHideInvisibleColorRegions.Location = new System.Drawing.Point(6, 19);
+            this.CbHideInvisibleColorRegions.Name = "CbHideInvisibleColorRegions";
+            this.CbHideInvisibleColorRegions.Size = new System.Drawing.Size(149, 17);
+            this.CbHideInvisibleColorRegions.TabIndex = 0;
+            this.CbHideInvisibleColorRegions.Text = "Hide invisble color regions";
+            this.CbHideInvisibleColorRegions.UseVisualStyleBackColor = true;
+            // 
             // groupBox30
             // 
             this.groupBox30.Controls.Add(this.CbExportTableFieldsAll);
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveDown);
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveUp);
             this.groupBox30.Controls.Add(this.ClbExportSpreadsheetFields);
-            this.groupBox30.Location = new System.Drawing.Point(329, 283);
+            this.groupBox30.Location = new System.Drawing.Point(329, 332);
             this.groupBox30.Name = "groupBox30";
-            this.groupBox30.Size = new System.Drawing.Size(413, 330);
+            this.groupBox30.Size = new System.Drawing.Size(413, 281);
             this.groupBox30.TabIndex = 13;
             this.groupBox30.TabStop = false;
             this.groupBox30.Text = "Info to export for spreadsheet";
@@ -1961,7 +1987,7 @@
             this.ClbExportSpreadsheetFields.FormattingEnabled = true;
             this.ClbExportSpreadsheetFields.Location = new System.Drawing.Point(36, 41);
             this.ClbExportSpreadsheetFields.Name = "ClbExportSpreadsheetFields";
-            this.ClbExportSpreadsheetFields.Size = new System.Drawing.Size(371, 274);
+            this.ClbExportSpreadsheetFields.Size = new System.Drawing.Size(371, 229);
             this.ClbExportSpreadsheetFields.TabIndex = 12;
             // 
             // GbImgCacheLocalAppData
@@ -2249,6 +2275,7 @@
             // 
             // tabPageInfoGraphic
             // 
+            this.tabPageInfoGraphic.Controls.Add(this.BtNewRandomInfoGraphicCreature);
             this.tabPageInfoGraphic.Controls.Add(this.label63);
             this.tabPageInfoGraphic.Controls.Add(this.PbInfoGraphicPreview);
             this.tabPageInfoGraphic.Controls.Add(this.groupBox32);
@@ -2850,6 +2877,7 @@
             // 
             // groupBox22
             // 
+            this.groupBox22.Controls.Add(this.CbBringToFrontOnImportExportIssue);
             this.groupBox22.Controls.Add(this.CbAutoExtractAddToLibrary);
             this.groupBox22.Controls.Add(this.CbAutoImportSuccessGotoLibrary);
             this.groupBox22.Controls.Add(this.TbExportFileRename);
@@ -2868,6 +2896,16 @@
             this.groupBox22.TabIndex = 6;
             this.groupBox22.TabStop = false;
             this.groupBox22.Text = "Auto import";
+            // 
+            // CbBringToFrontOnImportExportIssue
+            // 
+            this.CbBringToFrontOnImportExportIssue.AutoSize = true;
+            this.CbBringToFrontOnImportExportIssue.Location = new System.Drawing.Point(155, 165);
+            this.CbBringToFrontOnImportExportIssue.Name = "CbBringToFrontOnImportExportIssue";
+            this.CbBringToFrontOnImportExportIssue.Size = new System.Drawing.Size(198, 17);
+            this.CbBringToFrontOnImportExportIssue.TabIndex = 11;
+            this.CbBringToFrontOnImportExportIssue.Text = "Bring window to front on import issue";
+            this.CbBringToFrontOnImportExportIssue.UseVisualStyleBackColor = true;
             // 
             // CbAutoExtractAddToLibrary
             // 
@@ -3328,7 +3366,7 @@
             this.customSCCustom.Location = new System.Drawing.Point(6, 139);
             this.customSCCustom.Name = "customSCCustom";
             this.customSCCustom.Size = new System.Drawing.Size(401, 23);
-            this.customSCCustom.SoundFile = "";
+            this.customSCCustom.SoundFile = null;
             this.customSCCustom.TabIndex = 4;
             // 
             // customSCWakeup
@@ -3336,7 +3374,7 @@
             this.customSCWakeup.Location = new System.Drawing.Point(6, 81);
             this.customSCWakeup.Name = "customSCWakeup";
             this.customSCWakeup.Size = new System.Drawing.Size(401, 23);
-            this.customSCWakeup.SoundFile = null;
+            this.customSCWakeup.SoundFile = "";
             this.customSCWakeup.TabIndex = 2;
             // 
             // customSCBirth
@@ -3344,7 +3382,7 @@
             this.customSCBirth.Location = new System.Drawing.Point(6, 110);
             this.customSCBirth.Name = "customSCBirth";
             this.customSCBirth.Size = new System.Drawing.Size(401, 23);
-            this.customSCBirth.SoundFile = null;
+            this.customSCBirth.SoundFile = "";
             this.customSCBirth.TabIndex = 3;
             // 
             // customSCStarving
@@ -3352,7 +3390,7 @@
             this.customSCStarving.Location = new System.Drawing.Point(6, 52);
             this.customSCStarving.Name = "customSCStarving";
             this.customSCStarving.Size = new System.Drawing.Size(401, 23);
-            this.customSCStarving.SoundFile = "";
+            this.customSCStarving.SoundFile = null;
             this.customSCStarving.TabIndex = 1;
             // 
             // label20
@@ -4003,6 +4041,16 @@
             this.panel1.Size = new System.Drawing.Size(758, 30);
             this.panel1.TabIndex = 12;
             // 
+            // BtNewRandomInfoGraphicCreature
+            // 
+            this.BtNewRandomInfoGraphicCreature.Location = new System.Drawing.Point(62, 293);
+            this.BtNewRandomInfoGraphicCreature.Name = "BtNewRandomInfoGraphicCreature";
+            this.BtNewRandomInfoGraphicCreature.Size = new System.Drawing.Size(200, 20);
+            this.BtNewRandomInfoGraphicCreature.TabIndex = 19;
+            this.BtNewRandomInfoGraphicCreature.Text = "new random creature for preview";
+            this.BtNewRandomInfoGraphicCreature.UseVisualStyleBackColor = true;
+            this.BtNewRandomInfoGraphicCreature.Click += new System.EventHandler(this.BtNewRandomInfoGraphicCreature_Click);
+            // 
             // Settings
             // 
             this.AcceptButton = this.buttonOK;
@@ -4075,6 +4123,8 @@
             this.groupBox11.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudWildLevelStep)).EndInit();
             this.tabPageGeneral.ResumeLayout(false);
+            this.groupBox31.ResumeLayout(false);
+            this.groupBox31.PerformLayout();
             this.groupBox30.ResumeLayout(false);
             this.groupBox30.PerformLayout();
             this.GbImgCacheLocalAppData.ResumeLayout(false);
@@ -4448,5 +4498,9 @@
         private System.Windows.Forms.GroupBox groupBox32;
         private System.Windows.Forms.PictureBox PbInfoGraphicPreview;
         private System.Windows.Forms.Label label63;
+        private System.Windows.Forms.CheckBox CbBringToFrontOnImportExportIssue;
+        private System.Windows.Forms.GroupBox groupBox31;
+        private System.Windows.Forms.CheckBox CbHideInvisibleColorRegions;
+        private System.Windows.Forms.Button BtNewRandomInfoGraphicCreature;
     }
 }

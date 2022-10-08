@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -1186,18 +1186,6 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool LibraryGroupBySpecies {
-            get {
-                return ((bool)(this["LibraryGroupBySpecies"]));
-            }
-            set {
-                this["LibraryGroupBySpecies"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50, 50, 800, 600")]
         public global::System.Drawing.Rectangle LibraryFilterWindowRect {
             get {
@@ -2049,6 +2037,102 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["PlayerListColumnDisplayIndices"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ImportExportedBringToFrontOnIssue {
+            get {
+                return ((bool)(this["ImportExportedBringToFrontOnIssue"]));
+            }
+            set {
+                this["ImportExportedBringToFrontOnIssue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool HideInvisibleColorRegions {
+            get {
+                return ((bool)(this["HideInvisibleColorRegions"]));
+            }
+            set {
+                this["HideInvisibleColorRegions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseTribeFilterForBreedingPlan {
+            get {
+                return ((bool)(this["UseTribeFilterForBreedingPlan"]));
+            }
+            set {
+                this["UseTribeFilterForBreedingPlan"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterHideAdults {
+            get {
+                return ((bool)(this["FilterHideAdults"]));
+            }
+            set {
+                this["FilterHideAdults"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterHideNonAdults {
+            get {
+                return ((bool)(this["FilterHideNonAdults"]));
+            }
+            set {
+                this["FilterHideNonAdults"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterHideCooldowns {
+            get {
+                return ((bool)(this["FilterHideCooldowns"]));
+            }
+            set {
+                this["FilterHideCooldowns"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterHideNonCooldowns {
+            get {
+                return ((bool)(this["FilterHideNonCooldowns"]));
+            }
+            set {
+                this["FilterHideNonCooldowns"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LibraryGroupBySpecies {
+            get {
+                return ((bool)(this["LibraryGroupBySpecies"]));
+            }
+            set {
+                this["LibraryGroupBySpecies"] = value;
             }
         }
     }

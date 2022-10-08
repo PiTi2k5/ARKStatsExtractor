@@ -1,10 +1,10 @@
-﻿using ARKBreedingStats.values;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using ARKBreedingStats.mods;
 
 namespace ARKBreedingStats.species
 {
@@ -86,7 +86,7 @@ namespace ARKBreedingStats.species
         /// </summary>
         private double[] statImprintMultOverride;
         [JsonProperty]
-        public List<ColorRegion> colors; // every species has up to 6 color regions
+        public ColorRegion[] colors; // every species has up to 6 color regions
         [JsonProperty]
         public TamingData taming;
         [JsonProperty]
@@ -119,11 +119,6 @@ namespace ARKBreedingStats.species
         public bool IsDomesticable;
 
         /// <summary>
-        /// Number of possible color regions for all species.
-        /// </summary>
-        public const int ColorRegionCount = 6;
-
-        /// <summary>
         /// creates properties that are not created during deserialization. They are set later with the raw-values with the multipliers applied.
         /// </summary>
         [OnDeserialized]
@@ -133,13 +128,13 @@ namespace ARKBreedingStats.species
 
             InitializeNames();
 
-            stats = new CreatureStat[Values.STATS_COUNT];
+            stats = new CreatureStat[Stats.StatsCount];
             if (altBaseStatsRaw != null)
-                altStats = new CreatureStat[Values.STATS_COUNT];
+                altStats = new CreatureStat[Stats.StatsCount];
 
             usedStats = 0;
-            double[][] completeRaws = new double[Values.STATS_COUNT][];
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            double[][] completeRaws = new double[Stats.StatsCount][];
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 stats[s] = new CreatureStat();
                 if (altBaseStatsRaw?.ContainsKey(s) ?? false)
@@ -165,10 +160,15 @@ namespace ARKBreedingStats.species
             if (TamedBaseHealthMultiplier == null)
                 TamedBaseHealthMultiplier = 1;
 
-            if (colors == null)
-                colors = new List<ColorRegion>(ColorRegionCount);
-            for (int ci = colors.Count; ci < ColorRegionCount; ci++)
-                colors.Add(null);
+            if (colors?.Length == 0)
+                colors = null;
+            if (colors != null && colors.Length < Ark.ColorRegionCount)
+            {
+                var allColorRegions = new ColorRegion[Ark.ColorRegionCount];
+                colors.CopyTo(allColorRegions, 0);
+                colors = allColorRegions;
+            }
+
             if (string.IsNullOrEmpty(blueprintPath))
                 blueprintPath = string.Empty;
 
@@ -210,26 +210,42 @@ namespace ARKBreedingStats.species
             SortName = DescriptiveNameAndMod;
         }
 
+
+        /// <summary>
+        /// Sets the ArkColor objects for the natural occurring colors. Call after colors are loaded or changed by loading mods.
+        /// </summary>
         public void InitializeColors(ArkColors arkColors)
         {
-            for (int i = 0; i < ColorRegionCount; i++)
-                colors[i]?.Initialize(arkColors);
+            if (colors != null)
+            {
+                for (int i = 0; i < Ark.ColorRegionCount; i++)
+                    colors[i]?.Initialize(arkColors);
+            }
+
+            InitializeColorRegions();
+        }
+
+        /// <summary>
+        /// Sets which color regions are enabled. Call after Properties.Settings.Default.HideInvisibleColorRegions was changed.
+        /// </summary>
+        public void InitializeColorRegions()
+        {
+            EnabledColorRegions = colors?.Select(n =>
+                      !string.IsNullOrEmpty(n?.name) && (!n.invisible || !Properties.Settings.Default.HideInvisibleColorRegions)
+                ).ToArray() ??
+                new[] { true, true, true, true, true, true, };
         }
 
         /// <summary>
         /// Array indicating which color regions are used by this species.
         /// </summary>
-        public bool[] EnabledColorRegions => colors?.Select(n => !string.IsNullOrEmpty(n?.name)).ToArray() ??
-                                             new[] { true, true, true, true, true, true, };
+        public bool[] EnabledColorRegions;
 
         /// <summary>
         /// Indicates the multipliers for each stat applied to the imprinting-bonus.
         /// To override the multipliers, set the value to a custom array.
         /// </summary>
-        public double[] StatImprintMultipliers
-        {
-            get => statImprintMultOverride ?? statImprintMult;
-        }
+        public double[] StatImprintMultipliers => statImprintMultOverride ?? statImprintMult;
 
         /// <summary>
         /// The default stat imprinting multipliers.
@@ -249,11 +265,11 @@ namespace ARKBreedingStats.species
             }
 
             // if a value if null, use the default value
-            double[] overrideValues = new double[Values.STATS_COUNT];
+            double[] overrideValues = new double[Stats.StatsCount];
 
             // if value is equal to default, set override to null
             bool isEqual = true;
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 if (overrides[s] == null)
                 {
@@ -326,14 +342,14 @@ namespace ARKBreedingStats.species
         {
             if (rand == null) rand = new Random();
 
-            var randomColors = new byte[ColorRegionCount];
-            for (int ci = 0; ci < ColorRegionCount; ci++)
+            var randomColors = new byte[Ark.ColorRegionCount];
+            for (int ci = 0; ci < Ark.ColorRegionCount; ci++)
             {
                 if (!EnabledColorRegions[ci]) continue;
-                var colorCount = colors[ci]?.naturalColors?.Count ?? 0;
+                var colorCount = colors?[ci]?.naturalColors?.Count ?? 0;
                 if (colorCount == 0)
-                    randomColors[ci] = (byte)(6 + rand.Next(50));
-                else randomColors[ci] = (byte)colors[ci].naturalColors[rand.Next(colorCount)].Id;
+                    randomColors[ci] = (byte)(6 + rand.Next(100));
+                else randomColors[ci] = colors[ci].naturalColors[rand.Next(colorCount)].Id;
             }
 
             return randomColors;

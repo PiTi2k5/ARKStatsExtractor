@@ -1011,9 +1011,6 @@ Wählen, um die Top stats in einer Kreature zu vereinen. Dieser Modus geht ein R
   <data name="clearColorsFilters" xml:space="preserve">
     <value>Farbfilter löschen</value>
   </data>
-  <data name="groupLibraryBySpecies" xml:space="preserve">
-    <value>Bibliothek nach Spezies gruppieren</value>
-  </data>
   <data name="libraryFilterToolStripMenuItem" xml:space="preserve">
     <value>Bibliothek filtern…</value>
   </data>
@@ -1283,7 +1280,8 @@ Ark id im Spiel
 Server
 Tags
 Filter nach Stats mit {englische statAbkürzung} [==|&lt;|&gt;] {Wert}, z.B. hp &gt; 20, st == 35
-Filter nach Farben mit c{Region}: {FarbCode} {FarbCode2}, z.B. c0: 20, c5: 3 4 5 6, c1: 13 14</value>
+Filter nach Farben mit c{Regionen}: {FarbCode} {FarbCode2}, z.B. c0: 20, c5: 3 4 5 6, c1: 13 14
+Es ist auch möglich Tiere mit einer Farbe in mehreren möglichen Regionen zu filtern. Z.B. um alle Tiere mit der Farb-Id 10 oder 20 in irgendeiner Region anzuzeigen nutze: c0 1 2 3 4 5: 10 20</value>
   </data>
   <data name="ClickDisplayFile" xml:space="preserve">
     <value>Klicken um Datei im Explorer anzuzeigen</value>
@@ -1320,5 +1318,8 @@ Filter nach Farben mit c{Region}: {FarbCode} {FarbCode2}, z.B. c0: 20, c5: 3 4 5
   </data>
   <data name="lbServerTT" xml:space="preserve">
     <value>Klicken um das Feld zu fixieren. Wenn das Feld fixiert ist, hat es einen grauen Hintergrund und wird beim Importieren einer Kreatur nicht verändert.</value>
+  </data>
+  <data name="groupLibraryBySpecies" xml:space="preserve">
+    <value>Bibliothek nach Spezies gruppieren</value>
   </data>
 </root>

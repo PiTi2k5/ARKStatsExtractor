@@ -50,6 +50,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>ARKSmartBreeding.ico</ApplicationIcon>
@@ -80,7 +81,7 @@
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
     <Compile Include="ArkConstants.cs" />
-    <Compile Include="Ark\GameConstants.cs" />
+    <Compile Include="Ark.cs" />
     <Compile Include="BreedingPlanning\BreedingScore.cs" />
     <Compile Include="library\AddDummyCreaturesSettings.cs">
       <SubType>Form</SubType>
@@ -98,6 +99,7 @@
     <Compile Include="NamePatterns\PatternTemplates.cs" />
     <Compile Include="Pedigree\PedigreeCreation.cs" />
     <Compile Include="Pedigree\IPedigreeCreature.cs" />
+    <Compile Include="species\ArkColors.cs" />
     <Compile Include="uiControls\CreatureAnalysis.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -223,7 +225,6 @@
       <DependentUpon>FtpProgress.cs</DependentUpon>
     </Compile>
     <Compile Include="species\ArkColor.cs" />
-    <Compile Include="species\ArkColors.cs" />
     <Compile Include="settings\FtpCredentials.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -630,6 +631,7 @@
     <Compile Include="utils\Debouncer.cs" />
     <Compile Include="utils\ExportFolderLocation.cs" />
     <Compile Include="utils\ExtensionMethods.cs" />
+    <Compile Include="utils\CreatureListSorter.cs" />
     <Compile Include="utils\MessageBoxes.cs" />
     <Compile Include="NamePatterns\NamePatternFunctions.cs" />
     <Compile Include="utils\RepositoryInfo.cs" />
@@ -640,6 +642,7 @@
     <Compile Include="values\ServerMultipliers.cs" />
     <Compile Include="values\Values.cs" />
     <Compile Include="utils\Win32API.cs" />
+    <Compile Include="values\ValuesFile.cs" />
     <None Include="json\equalColorIds.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -885,6 +888,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="settings\MultiplierSetting.resx">
       <DependentUpon>MultiplierSetting.cs</DependentUpon>
@@ -948,15 +952,15 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentFTP">
-      <Version>27.1.3</Version>
+      <Version>37.0.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
-      <Version>2.9.6</Version>
+      <Version>3.3.3</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.2</Version>
+      <Version>13.0.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -996,8 +1000,8 @@ if $(ConfigurationName) == Release (
 
   powershell -nologo -noprofile -command "$version = (Get-Item '$(TargetPath)').VersionInfo.FileVersion; Compress-Archive -Force -Path '$(TargetDir)*' -DestinationPath """$(SolutionDir)_publish\ARK.Smart.Breeding_$version.zip""" "
 
-  if exist "%25ProgramFiles(x86)%25\Inno Setup 5\ISCC.exe" (
-    "%25ProgramFiles(x86)%25\Inno Setup 5\ISCC.exe" "$(SolutionDir)setup.iss"
+  if exist "%25ProgramFiles(x86)%25\Inno Setup 6\ISCC.exe" (
+    "%25ProgramFiles(x86)%25\Inno Setup 6\ISCC.exe" "$(SolutionDir)setup.iss"
   ) else (
     echo Inno Setup command line compiler not found
   )

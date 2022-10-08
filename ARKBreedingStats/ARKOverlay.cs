@@ -78,7 +78,7 @@ namespace ARKBreedingStats
 
             for (int statIndex = 0; statIndex < _labels.Length; statIndex++)
             {
-                Rectangle r = ArkOcr.Ocr.ocrConfig.labelRectangles[statIndex];
+                Rectangle r = ArkOcr.Ocr.ocrConfig.UsedLabelRectangles[statIndex];
                 _labels[statIndex].Location = new Point(r.Left + r.Width + 30, r.Top - 10);
             }
             lblStatus.Location = new Point(50, 10);
@@ -141,7 +141,7 @@ namespace ARKBreedingStats
         public void SetStatLevels(int[] wildValues, int[] tamedValues, int levelWild, int levelDom, Color[] colors = null)
         {
             // only 7 stats are displayed
-            var displayIndices = new int[] { (int)StatNames.Health, (int)StatNames.Stamina, (int)StatNames.Oxygen, (int)StatNames.Food, (int)StatNames.Weight, (int)StatNames.MeleeDamageMultiplier, (int)StatNames.SpeedMultiplier };
+            var displayIndices = new int[] { Stats.Health, Stats.Stamina, Stats.Oxygen, Stats.Food, Stats.Weight, Stats.MeleeDamageMultiplier, Stats.SpeedMultiplier };
             for (int s = 0; s < 7; s++)
             {
                 int di = displayIndices[s];

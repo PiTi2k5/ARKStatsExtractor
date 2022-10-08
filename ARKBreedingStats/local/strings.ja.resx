@@ -1031,9 +1031,6 @@ OCRで種族の推測が頻繁に間違える場合は、この設定を無効�
   <data name="clearColorsFilters" xml:space="preserve">
     <value>色のフィルターを解除</value>
   </data>
-  <data name="groupLibraryBySpecies" xml:space="preserve">
-    <value>種族でライブラリを切り分ける</value>
-  </data>
   <data name="libraryFilterToolStripMenuItem" xml:space="preserve">
     <value>ライブラリをフィルター...</value>
   </data>
@@ -1294,12 +1291,16 @@ BabyCuddleIntervallMultiplierとBabyMatureSpeedMultiplierが正しいか確認�
 サーバ
 タグ
 Filter for a stats with {statAbb} [==|&lt;|&gt;] {value}, e.g. hp &gt; 20, st == 35
-Filter for colors with c{region}: {colorValue}, e.g. c0: 20, c5: 3</value>
+Filter for colors with c{regions}: {colorValue} {colorValue2}, e.g. c0: 20, c5: 3 4 5 6, c1: 13 14
+It's also possible to filter for creatures with a color in one of multiple possible regions. E.g. to display all creatures with the color 10 or 20 in any region use: c0 1 2 3 4 5: 10 20</value>
   </data>
   <data name="ClickDisplayFile" xml:space="preserve">
     <value>クリックでファイルをエクスプローラーで表示</value>
   </data>
   <data name="ImportingSavegame" xml:space="preserve">
     <value>savegameインポート中</value>
+  </data>
+  <data name="groupLibraryBySpecies" xml:space="preserve">
+    <value>種族でライブラリを切り分ける</value>
   </data>
 </root>

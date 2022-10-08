@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.library;
-using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
@@ -24,6 +23,7 @@ namespace ARKBreedingStats.settings
         private Dictionary<string, string> _languages;
         public SettingsTabPages LastTabPageIndex;
         public bool LanguageChanged;
+        public bool ColorRegionDisplayChanged;
 
         public Settings(CreatureCollection cc, SettingsTabPages page)
         {
@@ -74,8 +74,8 @@ namespace ARKBreedingStats.settings
         {
             InitializeComponent();
             DisplayServerMultiplierPresets();
-            _multSetter = new MultiplierSetting[Values.STATS_COUNT];
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            _multSetter = new MultiplierSetting[Stats.StatsCount];
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 _multSetter[s] = new MultiplierSetting
                 {
@@ -86,7 +86,7 @@ namespace ARKBreedingStats.settings
 
             // set neutral numbers for stat-multipliers to the default values to easier see what is non-default
             ServerMultipliers officialMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 if (s < officialMultipliers.statMultipliers.Length)
                     _multSetter[s].SetNeutralValues(officialMultipliers.statMultipliers[s]);
@@ -180,7 +180,7 @@ namespace ARKBreedingStats.settings
         {
             if (cc.serverMultipliers?.statMultipliers != null)
             {
-                for (int s = 0; s < Values.STATS_COUNT; s++)
+                for (int s = 0; s < Stats.StatsCount; s++)
                 {
                     if (s < cc.serverMultipliers.statMultipliers.Length && cc.serverMultipliers.statMultipliers[s].Length > 3)
                     {
@@ -349,6 +349,7 @@ namespace ARKBreedingStats.settings
             CbExportFileRenameAfterImport.Checked = Properties.Settings.Default.AutoImportedExportFileRename;
             TbExportFileRename.Text = Properties.Settings.Default.AutoImportedExportFileRenamePattern;
             CbAutoImportSuccessGotoLibrary.Checked = Properties.Settings.Default.AutoImportGotoLibraryAfterSuccess;
+            CbBringToFrontOnImportExportIssue.Checked = Properties.Settings.Default.ImportExportedBringToFrontOnIssue;
             nudImportLowerBoundTE.ValueSave = (decimal)Properties.Settings.Default.ImportLowerBoundTE * 100;
             if (Properties.Settings.Default.ImportExportUseTamerStringForOwner)
                 RbTamerStringForOwner.Checked = true;
@@ -402,6 +403,8 @@ namespace ARKBreedingStats.settings
             int langI = cbbLanguage.Items.IndexOf(langKey);
             cbbLanguage.SelectedIndex = langI == -1 ? 0 : langI;
 
+            CbHideInvisibleColorRegions.Checked = Properties.Settings.Default.HideInvisibleColorRegions;
+
             CbbColorMode.SelectedIndex = Math.Min(CbbColorMode.Items.Count, Math.Max(0, Properties.Settings.Default.ColorMode));
         }
 
@@ -413,11 +416,11 @@ namespace ARKBreedingStats.settings
             }
             if (_cc.serverMultipliers.statMultipliers == null)
             {
-                _cc.serverMultipliers.statMultipliers = new double[Values.STATS_COUNT][];
+                _cc.serverMultipliers.statMultipliers = new double[Stats.StatsCount][];
             }
             if (_cc.serverMultipliers?.statMultipliers != null)
             {
-                for (int s = 0; s < Values.STATS_COUNT; s++)
+                for (int s = 0; s < Stats.StatsCount; s++)
                 {
                     if (_cc.serverMultipliers.statMultipliers[s] == null)
                         _cc.serverMultipliers.statMultipliers[s] = new double[4];
@@ -428,7 +431,7 @@ namespace ARKBreedingStats.settings
 
             // Torpidity is handled differently by the game, IwM has no effect. Set IwM to 1.
             // Also see https://github.com/cadon/ARKStatsExtractor/issues/942 for more infos about this.
-            _cc.serverMultipliers.statMultipliers[(int)species.StatNames.Torpidity][3] = 1;
+            _cc.serverMultipliers.statMultipliers[Stats.Torpidity][3] = 1;
 
             _cc.singlePlayerSettings = cbSingleplayerSettings.Checked;
             _cc.maxDomLevel = (int)nudMaxDomLevels.Value;
@@ -571,6 +574,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.AutoImportedExportFileRename = CbExportFileRenameAfterImport.Checked;
             Properties.Settings.Default.AutoImportedExportFileRenamePattern = TbExportFileRename.Text;
             Properties.Settings.Default.AutoImportGotoLibraryAfterSuccess = CbAutoImportSuccessGotoLibrary.Checked;
+            Properties.Settings.Default.ImportExportedBringToFrontOnIssue = CbBringToFrontOnImportExportIssue.Checked;
             Properties.Settings.Default.ImportLowerBoundTE = (double)nudImportLowerBoundTE.Value / 100;
 
             _cc.changeCreatureStatusOnSavegameImport = cbImportUpdateCreatureStatus.Checked;
@@ -615,6 +619,10 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.language = _languages.ContainsKey(lang) ? _languages[lang] : string.Empty;
             LanguageChanged = oldLanguageSetting != Properties.Settings.Default.language;
 
+            var oldColorRegionSetting = Properties.Settings.Default.HideInvisibleColorRegions;
+            Properties.Settings.Default.HideInvisibleColorRegions = CbHideInvisibleColorRegions.Checked;
+            ColorRegionDisplayChanged = oldColorRegionSetting != Properties.Settings.Default.HideInvisibleColorRegions;
+
             Properties.Settings.Default.ColorMode = Math.Max(0, CbbColorMode.SelectedIndex);
 
             Properties.Settings.Default.Save();
@@ -635,7 +643,7 @@ namespace ARKBreedingStats.settings
         /// </summary>
         private void CheckSaveImportPath(string filePath)
         {
-            if (!filePath.EndsWith(".ark"))
+            if (!filePath.EndsWith(".ark") && !filePath.EndsWith(".gz") && !filePath.Contains("*") && !filePath.Contains("(?<"))
             {
                 MessageBoxes.ShowMessageBox($"The file location must include the path and the filename of the save file. The set path\n{filePath}\ndoesn't end with \".ark\" and seems to miss the file name.", "Possibly wrong path", MessageBoxIcon.Warning);
             }
@@ -717,7 +725,7 @@ namespace ARKBreedingStats.settings
             // if an ini file is imported the server is most likely unofficial wit no level cap, if the server has a max level, it will be parsed.
             nudMaxServerLevel.ValueSave = 0;
 
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 ParseAndSetStatMultiplier(0, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
                 ParseAndSetStatMultiplier(1,
@@ -994,7 +1002,7 @@ namespace ARKBreedingStats.settings
             }
 
             if (sm.statMultipliers == null) return;
-            int loopTo = Math.Min(Values.STATS_COUNT, sm.statMultipliers.Length);
+            int loopTo = Math.Min(Stats.StatsCount, sm.statMultipliers.Length);
             for (int s = 0; s < loopTo; s++)
             {
                 _multSetter[s].Multipliers = sm.statMultipliers[s];
@@ -1059,7 +1067,7 @@ namespace ARKBreedingStats.settings
             var cultureForStrings = System.Globalization.CultureInfo.GetCultureInfo("en-US");
 
             // stat multipliers
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            for (int s = 0; s < Stats.StatsCount; s++)
             {
                 sb.AppendLine($"PerLevelStatsMultiplier_DinoTamed_Add[{s}] = {_multSetter[s].Multipliers[0].ToString(cultureForStrings)}");
                 sb.AppendLine($"PerLevelStatsMultiplier_DinoTamed_Affinity[{s}] = {_multSetter[s].Multipliers[1].ToString(cultureForStrings)}");
@@ -1286,7 +1294,7 @@ namespace ARKBreedingStats.settings
         private void CbHighlightAdjustedMultipliers_CheckedChanged(object sender, EventArgs e)
         {
             bool highlight = CbHighlightAdjustedMultipliers.Checked;
-            for (int s = 0; s < Values.STATS_COUNT; s++)
+            for (int s = 0; s < Stats.StatsCount; s++)
                 _multSetter[s].SetHighlighted(highlight);
             nudTamingSpeed.SetExtraHighlightNonDefault(highlight);
             nudDinoCharacterFoodDrain.SetExtraHighlightNonDefault(highlight);
@@ -1430,17 +1438,9 @@ namespace ARKBreedingStats.settings
         private void ShowInfoGraphicPreview()
         {
             if (_infoGraphicPreviewCreature == null)
-            {
-                _infoGraphicPreviewCreature = DummyCreatures.CreateCreatures(1)?.FirstOrDefault();
-                if (_infoGraphicPreviewCreature == null) return;
-                // add some dom levels
-                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.Health] = 5;
-                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.Weight] = 15;
-                _infoGraphicPreviewCreature.levelsDom[(int)StatNames.MeleeDamageMultiplier] = 8;
-                _infoGraphicPreviewCreature.RecalculateCreatureValues(_cc.wildLevelStep);
-            }
+                CreateInfoGraphicCreature();
 
-            var speciesImage = _infoGraphicPreviewCreature.InfoGraphic(_cc,
+            var speciesImage = _infoGraphicPreviewCreature?.InfoGraphic(_cc,
                 (int)nudInfoGraphicHeight.Value,
                 CbbInfoGraphicFontName.Text,
                 BtInfoGraphicForeColor.BackColor,
@@ -1461,6 +1461,24 @@ namespace ARKBreedingStats.settings
             PbInfoGraphicPreview.Size = speciesImage.Size;
             PbInfoGraphicPreview.SetImageAndDisposeOld(speciesImage);
         }
+        private void BtNewRandomInfoGraphicCreature_Click(object sender, EventArgs e)
+        {
+            _infoGraphicPreviewCreature = null;
+            ShowInfoGraphicPreview();
+        }
+
+        private void CreateInfoGraphicCreature()
+        {
+            _infoGraphicPreviewCreature = DummyCreatures.CreateCreatures(1)?.FirstOrDefault();
+            if (_infoGraphicPreviewCreature == null) return;
+            // add some dom levels
+            var rand = new Random();
+            _infoGraphicPreviewCreature.levelsDom[Stats.Health] = rand.Next(20);
+            _infoGraphicPreviewCreature.levelsDom[Stats.Stamina] = rand.Next(20);
+            _infoGraphicPreviewCreature.levelsDom[Stats.Weight] = rand.Next(20);
+            _infoGraphicPreviewCreature.levelsDom[Stats.MeleeDamageMultiplier] = rand.Next(20);
+            _infoGraphicPreviewCreature.RecalculateCreatureValues(_cc.wildLevelStep);
+        }
 
         private void nudInfoGraphicHeight_ValueChanged(object sender, EventArgs e)
         {
@@ -1473,10 +1491,5 @@ namespace ARKBreedingStats.settings
         }
 
         #endregion
-
-        private void nudInfoGraphicWidth_ValueChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }

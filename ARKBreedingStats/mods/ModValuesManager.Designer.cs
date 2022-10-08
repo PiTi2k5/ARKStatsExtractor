@@ -1,4 +1,4 @@
-﻿namespace ARKBreedingStats.uiControls
+﻿namespace ARKBreedingStats.mods
 {
     partial class ModValuesManager
     {
@@ -28,11 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ModValuesManager));
             this.lbModList = new System.Windows.Forms.ListBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btRemoveMod = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.lbAvailableModFiles = new System.Windows.Forms.ListBox();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.TbModFilter = new System.Windows.Forms.TextBox();
+            this.BtClearFilter = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.LbModVersion = new System.Windows.Forms.Label();
@@ -45,6 +49,7 @@
             this.lbModTag = new System.Windows.Forms.Label();
             this.lbModName = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.label6 = new System.Windows.Forms.Label();
             this.LlUnofficialModFiles = new System.Windows.Forms.LinkLabel();
             this.linkLabelCustomModManual = new System.Windows.Forms.LinkLabel();
             this.btOpenValuesFolder = new System.Windows.Forms.Button();
@@ -55,15 +60,12 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btAddMod = new System.Windows.Forms.Button();
             this.BtRemoveAllMods = new System.Windows.Forms.Button();
-            this.TbModFilter = new System.Windows.Forms.TextBox();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.BtClearFilter = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // lbModList
@@ -138,6 +140,37 @@
             this.lbAvailableModFiles.TabIndex = 0;
             this.lbAvailableModFiles.SelectedIndexChanged += new System.EventHandler(this.LbAvailableModFiles_SelectedIndexChanged);
             this.lbAvailableModFiles.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.LbAvailableModFiles_MouseDoubleClick);
+            // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.TbModFilter);
+            this.panel2.Controls.Add(this.BtClearFilter);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel2.Location = new System.Drawing.Point(3, 16);
+            this.panel2.Name = "panel2";
+            this.panel2.Padding = new System.Windows.Forms.Padding(3);
+            this.panel2.Size = new System.Drawing.Size(221, 27);
+            this.panel2.TabIndex = 10;
+            // 
+            // TbModFilter
+            // 
+            this.TbModFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TbModFilter.Location = new System.Drawing.Point(3, 3);
+            this.TbModFilter.Name = "TbModFilter";
+            this.TbModFilter.Size = new System.Drawing.Size(193, 20);
+            this.TbModFilter.TabIndex = 10;
+            this.TbModFilter.TextChanged += new System.EventHandler(this.TbModFilter_TextChanged);
+            // 
+            // BtClearFilter
+            // 
+            this.BtClearFilter.Dock = System.Windows.Forms.DockStyle.Right;
+            this.BtClearFilter.Location = new System.Drawing.Point(196, 3);
+            this.BtClearFilter.Name = "BtClearFilter";
+            this.BtClearFilter.Size = new System.Drawing.Size(22, 21);
+            this.BtClearFilter.TabIndex = 11;
+            this.BtClearFilter.Text = "×";
+            this.BtClearFilter.UseVisualStyleBackColor = true;
+            this.BtClearFilter.Click += new System.EventHandler(this.BtClearFilter_Click);
             // 
             // groupBox1
             // 
@@ -264,6 +297,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.label6);
             this.panel1.Controls.Add(this.LlUnofficialModFiles);
             this.panel1.Controls.Add(this.linkLabelCustomModManual);
             this.panel1.Controls.Add(this.btOpenValuesFolder);
@@ -275,6 +309,14 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(396, 231);
             this.panel1.TabIndex = 4;
+            // 
+            // label6
+            // 
+            this.label6.Location = new System.Drawing.Point(59, 101);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(328, 59);
+            this.label6.TabIndex = 7;
+            this.label6.Text = resources.GetString("label6.Text");
             // 
             // LlUnofficialModFiles
             // 
@@ -312,9 +354,9 @@
             // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(59, 67);
+            this.label1.Location = new System.Drawing.Point(59, 50);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(226, 52);
+            this.label1.Size = new System.Drawing.Size(328, 40);
             this.label1.TabIndex = 4;
             this.label1.Text = "Mod values are loaded from top to bottom. If multiple mods change the same value," +
     " the value of the mod lower in the list will be used.";
@@ -383,37 +425,6 @@
             this.BtRemoveAllMods.UseVisualStyleBackColor = true;
             this.BtRemoveAllMods.Click += new System.EventHandler(this.BtRemoveAllMods_Click);
             // 
-            // TbModFilter
-            // 
-            this.TbModFilter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TbModFilter.Location = new System.Drawing.Point(3, 3);
-            this.TbModFilter.Name = "TbModFilter";
-            this.TbModFilter.Size = new System.Drawing.Size(193, 20);
-            this.TbModFilter.TabIndex = 10;
-            this.TbModFilter.TextChanged += new System.EventHandler(this.TbModFilter_TextChanged);
-            // 
-            // panel2
-            // 
-            this.panel2.Controls.Add(this.TbModFilter);
-            this.panel2.Controls.Add(this.BtClearFilter);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel2.Location = new System.Drawing.Point(3, 16);
-            this.panel2.Name = "panel2";
-            this.panel2.Padding = new System.Windows.Forms.Padding(3);
-            this.panel2.Size = new System.Drawing.Size(221, 27);
-            this.panel2.TabIndex = 10;
-            // 
-            // BtClearFilter
-            // 
-            this.BtClearFilter.Dock = System.Windows.Forms.DockStyle.Right;
-            this.BtClearFilter.Location = new System.Drawing.Point(196, 3);
-            this.BtClearFilter.Name = "BtClearFilter";
-            this.BtClearFilter.Size = new System.Drawing.Size(22, 21);
-            this.BtClearFilter.TabIndex = 11;
-            this.BtClearFilter.Text = "×";
-            this.BtClearFilter.UseVisualStyleBackColor = true;
-            this.BtClearFilter.Click += new System.EventHandler(this.BtClearFilter_Click);
-            // 
             // ModValuesManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -427,13 +438,13 @@
             this.Text = "Mod Values Manager";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
-            this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -470,5 +481,6 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TextBox TbModFilter;
         private System.Windows.Forms.Button BtClearFilter;
+        private System.Windows.Forms.Label label6;
     }
 }

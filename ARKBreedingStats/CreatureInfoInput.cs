@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using ARKBreedingStats.Ark;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.Properties;
@@ -64,6 +63,8 @@ namespace ARKBreedingStats
         /// </summary>
         public ParentInheritance ParentInheritance;
 
+        internal CreatureCollection.ColorExisting[] ColorAlreadyExistingInformation;
+
         private Button[] ButtonsNamingPattern => new[] { btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6 };
 
         public CreatureInfoInput()
@@ -78,7 +79,7 @@ namespace ARKBreedingStats
             parentComboBoxMother.SelectedIndex = 0;
             parentComboBoxFather.SelectedIndex = 0;
             _updateMaturation = true;
-            _regionColorIDs = new byte[Species.ColorRegionCount];
+            _regionColorIDs = new byte[Ark.ColorRegionCount];
             CooldownUntil = new DateTime(2000, 1, 1);
             GrowingUntil = new DateTime(2000, 1, 1);
             NamesOfAllCreatures = new List<string>();
@@ -424,6 +425,10 @@ namespace ARKBreedingStats
                 if (CbMutagen.Checked)
                     _creatureFlags |= CreatureFlags.MutagenApplied;
                 else _creatureFlags &= ~CreatureFlags.MutagenApplied;
+                if (MutationCounterMother > 0 || MutationCounterFather > 0)
+                    _creatureFlags |= CreatureFlags.Mutated;
+                else _creatureFlags &= ~CreatureFlags.Mutated;
+
                 return _creatureFlags;
             }
             set
@@ -480,7 +485,7 @@ namespace ARKBreedingStats
             set
             {
                 if (_selectedSpecies == null) return;
-                _regionColorIDs = (byte[])value?.Clone() ?? new byte[Species.ColorRegionCount];
+                _regionColorIDs = (byte[])value?.Clone() ?? new byte[Ark.ColorRegionCount];
                 if (DontUpdateVisuals) return;
                 regionColorChooser1.SetSpecies(_selectedSpecies, _regionColorIDs);
                 UpdateRegionColorImage();
@@ -510,7 +515,7 @@ namespace ARKBreedingStats
             set
             {
                 if (_selectedSpecies == null) return;
-                _colorIdsAlsoPossible = (byte[])value?.Clone() ?? new byte[Species.ColorRegionCount];
+                _colorIdsAlsoPossible = (byte[])value?.Clone() ?? new byte[Ark.ColorRegionCount];
                 if (DontUpdateVisuals) return;
                 regionColorChooser1.ColorIdsAlsoPossible = _colorIdsAlsoPossible;
             }
@@ -580,7 +585,7 @@ namespace ARKBreedingStats
         public void GenerateCreatureName(Creature creature, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings, bool showDuplicateNameWarning, int namingPatternIndex)
         {
             SetCreatureData(creature);
-            CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex, false);
+            CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex, false, colorsExisting: ColorAlreadyExistingInformation);
             if (CreatureName.Length > 24)
                 SetMessageLabelText?.Invoke("The generated name is longer than 24 characters, the name will look like this in game:\n" + CreatureName.Substring(0, 24), MessageBoxIcon.Error);
         }
@@ -589,7 +594,7 @@ namespace ARKBreedingStats
         {
             if (!parentListValid)
                 ParentListRequested?.Invoke(this);
-            using (var pe = new PatternEditor(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, namingPatternIndex, reloadCallback))
+            using (var pe = new PatternEditor(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, ColorAlreadyExistingInformation, customReplacings, namingPatternIndex, reloadCallback))
             {
                 if (pe.ShowDialog() == DialogResult.OK)
                 {
@@ -766,7 +771,7 @@ namespace ARKBreedingStats
             int NewMutations(int mutationCountParent, int mutationCountChild)
             {
                 var newMutationsFromParent = mutationCountChild - mutationCountParent;
-                if (newMutationsFromParent > 0 && newMutationsFromParent <= GameConstants.MutationRolls)
+                if (newMutationsFromParent > 0 && newMutationsFromParent <= Ark.MutationRolls)
                     return mutationCountChild - mutationCountParent;
                 return 0;
             }
