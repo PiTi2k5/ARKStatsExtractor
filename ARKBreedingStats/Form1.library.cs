@@ -14,7 +14,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ARKBreedingStats.library;
 using ARKBreedingStats.settings;
-using System.Runtime.ConstrainedExecution;
 
 namespace ARKBreedingStats
 {
@@ -759,7 +758,8 @@ namespace ARKBreedingStats
         private void ShowCreaturesInListView(IEnumerable<Creature> creatures)
         {
             listViewLibrary.BeginUpdate();
-            _creaturesDisplayed = _creatureListSorter.DoSort(creatures, orderBySpecies: Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            IEnumerable<Creature> sorted = _creatureListSorter.DoSort(creatures, orderBySpecies: Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted.ToArray();
             listViewLibrary.VirtualListSize = _creaturesDisplayed.Length;
             _libraryListViewItemCache = null;
             listViewLibrary.EndUpdate();
@@ -776,6 +776,31 @@ namespace ARKBreedingStats
                 ToolStripTextBoxLibraryFilter.BackColor = _creaturesDisplayed.Any() ? Color.LightGoldenrodYellow : Color.LightSalmon;
                 ToolStripButtonLibraryFilterClear.BackColor = Color.Orange;
             }
+        }
+
+        private Creature[] InsertDividers(IEnumerable<Creature> creatures)
+        {
+            var enumerable = creatures.ToList();
+            if (!enumerable.Any())
+            {
+                return Array.Empty<Creature>();
+            }
+            List<Creature> result = new List<Creature>();
+            Species lastSpecies = null;
+            foreach (Creature c in enumerable)
+            {
+                if (lastSpecies == null || c.Species != lastSpecies)
+                {
+                    result.Add(new Creature(c.Species)
+                    {
+                        flags = CreatureFlags.Placeholder | CreatureFlags.Divider,
+                        Status = CreatureStatus.Unavailable
+                    });
+                }
+                result.Add(c);
+                lastSpecies = c.Species;
+            }
+            return result.ToArray();
         }
 
         #region ListViewLibrary virtual
@@ -820,6 +845,33 @@ namespace ARKBreedingStats
             {
                 _libraryListViewItemCache[i] = CreateCreatureLvItem(_creaturesDisplayed[i + _libraryItemCacheFirstIndex]);
             }
+        }
+
+        private void ListViewLibrary_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            e.DrawDefault = true;
+
+            if (!(e.Item.Tag is Creature creature))
+            {
+                return;
+            }
+
+            if (creature.flags.HasFlag(CreatureFlags.Divider))
+            {
+                e.DrawDefault = false;
+                var rect = e.Bounds;
+                float middle = (rect.Top + rect.Bottom) / 2f;
+                e.Graphics.FillRectangle(Brushes.Blue, rect.Left, middle, rect.Width - 3, 1);
+                SizeF strSize = e.Graphics.MeasureString(creature.Species.DescriptiveNameAndMod, e.Item.Font);
+                e.Graphics.FillRectangle(new SolidBrush(e.Item.BackColor), rect.Left, rect.Top, strSize.Width + 15, rect.Height);
+                e.Graphics.DrawString(creature.Species.DescriptiveNameAndMod, e.Item.Font, Brushes.Black, rect.Left + 10, rect.Top + ((rect.Height - strSize.Height) / 2f));
+            }
+        }
+
+        private void ListViewLibrary_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            var isDivider = e.Item.Tag is Creature creature && creature.flags.HasFlag(CreatureFlags.Divider);
+            e.DrawDefault = !isDivider;
         }
 
         #endregion
@@ -952,6 +1004,14 @@ namespace ARKBreedingStats
 
         private ListViewItem CreateCreatureLvItem(Creature cr)
         {
+            if (cr.flags.HasFlag(CreatureFlags.Divider))
+            {
+                return new ListViewItem(Enumerable.Repeat(string.Empty, listViewLibrary.Columns.Count).ToArray())
+                {
+                    Tag = cr
+                };
+            }
+
             double colorFactor = 100d / _creatureCollection.maxChartLevel;
 
             string[] subItems = new[]
@@ -1188,7 +1248,8 @@ namespace ARKBreedingStats
             foreach (int i in listViewLibrary.SelectedIndices)
                 selectedCreatures.Add(_creaturesDisplayed[i]);
 
-            _creaturesDisplayed = _creatureListSorter.DoSort(_creaturesDisplayed, columnIndex, Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            IEnumerable<Creature> sorted = _creatureListSorter.DoSort(_creaturesDisplayed.Where(c => !c.flags.HasFlag(CreatureFlags.Divider)), columnIndex, Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted.ToArray();
             _libraryListViewItemCache = null;
             listViewLibrary.EndUpdate();
             SelectCreaturesInLibrary(selectedCreatures);
@@ -1208,6 +1269,13 @@ namespace ARKBreedingStats
         /// </summary>
         private void LibrarySelectedIndexChanged()
         {
+            // remove dividers from selection
+            foreach (int i in listViewLibrary.SelectedIndices)
+            {
+                if (_creaturesDisplayed[i].flags.HasFlag(CreatureFlags.Divider))
+                    listViewLibrary.SelectedIndices.Remove(i);
+            }
+
             int cnt = listViewLibrary.SelectedIndices.Count;
             if (cnt == 0)
             {
@@ -1561,13 +1629,11 @@ namespace ARKBreedingStats
             // shows a dialog to set multiple settings to all selected creatures
             if (listViewLibrary.SelectedIndices.Count <= 0)
                 return;
-            Creature c = new Creature();
             List<Creature> selectedCreatures = new List<Creature>();
 
             // check if multiple species are selected
             bool multipleSpecies = false;
             Species sp = _creaturesDisplayed[listViewLibrary.SelectedIndices[0]].Species;
-            c.Species = sp;
             foreach (int i in listViewLibrary.SelectedIndices)
             {
                 var cr = _creaturesDisplayed[i];
@@ -1579,7 +1645,7 @@ namespace ARKBreedingStats
             }
             List<Creature>[] parents = null;
             if (!multipleSpecies)
-                parents = FindPossibleParents(c);
+                parents = FindPossibleParents(new Creature(sp));
 
             using (MultiSetter ms = new MultiSetter(selectedCreatures,
                 parents,
@@ -1596,7 +1662,11 @@ namespace ARKBreedingStats
                     if (ms.TagsChanged)
                         CreateCreatureTagList();
                     if (ms.SpeciesChanged)
+                    {
                         UpdateSpeciesLists(_creatureCollection.creatures);
+                        foreach (var c in selectedCreatures)
+                            c.RecalculateCreatureValues(_creatureCollection.wildLevelStep);
+                    }
                     UpdateOwnerServerTagLists();
                     SetCollectionChanged(true, !multipleSpecies ? sp : null);
                     RecalculateTopStatsIfNeeded();
@@ -1712,27 +1782,27 @@ namespace ARKBreedingStats
 
         private void toolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Available);
+            SetStatusOfSelectedCreatures(CreatureStatus.Available);
         }
 
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Unavailable);
+            SetStatusOfSelectedCreatures(CreatureStatus.Unavailable);
         }
 
         private void toolStripMenuItem4_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Dead);
+            SetStatusOfSelectedCreatures(CreatureStatus.Dead);
         }
 
         private void obeliskToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Obelisk);
+            SetStatusOfSelectedCreatures(CreatureStatus.Obelisk);
         }
 
         private void cryopodToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Cryopod);
+            SetStatusOfSelectedCreatures(CreatureStatus.Cryopod);
         }
 
         private void currentValuesToolStripMenuItem_Click(object sender, EventArgs e)

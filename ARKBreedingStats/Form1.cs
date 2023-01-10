@@ -172,6 +172,10 @@ namespace ARKBreedingStats
             listViewLibrary.VirtualMode = true;
             listViewLibrary.RetrieveVirtualItem += ListViewLibrary_RetrieveVirtualItem;
             listViewLibrary.CacheVirtualItems += ListViewLibrary_CacheVirtualItems;
+            listViewLibrary.OwnerDraw = true;
+            listViewLibrary.DrawItem += ListViewLibrary_DrawItem;
+            listViewLibrary.DrawColumnHeader += (sender, args) => args.DrawDefault = true;
+            listViewLibrary.DrawSubItem += ListViewLibrary_DrawSubItem;
 
             speciesSelector1.SetTextBox(tbSpeciesGlobal);
 
@@ -260,7 +264,7 @@ namespace ARKBreedingStats
                     statIoTesting.Percent = true;
                 }
 
-                statIoTesting.LevelChanged += testingStatIOValueUpdate;
+                statIoTesting.LevelChanged += TestingStatIoValueUpdate;
                 statIO.InputValueChanged += StatIOQuickWildLevelCheck;
                 statIO.Click += StatIO_Click;
                 _considerStatHighlight[s] = (Properties.Settings.Default.consideredStats & (1 << s)) != 0;
@@ -292,6 +296,8 @@ namespace ARKBreedingStats
             // enable 0-lock for dom-levels of oxygen, food (most often they are not leveled up)
             _statIOs[Stats.Oxygen].DomLevelLockedZero = true;
             _statIOs[Stats.Food].DomLevelLockedZero = true;
+
+            LbWarningLevel255.Visible = false;
 
             InitializeCollection();
 
@@ -734,8 +740,8 @@ namespace ARKBreedingStats
             radarChart1.InitializeVariables(_creatureCollection.maxChartLevel);
             radarChartExtractor.InitializeVariables(_creatureCollection.maxChartLevel);
             radarChartLibrary.InitializeVariables(_creatureCollection.maxChartLevel);
-            statPotentials1.levelDomMax = _creatureCollection.maxDomLevel;
-            statPotentials1.levelGraphMax = _creatureCollection.maxChartLevel;
+            statPotentials1.LevelDomMax = _creatureCollection.maxDomLevel;
+            statPotentials1.LevelGraphMax = _creatureCollection.maxChartLevel;
 
             _speechRecognition?.SetMaxLevelAndSpecies(_creatureCollection.maxWildLevel,
                 _creatureCollection.considerWildLevelSteps ? _creatureCollection.wildLevelStep : 1,
@@ -1766,34 +1772,34 @@ namespace ARKBreedingStats
 
         private void aliveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Available);
+            SetStatusOfSelectedCreatures(CreatureStatus.Available);
         }
 
         private void deadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Dead);
+            SetStatusOfSelectedCreatures(CreatureStatus.Dead);
         }
 
         private void unavailableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Unavailable);
+            SetStatusOfSelectedCreatures(CreatureStatus.Unavailable);
         }
 
         private void obeliskToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            SetStatusOfSelected(CreatureStatus.Obelisk);
+            SetStatusOfSelectedCreatures(CreatureStatus.Obelisk);
         }
 
-        private void SetStatusOfSelected(CreatureStatus s)
+        private void SetStatusOfSelectedCreatures(CreatureStatus s)
         {
             List<Creature> cs = new List<Creature>();
             foreach (int i in listViewLibrary.SelectedIndices)
                 cs.Add(_creaturesDisplayed[i]);
             if (cs.Any())
-                SetStatus(cs, s);
+                SetCreatureStatus(cs, s);
         }
 
-        private void SetStatus(IEnumerable<Creature> cs, CreatureStatus s)
+        private void SetCreatureStatus(IEnumerable<Creature> cs, CreatureStatus s)
         {
             bool changed = false;
             List<string> speciesBlueprints = new List<string>();
@@ -1852,7 +1858,7 @@ namespace ARKBreedingStats
                     "Selected Creature not Available",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                SetStatus(new List<Creature> { c }, CreatureStatus.Available);
+                SetCreatureStatus(new List<Creature> { c }, CreatureStatus.Available);
                 breedingPlan1.BreedingPlanNeedsUpdate = false;
             }
             else
@@ -2384,7 +2390,7 @@ namespace ARKBreedingStats
             {
                 _testingIOs[s].LevelWild = _statIOs[s].LevelWild;
                 _testingIOs[s].LevelDom = _statIOs[s].LevelDom;
-                testingStatIOValueUpdate(_testingIOs[s]);
+                TestingStatIoValueUpdate(_testingIOs[s]);
             }
 
             // set the data in the creatureInfoInput
@@ -3218,7 +3224,15 @@ namespace ARKBreedingStats
             }
             else if (ext == ".ini")
             {
-                ExtractExportedFileInExtractor(filePath);
+                if (files.Length == 1)
+                {
+                    ExtractExportedFileInExtractor(filePath);
+                }
+                else
+                {
+                    ShowExportedCreatureListControl();
+                    _exportedCreatureList.LoadFiles(files);
+                }
             }
             else if (ext == ".asb" || ext == ".xml")
             {
