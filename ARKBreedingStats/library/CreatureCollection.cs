@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 using ARKBreedingStats.mods;
 
 namespace ARKBreedingStats.Library
@@ -340,6 +341,7 @@ namespace ARKBreedingStats.Library
                 if (DeletedCreatureGuids == null)
                     DeletedCreatureGuids = new List<Guid>();
                 DeletedCreatureGuids.Add(c.guid);
+                ResetExistingColors(c.Species);
             }
         }
 
