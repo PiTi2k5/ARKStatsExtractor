@@ -56,6 +56,7 @@
     <ApplicationIcon>ARKSmartBreeding.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -636,6 +637,7 @@
     <Compile Include="utils\CreatureListSorter.cs" />
     <Compile Include="utils\MessageBoxes.cs" />
     <Compile Include="NamePatterns\NamePatternFunctions.cs" />
+    <Compile Include="utils\NaturalComparer.cs" />
     <Compile Include="utils\RepositoryInfo.cs" />
     <Compile Include="utils\SoundFeedback.cs" />
     <Compile Include="utils\Themes.cs" />
