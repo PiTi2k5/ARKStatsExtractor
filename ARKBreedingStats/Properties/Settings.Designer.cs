@@ -1605,18 +1605,6 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool BreedingPlannerConsiderOnlyEvenForHighStats {
-            get {
-                return ((bool)(this["BreedingPlannerConsiderOnlyEvenForHighStats"]));
-            }
-            set {
-                this["BreedingPlannerConsiderOnlyEvenForHighStats"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool AutoImportGotoLibraryAfterSuccess {
             get {
                 return ((bool)(this["AutoImportGotoLibraryAfterSuccess"]));
@@ -2169,6 +2157,65 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["NaturalSortIgnoreSpaces"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowColorIdOnRegionButtons {
+            get {
+                return ((bool)(this["ShowColorIdOnRegionButtons"]));
+            }
+            set {
+                this["ShowColorIdOnRegionButtons"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AlwaysShowAllColorRegions {
+            get {
+                return ((bool)(this["AlwaysShowAllColorRegions"]));
+            }
+            set {
+                this["AlwaysShowAllColorRegions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public byte[][] CustomStatWeightOddEven {
+            get {
+                return ((byte[][])(this["CustomStatWeightOddEven"]));
+            }
+            set {
+                this["CustomStatWeightOddEven"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string language2 {
+            get {
+                return ((string)(this["language2"]));
+            }
+            set {
+                this["language2"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public float OverlayRelativeFontSize {
+            get {
+                return ((float)(this["OverlayRelativeFontSize"]));
+            }
+            set {
+                this["OverlayRelativeFontSize"] = value;
             }
         }
     }

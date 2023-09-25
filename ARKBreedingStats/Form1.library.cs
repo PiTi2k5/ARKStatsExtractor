@@ -36,63 +36,9 @@ namespace ARKBreedingStats
         /// <param name="goToLibraryTab">go to library tab after the creature is added</param>
         private Creature AddCreatureToCollection(bool fromExtractor = true, long motherArkId = 0, long fatherArkId = 0, bool goToLibraryTab = true)
         {
-            CreatureInfoInput input;
-            bool bred;
-            double te, imprinting;
-            Species species = speciesSelector1.SelectedSpecies;
-            if (fromExtractor)
-            {
-                input = creatureInfoInputExtractor;
-                bred = rbBredExtractor.Checked;
-                te = rbWildExtractor.Checked ? -3 : _extractor.UniqueTamingEffectiveness();
-                imprinting = _extractor.ImprintingBonus;
-            }
-            else
-            {
-                input = creatureInfoInputTester;
-                bred = rbBredTester.Checked;
-                te = TamingEffectivenessTester;
-                imprinting = (double)numericUpDownImprintingBonusTester.Value / 100;
-            }
-
             var levelStep = _creatureCollection.getWildLevelStep();
-            Creature creature = new Creature(species, input.CreatureName, input.CreatureOwner, input.CreatureTribe, input.CreatureSex, GetCurrentWildLevels(fromExtractor), GetCurrentDomLevels(fromExtractor), te, bred, imprinting, levelStep: levelStep)
-            {
-                // set parents
-                Mother = input.Mother,
-                Father = input.Father,
-
-                // cooldown-, growing-time
-                cooldownUntil = input.CooldownUntil,
-                growingUntil = input.GrowingUntil,
-
-                flags = input.CreatureFlags,
-                note = input.CreatureNote,
-                server = input.CreatureServer,
-
-                domesticatedAt = input.DomesticatedAt.HasValue && input.DomesticatedAt.Value.Year > 2014 ? input.DomesticatedAt.Value : default(DateTime?),
-                addedToLibrary = DateTime.Now,
-                mutationsMaternal = input.MutationCounterMother,
-                mutationsPaternal = input.MutationCounterFather,
-                Status = input.CreatureStatus,
-                colors = input.RegionColors,
-                ColorIdsAlsoPossible = input.ColorIdsAlsoPossible,
-                guid = fromExtractor && input.CreatureGuid != Guid.Empty ? input.CreatureGuid : Guid.NewGuid(),
-                ArkId = input.ArkId
-            };
-
-            creature.ArkIdImported = Utils.IsArkIdImported(creature.ArkId, creature.guid);
-            creature.InitializeArkInGame();
-
-            // parent guids
-            if (motherArkId != 0)
-                creature.motherGuid = Utils.ConvertArkIdToGuid(motherArkId);
-            else if (input.MotherArkId != 0)
-                creature.motherGuid = Utils.ConvertArkIdToGuid(input.MotherArkId);
-            if (fatherArkId != 0)
-                creature.fatherGuid = Utils.ConvertArkIdToGuid(fatherArkId);
-            else if (input.FatherArkId != 0)
-                creature.fatherGuid = Utils.ConvertArkIdToGuid(input.FatherArkId);
+            var species = speciesSelector1.SelectedSpecies;
+            var creature = GetCreatureFromInput(fromExtractor, species, levelStep, motherArkId, fatherArkId);
 
             // if creature is placeholder: add it
             // if creature's ArkId is already in library, suggest updating of the creature
@@ -354,6 +300,7 @@ namespace ARKBreedingStats
                 List<int> usedAndConsideredStatIndices = new List<int>(Stats.StatsCount);
                 int[] bestStat = new int[Stats.StatsCount];
                 int[] lowestStat = new int[Stats.StatsCount];
+                var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
                 for (int s = 0; s < Stats.StatsCount; s++)
                 {
                     bestStat[s] = -1;
@@ -407,29 +354,21 @@ namespace ARKBreedingStats
                         }
                         else if (c.levelsWild[si] > bestStat[si])
                         {
-                            bestCreatures[si] = new List<Creature> { c };
-                            bestStat[si] = c.levelsWild[si];
+                            // check if highest stats are only counted if odd or even
+                            if ((statWeights.Item2?[s] ?? 0) == 0 // even/odd doesn't matter
+                                || (statWeights.Item2[s] == 1 && c.levelsWild[si] % 2 == 1)
+                                || (statWeights.Item2[s] == 2 && c.levelsWild[si] % 2 == 0)
+                               )
+                            {
+                                bestCreatures[si] = new List<Creature> { c };
+                                bestStat[si] = c.levelsWild[si];
+                            }
                         }
                     }
                 }
 
-                if (!_topLevels.ContainsKey(species))
-                {
-                    _topLevels.Add(species, bestStat);
-                }
-                else
-                {
-                    _topLevels[species] = bestStat;
-                }
-
-                if (!_lowestLevels.ContainsKey(species))
-                {
-                    _lowestLevels.Add(species, lowestStat);
-                }
-                else
-                {
-                    _lowestLevels[species] = lowestStat;
-                }
+                _topLevels[species] = bestStat;
+                _lowestLevels[species] = lowestStat;
 
                 // bestStat and bestCreatures now contain the best stats and creatures for each stat.
 
@@ -540,8 +479,6 @@ namespace ARKBreedingStats
         /// </summary>
         private bool UpdateParents(IEnumerable<Creature> creatures)
         {
-            List<Creature> placeholderAncestors = new List<Creature>();
-
             Dictionary<Guid, Creature> creatureGuids;
 
             bool duplicatesWereRemoved = false;
@@ -678,6 +615,8 @@ namespace ARKBreedingStats
                 duplicatesWereRemoved = true;
             }
 
+            var placeholderAncestors = new Dictionary<Guid, Creature>();
+
             foreach (Creature c in creatures)
             {
                 if (c.motherGuid == Guid.Empty && c.fatherGuid == Guid.Empty) continue;
@@ -696,7 +635,7 @@ namespace ARKBreedingStats
                 c.Father = father;
             }
 
-            _creatureCollection.creatures.AddRange(placeholderAncestors);
+            _creatureCollection.creatures.AddRange(placeholderAncestors.Values);
 
             return duplicatesWereRemoved;
         }
@@ -711,13 +650,12 @@ namespace ARKBreedingStats
         /// <param name="name">Name of the creature to create</param>
         /// <param name="sex">Sex of the creature to create</param>
         /// <returns></returns>
-        private Creature EnsurePlaceholderCreature(List<Creature> placeholders, Creature tmpl, Guid guid, string name, Sex sex)
+        private Creature EnsurePlaceholderCreature(Dictionary<Guid, Creature> placeholders, Creature tmpl, Guid guid, string name, Sex sex)
         {
             if (guid == Guid.Empty)
                 return null;
-            var existing = placeholders.FirstOrDefault(ph => ph.guid == guid);
-            if (existing != null)
-                return existing;
+            if (placeholders.TryGetValue(guid, out var existingCreature))
+                return existingCreature;
 
             if (string.IsNullOrEmpty(name))
                 name = (sex == Sex.Female ? "Mother" : "Father") + " of " + tmpl.name;
@@ -729,7 +667,7 @@ namespace ARKBreedingStats
                 flags = CreatureFlags.Placeholder
             };
 
-            placeholders.Add(creature);
+            placeholders.Add(creature.guid, creature);
 
             return creature;
         }
@@ -740,18 +678,16 @@ namespace ARKBreedingStats
         /// <param name="cc"></param>
         private void UpdateIncubationParents(CreatureCollection cc)
         {
-            foreach (Creature c in cc.creatures)
+            if (!cc.incubationListEntries.Any()) return;
+
+            var dict = cc.creatures.ToDictionary(c => c.guid);
+
+            foreach (IncubationTimerEntry it in cc.incubationListEntries)
             {
-                if (c.guid != Guid.Empty)
-                {
-                    foreach (IncubationTimerEntry it in cc.incubationListEntries)
-                    {
-                        if (c.guid == it.motherGuid)
-                            it.mother = c;
-                        else if (c.guid == it.fatherGuid)
-                            it.father = c;
-                    }
-                }
+                if (it.motherGuid != Guid.Empty && dict.TryGetValue(it.motherGuid, out var m))
+                    it.Mother = m;
+                if (it.fatherGuid != Guid.Empty && dict.TryGetValue(it.fatherGuid, out var f))
+                    it.Father = f;
             }
         }
 
@@ -1310,11 +1246,11 @@ namespace ARKBreedingStats
 
             SetMessageLabelText($"{cnt} creatures selected, " +
                     $"{selCrs.Count(cr => cr.sex == Sex.Female)} females, " +
-                    $"{selCrs.Count(cr => cr.sex == Sex.Male)} males\n" +
+                    $"{selCrs.Count(cr => cr.sex == Sex.Male)} males\r\n" +
                     (cnt == 1
                         ? $"level: {selCrs[0].Level}; Ark-Id (ingame): " + (selCrs[0].ArkIdImported ? Utils.ConvertImportedArkIdToIngameVisualization(selCrs[0].ArkId) : selCrs[0].ArkId.ToString())
                         : $"level-range: {selCrs.Min(cr => cr.Level)} - {selCrs.Max(cr => cr.Level)}"
-                    ) + "\n" +
+                    ) + "\r\n" +
                     $"Tags: {string.Join(", ", tagList)}");
         }
 
@@ -1601,7 +1537,7 @@ namespace ARKBreedingStats
                 }
                 if (listViewLibrary.SelectedIndices.Count > 0)
                 {
-                    var exportCount = ExportImportCreatures.ExportTable(listViewLibrary.SelectedIndices.Cast<int>().Select(i => _creaturesDisplayed[i]));
+                    var exportCount = ExportImportCreatures.ExportTable(listViewLibrary.SelectedIndices.Cast<int>().Select(i => _creaturesDisplayed[i]).ToArray());
                     if (exportCount != 0)
                         SetMessageLabelText($"{exportCount} creatures were exported to the clipboard for pasting in a spreadsheet.", MessageBoxIcon.Information);
 
@@ -1764,7 +1700,7 @@ namespace ARKBreedingStats
             if (imagesCreated == 0) return;
 
             var pluralS = (imagesCreated != 1 ? "s" : string.Empty);
-            SetMessageLabelText($"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\n{(imagesCreated == 1 ? firstImageFilePath : folderPath)}", MessageBoxIcon.Information, firstImageFilePath);
+            SetMessageLabelText($"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\r\n{(imagesCreated == 1 ? firstImageFilePath : folderPath)}", MessageBoxIcon.Information, firstImageFilePath);
         }
 
         #region Library ContextMenu

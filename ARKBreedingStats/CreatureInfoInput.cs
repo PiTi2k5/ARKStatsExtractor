@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.Library;
@@ -47,6 +48,7 @@ namespace ARKBreedingStats
         private bool _isNewCreature;
 
         private readonly Debouncer _parentsChangedDebouncer = new Debouncer();
+        private readonly Debouncer _nameChangedDebouncer = new Debouncer();
 
         /// <summary>
         /// The pictureBox that displays the colored species dependent on the selected region colors.
@@ -589,8 +591,8 @@ namespace ARKBreedingStats
         {
             SetCreatureData(creature);
             CreatureName = NamePattern.GenerateCreatureName(creature, _sameSpecies, speciesTopLevels, speciesLowestLevels, customReplacings, showDuplicateNameWarning, namingPatternIndex, false, colorsExisting: ColorAlreadyExistingInformation);
-            if (CreatureName.Length > 24)
-                SetMessageLabelText?.Invoke("The generated name is longer than 24 characters, the name will look like this in game:\n" + CreatureName.Substring(0, 24), MessageBoxIcon.Error);
+            if (CreatureName.Length > Ark.MaxCreatureNameLength)
+                SetMessageLabelText?.Invoke($"The generated name is longer than {Ark.MaxCreatureNameLength} characters, the name will look like this in game:\r\n" + CreatureName.Substring(0, Ark.MaxCreatureNameLength), MessageBoxIcon.Error);
             else SetMessageLabelText?.Invoke();
         }
 
@@ -754,14 +756,21 @@ namespace ARKBreedingStats
 
         private void textBoxName_TextChanged(object sender, EventArgs e)
         {
+            _nameChangedDebouncer.Debounce(500, CheckIfNameAlreadyExists, Dispatcher.CurrentDispatcher);
+        }
+
+        private void CheckIfNameAlreadyExists()
+        {
             // feedback if name already exists
             if (!string.IsNullOrEmpty(textBoxName.Text) && NamesOfAllCreatures != null && NamesOfAllCreatures.Contains(textBoxName.Text))
             {
                 textBoxName.BackColor = Color.Khaki;
+                _tt.SetToolTip(textBoxName, Loc.S("nameAlreadyExistsInLibrary"));
             }
             else
             {
                 textBoxName.BackColor = SystemColors.Window;
+                _tt.SetToolTip(textBoxName, null);
             }
         }
 

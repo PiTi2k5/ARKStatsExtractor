@@ -120,6 +120,7 @@
             this.checkBoxDisplayHiddenStats = new System.Windows.Forms.CheckBox();
             this.tabControlSettings = new System.Windows.Forms.TabControl();
             this.tabPageMultipliers = new System.Windows.Forms.TabPage();
+            this.CbAtlasSettings = new System.Windows.Forms.CheckBox();
             this.BtSettingsToClipboard = new System.Windows.Forms.Button();
             this.groupBox29 = new System.Windows.Forms.GroupBox();
             this.CbAllowFlyerSpeedLeveling = new System.Windows.Forms.CheckBox();
@@ -138,6 +139,8 @@
             this.labelEvent = new System.Windows.Forms.Label();
             this.tabPageGeneral = new System.Windows.Forms.TabPage();
             this.groupBox31 = new System.Windows.Forms.GroupBox();
+            this.CbColorIdOnColorRegionButton = new System.Windows.Forms.CheckBox();
+            this.CbAlwaysShowAllColorRegions = new System.Windows.Forms.CheckBox();
             this.CbHideInvisibleColorRegions = new System.Windows.Forms.CheckBox();
             this.groupBox30 = new System.Windows.Forms.GroupBox();
             this.CbExportTableFieldsAll = new System.Windows.Forms.CheckBox();
@@ -163,8 +166,12 @@
             this.groupBox20 = new System.Windows.Forms.GroupBox();
             this.cbPrettifyJSON = new System.Windows.Forms.CheckBox();
             this.groupBox17 = new System.Windows.Forms.GroupBox();
-            this.cbbLanguage = new System.Windows.Forms.ComboBox();
+            this.LbLanguage2 = new System.Windows.Forms.Label();
+            this.CbbLanguage2 = new System.Windows.Forms.ComboBox();
+            this.CbbLanguage = new System.Windows.Forms.ComboBox();
             this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.CbNaturalSortIgnoreSpaces = new System.Windows.Forms.CheckBox();
+            this.CbNaturalSorting = new System.Windows.Forms.CheckBox();
             this.CbConsiderWastedStatsForTopCreatures = new System.Windows.Forms.CheckBox();
             this.CbPauseGrowingTimerAfterAdding = new System.Windows.Forms.CheckBox();
             this.CbLibrarySelectSelectedSpeciesOnLoad = new System.Windows.Forms.CheckBox();
@@ -279,6 +286,8 @@
             this.label20 = new System.Windows.Forms.Label();
             this.tabPageOverlay = new System.Windows.Forms.TabPage();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.NudOverlayRelativeFontSize = new ARKBreedingStats.uiControls.Nud();
+            this.label65 = new System.Windows.Forms.Label();
             this.CbOverlayDisplayInheritance = new System.Windows.Forms.CheckBox();
             this.label45 = new System.Windows.Forms.Label();
             this.pCustomOverlayLocation = new System.Windows.Forms.Panel();
@@ -326,8 +335,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.CbNaturalSorting = new System.Windows.Forms.CheckBox();
-            this.CbNaturalSortIgnoreSpaces = new System.Windows.Forms.CheckBox();
+            this.label66 = new System.Windows.Forms.Label();
             this.groupBoxMultiplier.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudTamedDinoCharacterFoodDrain)).BeginInit();
@@ -416,6 +424,7 @@
             this.groupBox8.SuspendLayout();
             this.tabPageOverlay.SuspendLayout();
             this.groupBox10.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOverlayRelativeFontSize)).BeginInit();
             this.pCustomOverlayLocation.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocY)).BeginInit();
@@ -1769,6 +1778,7 @@
             // 
             this.tabPageMultipliers.AllowDrop = true;
             this.tabPageMultipliers.AutoScroll = true;
+            this.tabPageMultipliers.Controls.Add(this.CbAtlasSettings);
             this.tabPageMultipliers.Controls.Add(this.BtSettingsToClipboard);
             this.tabPageMultipliers.Controls.Add(this.groupBox29);
             this.tabPageMultipliers.Controls.Add(this.label34);
@@ -1793,6 +1803,16 @@
             this.tabPageMultipliers.UseVisualStyleBackColor = true;
             this.tabPageMultipliers.DragDrop += new System.Windows.Forms.DragEventHandler(this.tabPage2_DragDrop);
             this.tabPageMultipliers.DragEnter += new System.Windows.Forms.DragEventHandler(this.tabPage2_DragEnter);
+            // 
+            // CbAtlasSettings
+            // 
+            this.CbAtlasSettings.AutoSize = true;
+            this.CbAtlasSettings.Location = new System.Drawing.Point(264, 23);
+            this.CbAtlasSettings.Name = "CbAtlasSettings";
+            this.CbAtlasSettings.Size = new System.Drawing.Size(99, 17);
+            this.CbAtlasSettings.TabIndex = 14;
+            this.CbAtlasSettings.Text = "ATLAS settings";
+            this.CbAtlasSettings.UseVisualStyleBackColor = true;
             // 
             // BtSettingsToClipboard
             // 
@@ -1888,9 +1908,9 @@
             this.cbSingleplayerSettings.AutoSize = true;
             this.cbSingleplayerSettings.Location = new System.Drawing.Point(15, 23);
             this.cbSingleplayerSettings.Name = "cbSingleplayerSettings";
-            this.cbSingleplayerSettings.Size = new System.Drawing.Size(124, 17);
+            this.cbSingleplayerSettings.Size = new System.Drawing.Size(122, 17);
             this.cbSingleplayerSettings.TabIndex = 0;
-            this.cbSingleplayerSettings.Text = "Singleplayer Settings";
+            this.cbSingleplayerSettings.Text = "Singleplayer settings";
             this.cbSingleplayerSettings.UseVisualStyleBackColor = true;
             this.cbSingleplayerSettings.CheckedChanged += new System.EventHandler(this.cbSingleplayerSettings_CheckedChanged);
             // 
@@ -1999,18 +2019,40 @@
             // 
             // groupBox31
             // 
+            this.groupBox31.Controls.Add(this.CbColorIdOnColorRegionButton);
+            this.groupBox31.Controls.Add(this.CbAlwaysShowAllColorRegions);
             this.groupBox31.Controls.Add(this.CbHideInvisibleColorRegions);
             this.groupBox31.Location = new System.Drawing.Point(329, 283);
             this.groupBox31.Name = "groupBox31";
-            this.groupBox31.Size = new System.Drawing.Size(413, 43);
+            this.groupBox31.Size = new System.Drawing.Size(413, 66);
             this.groupBox31.TabIndex = 14;
             this.groupBox31.TabStop = false;
-            this.groupBox31.Text = "ColorRegions";
+            this.groupBox31.Text = "Color Regions";
+            // 
+            // CbColorIdOnColorRegionButton
+            // 
+            this.CbColorIdOnColorRegionButton.AutoSize = true;
+            this.CbColorIdOnColorRegionButton.Location = new System.Drawing.Point(6, 42);
+            this.CbColorIdOnColorRegionButton.Name = "CbColorIdOnColorRegionButton";
+            this.CbColorIdOnColorRegionButton.Size = new System.Drawing.Size(201, 17);
+            this.CbColorIdOnColorRegionButton.TabIndex = 2;
+            this.CbColorIdOnColorRegionButton.Text = "Show color id on color region buttons";
+            this.CbColorIdOnColorRegionButton.UseVisualStyleBackColor = true;
+            // 
+            // CbAlwaysShowAllColorRegions
+            // 
+            this.CbAlwaysShowAllColorRegions.AutoSize = true;
+            this.CbAlwaysShowAllColorRegions.Location = new System.Drawing.Point(6, 19);
+            this.CbAlwaysShowAllColorRegions.Name = "CbAlwaysShowAllColorRegions";
+            this.CbAlwaysShowAllColorRegions.Size = new System.Drawing.Size(163, 17);
+            this.CbAlwaysShowAllColorRegions.TabIndex = 1;
+            this.CbAlwaysShowAllColorRegions.Text = "Always show all color regions";
+            this.CbAlwaysShowAllColorRegions.UseVisualStyleBackColor = true;
             // 
             // CbHideInvisibleColorRegions
             // 
             this.CbHideInvisibleColorRegions.AutoSize = true;
-            this.CbHideInvisibleColorRegions.Location = new System.Drawing.Point(6, 19);
+            this.CbHideInvisibleColorRegions.Location = new System.Drawing.Point(222, 19);
             this.CbHideInvisibleColorRegions.Name = "CbHideInvisibleColorRegions";
             this.CbHideInvisibleColorRegions.Size = new System.Drawing.Size(149, 17);
             this.CbHideInvisibleColorRegions.TabIndex = 0;
@@ -2023,7 +2065,7 @@
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveDown);
             this.groupBox30.Controls.Add(this.BExportSpreadsheetMoveUp);
             this.groupBox30.Controls.Add(this.ClbExportSpreadsheetFields);
-            this.groupBox30.Location = new System.Drawing.Point(329, 332);
+            this.groupBox30.Location = new System.Drawing.Point(329, 355);
             this.groupBox30.Name = "groupBox30";
             this.groupBox30.Size = new System.Drawing.Size(413, 281);
             this.groupBox30.TabIndex = 13;
@@ -2259,23 +2301,42 @@
             // 
             // groupBox17
             // 
-            this.groupBox17.Controls.Add(this.cbbLanguage);
-            this.groupBox17.Location = new System.Drawing.Point(329, 619);
+            this.groupBox17.Controls.Add(this.LbLanguage2);
+            this.groupBox17.Controls.Add(this.CbbLanguage2);
+            this.groupBox17.Controls.Add(this.CbbLanguage);
+            this.groupBox17.Location = new System.Drawing.Point(329, 642);
             this.groupBox17.Name = "groupBox17";
             this.groupBox17.Size = new System.Drawing.Size(413, 51);
             this.groupBox17.TabIndex = 5;
             this.groupBox17.TabStop = false;
             this.groupBox17.Text = "Language (WIP)";
             // 
-            // cbbLanguage
+            // LbLanguage2
             // 
-            this.cbbLanguage.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbbLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbbLanguage.FormattingEnabled = true;
-            this.cbbLanguage.Location = new System.Drawing.Point(3, 16);
-            this.cbbLanguage.Name = "cbbLanguage";
-            this.cbbLanguage.Size = new System.Drawing.Size(407, 21);
-            this.cbbLanguage.TabIndex = 0;
+            this.LbLanguage2.AutoSize = true;
+            this.LbLanguage2.Location = new System.Drawing.Point(198, 19);
+            this.LbLanguage2.Name = "LbLanguage2";
+            this.LbLanguage2.Size = new System.Drawing.Size(37, 13);
+            this.LbLanguage2.TabIndex = 2;
+            this.LbLanguage2.Text = "Export";
+            // 
+            // CbbLanguage2
+            // 
+            this.CbbLanguage2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.CbbLanguage2.FormattingEnabled = true;
+            this.CbbLanguage2.Location = new System.Drawing.Point(241, 16);
+            this.CbbLanguage2.Name = "CbbLanguage2";
+            this.CbbLanguage2.Size = new System.Drawing.Size(166, 21);
+            this.CbbLanguage2.TabIndex = 1;
+            // 
+            // CbbLanguage
+            // 
+            this.CbbLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.CbbLanguage.FormattingEnabled = true;
+            this.CbbLanguage.Location = new System.Drawing.Point(3, 16);
+            this.CbbLanguage.Name = "CbbLanguage";
+            this.CbbLanguage.Size = new System.Drawing.Size(176, 21);
+            this.CbbLanguage.TabIndex = 0;
             // 
             // groupBox9
             // 
@@ -2293,6 +2354,27 @@
             this.groupBox9.TabIndex = 4;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "Library";
+            // 
+            // CbNaturalSortIgnoreSpaces
+            // 
+            this.CbNaturalSortIgnoreSpaces.AutoSize = true;
+            this.CbNaturalSortIgnoreSpaces.Location = new System.Drawing.Point(181, 157);
+            this.CbNaturalSortIgnoreSpaces.Name = "CbNaturalSortIgnoreSpaces";
+            this.CbNaturalSortIgnoreSpaces.Size = new System.Drawing.Size(93, 17);
+            this.CbNaturalSortIgnoreSpaces.TabIndex = 7;
+            this.CbNaturalSortIgnoreSpaces.Text = "Ignore spaces";
+            this.CbNaturalSortIgnoreSpaces.UseVisualStyleBackColor = true;
+            // 
+            // CbNaturalSorting
+            // 
+            this.CbNaturalSorting.AutoSize = true;
+            this.CbNaturalSorting.Location = new System.Drawing.Point(6, 157);
+            this.CbNaturalSorting.Name = "CbNaturalSorting";
+            this.CbNaturalSorting.Size = new System.Drawing.Size(155, 17);
+            this.CbNaturalSorting.TabIndex = 6;
+            this.CbNaturalSorting.Text = "Natural sort (e.g. 10 after 2)";
+            this.CbNaturalSorting.UseVisualStyleBackColor = true;
+            this.CbNaturalSorting.CheckedChanged += new System.EventHandler(this.CbNaturalSorting_CheckedChanged);
             // 
             // CbConsiderWastedStatsForTopCreatures
             // 
@@ -3457,7 +3539,7 @@
             this.customSCCustom.Location = new System.Drawing.Point(6, 139);
             this.customSCCustom.Name = "customSCCustom";
             this.customSCCustom.Size = new System.Drawing.Size(401, 23);
-            this.customSCCustom.SoundFile = "";
+            this.customSCCustom.SoundFile = null;
             this.customSCCustom.TabIndex = 4;
             // 
             // customSCWakeup
@@ -3465,7 +3547,7 @@
             this.customSCWakeup.Location = new System.Drawing.Point(6, 81);
             this.customSCWakeup.Name = "customSCWakeup";
             this.customSCWakeup.Size = new System.Drawing.Size(401, 23);
-            this.customSCWakeup.SoundFile = null;
+            this.customSCWakeup.SoundFile = "";
             this.customSCWakeup.TabIndex = 2;
             // 
             // customSCBirth
@@ -3473,7 +3555,7 @@
             this.customSCBirth.Location = new System.Drawing.Point(6, 110);
             this.customSCBirth.Name = "customSCBirth";
             this.customSCBirth.Size = new System.Drawing.Size(401, 23);
-            this.customSCBirth.SoundFile = null;
+            this.customSCBirth.SoundFile = "";
             this.customSCBirth.TabIndex = 3;
             // 
             // customSCStarving
@@ -3481,7 +3563,7 @@
             this.customSCStarving.Location = new System.Drawing.Point(6, 52);
             this.customSCStarving.Name = "customSCStarving";
             this.customSCStarving.Size = new System.Drawing.Size(401, 23);
-            this.customSCStarving.SoundFile = "";
+            this.customSCStarving.SoundFile = null;
             this.customSCStarving.TabIndex = 1;
             // 
             // label20
@@ -3506,6 +3588,8 @@
             // 
             // groupBox10
             // 
+            this.groupBox10.Controls.Add(this.NudOverlayRelativeFontSize);
+            this.groupBox10.Controls.Add(this.label65);
             this.groupBox10.Controls.Add(this.CbOverlayDisplayInheritance);
             this.groupBox10.Controls.Add(this.label45);
             this.groupBox10.Controls.Add(this.pCustomOverlayLocation);
@@ -3524,31 +3608,76 @@
             this.groupBox10.Controls.Add(this.label21);
             this.groupBox10.Controls.Add(this.nudOverlayInfoDuration);
             this.groupBox10.Controls.Add(this.chkbSpeechRecognition);
+            this.groupBox10.Controls.Add(this.label66);
             this.groupBox10.Location = new System.Drawing.Point(8, 6);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(734, 243);
+            this.groupBox10.Size = new System.Drawing.Size(734, 307);
             this.groupBox10.TabIndex = 0;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Overlay";
             // 
+            // NudOverlayRelativeFontSize
+            // 
+            this.NudOverlayRelativeFontSize.DecimalPlaces = 2;
+            this.NudOverlayRelativeFontSize.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.NudOverlayRelativeFontSize.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.NudOverlayRelativeFontSize.Location = new System.Drawing.Point(219, 250);
+            this.NudOverlayRelativeFontSize.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.NudOverlayRelativeFontSize.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.NudOverlayRelativeFontSize.Name = "NudOverlayRelativeFontSize";
+            this.NudOverlayRelativeFontSize.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.NudOverlayRelativeFontSize.Size = new System.Drawing.Size(57, 20);
+            this.NudOverlayRelativeFontSize.TabIndex = 4;
+            this.NudOverlayRelativeFontSize.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label65
+            // 
+            this.label65.AutoSize = true;
+            this.label65.Location = new System.Drawing.Point(6, 252);
+            this.label65.Name = "label65";
+            this.label65.Size = new System.Drawing.Size(141, 13);
+            this.label65.TabIndex = 18;
+            this.label65.Text = "Relative font size (default: 1)";
+            // 
             // CbOverlayDisplayInheritance
             // 
             this.CbOverlayDisplayInheritance.AutoSize = true;
-            this.CbOverlayDisplayInheritance.Location = new System.Drawing.Point(6, 215);
+            this.CbOverlayDisplayInheritance.Location = new System.Drawing.Point(6, 284);
             this.CbOverlayDisplayInheritance.Name = "CbOverlayDisplayInheritance";
-            this.CbOverlayDisplayInheritance.Size = new System.Drawing.Size(162, 17);
+            this.CbOverlayDisplayInheritance.Size = new System.Drawing.Size(203, 17);
             this.CbOverlayDisplayInheritance.TabIndex = 17;
-            this.CbOverlayDisplayInheritance.Text = "Display Inheritance on import";
+            this.CbOverlayDisplayInheritance.Text = "Display creature inheritance on import";
             this.CbOverlayDisplayInheritance.UseVisualStyleBackColor = true;
             // 
             // label45
             // 
             this.label45.AutoSize = true;
-            this.label45.Location = new System.Drawing.Point(6, 16);
+            this.label45.Location = new System.Drawing.Point(38, 25);
             this.label45.Name = "label45";
-            this.label45.Size = new System.Drawing.Size(315, 13);
+            this.label45.Size = new System.Drawing.Size(495, 13);
             this.label45.TabIndex = 0;
-            this.label45.Text = "The window-mode \"Fullscreen-Windowed\" should be set ingame.";
+            this.label45.Text = "For the overlay to work, you need to set the window-mode \"Fullscreen-Windowed\" in" +
+    " the game settings.";
             // 
             // pCustomOverlayLocation
             // 
@@ -3557,7 +3686,7 @@
             this.pCustomOverlayLocation.Controls.Add(this.label43);
             this.pCustomOverlayLocation.Controls.Add(this.nudCustomOverlayLocY);
             this.pCustomOverlayLocation.Enabled = false;
-            this.pCustomOverlayLocation.Location = new System.Drawing.Point(195, 179);
+            this.pCustomOverlayLocation.Location = new System.Drawing.Point(195, 217);
             this.pCustomOverlayLocation.Name = "pCustomOverlayLocation";
             this.pCustomOverlayLocation.Size = new System.Drawing.Size(201, 28);
             this.pCustomOverlayLocation.TabIndex = 16;
@@ -3630,7 +3759,7 @@
             // cbCustomOverlayLocation
             // 
             this.cbCustomOverlayLocation.AutoSize = true;
-            this.cbCustomOverlayLocation.Location = new System.Drawing.Point(6, 183);
+            this.cbCustomOverlayLocation.Location = new System.Drawing.Point(6, 221);
             this.cbCustomOverlayLocation.Name = "cbCustomOverlayLocation";
             this.cbCustomOverlayLocation.Size = new System.Drawing.Size(138, 17);
             this.cbCustomOverlayLocation.TabIndex = 15;
@@ -3641,7 +3770,7 @@
             // label38
             // 
             this.label38.AutoSize = true;
-            this.label38.Location = new System.Drawing.Point(120, 149);
+            this.label38.Location = new System.Drawing.Point(120, 187);
             this.label38.Name = "label38";
             this.label38.Size = new System.Drawing.Size(93, 13);
             this.label38.TabIndex = 11;
@@ -3650,7 +3779,7 @@
             // nudOverlayInfoPosY
             // 
             this.nudOverlayInfoPosY.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayInfoPosY.Location = new System.Drawing.Point(320, 147);
+            this.nudOverlayInfoPosY.Location = new System.Drawing.Point(320, 185);
             this.nudOverlayInfoPosY.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -3668,7 +3797,7 @@
             // label39
             // 
             this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(300, 149);
+            this.label39.Location = new System.Drawing.Point(300, 187);
             this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(14, 13);
             this.label39.TabIndex = 13;
@@ -3677,7 +3806,7 @@
             // nudOverlayInfoPosDFR
             // 
             this.nudOverlayInfoPosDFR.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayInfoPosDFR.Location = new System.Drawing.Point(219, 147);
+            this.nudOverlayInfoPosDFR.Location = new System.Drawing.Point(219, 185);
             this.nudOverlayInfoPosDFR.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -3695,7 +3824,7 @@
             // label40
             // 
             this.label40.AutoSize = true;
-            this.label40.Location = new System.Drawing.Point(6, 149);
+            this.label40.Location = new System.Drawing.Point(6, 187);
             this.label40.Name = "label40";
             this.label40.Size = new System.Drawing.Size(94, 13);
             this.label40.TabIndex = 10;
@@ -3704,7 +3833,7 @@
             // label37
             // 
             this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(300, 123);
+            this.label37.Location = new System.Drawing.Point(300, 161);
             this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(14, 13);
             this.label37.TabIndex = 8;
@@ -3713,7 +3842,7 @@
             // nudOverlayTimerPosY
             // 
             this.nudOverlayTimerPosY.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayTimerPosY.Location = new System.Drawing.Point(320, 121);
+            this.nudOverlayTimerPosY.Location = new System.Drawing.Point(320, 159);
             this.nudOverlayTimerPosY.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -3731,7 +3860,7 @@
             // label36
             // 
             this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(199, 123);
+            this.label36.Location = new System.Drawing.Point(199, 161);
             this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(14, 13);
             this.label36.TabIndex = 6;
@@ -3740,7 +3869,7 @@
             // nudOverlayTimerPosX
             // 
             this.nudOverlayTimerPosX.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudOverlayTimerPosX.Location = new System.Drawing.Point(219, 121);
+            this.nudOverlayTimerPosX.Location = new System.Drawing.Point(219, 159);
             this.nudOverlayTimerPosX.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -3758,7 +3887,7 @@
             // label35
             // 
             this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(6, 123);
+            this.label35.Location = new System.Drawing.Point(6, 161);
             this.label35.Name = "label35";
             this.label35.Size = new System.Drawing.Size(104, 13);
             this.label35.TabIndex = 5;
@@ -3766,7 +3895,7 @@
             // 
             // cbInventoryCheck
             // 
-            this.cbInventoryCheck.Location = new System.Drawing.Point(6, 85);
+            this.cbInventoryCheck.Location = new System.Drawing.Point(6, 116);
             this.cbInventoryCheck.Name = "cbInventoryCheck";
             this.cbInventoryCheck.Size = new System.Drawing.Size(305, 35);
             this.cbInventoryCheck.TabIndex = 4;
@@ -3776,7 +3905,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(6, 61);
+            this.label21.Location = new System.Drawing.Point(6, 84);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(138, 13);
             this.label21.TabIndex = 2;
@@ -3785,7 +3914,7 @@
             // nudOverlayInfoDuration
             // 
             this.nudOverlayInfoDuration.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudOverlayInfoDuration.Location = new System.Drawing.Point(150, 59);
+            this.nudOverlayInfoDuration.Location = new System.Drawing.Point(150, 82);
             this.nudOverlayInfoDuration.Minimum = new decimal(new int[] {
             1,
             0,
@@ -3808,11 +3937,11 @@
             // chkbSpeechRecognition
             // 
             this.chkbSpeechRecognition.AutoSize = true;
-            this.chkbSpeechRecognition.Location = new System.Drawing.Point(6, 36);
+            this.chkbSpeechRecognition.Location = new System.Drawing.Point(6, 59);
             this.chkbSpeechRecognition.Name = "chkbSpeechRecognition";
-            this.chkbSpeechRecognition.Size = new System.Drawing.Size(123, 17);
+            this.chkbSpeechRecognition.Size = new System.Drawing.Size(338, 17);
             this.chkbSpeechRecognition.TabIndex = 1;
-            this.chkbSpeechRecognition.Text = "Speech Recognition";
+            this.chkbSpeechRecognition.Text = "Speech Recognition (displays taming info, e.g. say \"Rex level 30\")";
             this.chkbSpeechRecognition.UseVisualStyleBackColor = true;
             // 
             // tabPageOCR
@@ -4132,26 +4261,15 @@
             this.panel1.Size = new System.Drawing.Size(758, 30);
             this.panel1.TabIndex = 12;
             // 
-            // CbNaturalSorting
+            // label66
             // 
-            this.CbNaturalSorting.AutoSize = true;
-            this.CbNaturalSorting.Location = new System.Drawing.Point(6, 157);
-            this.CbNaturalSorting.Name = "CbNaturalSorting";
-            this.CbNaturalSorting.Size = new System.Drawing.Size(155, 17);
-            this.CbNaturalSorting.TabIndex = 6;
-            this.CbNaturalSorting.Text = "Natural sort (e.g. 10 after 2)";
-            this.CbNaturalSorting.UseVisualStyleBackColor = true;
-            this.CbNaturalSorting.CheckedChanged += new System.EventHandler(this.CbNaturalSorting_CheckedChanged);
-            // 
-            // CbNaturalSortIgnoreSpaces
-            // 
-            this.CbNaturalSortIgnoreSpaces.AutoSize = true;
-            this.CbNaturalSortIgnoreSpaces.Location = new System.Drawing.Point(181, 157);
-            this.CbNaturalSortIgnoreSpaces.Name = "CbNaturalSortIgnoreSpaces";
-            this.CbNaturalSortIgnoreSpaces.Size = new System.Drawing.Size(93, 17);
-            this.CbNaturalSortIgnoreSpaces.TabIndex = 7;
-            this.CbNaturalSortIgnoreSpaces.Text = "Ignore spaces";
-            this.CbNaturalSortIgnoreSpaces.UseVisualStyleBackColor = true;
+            this.label66.AutoSize = true;
+            this.label66.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label66.Location = new System.Drawing.Point(6, 16);
+            this.label66.Name = "label66";
+            this.label66.Size = new System.Drawing.Size(37, 26);
+            this.label66.TabIndex = 19;
+            this.label66.Text = "💡";
             // 
             // Settings
             // 
@@ -4244,6 +4362,7 @@
             this.groupBox20.ResumeLayout(false);
             this.groupBox20.PerformLayout();
             this.groupBox17.ResumeLayout(false);
+            this.groupBox17.PerformLayout();
             this.groupBox9.ResumeLayout(false);
             this.groupBox9.PerformLayout();
             this.tabPageInfoGraphic.ResumeLayout(false);
@@ -4289,6 +4408,7 @@
             this.tabPageOverlay.ResumeLayout(false);
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NudOverlayRelativeFontSize)).EndInit();
             this.pCustomOverlayLocation.ResumeLayout(false);
             this.pCustomOverlayLocation.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudCustomOverlayLocX)).EndInit();
@@ -4405,7 +4525,7 @@
         private uiControls.Nud nudMaxServerLevel;
         private System.Windows.Forms.Label lbMaxTotalLevel;
         private System.Windows.Forms.GroupBox groupBox17;
-        private System.Windows.Forms.ComboBox cbbLanguage;
+        private System.Windows.Forms.ComboBox CbbLanguage;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label labelSavegameFileLocationHint;
         private System.Windows.Forms.TextBox textBoxImportTribeNameFilter;
@@ -4612,5 +4732,13 @@
         private uiControls.Nud nudTamedDinoCharacterFoodDrain;
         private System.Windows.Forms.CheckBox CbNaturalSortIgnoreSpaces;
         private System.Windows.Forms.CheckBox CbNaturalSorting;
+        private System.Windows.Forms.CheckBox CbAtlasSettings;
+        private System.Windows.Forms.CheckBox CbAlwaysShowAllColorRegions;
+        private System.Windows.Forms.CheckBox CbColorIdOnColorRegionButton;
+        private System.Windows.Forms.Label LbLanguage2;
+        private System.Windows.Forms.ComboBox CbbLanguage2;
+        private uiControls.Nud NudOverlayRelativeFontSize;
+        private System.Windows.Forms.Label label65;
+        private System.Windows.Forms.Label label66;
     }
 }

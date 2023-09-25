@@ -84,6 +84,10 @@
     <Compile Include="Ark.cs" />
     <Compile Include="BreedingPlanning\Score.cs" />
     <Compile Include="BreedingPlanning\BreedingScore.cs" />
+    <Compile Include="importExportGun\ExportGunCreatureFile.cs" />
+    <Compile Include="importExportGun\ExportGunServerFile.cs" />
+    <Compile Include="importExportGun\ImportExportGun.cs" />
+    <Compile Include="importExportGun\ReadExportFile.cs" />
     <Compile Include="library\AddDummyCreaturesSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -844,6 +848,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="TamingControl.resx">
       <DependentUpon>TamingControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="TamingFoodControl.resx">
       <DependentUpon>TamingFoodControl.cs</DependentUpon>

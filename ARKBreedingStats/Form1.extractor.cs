@@ -120,8 +120,8 @@ namespace ARKBreedingStats
                 var checkLowLevels = _lowestLevels.TryGetValue(species, out int[] lowSpeciesLevels);
 
                 var customStatNames = species.statNames;
-                var statWeights = breedingPlan1.StatWeighting.GetWeightingByPresetName(species.name);
-                if (statWeights == null) checkLowLevels = false;
+                var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
+                if (statWeights.Item1 == null) checkLowLevels = false;
                 var analysisState = LevelStatus.Neutral;
                 var newTopStatsText = new List<string>();
                 var topStatsText = new List<string>();
@@ -134,24 +134,32 @@ namespace ARKBreedingStats
 
                     var levelStatus = LevelStatus.Neutral;
 
-                    if (checkTopLevels && (statWeights?[s] ?? 0) >= 0)
+                    if (checkTopLevels && (statWeights.Item1?[s] ?? 0) >= 0)
                     {
                         // higher stats are considered to be good. If no custom weightings are available, consider higher levels to be better.
-                        if (_statIOs[s].LevelWild == topSpeciesLevels[s])
+
+                        // check if higher level is only considered if even or odd
+                        if ((statWeights.Item2?[s] ?? 0) == 0 // even/odd doesn't matter
+                            || (statWeights.Item2[s] == 1 && _statIOs[s].LevelWild % 2 == 1)
+                            || (statWeights.Item2[s] == 2 && _statIOs[s].LevelWild % 2 == 0)
+                            )
                         {
-                            levelStatus = LevelStatus.TopLevel;
-                            topStatsText.Add(Utils.StatName(s, false, customStatNames));
-                            if (analysisState != LevelStatus.NewTopLevel)
-                                analysisState = LevelStatus.TopLevel;
-                        }
-                        else if (topSpeciesLevels[s] != -1 && _statIOs[s].LevelWild > topSpeciesLevels[s])
-                        {
-                            levelStatus = LevelStatus.NewTopLevel;
-                            newTopStatsText.Add(Utils.StatName(s, false, customStatNames));
-                            analysisState = LevelStatus.NewTopLevel;
+                            if (_statIOs[s].LevelWild == topSpeciesLevels[s])
+                            {
+                                levelStatus = LevelStatus.TopLevel;
+                                topStatsText.Add(Utils.StatName(s, false, customStatNames));
+                                if (analysisState != LevelStatus.NewTopLevel)
+                                    analysisState = LevelStatus.TopLevel;
+                            }
+                            else if (topSpeciesLevels[s] != -1 && _statIOs[s].LevelWild > topSpeciesLevels[s])
+                            {
+                                levelStatus = LevelStatus.NewTopLevel;
+                                newTopStatsText.Add(Utils.StatName(s, false, customStatNames));
+                                analysisState = LevelStatus.NewTopLevel;
+                            }
                         }
                     }
-                    else if (checkLowLevels && statWeights[s] < 0)
+                    else if (checkLowLevels && statWeights.Item1[s] < 0)
                     {
                         // lower stats are considered to be good
                         if (_statIOs[s].LevelWild == lowSpeciesLevels[s])
@@ -1023,7 +1031,7 @@ namespace ARKBreedingStats
             UpdateParentListInput(creatureInfoInputExtractor); // this function is only used for single-creature extractions, e.g. LastExport
             creatureInfoInputExtractor.UpdateExistingCreature = creatureExists;
             if (!string.IsNullOrEmpty(filePath))
-                SetMessageLabelText(Loc.S("creatureOfFile") + "\n" + filePath, path: filePath);
+                SetMessageLabelText(Loc.S("creatureOfFile") + "\r\n" + filePath, path: filePath);
             return creatureExists;
         }
 
@@ -1050,7 +1058,9 @@ namespace ARKBreedingStats
             // at this point, if the creatureValues has parent-ArkIds, make sure these parent-creatures exist
             if (cv.Mother == null)
             {
-                if (_creatureCollection.CreatureById(cv.motherGuid, cv.motherArkId, cv.Species, out Creature mother))
+                // placeholder creatures might have an Ark id of 0, so use the generated guid to find them reliably
+                var useGuid = cv.motherGuid != Guid.Empty ? cv.motherGuid : Utils.ConvertArkIdToGuid(cv.motherArkId);
+                if (_creatureCollection.CreatureById(useGuid, cv.motherArkId, out Creature mother))
                 {
                     cv.Mother = mother;
                 }
@@ -1062,7 +1072,8 @@ namespace ARKBreedingStats
             }
             if (cv.Father == null)
             {
-                if (_creatureCollection.CreatureById(cv.fatherGuid, cv.fatherArkId, cv.Species, out Creature father))
+                var useGuid = cv.fatherGuid != Guid.Empty ? cv.fatherGuid : Utils.ConvertArkIdToGuid(cv.fatherArkId);
+                if (_creatureCollection.CreatureById(useGuid, cv.fatherArkId, out Creature father))
                 {
                     cv.Father = father;
                 }
@@ -1092,6 +1103,76 @@ namespace ARKBreedingStats
             else
                 rbWildExtractor.Checked = true;
             numericUpDownImprintingBonusExtractor.ValueSave = (decimal)cv.imprintingBonus * 100;
+        }
+
+        /// <summary>
+        /// Creates a creature from the infos in inputs, extractor or tester.
+        /// </summary>
+        /// <param name="fromExtractor"></param>
+        /// <param name="species"></param>
+        /// <param name="levelStep"></param>
+        /// <param name="motherArkId">Use this Ark Id instead of the ones of the input if not 0</param>
+        /// <param name="fatherArkId">Use this Ark Id instead of the ones of the input if not 0</param>
+        /// <returns></returns>
+        private Creature GetCreatureFromInput(bool fromExtractor, Species species, int? levelStep, long motherArkId = 0, long fatherArkId = 0)
+        {
+            CreatureInfoInput input;
+            bool bred;
+            double te, imprinting;
+            if (fromExtractor)
+            {
+                input = creatureInfoInputExtractor;
+                bred = rbBredExtractor.Checked;
+                te = rbWildExtractor.Checked ? -3 : _extractor.UniqueTamingEffectiveness();
+                imprinting = _extractor.ImprintingBonus;
+            }
+            else
+            {
+                input = creatureInfoInputTester;
+                bred = rbBredTester.Checked;
+                te = TamingEffectivenessTester;
+                imprinting = (double)numericUpDownImprintingBonusTester.Value / 100;
+            }
+
+            Creature creature = new Creature(species, input.CreatureName, input.CreatureOwner, input.CreatureTribe, input.CreatureSex, GetCurrentWildLevels(fromExtractor), GetCurrentDomLevels(fromExtractor), te, bred, imprinting, levelStep: levelStep)
+            {
+                // set parents
+                Mother = input.Mother,
+                Father = input.Father,
+
+                // cooldown-, growing-time
+                cooldownUntil = input.CooldownUntil,
+                growingUntil = input.GrowingUntil,
+
+                flags = input.CreatureFlags,
+                note = input.CreatureNote,
+                server = input.CreatureServer,
+
+                domesticatedAt = input.DomesticatedAt.HasValue && input.DomesticatedAt.Value.Year > 2014 ? input.DomesticatedAt.Value : default(DateTime?),
+                addedToLibrary = DateTime.Now,
+                mutationsMaternal = input.MutationCounterMother,
+                mutationsPaternal = input.MutationCounterFather,
+                Status = input.CreatureStatus,
+                colors = input.RegionColors,
+                ColorIdsAlsoPossible = input.ColorIdsAlsoPossible,
+                guid = fromExtractor && input.CreatureGuid != Guid.Empty ? input.CreatureGuid : Guid.NewGuid(),
+                ArkId = input.ArkId
+            };
+
+            creature.ArkIdImported = Utils.IsArkIdImported(creature.ArkId, creature.guid);
+            creature.InitializeArkInGame();
+
+            // parent guids
+            if (motherArkId != 0)
+                creature.motherGuid = Utils.ConvertArkIdToGuid(motherArkId);
+            else if (input.MotherArkId != 0)
+                creature.motherGuid = Utils.ConvertArkIdToGuid(input.MotherArkId);
+            if (fatherArkId != 0)
+                creature.fatherGuid = Utils.ConvertArkIdToGuid(fatherArkId);
+            else if (input.FatherArkId != 0)
+                creature.fatherGuid = Utils.ConvertArkIdToGuid(input.FatherArkId);
+
+            return creature;
         }
 
         /// <summary>

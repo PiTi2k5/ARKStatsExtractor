@@ -9,9 +9,11 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.library;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ARKBreedingStats.settings
 {
@@ -84,6 +86,8 @@ namespace ARKBreedingStats.settings
                 flowLayoutPanelStatMultipliers.Controls.Add(_multSetter[s]);
             }
 
+            CbHideInvisibleColorRegions.Visible = Values.V.InvisibleColorRegionsExist;
+
             // set neutral numbers for stat-multipliers to the default values to easier see what is non-default
             ServerMultipliers officialMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             for (int s = 0; s < Stats.StatsCount; s++)
@@ -140,12 +144,14 @@ namespace ARKBreedingStats.settings
             _tt.SetToolTip(labelEvent, "These values are used if the Event-Checkbox under the species-selector is selected.");
             _tt.SetToolTip(cbConsiderWildLevelSteps, "Enable to sort out all level-combinations that are not possible for naturally spawned creatures.\nThe step is max-wild-level / 30 by default, e.g. with a max wildlevel of 150, only creatures with levels that are a multiple of 5 are possible (can be different with mods).\nDisable if there are creatures that have other levels, e.g. spawned in by an admin.");
             _tt.SetToolTip(cbSingleplayerSettings, "Check this if you have enabled the \"Singleplayer-Settings\" in your game. This settings adjusts some of the multipliers again.");
+            _tt.SetToolTip(CbAtlasSettings, "Check this if you use this tool with creatures from the game ATLAS. This settings adjusts some of the multipliers to match the ones of ATLAS.");
             _tt.SetToolTip(cbAllowMoreThanHundredImprinting, "Enable this if on your server more than 100% imprinting are possible, e.g. with the mod S+ with a Nanny");
             _tt.SetToolTip(cbDevTools, "Shows extra tabs for multiplier-testing and extraction test-cases.");
             _tt.SetToolTip(nudMaxServerLevel, "The max level allowed on the server. Currently creatures with more than 450 levels will be deleted on official servers.\nA creature that can be potentially have a higher level than this (if maximally leveled up) will be marked with a orange-red text in the library.\nSet to 0 to disable a warning in the loaded library.");
             _tt.SetToolTip(lbMaxTotalLevel, "The max level allowed on the server. Currently creatures with more than 450 levels will be deleted on official servers.\nThis limit can be enabled on unoffical servers with the setting DestroyTamesOverLevelClamp.\nA creature in this library that can be potentially have a higher level than this (if maximally leveled up) will be marked with a orange-red text in the library.\nSet to 0 to disable a warning in the loaded library.");
             _tt.SetToolTip(CbExportFileRenameAfterImport, "Use a pattern to create the new file name, a subset of the keywords and functions from the naming pattern work.");
             _tt.SetToolTip(CbHighlightAdjustedMultipliers, "Highlight multipliers that are set to non-official values.\nDoes not update on multiplier change, this button needs to be rechecked then.\nCan be used to share screenshots of these settings.");
+            _tt.SetToolTip(LbLanguage2, "Here you can specify a different language for exported data, e.g. the info graphics.");
 
             // localizations / translations
             // for a new translation
@@ -155,7 +161,6 @@ namespace ARKBreedingStats.settings
             // * the entry in the dictionary below needs to be added
             _languages = new Dictionary<string, string>
             {
-                { Loc.S("SystemLanguage"), string.Empty},
                 { "Deutsch", "de"},
                 { "English", "en"},
                 { "Español", "es"},
@@ -169,8 +174,17 @@ namespace ARKBreedingStats.settings
                 { "简体中文", "zh"},
                 { "繁體中文", "zh-tw"}
             };
+
+            CbbLanguage.Items.Add(Loc.S("SystemLanguage"));
+            CbbLanguage2.Items.Add("-"); // indicates no secondary language, i.e. the same as primary
+
             foreach (string l in _languages.Keys)
-                cbbLanguage.Items.Add(l);
+            {
+                CbbLanguage.Items.Add(l);
+                CbbLanguage2.Items.Add(l);
+            }
+
+            _languages[Loc.S("SystemLanguage")] = string.Empty;
 
             foreach (var cm in Enum.GetNames(typeof(ColorModeColors.AsbColorMode)))
                 CbbColorMode.Items.Add(cm);
@@ -194,6 +208,7 @@ namespace ARKBreedingStats.settings
                 }
             }
             cbSingleplayerSettings.Checked = cc.singlePlayerSettings;
+            CbAtlasSettings.Checked = _cc.AtlasSettings;
 
             nudMaxDomLevels.ValueSave = cc.maxDomLevel;
             numericUpDownMaxBreedingSug.ValueSave = cc.maxBreedingSuggestions;
@@ -281,6 +296,7 @@ namespace ARKBreedingStats.settings
             NudOCRClipboardCropWidth.ValueSave = rec.Width;
             NudOCRClipboardCropHeight.ValueSave = rec.Height;
             cbOCRIgnoreImprintValue.Checked = Properties.Settings.Default.OCRIgnoresImprintValue;
+            NudOverlayRelativeFontSize.ValueSave = (decimal)Properties.Settings.Default.OverlayRelativeFontSize;
             #endregion
 
             customSCStarving.SoundFile = Properties.Settings.Default.soundStarving;
@@ -409,10 +425,16 @@ namespace ARKBreedingStats.settings
             cbAdminConsoleCommandWithCheat.Checked = Properties.Settings.Default.AdminConsoleCommandWithCheat;
 
             string langKey = _languages.FirstOrDefault(x => x.Value == Properties.Settings.Default.language).Key ?? string.Empty;
-            int langI = cbbLanguage.Items.IndexOf(langKey);
-            cbbLanguage.SelectedIndex = langI == -1 ? 0 : langI;
+            int langI = CbbLanguage.Items.IndexOf(langKey);
+            CbbLanguage.SelectedIndex = langI == -1 ? 0 : langI;
+
+            langKey = _languages.FirstOrDefault(x => x.Value == Properties.Settings.Default.language2).Key ?? string.Empty;
+            langI = CbbLanguage2.Items.IndexOf(langKey);
+            CbbLanguage2.SelectedIndex = langI == -1 ? 0 : langI;
 
             CbHideInvisibleColorRegions.Checked = Properties.Settings.Default.HideInvisibleColorRegions;
+            CbAlwaysShowAllColorRegions.Checked = Properties.Settings.Default.AlwaysShowAllColorRegions;
+            CbColorIdOnColorRegionButton.Checked = Properties.Settings.Default.ShowColorIdOnRegionButtons;
 
             CbbColorMode.SelectedIndex = Math.Min(CbbColorMode.Items.Count, Math.Max(0, Properties.Settings.Default.ColorMode));
         }
@@ -440,9 +462,10 @@ namespace ARKBreedingStats.settings
 
             // Torpidity is handled differently by the game, IwM has no effect. Set IwM to 1.
             // See https://github.com/cadon/ARKStatsExtractor/issues/942 for more infos about this.
-            _cc.serverMultipliers.statMultipliers[Stats.Torpidity][3] = 1;
+            _cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] = 1;
 
             _cc.singlePlayerSettings = cbSingleplayerSettings.Checked;
+            _cc.AtlasSettings = CbAtlasSettings.Checked;
             _cc.maxDomLevel = (int)nudMaxDomLevels.Value;
             _cc.maxWildLevel = (int)nudMaxWildLevels.Value;
             _cc.maxServerLevel = (int)nudMaxServerLevel.Value;
@@ -517,6 +540,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.OCRFromClipboard = CbOCRFromClipboard.Checked;
             Properties.Settings.Default.OCRFromRectangle = new Rectangle((int)NudOCRClipboardCropLeft.Value, (int)NudOCRClipboardCropTop.Value, (int)NudOCRClipboardCropWidth.Value, (int)NudOCRClipboardCropHeight.Value);
             Properties.Settings.Default.OCRIgnoresImprintValue = cbOCRIgnoreImprintValue.Checked;
+            Properties.Settings.Default.OverlayRelativeFontSize = (float)NudOverlayRelativeFontSize.Value;
             #endregion
 
             Properties.Settings.Default.soundStarving = customSCStarving.SoundFile;
@@ -628,13 +652,17 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.AdminConsoleCommandWithCheat = cbAdminConsoleCommandWithCheat.Checked;
 
             string oldLanguageSetting = Properties.Settings.Default.language;
-            string lang = cbbLanguage.SelectedItem.ToString();
-            Properties.Settings.Default.language = _languages.ContainsKey(lang) ? _languages[lang] : string.Empty;
-            LanguageChanged = oldLanguageSetting != Properties.Settings.Default.language;
+            Properties.Settings.Default.language = _languages.TryGetValue(CbbLanguage.SelectedItem.ToString(), out var languageId) ? languageId : string.Empty;
+            string oldLanguage2Setting = Properties.Settings.Default.language2;
+            Properties.Settings.Default.language2 = _languages.TryGetValue(CbbLanguage2.SelectedItem.ToString(), out languageId) ? languageId : string.Empty;
 
-            var oldColorRegionSetting = Properties.Settings.Default.HideInvisibleColorRegions;
+            LanguageChanged = oldLanguageSetting != Properties.Settings.Default.language || oldLanguage2Setting != Properties.Settings.Default.language2;
+
+            ColorRegionDisplayChanged = CbHideInvisibleColorRegions.Checked != Properties.Settings.Default.HideInvisibleColorRegions
+                || Properties.Settings.Default.AlwaysShowAllColorRegions != CbAlwaysShowAllColorRegions.Checked;
             Properties.Settings.Default.HideInvisibleColorRegions = CbHideInvisibleColorRegions.Checked;
-            ColorRegionDisplayChanged = oldColorRegionSetting != Properties.Settings.Default.HideInvisibleColorRegions;
+            Properties.Settings.Default.AlwaysShowAllColorRegions = CbAlwaysShowAllColorRegions.Checked;
+            Properties.Settings.Default.ShowColorIdOnRegionButtons = CbColorIdOnColorRegionButton.Checked;
 
             Properties.Settings.Default.ColorMode = Math.Max(0, CbbColorMode.SelectedIndex);
 
@@ -679,7 +707,18 @@ namespace ARKBreedingStats.settings
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                foreach (string file in files) ExtractSettingsFromFile(file);
+                foreach (string filePath in files)
+                {
+                    switch (Path.GetExtension(filePath))
+                    {
+                        case ".sav":
+                            LoadServerMultipliersFromSavFile(filePath);
+                            break;
+                        default:
+                            ExtractSettingsFromFile(filePath);
+                            break;
+                    }
+                }
             }
             else if (e.Data.GetDataPresent(DataFormats.Text))
             {
@@ -735,14 +774,13 @@ namespace ARKBreedingStats.settings
             }
 
             // get stat-multipliers
-            // if an ini file is imported the server is most likely unofficial wit no level cap, if the server has a max level, it will be parsed.
+            // if an ini file is imported the server is most likely unofficial with no level cap, if the server has a max level, it will be parsed.
             nudMaxServerLevel.ValueSave = 0;
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
                 ParseAndSetStatMultiplier(0, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(1,
-                    @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(1, @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
                 ParseAndSetStatMultiplier(2, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
                 ParseAndSetStatMultiplier(3, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
 
@@ -752,9 +790,7 @@ namespace ARKBreedingStats.settings
                     if (m.Success && double.TryParse(m.Groups[1].Value,
                         System.Globalization.NumberStyles.AllowDecimalPoint, cultureForStrings, out d))
                     {
-                        var multipliers = _multSetter[s].Multipliers;
-                        multipliers[multiplierIndex] = d == 0 ? 1 : d;
-                        _multSetter[s].Multipliers = multipliers;
+                        _multSetter[s].SetMultiplier(multiplierIndex, d == 0 ? 1 : d);
                     }
                 }
             }
@@ -793,14 +829,12 @@ namespace ARKBreedingStats.settings
             ParseAndSetValue(nudEggHatchSpeedEvent, @"ASBEvent_EggHatchSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyMatureSpeedEvent, @"ASBEvent_BabyMatureSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudBabyCuddleIntervalEvent, @"ASBEvent_BabyCuddleIntervalMultiplier ?= ?(\d*\.?\d+)");
-            ParseAndSetValue(nudBabyFoodConsumptionSpeedEvent,
-                @"ASBEvent_BabyFoodConsumptionSpeedMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyFoodConsumptionSpeedEvent, @"ASBEvent_BabyFoodConsumptionSpeedMultiplier ?= ?(\d*\.?\d+)");
             // event multipliers taming
             ParseAndSetValue(nudTamingSpeedEvent, @"ASBEvent_TamingSpeedMultiplier ?= ?(\d*\.?\d+)");
-            ParseAndSetValue(nudDinoCharacterFoodDrainEvent,
-                @"ASBEvent_DinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudDinoCharacterFoodDrainEvent, @"ASBEvent_DinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
 
-            bool ParseAndSetValue(uiControls.Nud nud, string regexPattern)
+            bool ParseAndSetValue(Nud nud, string regexPattern)
             {
                 m = Regex.Match(text, regexPattern);
                 if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint,
@@ -855,6 +889,40 @@ namespace ARKBreedingStats.settings
 
                 nudMaxWildLevels.ValueSave = (int)(difficultyValue * 30);
             }
+        }
+
+        /// <summary>
+        /// Load server multipliers from a file created by the export gun mod.
+        /// </summary>
+        private void LoadServerMultipliersFromSavFile(string filePath)
+        {
+            var esm = ImportExportGun.ReadServerMultipliers(filePath, out _);
+            if (esm == null) return;
+
+            const int roundToDigits = 6;
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                _multSetter[s].SetMultiplier(0, Math.Round(esm.TameAdd[s], roundToDigits));
+                _multSetter[s].SetMultiplier(1, Math.Round(esm.TameAff[s], roundToDigits));
+                _multSetter[s].SetMultiplier(2, Math.Round(esm.TameLevel[s], roundToDigits));
+                _multSetter[s].SetMultiplier(3, Math.Round(esm.WildLevel[s], roundToDigits));
+            }
+
+            nudMaxWildLevels.ValueSave = esm.MaxWildLevel;
+            nudMaxServerLevel.ValueSave = esm.DestroyTamesOverLevelClamp;
+            nudTamingSpeed.ValueSaveDouble = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
+            nudDinoCharacterFoodDrain.ValueSaveDouble = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
+            nudMatingSpeed.ValueSaveDouble = Math.Round(esm.MatingSpeedMultiplier, roundToDigits);
+            nudMatingInterval.ValueSaveDouble = Math.Round(esm.MatingIntervalMultiplier, roundToDigits);
+            nudEggHatchSpeed.ValueSaveDouble = Math.Round(esm.EggHatchSpeedMultiplier, roundToDigits);
+            nudBabyMatureSpeed.ValueSaveDouble = Math.Round(esm.BabyMatureSpeedMultiplier, roundToDigits);
+            nudBabyCuddleInterval.ValueSaveDouble = Math.Round(esm.BabyCuddleIntervalMultiplier, roundToDigits);
+            nudBabyImprintAmount.ValueSaveDouble = Math.Round(esm.BabyImprintAmountMultiplier, roundToDigits);
+            nudBabyImprintingStatScale.ValueSaveDouble = Math.Round(esm.BabyImprintingStatScaleMultiplier, roundToDigits);
+            nudBabyFoodConsumptionSpeed.ValueSaveDouble = Math.Round(esm.BabyFoodConsumptionSpeedMultiplier, roundToDigits);
+            nudTamedDinoCharacterFoodDrain.ValueSaveDouble = Math.Round(esm.TamedDinoCharacterFoodDrainMultiplier, roundToDigits);
+            CbAllowFlyerSpeedLeveling.Checked = esm.AllowFlyerSpeedLeveling;
+            cbSingleplayerSettings.Checked = esm.UseSingleplayerSettings;
         }
 
         private void Settings_Disposed(object sender, EventArgs e)
@@ -1325,7 +1393,14 @@ namespace ARKBreedingStats.settings
             nudBabyImprintAmount.SetExtraHighlightNonDefault(highlight);
             nudBabyImprintingStatScale.SetExtraHighlightNonDefault(highlight);
             nudBabyFoodConsumptionSpeed.SetExtraHighlightNonDefault(highlight);
-            cbSingleplayerSettings.SetBackColorAndAccordingForeColor(highlight && cbSingleplayerSettings.Checked ? Color.FromArgb(190, 40, 20) : Color.Transparent);
+            HighlightCheckbox(cbSingleplayerSettings);
+            HighlightCheckbox(CbAllowFlyerSpeedLeveling);
+            HighlightCheckbox(CbAtlasSettings);
+
+            void HighlightCheckbox(CheckBox cb, bool defaultUnchecked = true)
+            {
+                cb.SetBackColorAndAccordingForeColor(highlight && cb.Checked == defaultUnchecked ? Color.FromArgb(190, 40, 20) : Color.Transparent);
+            }
         }
 
         private void BExportSpreadsheetMoveUp_Click(object sender, EventArgs e)

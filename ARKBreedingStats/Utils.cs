@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ARKBreedingStats.values;
@@ -310,7 +311,7 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Probability of the occurence of a stat level, assuming a normal distribution of 180 levels on 7 stats.
+        /// Probability of the occurrence of a stat level, assuming a normal distribution of 180 levels on 7 stats.
         /// </summary>
         /// <param name="level"></param>
         /// <returns></returns>
@@ -373,16 +374,19 @@ namespace ARKBreedingStats
         /// <param name="abbreviation"></param>
         /// <param name="customStatNames">Dictionary with custom stat names</param>
         /// <returns></returns>
-        public static string StatName(int statIndex, bool abbreviation = false, Dictionary<string, string> customStatNames = null)
+        public static string StatName(int statIndex, bool abbreviation = false, Dictionary<string, string> customStatNames = null, bool secondaryLanguage = false)
         {
             if (_statNames == null || statIndex < 0 || statIndex >= _statNames.Length)
                 return string.Empty;
 
             if (customStatNames != null && customStatNames.TryGetValue(statIndex.ToString(), out string statName))
             {
-                return Loc.S(abbreviation ? $"{statName}_Abb" : statName);
+                return Loc.S(abbreviation ? $"{statName}_Abb" : statName, secondaryCulture: secondaryLanguage);
             }
+            if (secondaryLanguage)
+                return Loc.S(abbreviation ? StatNameKeys[statIndex] + "_Abb" : StatNameKeys[statIndex], secondaryCulture: true);
 
+            // use cached names
             return abbreviation ? _statNamesAbb[statIndex] : _statNames[statIndex];
         }
 
@@ -469,7 +473,7 @@ namespace ARKBreedingStats
             return backColor.R * .3f + backColor.G * .59f + backColor.B * .11f < 110 ? Color.White : Color.Black;
         }
 
-        public static bool ShowTextInput(string text, out string input, string title = "", string preInput = "")
+        public static bool ShowTextInput(string text, out string input, string title = null, string preInput = null, params string[] autoCompleteStrings)
         {
             Form inputForm = new Form
             {
@@ -493,6 +497,14 @@ namespace ARKBreedingStats
             inputForm.AcceptButton = buttonOk;
             inputForm.CancelButton = buttonCancel;
             textBox.Text = preInput;
+            if (autoCompleteStrings?.Any() == true)
+            {
+                textBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                var ac = new AutoCompleteStringCollection();
+                ac.AddRange(autoCompleteStrings);
+                textBox.AutoCompleteCustomSource = ac;
+            }
             textBox.SelectAll();
 
             input = string.Empty;

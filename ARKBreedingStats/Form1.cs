@@ -12,12 +12,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Windows.Forms;
 using ARKBreedingStats.mods;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.utils;
 using static ARKBreedingStats.settings.Settings;
+using Color = System.Drawing.Color;
 
 namespace ARKBreedingStats
 {
@@ -33,8 +35,8 @@ namespace ARKBreedingStats
         private readonly Dictionary<Species, int[]> _topLevels = new Dictionary<Species, int[]>();
 
         private readonly Dictionary<Species, int[]> _lowestLevels = new Dictionary<Species, int[]>();
-        private readonly List<StatIO> _statIOs = new List<StatIO>();
-        private readonly List<StatIO> _testingIOs = new List<StatIO>();
+        private readonly StatIO[] _statIOs = new StatIO[Stats.StatsCount];
+        private readonly StatIO[] _testingIOs = new StatIO[Stats.StatsCount];
         private int _activeStatIndex = -1;
 
         private readonly bool[]
@@ -188,6 +190,46 @@ namespace ARKBreedingStats
             openSettingsToolStripMenuItem.ShortcutKeyDisplayString = new KeysConverter()
                 .ConvertTo(Keys.Control, typeof(string))?.ToString().Replace("None", ",");
 
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                var statIo = new StatIO
+                {
+                    InputType = StatIOInputType.FinalValueInputType,
+                    Title = Utils.StatName(s),
+                    statIndex = s
+                };
+                var statIoTesting = new StatIO
+                {
+                    InputType = StatIOInputType.LevelsInputType,
+                    Title = Utils.StatName(s),
+                    statIndex = s
+                };
+
+                if (Utils.Precision(s) == 3)
+                {
+                    statIo.Percent = true;
+                    statIoTesting.Percent = true;
+                }
+
+                statIoTesting.LevelChanged += TestingStatIoValueUpdate;
+                statIo.InputValueChanged += StatIOQuickWildLevelCheck;
+                statIo.Click += StatIO_Click;
+                _considerStatHighlight[s] = (Properties.Settings.Default.consideredStats & (1 << s)) != 0;
+
+                _statIOs[s] = statIo;
+                _testingIOs[s] = statIoTesting;
+            }
+
+            // add controls in the order they are shown in-game
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                var displayIndex = Stats.DisplayOrder[s];
+                flowLayoutPanelStatIOsExtractor.Controls.Add(_statIOs[displayIndex]);
+                flowLayoutPanelStatIOsTester.Controls.Add(_testingIOs[displayIndex]);
+                checkedListBoxConsiderStatTop.Items.Add(Utils.StatName(displayIndex),
+                    _considerStatHighlight[displayIndex]);
+            }
+
             _timerGlobal.Interval = 1000;
             _timerGlobal.Tick += TimerGlobal_Tick;
 
@@ -229,13 +271,14 @@ namespace ARKBreedingStats
 
             // load stat weights
             double[][] custWd = Properties.Settings.Default.customStatWeights;
+            var customStatWeightOddEven = Properties.Settings.Default.CustomStatWeightOddEven;
             string[] custWs = Properties.Settings.Default.customStatWeightNames;
-            Dictionary<string, double[]> custW = new Dictionary<string, double[]>();
+            var custW = new Dictionary<string, (double[], byte[])>();
             if (custWs != null && custWd != null)
             {
-                for (int i = 0; i < custWs.Length && i < custWd.Length; i++)
+                for (int i = 0; i < custWs.Length && i < custWd.Length && i < customStatWeightOddEven.Length; i++)
                 {
-                    custW.Add(custWs[i], custWd[i]);
+                    custW.Add(custWs[i], (custWd[i], customStatWeightOddEven[i]));
                 }
             }
 
@@ -243,50 +286,12 @@ namespace ARKBreedingStats
             // last set values are saved at the end of the custom weightings
             if (custWs != null && custWd != null && custWd.Length > custWs.Length)
                 breedingPlan1.StatWeighting.WeightValues = custWd[custWs.Length];
+            if (custWs != null && customStatWeightOddEven != null && customStatWeightOddEven.Length > custWs.Length)
+                breedingPlan1.StatWeighting.AnyOddEven = customStatWeightOddEven[custWs.Length];
 
             // load weapon damages
             tamingControl1.WeaponDamages = Properties.Settings.Default.weaponDamages;
             tamingControl1.WeaponDamagesEnabled = Properties.Settings.Default.weaponDamagesEnabled;
-
-            for (int s = 0; s < Stats.StatsCount; s++)
-            {
-                var statIO = new StatIO
-                {
-                    InputType = StatIOInputType.FinalValueInputType,
-                    Title = Utils.StatName(s),
-                    statIndex = s
-                };
-                var statIoTesting = new StatIO
-                {
-                    InputType = StatIOInputType.LevelsInputType,
-                    Title = Utils.StatName(s),
-                    statIndex = s
-                };
-
-                if (Utils.Precision(s) == 3)
-                {
-                    statIO.Percent = true;
-                    statIoTesting.Percent = true;
-                }
-
-                statIoTesting.LevelChanged += TestingStatIoValueUpdate;
-                statIO.InputValueChanged += StatIOQuickWildLevelCheck;
-                statIO.Click += StatIO_Click;
-                _considerStatHighlight[s] = (Properties.Settings.Default.consideredStats & (1 << s)) != 0;
-
-                _statIOs.Add(statIO);
-                _testingIOs.Add(statIoTesting);
-            }
-
-            // add controls in the order they are shown in-game
-            for (int s = 0; s < Stats.StatsCount; s++)
-            {
-                var displayIndex = Stats.DisplayOrder[s];
-                flowLayoutPanelStatIOsExtractor.Controls.Add(_statIOs[displayIndex]);
-                flowLayoutPanelStatIOsTester.Controls.Add(_testingIOs[displayIndex]);
-                checkedListBoxConsiderStatTop.Items.Add(Utils.StatName(displayIndex),
-                    _considerStatHighlight[displayIndex]);
-            }
 
             // torpor should not show bar, it get's too wide and is not interesting for breeding
             _statIOs[Stats.Torpidity].ShowBarAndLock = false;
@@ -983,43 +988,31 @@ namespace ARKBreedingStats
 
             //// clear lists
             // owner
-            var ownerList = new List<string>();
-            var tribesList = new List<string>();
-            var serverList = new List<string>();
+            var ownerList = new HashSet<string>();
+            var tribesList = new HashSet<string>();
+            var serverList = new HashSet<string>();
 
             //// check all creature for info
             var creaturesToCheck = _creatureCollection.creatures.Where(c => !c.flags.HasFlag(CreatureFlags.Placeholder))
                 .ToArray();
             foreach (Creature c in creaturesToCheck)
             {
-                AddIfNotContains(ownerList, c.owner);
-                AddIfNotContains(tribesList, c.tribe);
-                AddIfNotContains(serverList, c.server);
+                AddIfNotEmpty(ownerList, c.owner);
+                AddIfNotEmpty(tribesList, c.tribe);
+                AddIfNotEmpty(serverList, c.server);
 
-                void AddIfNotContains(List<string> list, string name)
+                void AddIfNotEmpty(HashSet<string> list, string name)
                 {
-                    if (!string.IsNullOrEmpty(name) && !list.Contains(name))
+                    if (!string.IsNullOrEmpty(name))
                         list.Add(name);
                 }
             }
 
-            ownerList.Sort();
-            tribesList.Sort();
-            serverList.Sort();
-
             // owners
-            foreach (var owner in ownerList)
-            {
-                if (!string.IsNullOrEmpty(owner) && !tribesControl1.PlayerExists(owner))
-                    tribesControl1.AddPlayer(owner);
-            }
+            tribesControl1.AddPlayers(ownerList);
 
             // tribes
-            foreach (var tribe in tribesList)
-            {
-                if (!string.IsNullOrEmpty(tribe) && !tribesControl1.TribeExists(tribe))
-                    tribesControl1.AddTribe(tribe);
-            }
+            tribesControl1.AddTribes(tribesList);
 
             ///// Apply autocomplete lists
             // owners
@@ -1170,10 +1163,26 @@ namespace ARKBreedingStats
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (UnsavedChanges() && CustomMessageBox.Show(Loc.S("Collection changed discard and quit?"),
-                Loc.S("Discard changes?"), Loc.S("Discard changes and quit"), buttonCancel: Loc.S("Cancel quitting"),
-                icon: MessageBoxIcon.Warning) != DialogResult.Yes)
-                e.Cancel = true;
+            if (UnsavedChanges())
+            {
+                switch (CustomMessageBox.Show(Loc.S("Collection changed discard and quit?"),
+                Loc.S("Discard changes?"), buttonYes: Loc.S("Save and quit"), buttonNo: Loc.S("Discard changes and quit"), buttonCancel: Loc.S("Cancel quitting"),
+                icon: MessageBoxIcon.Warning))
+                {
+                    case DialogResult.Yes:
+                        SaveCollection();
+                        break;
+                    case DialogResult.No:
+                        break;
+                    case DialogResult.Cancel:
+                        e.Cancel = true;
+                        break;
+                    default:
+                        e.Cancel = true;
+                        break;
+                }
+            }
+
         }
 
         /// <summary>
@@ -1272,17 +1281,23 @@ namespace ARKBreedingStats
             Properties.Settings.Default.TimerPresets = timerList1.GetTimerPresets();
 
             // save custom statWeights
-            List<string> custWs = new List<string>();
-            List<double[]> custWd = new List<double[]>();
-            foreach (KeyValuePair<string, double[]> w in breedingPlan1.StatWeighting.CustomWeightings)
+            var custWs = new List<string>();
+            var custWd = new List<double[]>();
+            var custOddEven = new List<byte[]>();
+            foreach (KeyValuePair<string, (double[], byte[])> w in breedingPlan1.StatWeighting.CustomWeightings)
             {
                 custWs.Add(w.Key);
-                custWd.Add(w.Value);
+                custWd.Add(w.Value.Item1);
+                custOddEven.Add(w.Value.Item2);
             }
 
-            custWd.Add(breedingPlan1.StatWeighting.WeightValues); // add current values
-            Properties.Settings.Default.customStatWeights = custWd.ToArray();
+            // add current values without name
+            custWd.Add(breedingPlan1.StatWeighting.WeightValues);
+            custOddEven.Add(breedingPlan1.StatWeighting.AnyOddEven);
+
             Properties.Settings.Default.customStatWeightNames = custWs.ToArray();
+            Properties.Settings.Default.customStatWeights = custWd.ToArray();
+            Properties.Settings.Default.CustomStatWeightOddEven = custOddEven.ToArray();
 
             // save weaponDamages for KO calculation
             Properties.Settings.Default.weaponDamages = tamingControl1.WeaponDamages;
@@ -1320,39 +1335,53 @@ namespace ARKBreedingStats
         /// Sets the text at the top to display infos.
         /// </summary>
         /// <param name="text">Text to display</param>
-        /// <param name="icon">Backcolor of the label</param>
-        /// <param name="path">If valid path to file or folder, the user can click on the label to display the path in the explorer</param>
+        /// <param name="icon">Back color of the message</param>
+        /// <param name="path">If valid path to file or folder, the user can click on the message to display the path in the explorer</param>
         private void SetMessageLabelText(string text = null, MessageBoxIcon icon = MessageBoxIcon.None,
             string path = null)
         {
-            lbLibrarySelectionInfo.Text = text;
-            _librarySelectionInfoClickPath = path;
-
-            if (string.IsNullOrEmpty(path))
+            if (_ignoreNextMessageLabel)
             {
-                lbLibrarySelectionInfo.Cursor = null;
-                _tt.SetToolTip(lbLibrarySelectionInfo, null);
+                _ignoreNextMessageLabel = false;
+                return;
             }
-            else
-            {
-                lbLibrarySelectionInfo.Cursor = Cursors.Hand;
-                _tt.SetToolTip(lbLibrarySelectionInfo, Loc.S("ClickDisplayFile"));
-            }
+            // a TextBox needs \r\n for a new line, only \n will not result in a line break.
+            TbMessageLabel.Text = text;
+            SetMessageLabelLink(path);
 
             switch (icon)
             {
                 case MessageBoxIcon.Information:
-                    lbLibrarySelectionInfo.BackColor = Color.LightGreen;
+                    TbMessageLabel.BackColor = Color.LightGreen;
                     break;
                 case MessageBoxIcon.Warning:
-                    lbLibrarySelectionInfo.BackColor = Color.Yellow;
+                    TbMessageLabel.BackColor = Color.Yellow;
                     break;
                 case MessageBoxIcon.Error:
-                    lbLibrarySelectionInfo.BackColor = Color.LightSalmon;
+                    TbMessageLabel.BackColor = Color.LightSalmon;
                     break;
                 default:
-                    lbLibrarySelectionInfo.BackColor = SystemColors.Control;
+                    TbMessageLabel.BackColor = SystemColors.Control;
                     break;
+            }
+        }
+
+        /// <summary>
+        /// If valid path to file or folder, the user can click on the message to display the path in the explorer
+        /// </summary>
+        private void SetMessageLabelLink(string path = null)
+        {
+            _librarySelectionInfoClickPath = path;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                TbMessageLabel.Cursor = null;
+                _tt.SetToolTip(TbMessageLabel, null);
+            }
+            else
+            {
+                TbMessageLabel.Cursor = Cursors.Hand;
+                _tt.SetToolTip(TbMessageLabel, Loc.S("ClickDisplayFile"));
             }
         }
 
@@ -1361,7 +1390,12 @@ namespace ARKBreedingStats
         /// </summary>
         private string _librarySelectionInfoClickPath;
 
-        private void lbLibrarySelectionInfo_Click(object sender, EventArgs e)
+        /// <summary>
+        /// If true, the next message is ignored to preserve the previous one. This is used to avoid that the library selection info overwrites the results of the save game import.
+        /// </summary>
+        private bool _ignoreNextMessageLabel;
+
+        private void TbMessageLabel_Click(object sender, EventArgs e)
         {
             OpenFolderInExplorer(_librarySelectionInfoClickPath);
         }
@@ -1968,7 +2002,7 @@ namespace ARKBreedingStats
             SetupExportFileWatcher();
 
             InitializeSpeechRecognition();
-            _overlay?.SetInfoPositions();
+            _overlay?.SetInfoPositionsAndFontSize();
             if (Properties.Settings.Default.DevTools)
                 statsMultiplierTesting1.CheckIfMultipliersAreEqualToSettings();
             devToolStripMenuItem.Visible = Properties.Settings.Default.DevTools;
@@ -2345,7 +2379,11 @@ namespace ARKBreedingStats
 
         private void chkbToggleOverlay_CheckedChanged(object sender, EventArgs e)
         {
-            if (_overlay == null)
+            var enableOverlay = cbToggleOverlay.Checked;
+
+            cbToggleOverlay.BackColor = enableOverlay ? Color.LightGreen : SystemColors.ButtonFace;
+
+            if (enableOverlay && (_overlay == null || _overlay.IsDisposed))
             {
                 _overlay = new ARKOverlay
                 {
@@ -2354,15 +2392,16 @@ namespace ARKBreedingStats
                     checkInventoryStats = Properties.Settings.Default.inventoryCheckTimer
                 };
                 _overlay.InitLabelPositions();
+                _overlay.CreatureTimers = _creatureCollection.creatures.Where(c => c.ShowInOverlay).ToList();
             }
 
-            if (!SetOverlayLocation()) return;
+            if (enableOverlay && !SetOverlayLocation()) return;
 
-            _overlay.Visible = cbToggleOverlay.Checked;
-            _overlay.EnableOverlayTimer = cbToggleOverlay.Checked;
+            _overlay.Visible = enableOverlay;
+            _overlay.EnableOverlayTimer = enableOverlay;
 
             // disable speechRecognition if overlay is disabled. (no use if no data can be displayed)
-            if (_speechRecognition != null && !cbToggleOverlay.Checked)
+            if (_speechRecognition != null && !enableOverlay)
                 _speechRecognition.Listen = false;
         }
 
@@ -2373,30 +2412,29 @@ namespace ARKBreedingStats
         /// <returns></returns>
         private bool SetOverlayLocation()
         {
-            if (cbToggleOverlay.Checked)
+            if (!cbToggleOverlay.Checked) return true;
+
+            if (Properties.Settings.Default.UseCustomOverlayLocation)
             {
-                if (Properties.Settings.Default.UseCustomOverlayLocation)
-                {
-                    _overlay.Location = Properties.Settings.Default.CustomOverlayLocation;
-                }
-                else
-                {
-                    var p = Process.GetProcessesByName(Properties.Settings.Default.OCRApp).FirstOrDefault();
+                _overlay.Location = Properties.Settings.Default.CustomOverlayLocation;
+            }
+            else
+            {
+                var p = Process.GetProcessesByName(Properties.Settings.Default.OCRApp).FirstOrDefault();
 
-                    if (p == null)
-                    {
-                        MessageBoxes.ShowMessageBox(
-                            "Process for capturing screenshots and for overlay (e.g. the game, or a stream of the game) not found.\n" +
-                            "Start the game or change the process in the settings.", "Game started?",
-                            MessageBoxIcon.Warning);
-                        cbToggleOverlay.Checked = false;
-                        return false;
-                    }
-
-                    IntPtr mwhd = p.MainWindowHandle;
-                    Screen scr = Screen.FromHandle(mwhd);
-                    _overlay.Location = scr.WorkingArea.Location;
+                if (p == null)
+                {
+                    MessageBoxes.ShowMessageBox(
+                        "Process for capturing screenshots and for overlay (e.g. the game, or a stream of the game) not found.\n" +
+                        "Start the game or change the process in the settings.", "Game started?",
+                        MessageBoxIcon.Warning);
+                    cbToggleOverlay.Checked = false;
+                    return false;
                 }
+
+                IntPtr mwhd = p.MainWindowHandle;
+                Screen scr = Screen.FromHandle(mwhd);
+                _overlay.Location = scr.WorkingArea.Location;
             }
 
             return true;
@@ -2925,7 +2963,7 @@ namespace ARKBreedingStats
         {
             toolStripCBTempCreatures.Items.Clear();
             foreach (CreatureValues cv in _creatureCollection.creaturesValues)
-                toolStripCBTempCreatures.Items.Add($"{cv.name} ({cv.Species?.name ?? "unknown species"})");
+                toolStripCBTempCreatures.Items.Add($"{cv.name} ({cv.Species?.name ?? "unknown species"}, Lv {cv.level})");
         }
 
         /// <summary>
@@ -3106,6 +3144,7 @@ namespace ARKBreedingStats
             // set all stat-multipliers from testCase
             _creatureCollection.serverMultipliers = etc.serverMultipliers.Copy(true);
             _creatureCollection.singlePlayerSettings = etc.singleplayerSettings;
+            _creatureCollection.AtlasSettings = etc.AtlasSettings;
             _creatureCollection.allowMoreThanHundredImprinting = etc.allowMoreThanHundredPercentImprinting;
             _creatureCollection.maxWildLevel = etc.maxWildLevel;
 
@@ -3139,6 +3178,7 @@ namespace ARKBreedingStats
                 etc.serverMultipliers = _creatureCollection.serverMultipliers;
                 etc.Species = speciesSelector1.SelectedSpecies;
                 etc.singleplayerSettings = _creatureCollection.singlePlayerSettings;
+                etc.AtlasSettings = _creatureCollection.AtlasSettings;
                 etc.allowMoreThanHundredPercentImprinting = _creatureCollection.allowMoreThanHundredImprinting;
                 etc.maxWildLevel = _creatureCollection.maxWildLevel;
 
@@ -3242,49 +3282,117 @@ namespace ARKBreedingStats
         {
             if (!(e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Any()))
                 return;
+            ProcessDroppedFiles(files);
+        }
 
+        private void ProcessDroppedFiles(string[] files)
+        {
             string filePath = files[0];
-            string ext = Path.GetExtension(filePath).ToLower();
+            // if first item is folder, only consider all files in first folder
             if (File.GetAttributes(filePath).HasFlag(FileAttributes.Directory))
             {
-                ShowExportedCreatureListControl();
-                _exportedCreatureList.LoadFilesInFolder(filePath);
-            }
-            else if (ext == ".ini")
-            {
-                if (files.Length == 1)
+                // if folder contains .sav files (mod dino export gun)
+                files = Directory.GetFiles(filePath);
+                if (!files.Any())
                 {
+                    MessageBoxes.ShowMessageBox("No files to import in first folder");
+                    return;
+                }
+                filePath = files[0];
+            }
+
+            switch (Path.GetExtension(filePath).ToLower())
+            {
+                case ".gz":
+                    OpenCompressedFile(filePath, true);
+                    return;
+                case ".ini" when files.Length == 1:
                     ExtractExportedFileInExtractor(filePath);
+                    break;
+                case ".ini":
+                    ShowExportedCreatureListControl();
+                    _exportedCreatureList.LoadFiles(files);
+                    break;
+                case ".sav":
+                    ImportExportGunFiles(files, out _, out _);
+                    break;
+                case ".asb":
+                case ".xml":
+                    {
+                        if (DiscardChangesAndLoadNewLibrary())
+                        {
+                            LoadCollectionFile(filePath);
+                        }
+
+                        break;
+                    }
+                case ".zip":
+                    {
+                        if (DiscardChangesAndLoadNewLibrary())
+                        {
+                            OpenZippedLibrary(filePath);
+                        }
+
+                        break;
+                    }
+                case ".ark":
+                    {
+                        if (MessageBox.Show(
+                                $"Import all of the creatures in the following ARK save file to the currently opened library?\n{filePath}",
+                                "Import savefile?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                            RunSavegameImport(new ATImportFileLocation(null, null, filePath));
+                        break;
+                    }
+                default:
+                    DoOcr(filePath);
+                    break;
+            }
+        }
+
+        private bool OpenCompressedFile(string filePath, bool usegzip)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                return false;
+
+            try
+            {
+                // get temp folder for zipping
+                var tempFolder = FileService.GetTempDirectory();
+                if (usegzip)
+                {
+                    var fileName = Path.GetFileName(filePath);
+                    var extractedFilePath = Path.Combine(tempFolder, fileName.Substring(0, fileName.Length - Path.GetExtension(fileName).Length));
+
+                    using (FileStream compressedFileStream = File.Open(filePath, FileMode.Open))
+                    using (FileStream outputFileStream = File.Create(extractedFilePath))
+                    using (var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress))
+                        decompressor.CopyTo(outputFileStream);
                 }
                 else
                 {
-                    ShowExportedCreatureListControl();
-                    _exportedCreatureList.LoadFiles(files);
+                    // unzip files
+                    ZipFile.ExtractToDirectory(filePath, tempFolder);
                 }
-            }
-            else if (ext == ".asb" || ext == ".xml")
-            {
-                if (DiscardChangesAndLoadNewLibrary())
+                var extractedFilePaths = Directory.GetFiles(tempFolder);
+                if (!extractedFilePaths.Any())
                 {
-                    LoadCollectionFile(filePath);
+                    MessageBoxes.ShowMessageBox("No files in archive found: " + filePath, "Error while loading compressed file");
+                    return false;
                 }
+                ProcessDroppedFiles(extractedFilePaths);
+
+                // delete temp extracted file
+                foreach (var f in extractedFilePaths)
+                    FileService.TryDeleteFile(f);
+                FileService.TryDeleteDirectory(tempFolder);
             }
-            else if (ext == ".zip")
+            catch (Exception ex)
             {
-                if (DiscardChangesAndLoadNewLibrary())
-                {
-                    OpenZippedLibrary(filePath);
-                }
+                MessageBoxes.ExceptionMessageBox(ex, "Error while loading compressed file " + filePath);
+                return false;
             }
-            else if (ext == ".ark")
-            {
-                if (MessageBox.Show(
-                    $"Import all of the creatures in the following ARK save file to the currently opened library?\n{filePath}",
-                    "Import savefile?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                    RunSavegameImport(new ATImportFileLocation(null, null, filePath));
-            }
-            else
-                DoOcr(files[0]);
+
+            return true;
         }
 
         private void toolStripMenuItemCopyCreatureName_Click(object sender, EventArgs e)

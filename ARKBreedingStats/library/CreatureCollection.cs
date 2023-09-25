@@ -48,7 +48,7 @@ namespace ARKBreedingStats.Library
         [JsonProperty]
         public int maxBreedingSuggestions = 10;
         [JsonProperty]
-        public bool considerWildLevelSteps = false;
+        public bool considerWildLevelSteps;
         [JsonProperty]
         public int wildLevelStep = 5;
         /// <summary>
@@ -68,12 +68,26 @@ namespace ARKBreedingStats.Library
         public ServerMultipliers serverMultipliersEvents; // this object's statMultipliers are not used
 
         [JsonProperty]
-        public bool singlePlayerSettings = false;
+        public bool singlePlayerSettings;
+
+        /// <summary>
+        /// If true, apply extra multipliers for the game ATLAS.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool AtlasSettings;
+
+        /// <summary>
+        /// Used for the exportGun mod.
+        /// This hash is used to determine if an imported creature file is using the current server multipliers.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ServerMultipliersHash;
+
         /// <summary>
         /// Allow more than 100% imprinting, can happen with mods, e.g. S+ Nanny
         /// </summary>
         [JsonProperty]
-        public bool allowMoreThanHundredImprinting = false;
+        public bool allowMoreThanHundredImprinting;
 
         [JsonProperty]
         public bool changeCreatureStatusOnSavegameImport = true;
@@ -187,6 +201,8 @@ namespace ARKBreedingStats.Library
             Species onlyThisSpeciesAdded = null;
             bool onlyOneSpeciesAdded = true;
 
+            var guidDict = creatures.ToDictionary(c => c.guid);
+
             foreach (Creature creatureNew in creaturesToMerge)
             {
                 if (!addPreviouslyDeletedCreatures && DeletedCreatureGuids != null && DeletedCreatureGuids.Contains(creatureNew.guid)) continue;
@@ -199,8 +215,7 @@ namespace ARKBreedingStats.Library
                         onlyOneSpeciesAdded = false;
                 }
 
-                var creatureExisting = creatures.FirstOrDefault(c => c.guid == creatureNew.guid);
-                if (creatureExisting == null)
+                if (!guidDict.TryGetValue(creatureNew.guid, out var creatureExisting))
                 {
                     creatures.Add(creatureNew);
                     creaturesWereAddedOrUpdated = true;
@@ -373,16 +388,17 @@ namespace ARKBreedingStats.Library
             return exists;
         }
 
-        public bool CreatureById(Guid guid, long arkId, Species species, out Creature foundCreature)
+        /// <summary>
+        /// Returns a creature based on the guid or ArkId.
+        /// </summary>
+        public bool CreatureById(Guid guid, long arkId, out Creature foundCreature)
         {
             foundCreature = null;
             if (guid == Guid.Empty && arkId == 0) return false;
 
-            var creaturesToCheck = creatures.Where(c => c.Species == species).ToArray();
-
             if (guid != Guid.Empty)
             {
-                foreach (var c in creaturesToCheck)
+                foreach (var c in creatures)
                 {
                     if (c.guid == guid)
                     {
@@ -394,7 +410,7 @@ namespace ARKBreedingStats.Library
 
             if (arkId != 0)
             {
-                foreach (var c in creaturesToCheck)
+                foreach (var c in creatures)
                 {
                     if (c.ArkIdImported && c.ArkId == arkId)
                     {
@@ -476,7 +492,7 @@ namespace ARKBreedingStats.Library
             var usedColorCount = usedColorIndices.Length;
 
             // create data if not available in the cache
-            if (!_existingColors.TryGetValue(species.blueprintPath, out var speciesExistingColors))
+            if (!_existingColors.TryGetValue(species.blueprintPath, out var speciesExistingColors) || speciesExistingColors.Length != usedColorCount + 1)
             {
                 // list of color ids in each region. The last index contains the ids of all regions
                 speciesExistingColors = new List<int>[usedColorCount + 1];
@@ -500,7 +516,7 @@ namespace ARKBreedingStats.Library
                     }
                 }
 
-                _existingColors.Add(species.blueprintPath, speciesExistingColors);
+                _existingColors[species.blueprintPath] = speciesExistingColors;
             }
 
             var newSpeciesColors = new List<string>(usedColorCount);

@@ -401,9 +401,6 @@
     <Setting Name="AutoImportedExportFileRename" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="BreedingPlannerConsiderOnlyEvenForHighStats" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="AutoImportGotoLibraryAfterSuccess" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -544,6 +541,21 @@
     </Setting>
     <Setting Name="NaturalSortIgnoreSpaces" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowColorIdOnRegionButtons" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AlwaysShowAllColorRegions" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CustomStatWeightOddEven" Type="System.Byte[][]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="language2" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="OverlayRelativeFontSize" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">1</Value>
     </Setting>
   </Settings>
 </SettingsFile>
