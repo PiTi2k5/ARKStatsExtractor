@@ -239,16 +239,18 @@ namespace ARKBreedingStats.multiplierTesting
             bool customStatsAvailable =
                 _cc?.CustomSpeciesStats?.TryGetValue(species.blueprintPath, out customStatOverrides) ?? false;
 
+            var statImprintMultipliers = _selectedSpecies.StatImprintMultipliers;
+
             for (int s = 0; s < Stats.StatsCount; s++)
             {
                 _statControls[s].SetStatValues(_selectedSpecies.fullStatsRaw[s], customStatsAvailable ? customStatOverrides?[s] : null,
                     _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(s, out var altV) ? altV / _selectedSpecies.fullStatsRaw[s][0] : 1,
                     !CbAllowFlyerSpeedLeveling.Checked && species.isFlyer && s == Stats.SpeedMultiplier);
-                _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Stats.StatsCount]?[s] ?? _selectedSpecies.StatImprintMultipliers[s] : _selectedSpecies.StatImprintMultipliers[s];
+                _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Stats.StatsCount]?[s] ?? statImprintMultipliers[s] : statImprintMultipliers[s];
                 _statControls[s].Visible = species.UsesStat(s);
                 _statControls[s].StatName = $"[{s}]{Utils.StatName(s, true, species.statNames)}";
             }
-            _statControls[Stats.Health].TBHM = _selectedSpecies.TamedBaseHealthMultiplier;
+            _statControls[Stats.Health].TBHM = _selectedSpecies.TamedBaseHealthMultiplier ?? 1;
         }
 
         private void btUpdateSpecies_Click(object sender, EventArgs e)
@@ -342,7 +344,7 @@ namespace ARKBreedingStats.multiplierTesting
 
         private void llStatCalculation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ArkWiki.OpenPage("Creature_Stats_Calculation");
+            ArkWiki.OpenPage("Creature_stats_calculation");
         }
 
         public CreatureCollection CreatureCollection
