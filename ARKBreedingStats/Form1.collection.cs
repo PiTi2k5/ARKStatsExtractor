@@ -31,8 +31,9 @@ namespace ARKBreedingStats
             if (!resetCollection
                 && UnsavedChanges()
                 && CustomMessageBox.Show(Loc.S("Collection changed discard and new?"),
-                    Loc.S("Discard changes?"), Loc.S("Discard changes and new"), buttonCancel: Loc.S("Cancel"), icon: MessageBoxIcon.Warning) != DialogResult.Yes
-            )
+                    Loc.S("Discard changes?"), Loc.S("Discard changes and new"), buttonCancel: Loc.S("Cancel"),
+                    icon: MessageBoxIcon.Warning) != DialogResult.Yes
+               )
             {
                 return;
             }
@@ -43,20 +44,38 @@ namespace ARKBreedingStats
                 var (statValuesLoaded, _) = LoadStatAndKibbleValues(applySettings: false);
                 if (!statValuesLoaded)
                 {
-                    MessageBoxes.ShowMessageBox("Couldn't load stat values. Please redownload the application.", $"{Loc.S("error")} while loading the stat-values");
+                    MessageBoxes.ShowMessageBox("Couldn't load stat values. Please redownload the application.",
+                        $"{Loc.S("error")} while loading the stat-values");
                 }
             }
 
-            if (_creatureCollection.serverMultipliers == null)
-                _creatureCollection.serverMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             // use previously used multipliers again in the new file
-            ServerMultipliers oldMultipliers = _creatureCollection.serverMultipliers;
+            var oldMultipliers = _creatureCollection.serverMultipliers;
+            var asaMode = _creatureCollection.Game == Ark.Asa;
+
+            if (!Properties.Settings.Default.KeepMultipliersForNewLibrary)
+            {
+                oldMultipliers = null;
+                asaMode = true; // default to ASA
+            }
+
+            if (oldMultipliers == null)
+                oldMultipliers = Values.V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
 
             _creatureCollection = new CreatureCollection
             {
                 serverMultipliers = oldMultipliers,
                 ModList = new List<Mod>()
             };
+            _currentFileName = null;
+            _fileSync?.ChangeFile(_currentFileName);
+
+            if (asaMode)
+            {
+                _creatureCollection.Game = Ark.Asa;
+                ReloadModValuesOfCollectionIfNeeded(true, false, false, false);
+            }
+
             pedigree1.Clear();
             breedingPlan1.Clear();
             creatureInfoInputExtractor.Clear(true);
@@ -67,8 +86,6 @@ namespace ARKBreedingStats
             UpdateCreatureListings();
             creatureBoxListView.Clear();
             Properties.Settings.Default.LastSaveFile = null;
-            _currentFileName = null;
-            _fileSync?.ChangeFile(_currentFileName);
             SetCollectionChanged(false);
         }
 
@@ -505,7 +522,7 @@ namespace ARKBreedingStats
 
             if (keepCurrentCreatures)
             {
-                creatureWasAdded = previouslyLoadedCreatureCollection.MergeCreatureList(_creatureCollection.creatures);
+                creatureWasAdded = previouslyLoadedCreatureCollection.MergeCreatureList(_creatureCollection.creatures, removeCreatures: _creatureCollection.DeletedCreatureGuids);
                 _creatureCollection = previouslyLoadedCreatureCollection;
             }
             else
@@ -791,6 +808,7 @@ namespace ARKBreedingStats
             bool? multipliersImportSuccessful = null;
             string serverImportResult = null;
             bool creatureAlreadyExists = false;
+            var gameSettingBefore = _creatureCollection.Game;
 
             foreach (var filePath in filePaths)
             {
@@ -817,11 +835,27 @@ namespace ARKBreedingStats
                 }
             }
 
-            if (!string.IsNullOrEmpty(serverMultipliersHash) && _creatureCollection.ServerMultipliersHash != serverMultipliersHash)
+            if (lastCreatureFilePath != null && !string.IsNullOrEmpty(serverMultipliersHash) && _creatureCollection.ServerMultipliersHash != serverMultipliersHash)
             {
                 // current server multipliers might be outdated, import them again
-                var serverMultiplierFilePath = Path.Combine(Path.GetDirectoryName(lastCreatureFilePath), "Servers", serverMultipliersHash + ".sav");
+                // for ASE the export gun create a .sav file containing a json, for ASA directly a .json file
+                var serverMultiplierFilePath = Path.Combine(Path.GetDirectoryName(lastCreatureFilePath), "Servers", serverMultipliersHash + ".json");
+                if (!File.Exists(serverMultiplierFilePath))
+                    serverMultiplierFilePath = Path.Combine(Path.GetDirectoryName(lastCreatureFilePath), "Servers", serverMultipliersHash + ".sav");
+
                 multipliersImportSuccessful = ImportExportGun.ImportServerMultipliers(_creatureCollection, serverMultiplierFilePath, serverMultipliersHash, out serverImportResult);
+            }
+
+            if (multipliersImportSuccessful == true)
+            {
+                if (_creatureCollection.Game != gameSettingBefore)
+                {
+                    // ASA setting changed
+                    var loadAsa = gameSettingBefore != Ark.Asa;
+                    ReloadModValuesOfCollectionIfNeeded(loadAsa, false, false);
+                }
+
+                ApplySettingsToValues();
             }
 
             lastAddedCreature = newCreatures.LastOrDefault();
@@ -843,6 +877,16 @@ namespace ARKBreedingStats
                                   + serverImportResult);
 
             SetMessageLabelText(resultText, importFailedCounter > 0 || multipliersImportSuccessful == false ? MessageBoxIcon.Error : MessageBoxIcon.Information, lastCreatureFilePath);
+
+            if (lastAddedCreature != null)
+            {
+                tabControlMain.SelectedTab = tabPageLibrary;
+                if (listBoxSpeciesLib.SelectedItem != null &&
+                    listBoxSpeciesLib.SelectedItem != lastAddedCreature.Species)
+                    listBoxSpeciesLib.SelectedItem = lastAddedCreature.Species;
+                SelectCreatureInLibrary(lastAddedCreature);
+            }
+
             return creatureAlreadyExists;
         }
 
@@ -871,6 +915,47 @@ namespace ARKBreedingStats
             SortLibrary();
 
             UpdateTempCreatureDropDown();
+        }
+
+        /// <summary>
+        /// Imports a creature when listening to a server.
+        /// </summary>
+        private void AsbServerDataSent((string jsonData, string serverHash, string message) data)
+        {
+            if (!string.IsNullOrEmpty(data.message))
+            {
+                SetMessageLabelText(data.message, MessageBoxIcon.Error);
+                return;
+            }
+
+            string resultText;
+            if (string.IsNullOrEmpty(data.serverHash))
+            {
+                // import creature
+                var creature = ImportExportGun.ImportCreatureFromJson(data.jsonData, null, out resultText, out _);
+                if (creature == null)
+                {
+                    SetMessageLabelText(resultText, MessageBoxIcon.Error);
+                    return;
+                }
+
+                _creatureCollection.MergeCreatureList(new[] { creature }, true);
+                UpdateCreatureParentLinkingSort();
+
+                SetMessageLabelText(resultText, MessageBoxIcon.Information);
+
+                tabControlMain.SelectedTab = tabPageLibrary;
+                if (listBoxSpeciesLib.SelectedItem != null &&
+                    listBoxSpeciesLib.SelectedItem != creature.Species)
+                    listBoxSpeciesLib.SelectedItem = creature.Species;
+                _ignoreNextMessageLabel = true;
+                SelectCreatureInLibrary(creature);
+                return;
+            }
+
+            // import server settings
+            var success = ImportExportGun.ImportServerMultipliersFromJson(_creatureCollection, data.jsonData, data.serverHash, out resultText);
+            SetMessageLabelText(resultText, success ? MessageBoxIcon.Information : MessageBoxIcon.Error, resultText);
         }
     }
 }

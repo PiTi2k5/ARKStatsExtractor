@@ -6,7 +6,6 @@ using ARKBreedingStats.values;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.multiplierTesting
@@ -21,6 +20,7 @@ namespace ARKBreedingStats.multiplierTesting
         private Nud _fineAdjustmentsNud;
         private MinMaxDouble _fineAdjustmentRange;
         private double _fineAdjustmentFactor;
+        private ToolTip _tt = new ToolTip();
 
         public StatsMultiplierTesting()
         {
@@ -52,6 +52,7 @@ namespace ARKBreedingStats.multiplierTesting
             _fineAdjustmentRange = new MinMaxDouble(0);
             rbTamed.Checked = true;
             gbFineAdjustment.Hide();
+            SetToolTips();
         }
 
         internal void SetGameDefaultMultiplier()
@@ -222,6 +223,7 @@ namespace ARKBreedingStats.multiplierTesting
 
             cbSingleplayerSettings.Checked = _cc.singlePlayerSettings;
             CbAtlas.Checked = _cc.AtlasSettings;
+            CbAllowSpeedLeveling.Checked = _cc.serverMultipliers.AllowSpeedLeveling;
             CbAllowFlyerSpeedLeveling.Checked = _cc.serverMultipliers.AllowFlyerSpeedLeveling;
 
             btUseMultipliersFromSettings.Visible = false;
@@ -245,7 +247,7 @@ namespace ARKBreedingStats.multiplierTesting
             {
                 _statControls[s].SetStatValues(_selectedSpecies.fullStatsRaw[s], customStatsAvailable ? customStatOverrides?[s] : null,
                     _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(s, out var altV) ? altV / _selectedSpecies.fullStatsRaw[s][0] : 1,
-                    !CbAllowFlyerSpeedLeveling.Checked && species.isFlyer && s == Stats.SpeedMultiplier);
+                    s == Stats.SpeedMultiplier && !(CbAllowSpeedLeveling.Checked && (CbAllowFlyerSpeedLeveling.Checked || !species.isFlyer)));
                 _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Stats.StatsCount]?[s] ?? statImprintMultipliers[s] : statImprintMultipliers[s];
                 _statControls[s].Visible = species.UsesStat(s);
                 _statControls[s].StatName = $"[{s}]{Utils.StatName(s, true, species.statNames)}";
@@ -325,6 +327,7 @@ namespace ARKBreedingStats.multiplierTesting
                 showWarning = _cc.serverMultipliers.BabyImprintingStatScaleMultiplier != (double)nudIBM.Value
                                 || _cc.singlePlayerSettings != cbSingleplayerSettings.Checked
                                 || _cc.AtlasSettings != CbAtlas.Checked
+                                || _cc.serverMultipliers.AllowSpeedLeveling != CbAllowSpeedLeveling.Checked
                                 || _cc.serverMultipliers.AllowFlyerSpeedLeveling != CbAllowFlyerSpeedLeveling.Checked;
                 if (!showWarning)
                 {
@@ -425,6 +428,7 @@ namespace ARKBreedingStats.multiplierTesting
             _cc.serverMultipliers.BabyImprintingStatScaleMultiplier = (double)nudIBM.Value;
             _cc.singlePlayerSettings = cbSingleplayerSettings.Checked;
             _cc.AtlasSettings = CbAtlas.Checked;
+            _cc.serverMultipliers.AllowSpeedLeveling = CbAllowSpeedLeveling.Checked;
             _cc.serverMultipliers.AllowFlyerSpeedLeveling = CbAllowFlyerSpeedLeveling.Checked;
             OnApplyMultipliers?.Invoke();
             btUseMultipliersFromSettings.Visible = false;
@@ -476,20 +480,28 @@ namespace ARKBreedingStats.multiplierTesting
             _statControls[Stats.MeleeDamageMultiplier].AtlasIdMultiplier = useAtlas ? 1.5 : 1;
         }
 
+        private void CbAllowSpeedLeveling_CheckedChanged(object sender, EventArgs e)
+        {
+            SetAllowSpeedLeveling(CbAllowSpeedLeveling.Checked, CbAllowFlyerSpeedLeveling.Checked);
+        }
+
         private void CbAllowFlyerSpeedLeveling_CheckedChanged(object sender, EventArgs e)
         {
-            // non flyers are not affected
-            if (!(_selectedSpecies?.isFlyer ?? false)) return;
+            SetAllowSpeedLeveling(CbAllowSpeedLeveling.Checked, CbAllowFlyerSpeedLeveling.Checked);
+        }
 
-            int speedIndex = Stats.SpeedMultiplier;
+        private void SetAllowSpeedLeveling(bool allowSpeedLeveling, bool allowFlyerSpeedleveling)
+        {
+            if (_selectedSpecies == null) return;
+            var speedLevelingAllowed = allowSpeedLeveling && (allowFlyerSpeedleveling || !_selectedSpecies.isFlyer);
 
             double?[][] customStatOverrides = null;
             bool customStatsAvailable =
                 _cc?.CustomSpeciesStats?.TryGetValue(_selectedSpecies.blueprintPath, out customStatOverrides) ?? false;
 
-            _statControls[speedIndex].SetStatValues(_selectedSpecies.fullStatsRaw[speedIndex], customStatsAvailable ? customStatOverrides?[speedIndex] : null,
-                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(speedIndex, out var altV) ? altV / _selectedSpecies.fullStatsRaw[speedIndex][0] : 1,
-                    !CbAllowFlyerSpeedLeveling.Checked);
+            _statControls[Stats.SpeedMultiplier].SetStatValues(_selectedSpecies.fullStatsRaw[Stats.SpeedMultiplier], customStatsAvailable ? customStatOverrides?[Stats.SpeedMultiplier] : null,
+                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(Stats.SpeedMultiplier, out var altV) ? altV / _selectedSpecies.fullStatsRaw[Stats.SpeedMultiplier][0] : 1,
+                    !speedLevelingAllowed);
         }
 
         private void allWildLvlToToolStripMenuItem_Click(object sender, EventArgs e)
@@ -525,6 +537,23 @@ namespace ARKBreedingStats.multiplierTesting
         private void btUseMultipliersFromSettings_Click(object sender, EventArgs e)
         {
             SetStatMultipliersFromCC();
+        }
+
+        private void SetToolTips()
+        {
+            _tt.SetToolTip(LbBaseValue, "Base value | Max status value");
+            _tt.SetToolTip(LbLw, "Wild levels | Points applied wild");
+            _tt.SetToolTip(LbIw, "Increase per wild level | Amount max gained per level up value wild");
+            _tt.SetToolTip(LbIwM, "Increase per wild level global multiplier | per level stats multiplier dino wild");
+            _tt.SetToolTip(LbTBHM, "Tamed base health multiplier");
+            _tt.SetToolTip(LbTa, "Additive taming bonus | Taming max stat additions");
+            _tt.SetToolTip(LbTaM, "Additive taming bonus global multiplier | per level stats multiplier dino tamed add");
+            _tt.SetToolTip(LbTm, "Multiplicative taming bonus | Taming max stat multiplier");
+            _tt.SetToolTip(LbTmM, "Multiplicative taming bonus global multiplier | per level stats multiplier dino tamed affinity");
+            _tt.SetToolTip(LbLd, "Domesticate levels | Points applied tamed");
+            _tt.SetToolTip(LbId, "Increase per domesticate level | Amount max gained per level up value tamed");
+            _tt.SetToolTip(LbIdM, "Increase per domestic level global multiplier | per level stats multiplier dino tamed");
+            _tt.SetToolTip(LbFinalValue, "Final stat value displayed in the game");
         }
     }
 }

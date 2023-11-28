@@ -1,7 +1,6 @@
 ﻿using ARKBreedingStats.Library;
 using ARKBreedingStats.miscClasses;
 using ARKBreedingStats.species;
-using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -198,26 +197,33 @@ namespace ARKBreedingStats
                     if (withTEff) { StatsWithTE.Add(s); }
 
                     int minLW = 0;
-                    int maxLW;
-                    if (stats[s].IncPerWildLevel > 0)
+                    int maxLW = 0;
+                    if (species.CanLevelUpWildOrHaveMutations(s))
                     {
-                        double multAffinityFactor = stats[s].MultAffinity;
-                        if (PostTamed)
+                        if (stats[s].IncPerWildLevel > 0)
                         {
-                            // the multiplicative bonus is only multiplied with the TE if it is positive (i.e. negative boni won't get less bad if the TE is low)
-                            if (multAffinityFactor > 0)
-                                multAffinityFactor *= lowerTEBound;
-                            multAffinityFactor += 1;
+                            double multAffinityFactor = stats[s].MultAffinity;
+                            if (PostTamed)
+                            {
+                                // the multiplicative bonus is only multiplied with the TE if it is positive (i.e. negative boni won't get less bad if the TE is low)
+                                if (multAffinityFactor > 0)
+                                    multAffinityFactor *= lowerTEBound;
+                                multAffinityFactor += 1;
+                            }
+                            else
+                                multAffinityFactor = 1;
+
+                            maxLW = (int)Math.Round(
+                                ((inputValue.Max / multAffinityFactor - (PostTamed ? stats[s].AddWhenTamed : 0)) /
+                                    statBaseValue - 1) / stats[s].IncPerWildLevel); // floor is too unprecise
                         }
                         else
-                            multAffinityFactor = 1;
-                        maxLW = (int)Math.Round(((inputValue.Max / multAffinityFactor - (PostTamed ? stats[s].AddWhenTamed : 0)) / statBaseValue - 1) / stats[s].IncPerWildLevel); // floor is too unprecise
+                        {
+                            minLW = -1;
+                            maxLW = -1;
+                        }
                     }
-                    else
-                    {
-                        minLW = -1;
-                        maxLW = -1;
-                    }
+
                     if (maxLW > LevelWildSum) { maxLW = LevelWildSum; }
 
                     double maxLD = 0;
@@ -543,25 +549,23 @@ namespace ARKBreedingStats
 
         public void RemoveImpossibleTEsAccordingToMaxWildLevel(int maxWildLevel)
         {
-            if (!_bred
-                && maxWildLevel > 0
-                && LevelWildSum + 1 > maxWildLevel)
-            {
-                double minTECheck = 2d * (LevelWildSum + 1 - maxWildLevel) / maxWildLevel;
+            if (_bred
+                || maxWildLevel <= 0
+                || LevelWildSum + 1 <= maxWildLevel) return;
 
-                // if min TE is equal or greater than 1, that indicates it can't possibly be anything but bred, and there cannot be any results that should be sorted out
-                if (minTECheck < 1)
+            var minTeCheck = 2d * (LevelWildSum + 1 - maxWildLevel) / maxWildLevel;
+
+            // if min TE is equal or greater than 1, that indicates it can't possibly be anything but bred, and there cannot be any results that should be sorted out
+            if (!(minTeCheck < 1)) return;
+
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                if (Results[s].Count == 0 || Results[s][0].TE.Max < 0)
+                    continue;
+                for (int r = 0; r < Results[s].Count; r++)
                 {
-                    for (int s = 0; s < Stats.StatsCount; s++)
-                    {
-                        if (Results[s].Count == 0 || Results[s][0].TE.Max < 0)
-                            continue;
-                        for (int r = 0; r < Results[s].Count; r++)
-                        {
-                            if (Results[s][r].TE.Max < minTECheck)
-                                Results[s].RemoveAt(r--);
-                        }
-                    }
+                    if (Results[s][r].TE.Max < minTeCheck)
+                        Results[s].RemoveAt(r--);
                 }
             }
         }

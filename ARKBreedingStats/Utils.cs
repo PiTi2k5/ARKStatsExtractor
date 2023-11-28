@@ -515,6 +515,65 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
+        /// Displays a control with options, where the user can select one of them or cancel.
+        /// The index of the selection is returned or -1 when cancelled.
+        /// </summary>
+        public static int ShowListInput(IList<string> optionTexts, string headerText = null, string windowTitle = null, int buttonHeight = 21)
+        {
+            const int width = 350;
+            const int margin = 15;
+            var result = -1;
+            Form inputForm = new Form
+            {
+                Width = width,
+                FormBorderStyle = FormBorderStyle.SizableToolWindow,
+                Text = windowTitle,
+                StartPosition = FormStartPosition.CenterParent,
+                ShowInTaskbar = false,
+                AutoScroll = true
+            };
+            var y = 10;
+            if (!string.IsNullOrEmpty(headerText))
+            {
+                Label textLabel = new Label { Left = margin, Top = y, Text = headerText, AutoSize = true };
+                inputForm.Controls.Add(textLabel);
+                y += 30;
+            }
+
+            var tt = new ToolTip();
+
+            var i = 0;
+            foreach (var option in optionTexts)
+            {
+                var optionButton = new Button { Text = option, Left = margin, Width = width - 3 * margin, Top = y, DialogResult = DialogResult.OK, Tag = i++ };
+                if (buttonHeight > 0) optionButton.Height = buttonHeight;
+                y += buttonHeight + 12;
+                optionButton.Click += (sender, e) =>
+                {
+                    result = (int)((Button)sender).Tag;
+                    inputForm.Close();
+                };
+                inputForm.Controls.Add(optionButton);
+                tt.SetToolTip(optionButton, option);
+            }
+
+            const int cancelButtonWidth = 80;
+            Button buttonCancel = new Button { Text = Loc.S("Cancel"), Left = width - cancelButtonWidth - 2 * margin, Width = cancelButtonWidth, Top = y, DialogResult = DialogResult.Cancel };
+            buttonCancel.Click += (sender, e) => { inputForm.Close(); };
+            inputForm.Controls.Add(buttonCancel);
+            y += 30;
+            inputForm.CancelButton = buttonCancel;
+
+            inputForm.Height = Math.Min(y + 50, 800);
+
+            var dialogResult = inputForm.ShowDialog();
+            tt.RemoveAll();
+            tt.Dispose();
+
+            return dialogResult != DialogResult.OK ? -1 : result;
+        }
+
+        /// <summary>
         /// This function may only be used if the ArkId is unique (when importing files that have ArkId1 and ArkId2)
         /// </summary>
         /// <param name="arkId">ArkId built from ArkId1 and ArkId2, user input from the ingame-representation is not allowed</param>
@@ -524,6 +583,14 @@ namespace ARKBreedingStats
             byte[] bytes = new byte[16];
             BitConverter.GetBytes(arkId).CopyTo(bytes, 0);
             return new Guid(bytes);
+        }
+
+        /// <summary>
+        /// This function may only be used if the Guid is created by an imported Ark id (i.e. two int32)
+        /// </summary>
+        public static long ConvertCreatureGuidToArkId(Guid guid)
+        {
+            return BitConverter.ToInt64(guid.ToByteArray(), 0);
         }
 
         public static bool IsArkIdImported(long arkId, Guid guid)
@@ -543,6 +610,11 @@ namespace ARKBreedingStats
         /// Converts the two 32 bit Ark id parts into one 64 bit Ark id.
         /// </summary>
         public static long ConvertArkIdsToLongArkId(int id1, int id2) => ((long)id1 << 32) | (id2 & 0xFFFFFFFFL);
+
+        /// <summary>
+        /// Converts int64 Ark id to two int32 ids, like used in the game.
+        /// </summary>
+        public static (int, int) ConvertArkId64ToArkIds32(long id) => ((int)(id >> 32), (int)id);
 
         /// <summary>
         /// returns a shortened string with an ellipsis in the middle. One third of the beginning is shown and two thirds of then end

@@ -48,7 +48,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="OCRApp" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ShooterGame</Value>
+      <Value Profile="(Default)">ArkAscended</Value>
     </Setting>
     <Setting Name="weaponDamages" Type="System.Double[]" Scope="User">
       <Value Profile="(Default)" />
@@ -556,6 +556,18 @@
     </Setting>
     <Setting Name="OverlayRelativeFontSize" Type="System.Single" Scope="User">
       <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="DisplayLibraryCreatureIndex" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AskSaveSettingsOnClose" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="KeepMultipliersForNewLibrary" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ExportServerToken" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

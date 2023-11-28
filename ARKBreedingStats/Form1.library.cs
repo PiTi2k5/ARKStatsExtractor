@@ -58,7 +58,7 @@ namespace ARKBreedingStats
                 && _creatureCollection.DeletedCreatureGuids.Contains(creature.guid))
                 _creatureCollection.DeletedCreatureGuids.RemoveAll(guid => guid == creature.guid);
 
-            _creatureCollection.MergeCreatureList(new List<Creature> { creature });
+            _creatureCollection.MergeCreatureList(new[] { creature });
 
             // set status of exportedCreatureControl if available
             _exportedCreatureControl?.setStatus(importExported.ExportedCreatureControl.ImportStatus.JustImported, DateTime.Now);
@@ -703,8 +703,8 @@ namespace ARKBreedingStats
         private void ShowCreaturesInListView(IEnumerable<Creature> creatures)
         {
             listViewLibrary.BeginUpdate();
-            IEnumerable<Creature> sorted = _creatureListSorter.DoSort(creatures, orderBySpecies: Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
-            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted.ToArray();
+            var sorted = _creatureListSorter.DoSort(creatures, orderBySpecies: Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted;
             listViewLibrary.VirtualListSize = _creaturesDisplayed.Length;
             _libraryListViewItemCache = null;
             listViewLibrary.EndUpdate();
@@ -723,16 +723,15 @@ namespace ARKBreedingStats
             }
         }
 
-        private Creature[] InsertDividers(IEnumerable<Creature> creatures)
+        private Creature[] InsertDividers(IList<Creature> creatures)
         {
-            var enumerable = creatures.ToList();
-            if (!enumerable.Any())
+            if (!creatures.Any())
             {
                 return Array.Empty<Creature>();
             }
             List<Creature> result = new List<Creature>();
             Species lastSpecies = null;
-            foreach (Creature c in enumerable)
+            foreach (Creature c in creatures)
             {
                 if (lastSpecies == null || c.Species != lastSpecies)
                 {
@@ -765,7 +764,7 @@ namespace ARKBreedingStats
             else if (_creaturesDisplayed?.Length > e.ItemIndex)
             {
                 // create item not available in the cache
-                e.Item = CreateCreatureLvItem(_creaturesDisplayed[e.ItemIndex]);
+                e.Item = CreateCreatureLvItem(_creaturesDisplayed[e.ItemIndex], Properties.Settings.Default.DisplayLibraryCreatureIndex);
             }
         }
 
@@ -785,10 +784,11 @@ namespace ARKBreedingStats
             var length = indexEnd - indexStart + 1;
             _libraryListViewItemCache = new ListViewItem[length];
 
+            var displayIndex = Properties.Settings.Default.DisplayLibraryCreatureIndex;
             //Fill the cache with the appropriate ListViewItems.
             for (int i = 0; i < length; i++)
             {
-                _libraryListViewItemCache[i] = CreateCreatureLvItem(_creaturesDisplayed[i + _libraryItemCacheFirstIndex]);
+                _libraryListViewItemCache[i] = CreateCreatureLvItem(_creaturesDisplayed[i + _libraryItemCacheFirstIndex], displayIndex);
             }
         }
 
@@ -805,11 +805,16 @@ namespace ARKBreedingStats
             {
                 e.DrawDefault = false;
                 var rect = e.Bounds;
+                var count = 0;
+                if (creature.Species.blueprintPath != null)
+                    _creatureCollection.GetCreatureCountBySpecies()
+                        .TryGetValue(creature.Species.blueprintPath, out count);
+                var displayedText = creature.Species.DescriptiveNameAndMod + " (" + count + ")";
                 float middle = (rect.Top + rect.Bottom) / 2f;
                 e.Graphics.FillRectangle(Brushes.Blue, rect.Left, middle, rect.Width - 3, 1);
-                SizeF strSize = e.Graphics.MeasureString(creature.Species.DescriptiveNameAndMod, e.Item.Font);
+                SizeF strSize = e.Graphics.MeasureString(displayedText, e.Item.Font);
                 e.Graphics.FillRectangle(new SolidBrush(e.Item.BackColor), rect.Left, rect.Top, strSize.Width + 15, rect.Height);
-                e.Graphics.DrawString(creature.Species.DescriptiveNameAndMod, e.Item.Font, Brushes.Black, rect.Left + 10, rect.Top + ((rect.Height - strSize.Height) / 2f));
+                e.Graphics.DrawString(displayedText, e.Item.Font, Brushes.Black, rect.Left + 10, rect.Top + ((rect.Height - strSize.Height) / 2f));
             }
         }
 
@@ -943,7 +948,7 @@ namespace ARKBreedingStats
             var cacheIndex = index - _libraryItemCacheFirstIndex;
             if (cacheIndex >= 0 && cacheIndex < _libraryListViewItemCache.Length)
             {
-                _libraryListViewItemCache[cacheIndex] = CreateCreatureLvItem(creature);
+                _libraryListViewItemCache[cacheIndex] = CreateCreatureLvItem(creature, Properties.Settings.Default.DisplayLibraryCreatureIndex);
             }
         }
 
@@ -957,11 +962,11 @@ namespace ARKBreedingStats
         private const int ColumnIndexMutations = 10;
         private const int ColumnIndexCountdown = 11;
         private const int ColumnIndexFirstStat = 12;
-        private const int ColumnIndexFirstColor = 24;
-        private const int ColumnIndexPostColor = 30;
-        private const int ColumnIndexMutagenApplied = 34;
+        private const int ColumnIndexFirstColor = 36;
+        private const int ColumnIndexPostColor = 42;
+        private const int ColumnIndexMutagenApplied = 46;
 
-        private ListViewItem CreateCreatureLvItem(Creature cr)
+        private ListViewItem CreateCreatureLvItem(Creature cr, bool displayIndex = false)
         {
             if (cr.flags.HasFlag(CreatureFlags.Divider))
             {
@@ -974,6 +979,7 @@ namespace ARKBreedingStats
             double colorFactor = 100d / _creatureCollection.maxChartLevel;
 
             string[] subItems = new[] {
+                        (displayIndex ? cr.ListIndex + " - " : string.Empty) +
                         cr.name,
                         cr.owner,
                         cr.note,
@@ -987,7 +993,8 @@ namespace ARKBreedingStats
                         cr.Mutations.ToString(),
                         DisplayedCreatureCountdown(cr, out var cooldownForeColor, out var cooldownBackColor)
                     }
-                    .Concat(cr.levelsWild.Select(x => x.ToString()))
+                    .Concat(cr.levelsWild.Select(l => l.ToString()))
+                    .Concat((cr.levelsMutated ?? new int[Stats.StatsCount]).Select(l => l.ToString()))
                     .Concat(Properties.Settings.Default.showColorsInLibrary
                         ? cr.colors.Select(cl => cl.ToString())
                         : new string[Ark.ColorRegionCount]
@@ -1022,6 +1029,17 @@ namespace ARKBreedingStats
                 }
                 else
                     lvi.SubItems[ColumnIndexFirstStat + s].BackColor = Utils.GetColorFromPercent((int)(cr.levelsWild[s] * (s == Stats.Torpidity ? colorFactor / 7 : colorFactor)), // TODO set factor to number of other stats (flyers have 6, Gacha has 8?)
+                            _considerStatHighlight[s] ? cr.topBreedingStats[s] ? 0.2 : 0.7 : 0.93);
+
+                // mutated levels
+                if (cr.levelsMutated == null || cr.valuesDom[s] == 0)
+                {
+                    // not used
+                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].ForeColor = Color.White;
+                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].BackColor = Color.White;
+                }
+                else
+                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].BackColor = Utils.GetColorFromPercent((int)(cr.levelsMutated[s] * (s == Stats.Torpidity ? colorFactor / 7 : colorFactor)),
                             _considerStatHighlight[s] ? cr.topBreedingStats[s] ? 0.2 : 0.7 : 0.93);
             }
             lvi.SubItems[ColumnIndexSex].BackColor = cr.flags.HasFlag(CreatureFlags.Neutered) ? Color.FromArgb(220, 220, 220) :
@@ -1209,8 +1227,8 @@ namespace ARKBreedingStats
             foreach (int i in listViewLibrary.SelectedIndices)
                 selectedCreatures.Add(_creaturesDisplayed[i]);
 
-            IEnumerable<Creature> sorted = _creatureListSorter.DoSort(_creaturesDisplayed.Where(c => !c.flags.HasFlag(CreatureFlags.Divider)), columnIndex, Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
-            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted.ToArray();
+            var sorted = _creatureListSorter.DoSort(_creaturesDisplayed.Where(c => !c.flags.HasFlag(CreatureFlags.Divider)), columnIndex, Properties.Settings.Default.LibraryGroupBySpecies ? _speciesInLibraryOrdered : null);
+            _creaturesDisplayed = Properties.Settings.Default.LibraryGroupBySpecies ? InsertDividers(sorted) : sorted;
             _libraryListViewItemCache = null;
             listViewLibrary.EndUpdate();
             SelectCreaturesInLibrary(selectedCreatures);
@@ -1320,7 +1338,10 @@ namespace ARKBreedingStats
                 }
 
                 for (int s = 0; s < Stats.StatsCount; s++)
+                {
                     listViewLibrary.Columns[ColumnIndexFirstStat + s].Text = Utils.StatName(s, true, customStatNames);
+                    listViewLibrary.Columns[ColumnIndexFirstStat + Stats.StatsCount + s].Text = Utils.StatName(s, true, customStatNames) + "M";
+                }
 
                 _creaturesPreFiltered = ApplyLibraryFilterSettings(filteredList).ToArray();
             }
@@ -1636,11 +1657,11 @@ namespace ARKBreedingStats
             }
         }
 
-        private Debouncer filterLibraryDebouncer = new Debouncer();
+        private readonly Debouncer _filterLibraryDebouncer = new Debouncer();
 
         private void ToolStripTextBoxLibraryFilter_TextChanged(object sender, EventArgs e)
         {
-            filterLibraryDebouncer.Debounce(ToolStripTextBoxLibraryFilter.Text == string.Empty ? 0 : 500, FilterLib, Dispatcher.CurrentDispatcher, false);
+            _filterLibraryDebouncer.Debounce(ToolStripTextBoxLibraryFilter.Text == string.Empty ? 0 : 500, FilterLib, Dispatcher.CurrentDispatcher, false);
         }
 
         private void ToolStripButtonLibraryFilterClear_Click(object sender, EventArgs e)
@@ -2027,5 +2048,74 @@ namespace ARKBreedingStats
 
             MessageBoxes.ShowMessageBox(result, "Creatures imported from tsv file", MessageBoxIcon.Information);
         }
+
+        #region library list view columns
+
+        private void resetColumnOrderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            listViewLibrary.BeginUpdate();
+            var colIndices = new[] { 1, 2, 4, 5, 6, 36, 31, 32, 33, 34, 35, 37, 7, 9, 29, 11, 13, 15, 17, 19, 21, 23, 25, 27, 8, 10, 30, 12, 14, 16, 18, 20, 22, 24, 26, 28, 40, 41, 42, 43, 44, 45, 46, 38, 3, 0, 39 };
+
+            // indices have to be set increasingly, or they will "push" other values up
+            var colIndicesOrdered = colIndices.Select((i, c) => (columnIndex: c, displayIndex: i))
+                .OrderBy(c => c.displayIndex).ToArray();
+            for (int c = 0; c < colIndicesOrdered.Length && c < listViewLibrary.Columns.Count; c++)
+                listViewLibrary.Columns[colIndicesOrdered[c].columnIndex].DisplayIndex = colIndicesOrdered[c].displayIndex;
+
+            listViewLibrary.EndUpdate();
+        }
+
+        private void toolStripMenuItemResetLibraryColumnWidths_Click(object sender, EventArgs e)
+        {
+            ResetColumnWidthListViewLibrary(false);
+        }
+
+        private void resetColumnWidthNoMutationLevelColumnsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetColumnWidthListViewLibrary(true);
+        }
+
+        private void restoreMutationLevelsASAToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LibraryColumnsMutationsWidth(false);
+        }
+
+        private void collapseMutationsLevelsASEToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LibraryColumnsMutationsWidth(true);
+        }
+
+        private void ResetColumnWidthListViewLibrary(bool mutationColumnWidthsZero)
+        {
+            listViewLibrary.BeginUpdate();
+            var statWidths = Stats.UsuallyVisibleStats.Select(w => w ? 30 : 0).ToArray();
+            for (int ci = 0; ci < listViewLibrary.Columns.Count; ci++)
+                listViewLibrary.Columns[ci].Width = ci == ColumnIndexMutagenApplied ? 30
+                    : ci < ColumnIndexFirstStat || ci >= ColumnIndexPostColor ? 60
+                    : ci >= ColumnIndexFirstStat + Stats.StatsCount + Stats.StatsCount ? 30 // color
+                    : ci < ColumnIndexFirstStat + Stats.StatsCount ? statWidths[ci - ColumnIndexFirstStat] // wild levels
+                    : (int)(statWidths[ci - ColumnIndexFirstStat - Stats.StatsCount] * 1.24); // mutated needs space for one more letter
+
+            if (mutationColumnWidthsZero)
+                LibraryColumnsMutationsWidth(true);
+
+            listViewLibrary.EndUpdate();
+        }
+
+        /// <summary>
+        /// Set width of mutation level columns to zero or restore.
+        /// </summary>
+        private void LibraryColumnsMutationsWidth(bool collapse)
+        {
+            listViewLibrary.BeginUpdate();
+            var statWidths = Stats.UsuallyVisibleStats.Select(w => !collapse && w ? 38 : 0).ToArray();
+            for (int c = 0; c < Stats.StatsCount; c++)
+            {
+                listViewLibrary.Columns[c + ColumnIndexFirstStat + Stats.StatsCount].Width = statWidths[c];
+            }
+            listViewLibrary.EndUpdate();
+        }
+
+        #endregion
     }
 }

@@ -6,7 +6,7 @@
 			"mod": { "id": "1083349027", "tag": "SpeedyFlyers", "title": "Najs Speedy Flyers" }
 		},
 		"1090809604-Pyria.json": {
-			"version": "358.17.1697371762",
+			"version": "358.17.1700355701",
 			"mod": { "id": "1090809604", "tag": "Pyria", "title": "Pyria: Mythos Evolved" }
 		},
 		"1092784125-Gryphons.json": {
@@ -15,12 +15,7 @@
 		},
 		"111111111-PrimitivePlus.json": {
 			"version": "345.39.8870324",
-			"mod": {
-				"id": "111111111",
-				"tag": "PrimitivePlus",
-				"title": "PrimitivePlus",
-				"official": true
-			}
+			"mod": { "id": "111111111", "tag": "PrimitivePlus", "title": "PrimitivePlus", "official": true }
 		},
 		"1125442531-Gaia.json": {
 			"version": "356.5.1630493486",
@@ -35,7 +30,7 @@
 			"mod": { "id": "1139775728", "tag": "Confuciusornis", "title": "Confuciusornis" }
 		},
 		"1169020368-Trex.json": {
-			"version": "357.11.1680434574",
+			"version": "358.17.1700597183",
 			"mod": { "id": "1169020368", "tag": "Trex", "title": "Ark Creature Rebalance (AG Reborn)" }
 		},
 		"1178308359-ShadDragon.json": {
@@ -72,7 +67,7 @@
 			"mod": { "id": "1356703358", "tag": "Primal_Fear_Noxious_Creatures", "title": "Primal Fear Noxious Creatures" }
 		},
 		"1373744537-AC2.json": {
-			"version": "358.17.1696878102",
+			"version": "358.17.1700355462",
 			"mod": { "id": "1373744537", "tag": "AC2", "title": "Additional Creatures 2: Wild Ark" }
 		},
 		"1379111008-RealismPlus.json": {
@@ -173,7 +168,7 @@
 			"mod": { "id": "1696957410", "tag": "MarniimodsTest", "title": "Marnii's Equines" }
 		},
 		"1729386191-BonusDinoMod.json": {
-			"version": "357.18.1683922895",
+			"version": "358.17.1699996351",
 			"mod": { "id": "1729386191", "tag": "BonusDinoMod", "title": "AC: Kami Creations" }
 		},
 		"1729512589-Brachiosaurus.json": {
@@ -263,7 +258,7 @@
 			"mod": { "id": "2000326197", "tag": "ExtraResources", "title": "Event Assets" }
 		},
 		"2003934830-Beasts.json": {
-			"version": "358.11.1692983778",
+			"version": "358.17.1699137788",
 			"mod": { "id": "2003934830", "tag": "Beasts", "title": "Prehistoric Beasts" }
 		},
 		"2019846325-ApexMod.json": {
@@ -297,6 +292,10 @@
 		"2247209652-MonstersandMore.json": {
 			"version": "356.5.1654594229",
 			"mod": { "id": "2247209652", "tag": "MonstersandMore", "title": "Monsters and More" }
+		},
+		"2269289965-RRMod_StarPegasus.json": {
+			"version": "358.17.1650033587",
+			"mod": { "id": "2269289965", "tag": "RRMod_StarPegasus", "title": "RR-StarPegasus" }
 		},
 		"2337840412-RRMod_StarFarmAnimals.json": {
 			"version": "356.5.1650033456",
@@ -399,19 +398,13 @@
 			"mod": { "id": "919470289", "tag": "SSFlyer", "title": "SSFlyer" }
 		},
 		"ASA-values.json": {
-			"version": "25.53.449745",
+			"version": "25.53.449746",
 			"format": "1.15-asa",
-			"mod": { "id": "ASA", "tag": "", "title": "Ark: Survival Ascended" }
+			"mod": { "id": "ASA", "tag": "", "title": "Ark: Survival Ascended", "shortTitle": "ASA", "official": true }
 		},
 		"CrystalIsles-CrystalIsles.json": {
 			"version": "345.39.8870324.1",
-			"mod": {
-				"id": "CrystalIsles",
-				"tag": "CrystalIsles",
-				"title": "CrystalIsles",
-				"official": true,
-				"expansion": true
-			}
+			"mod": { "id": "CrystalIsles", "tag": "CrystalIsles", "title": "CrystalIsles", "official": true, "expansion": true }
 		},
 		"values.json": {
 			"version": "358.6.11410860"
