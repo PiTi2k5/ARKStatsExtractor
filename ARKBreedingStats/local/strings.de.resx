@@ -1328,4 +1328,16 @@ Es ist auch möglich Tiere mit einer Farbe in mehreren möglichen Regionen zu fi
   <data name="timerStarvingOf" xml:space="preserve">
     <value>Verhungern von</value>
   </data>
+  <data name="ClickCopyToClipboard" xml:space="preserve">
+    <value>Klicken um in die Zwischenablage zu kopieren</value>
+  </data>
+  <data name="BtBeepUpdated" xml:space="preserve">
+    <value>Aktualisiert</value>
+  </data>
+  <data name="BtBeepUpdatedTT" xml:space="preserve">
+    <value>Dieser Ton wird abgespielt, wenn eine Kreatur aktualisiert wird, d.h. erneut importiert wird</value>
+  </data>
+  <data name="issueCauseSpeedLevelingSetting" xml:space="preserve">
+    <value>Die Einstellung zum Leveln von Bewegungsgeschwindigkeit (AllowSpeedLeveling) oder die Spielversion (ASE oder ASA) ist wahrscheinlich nicht richtig gesetzt.</value>
+  </data>
 </root>

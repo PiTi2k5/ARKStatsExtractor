@@ -101,7 +101,7 @@ namespace ARKBreedingStats.importExported
                         break;
                     case "DinoClass":
                         // despite the property is called DinoClass it contains the complete blueprint-path
-                        cv.Species = Values.V.SpeciesByBlueprint(text,true);
+                        cv.Species = Values.V.SpeciesByBlueprint(text, true);
                         if (cv.Species == null)
                             cv.speciesBlueprint = text; // species is unknown, check the needed mods later
                         break;
@@ -144,7 +144,10 @@ namespace ARKBreedingStats.importExported
                         break;
                     case "BabyAge":
                         if (cv.Species?.breeding != null)
+                        {
                             cv.growingUntil = DateTime.Now.AddSeconds((int)(cv.Species.breeding.maturationTimeAdjusted * (1 - value)));
+                            if (value < 1) cv.isBred = true;
+                        }
                         break;
                     case "CharacterLevel":
                         cv.level = (int)value;
@@ -247,8 +250,14 @@ namespace ARKBreedingStats.importExported
             {
                 if (r == 0 && g == 0 && b == 0 && a == 1) // no color
                     return 0;
-                if (r == 1 && g == 1 && b == 1 && a == 1) // undefined color
-                    return Ark.UndefinedColorId;
+                if (r == 1 && g == 1 && b == 1 && a == 1)
+                {
+                    // in ASE and ASA this is the undefined color. In ASA it's also the white coloring.
+                    // return undefined id for ASE, use color matching for ASA
+                    // this will result in the white coloring, then the undefined color is added as alternative possible color
+                    if (Ark.UndefinedColorId == Ark.UndefinedColorIdAse)
+                        return Ark.UndefinedColorId;
+                }
 
                 return Values.V.Colors.ClosestColorId(r, g, b, a);
             }

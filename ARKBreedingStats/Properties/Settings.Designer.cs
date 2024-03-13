@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.8.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -2245,6 +2245,77 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ExportServerToken {
+            get {
+                return ((string)(this["ExportServerToken"]));
+            }
+            set {
+                this["ExportServerToken"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LibraryShowMutationLevelColumns {
+            get {
+                return ((bool)(this["LibraryShowMutationLevelColumns"]));
+            }
+            set {
+                this["LibraryShowMutationLevelColumns"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StreamerMode {
+            get {
+                return ((bool)(this["StreamerMode"]));
+            }
+            set {
+                this["StreamerMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LibraryDisplayZeroMutationLevels {
+            get {
+                return ((bool)(this["LibraryDisplayZeroMutationLevels"]));
+            }
+            set {
+                this["LibraryDisplayZeroMutationLevels"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public ARKBreedingStats.uiControls.StatWeighting.StatValueEvenOdd[][] CustomStatWeightsOddEven {
+            get {
+                return ((ARKBreedingStats.uiControls.StatWeighting.StatValueEvenOdd[][])(this["CustomStatWeightsOddEven"]));
+            }
+            set {
+                this["CustomStatWeightsOddEven"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public global::ARKBreedingStats.Ark.Game NewLibraryGame {
+            get {
+                return ((global::ARKBreedingStats.Ark.Game)(this["NewLibraryGame"]));
+            }
+            set {
+                this["NewLibraryGame"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool KeepMultipliersForNewLibrary {
             get {
@@ -2257,13 +2328,13 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ExportServerToken {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DisplayPopupForServerToken {
             get {
-                return ((string)(this["ExportServerToken"]));
+                return ((bool)(this["DisplayPopupForServerToken"]));
             }
             set {
-                this["ExportServerToken"] = value;
+                this["DisplayPopupForServerToken"] = value;
             }
         }
     }

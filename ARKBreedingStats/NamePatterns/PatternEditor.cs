@@ -17,8 +17,10 @@ namespace ARKBreedingStats.NamePatterns
     {
         private readonly Creature _creature;
         private readonly Creature[] _creaturesOfSameSpecies;
+        private readonly Creature _alreadyExistingCreature;
         private readonly int[] _speciesTopLevels;
         private readonly int[] _speciesLowestLevels;
+        private readonly int _libraryCreatureCount;
         private readonly CreatureCollection.ColorExisting[] _colorExistings;
         private Dictionary<string, string> _customReplacings;
         private readonly Dictionary<string, string> _tokenDictionary;
@@ -38,7 +40,7 @@ namespace ARKBreedingStats.NamePatterns
             InitializeComponent();
         }
 
-        public PatternEditor(Creature creature, Creature[] creaturesOfSameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, CreatureCollection.ColorExisting[] colorExistings, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback) : this()
+        public PatternEditor(Creature creature, Creature[] creaturesOfSameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, CreatureCollection.ColorExisting[] colorExistings, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback, int libraryCreatureCount) : this()
         {
             Utils.SetWindowRectangle(this, Settings.Default.PatternEditorFormRectangle);
             if (Settings.Default.PatternEditorSplitterDistance > 0)
@@ -53,13 +55,15 @@ namespace ARKBreedingStats.NamePatterns
             _colorExistings = colorExistings;
             _customReplacings = customReplacings;
             _reloadCallback = reloadCallback;
+            _libraryCreatureCount = libraryCreatureCount;
             txtboxPattern.Text = Properties.Settings.Default.NamingPatterns?[namingPatternIndex] ?? string.Empty;
             CbPatternNameToClipboardAfterManualApplication.Checked = Properties.Settings.Default.PatternNameToClipboardAfterManualApplication;
             txtboxPattern.SelectionStart = txtboxPattern.Text.Length;
 
-            Text = $"Naming Pattern Editor: pattern {(namingPatternIndex + 1)}";
+            Text = $"Naming Pattern Editor: pattern {namingPatternIndex + 1}";
 
-            _tokenDictionary = NamePatterns.NamePattern.CreateTokenDictionary(creature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels);
+            _alreadyExistingCreature = _creaturesOfSameSpecies?.FirstOrDefault(c => c.guid == creature.guid);
+            _tokenDictionary = NamePatterns.NamePattern.CreateTokenDictionary(creature, _alreadyExistingCreature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels, _libraryCreatureCount);
             _keyDebouncer = new Debouncer();
             _functionDebouncer = new Debouncer();
 
@@ -469,21 +473,24 @@ namespace ARKBreedingStats.NamePatterns
                 { "sex_lang_short_gen", "\"Male_gen\", \"Female_gen\", \"Unknown_gen\" by loc(short)" },
 
                 { "topPercent", "Percentage of the considered stat levels compared to the top levels of the species in the library" },
-                { "baselvl", "Base-level (level without manually added ones), i.e. level right after taming / hatching" },
+                { "baseLvl", "Base-level (level without manually added ones), i.e. level right after taming / hatching" },
+                { "levelPreTamed", "Level of the creature before it was tamed. For bred creatures equal to baseLvl" },
                 { "muta", "Mutations" },
-                { "mutam", "maternal mutations" },
-                { "mutap", "paternal mutations" },
+                { "mutaM", "maternal mutations" },
+                { "mutaP", "paternal mutations" },
                 { "gen", "Generation" },
                 { "gena", "Generation in letters (0=A, 1=B, 26=AA, 27=AB)" },
                 { "genn", "The number of creatures with the same species and the same generation plus one" },
                 { "nr_in_gen", "The number of the creature in its generation, ordered by added to the library" },
                 { "nr_in_gen_sex", "The number of the creature in its generation with the same sex, ordered by added to the library" },
                 { "rnd", "6-digit random number in the range 0 – 999999" },
+                { "ln", "number of creatures in the library + 1" },
                 { "tn", "number of creatures of the current species in the library + 1" },
                 { "sn", "number of creatures of the current species with the same sex in the library + 1" },
                 { "arkid", "the Ark-Id (as entered or seen in-game)"},
                 { "alreadyExists", "returns 1 if the creature is already in the library, can be used with {{#if: }}"},
                 { "isFlyer", "returns 1 if the creature's species is a flyer"},
+                { "status", "returns the status of the creature, e.g. Available, Obelisk, Dead"},
                 { "highest1l", "the highest stat-level of this creature (excluding torpidity)" },
                 { "highest2l", "the second highest stat-level of this creature (excluding torpidity)" },
                 { "highest3l", "the third highest stat-level of this creature (excluding torpidity)" },
@@ -496,6 +503,19 @@ namespace ARKBreedingStats.NamePatterns
                 { "highest4s", "the name of the fourth highest stat-level of this creature (excluding torpidity)" },
                 { "highest5s", "the name of the fifth highest stat-level of this creature (excluding torpidity)" },
                 { "highest6s", "the name of the sixth highest stat-level of this creature (excluding torpidity)" },
+
+                { "hp_m", "Mutated levels of " + Utils.StatName(Stats.Health, customStatNames:customStatNames) },
+                { "st_m", "Mutated levels of " + Utils.StatName(Stats.Stamina, customStatNames:customStatNames) },
+                { "to_m", "Mutated levels of " + Utils.StatName(Stats.Torpidity, customStatNames:customStatNames) },
+                { "ox_m", "Mutated levels of " + Utils.StatName(Stats.Oxygen, customStatNames:customStatNames) },
+                { "fo_m", "Mutated levels of " + Utils.StatName(Stats.Food, customStatNames:customStatNames) },
+                { "wa_m", "Mutated levels of " + Utils.StatName(Stats.Water, customStatNames:customStatNames) },
+                { "te_m", "Mutated levels of " + Utils.StatName(Stats.Temperature, customStatNames:customStatNames) },
+                { "we_m", "Mutated levels of " + Utils.StatName(Stats.Weight, customStatNames:customStatNames) },
+                { "dm_m", "Mutated levels of " + Utils.StatName(Stats.MeleeDamageMultiplier, customStatNames:customStatNames) },
+                { "sp_m", "Mutated levels of " + Utils.StatName(Stats.SpeedMultiplier, customStatNames:customStatNames) },
+                { "fr_m", "Mutated levels of " + Utils.StatName(Stats.TemperatureFortitude, customStatNames:customStatNames) },
+                { "cr_m", "Mutated levels of " + Utils.StatName(Stats.CraftingSpeedMultiplier, customStatNames:customStatNames) }
             };
 
         // list of possible functions, expected format:
@@ -508,20 +528,22 @@ namespace ARKBreedingStats.NamePatterns
             {"expr", "{{#expr: expression }}, simple calculation with two operands and one operator. Possible operators are +, -, *, /.\n{{#expr: {hp} * 2 }}" },
             {"len", "{{#len: string }}, returns the length of the passed string.\n{{#len: {isTophp}{isTopdm}{isTopwe} }}" },
             {"substring","{{#substring: text | start | length }}. Length can be omitted. If start is negative it takes the characters from the end. If length is negative it takes the characters until that position from the end\n{{#substring: {species} | 0 | 4 }}"},
+            {"rand","{{#rand: min | max  (exclusive) }} or {{#rand: max (exclusive) }}\n{{#rand: 100 }}"},
             {"replace","{{#replace: text | find | replaceBy }}\n{{#replace: {species} | Aberrant | Ab }}"},
             {"regexreplace","{{#regexreplace: text | pattern | replaceBy }}\nUse &&lcub; instead {, &&vline; instead | and &&rcub; instead of }.\n{{#regexreplace: hp-st-we- | \\-$ | }}"},
             {"customreplace","{{#customreplace: text }}. Replaces the text with a value saved in the file customReplacings.json.\nIf a second parameter is given, that is returned if the key is not available.\n{{#customreplace: {species} }}"},
             {"float divide by","{{#float_div: number | divisor | formatString }}, can be used to display stat-values in thousands, e.g. '{{#float_div: {hp_vb} | 1000 | F2 }}kHP'.\n{{#float_div: {hp_vb} | 1000 | F2 }}"},
             {"divide by","{{#div: number | divisor }}, can be used to display stat-values in thousands, e.g. '{{#div: {hp_vb} | 1000 }}kHP'.\n{{#div: {hp_vb} | 1000 }}"},
-            {"padleft","{{#padleft: number | length | padding character }}\n{{#padleft: {hp_vb} | 8 | 0 }}"},
-            {"padright","{{#padright: number | length | padding character }}\n{{#padright: {hp_vb} | 8 | _ }}"},
+            {"listName","{{#listName: nameIndex | listSuffix }}, takes a name from a list in the file creatureNames[suffix].txt\n{{#listName: 0 | {sex_short} }}"},
+            {"padLeft","{{#padLeft: number | length | padding character }}\n{{#padLeft: {hp_vb} | 8 | 0 }}"},
+            {"padRight","{{#padRight: number | length | padding character }}\n{{#padRight: {hp_vb} | 8 | _ }}"},
             {"casing","{{#casing: text | case (U, L, T) }}. U for UPPER, L for lower, T for Title.\n{{#casing: {species} | U }}"},
             {"time","{{#time: formatString }}\n{{#time: yyyy-MM-dd_HH:mm }}"},
             {"format","{{#format: number | formatString }}\n{{#format: {hp_vb} | 000000 }}"},
             {"format_int","Like #format, but supports \"x\" in the format for hexadecimal representations. {{#format_int: number | formatString }}\n{{#format_int: {{#color: 0 }} | x2 }}"},
             {"color","{{#color: regionId | return color name | return value even for unused regions }}. Returns the colorId of the region. If the second parameter is not empty, the color name will be returned. Unused regions will only return a value if the third value is not empty.\n{{#color: 0 | true }}"},
             {"colorNew","{{#colorNew: regionId }}. Returns newInRegion if the region contains a color that is not yet available in that species. Returns newInSpecies if that color is not yet available in any region of that species.\n{{#colorNew: 0 }}"},
-            {"indexof","{{#indexof: source string | string to find }}. Returns the index of the second parameter in the first parameter. If the string is not contained, an empty string will be returned.\n{{#indexof: hello | ll }}"},
+            {"indexOf","{{#indexof: source string | string to find }}. Returns the index of the second parameter in the first parameter. If the string is not contained, an empty string will be returned.\n{{#indexof: hello | ll }}"},
             {"md5", "{{#md5: string }}, returns the md5 hash of a given string\n{{#md5: {hp}{st}{we} }}"}
         };
 
@@ -549,8 +571,8 @@ namespace ARKBreedingStats.NamePatterns
 
         private void DisplayPreview()
         {
-            cbPreview.Text = NamePatterns.NamePattern.GenerateCreatureName(_creature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels, _customReplacings,
-                false, -1, false, txtboxPattern.Text, false, _tokenDictionary, _colorExistings);
+            cbPreview.Text = NamePatterns.NamePattern.GenerateCreatureName(_creature, _alreadyExistingCreature, _creaturesOfSameSpecies, _speciesTopLevels, _speciesLowestLevels, _customReplacings,
+                false, -1, false, txtboxPattern.Text, false, _tokenDictionary, _colorExistings, _libraryCreatureCount);
         }
 
         private void TbFilterKeys_TextChanged(object sender, EventArgs e)

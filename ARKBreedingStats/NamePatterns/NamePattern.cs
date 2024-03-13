@@ -16,12 +16,15 @@ namespace ARKBreedingStats.NamePatterns
         /// </summary>
         private const string PipeEscapeSequence = @"\pipe";
 
+        public static Random Random = new Random();
+
         /// <summary>
         /// Generate a creature name with the naming pattern.
         /// </summary>
-        public static string GenerateCreatureName(Creature creature, Creature[] sameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings,
+        /// <param name="alreadyExistingCreature">If the creature already exists in the library, null if the creature is new.</param>
+        public static string GenerateCreatureName(Creature creature, Creature alreadyExistingCreature, Creature[] sameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings,
             bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true, Dictionary<string, string> tokenDictionary = null,
-            CreatureCollection.ColorExisting[] colorsExisting = null)
+            CreatureCollection.ColorExisting[] colorsExisting = null, int libraryCreatureCount = 0)
         {
             if (pattern == null)
             {
@@ -63,7 +66,7 @@ namespace ARKBreedingStats.NamePatterns
             }
 
             if (tokenDictionary == null)
-                tokenDictionary = CreateTokenDictionary(creature, sameSpecies, speciesTopLevels, speciesLowestLevels);
+                tokenDictionary = CreateTokenDictionary(creature, alreadyExistingCreature, sameSpecies, speciesTopLevels, speciesLowestLevels, libraryCreatureCount);
             // first resolve keys, then functions
             string name = ResolveFunctions(
                 ResolveKeysToValues(tokenDictionary, pattern.Replace("\r", string.Empty).Replace("\n", string.Empty)),
@@ -190,21 +193,17 @@ namespace ARKBreedingStats.NamePatterns
         /// This method creates the token dictionary for the dynamic creature name generation.
         /// </summary>
         /// <param name="creature">Creature with the data</param>
+        /// <param name="alreadyExistingCreature">If the creature is already existing in the library, i.e. if the name is created for a creature that is updated</param>
         /// <param name="speciesCreatures">A list of all currently stored creatures of the species</param>
         /// <param name="speciesTopLevels">top levels of that species</param>
         /// <param name="speciesLowestLevels">lowest levels of that species</param>
         /// <returns>A dictionary containing all tokens and their replacements</returns>
-        public static Dictionary<string, string> CreateTokenDictionary(Creature creature, Creature[] speciesCreatures, int[] speciesTopLevels, int[] speciesLowestLevels)
+        public static Dictionary<string, string> CreateTokenDictionary(Creature creature, Creature alreadyExistingCreature, Creature[] speciesCreatures, int[] speciesTopLevels, int[] speciesLowestLevels, int libraryCreatureCount)
         {
-            var creatureInLibrary = creature.guid != Guid.Empty ? speciesCreatures.FirstOrDefault(c => c.guid == creature.guid) : null;
-
             string dom = creature.isBred ? "B" : "T";
 
             double imp = creature.imprintingBonus * 100;
             double eff = creature.tamingEff * 100;
-
-            Random rand = new Random(DateTime.Now.Millisecond);
-            string randStr = rand.Next(0, 999999).ToString("000000");
 
             string effImp = "Z";
             string prefix = string.Empty;
@@ -247,7 +246,7 @@ namespace ARKBreedingStats.NamePatterns
 
                 if (creature.guid != Guid.Empty)
                 {
-                    oldName = creatureInLibrary?.name ?? creature.name;
+                    oldName = (alreadyExistingCreature != null ? alreadyExistingCreature.name : creature.name) ?? string.Empty;
                 }
                 else if (creature.ArkId != 0)
                 {
@@ -263,8 +262,9 @@ namespace ARKBreedingStats.NamePatterns
                 spcsNm = spcsNm.Remove(spcsNm.LastIndexOfAny(vowels), 1); // remove last vowel (not the first letter)
 
             // for counting, add 1 if the creature is not yet in the library
-            var addOne = creatureInLibrary == null ? 1 : 0;
+            var addOne = alreadyExistingCreature == null ? 1 : 0;
             int speciesCount = (speciesCreatures?.Length ?? 0) + addOne;
+            if (addOne == 1) libraryCreatureCount++;
             // the index of the creature in its generation, ordered by addedToLibrary
             int nrInGeneration = (speciesCreatures?.Count(c => c.guid != creature.guid && c.addedToLibrary != null && c.generation == generation && (creature.addedToLibrary == null || c.addedToLibrary < creature.addedToLibrary)) ?? 0) + addOne;
             int nrInGenerationAndSameSex = (speciesCreatures?.Count(c => c.guid != creature.guid && c.sex == creature.sex && c.addedToLibrary != null && c.generation == generation && (creature.addedToLibrary == null || c.addedToLibrary < creature.addedToLibrary)) ?? 0) + addOne;
@@ -321,6 +321,7 @@ namespace ARKBreedingStats.NamePatterns
 
                 { "toppercent" , (creature.topness / 10f).ToString() },
                 { "baselvl" , creature.LevelHatched.ToString() },
+                { "levelpretamed" , creature.levelFound.ToString() },
                 { "effimp" , effImp },
                 { "muta", creature.Mutations.ToString()},
                 { "mutam", creature.mutationsMaternal.ToString()},
@@ -330,13 +331,15 @@ namespace ARKBreedingStats.NamePatterns
                 { "genn", (speciesCreatures?.Count(c=>c.generation==generation) ?? 0 + 1).ToString()},
                 { "nr_in_gen", nrInGeneration.ToString()},
                 { "nr_in_gen_sex", nrInGenerationAndSameSex.ToString()},
-                { "rnd", randStr },
+                { "rnd", Random.Next(0, 999999).ToString("000000")},
+                { "ln", libraryCreatureCount.ToString()},
                 { "tn", speciesCount.ToString()},
                 { "sn", speciesSexCount.ToString()},
                 { "dom", dom},
                 { "arkid", arkid },
                 { "alreadyexists", speciesCreatures.Contains(creature) ? "1" : string.Empty },
-                { "isflyer", creature.Species.isFlyer ? "1" : string.Empty }
+                { "isflyer", creature.Species.isFlyer ? "1" : string.Empty },
+                { "status", creature.Status.ToString() }
             };
 
             // stat index and according level
@@ -365,6 +368,9 @@ namespace ARKBreedingStats.NamePatterns
                 // highest stats and according levels
                 dict.Add("highest" + (s + 1) + "l", usedStatsCount > s ? levelOrder[s].Item2.ToString() : string.Empty);
                 dict.Add("highest" + (s + 1) + "s", usedStatsCount > s ? Utils.StatName(levelOrder[s].Item1, true, creature.Species.statNames) : string.Empty);
+
+                // mutated levels
+                dict.Add(StatAbbreviationFromIndex[s] + "_m", (creature.levelsMutated?[s] ?? 0).ToString());
             }
 
             return dict;

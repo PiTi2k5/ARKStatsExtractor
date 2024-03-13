@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.importExportGun;
@@ -25,6 +26,7 @@ namespace ARKBreedingStats.settings
         public SettingsTabPages LastTabPageIndex;
         public bool LanguageChanged;
         public bool ColorRegionDisplayChanged;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public Settings(CreatureCollection cc, SettingsTabPages page)
         {
@@ -99,6 +101,7 @@ namespace ARKBreedingStats.settings
             }
             nudTamingSpeed.NeutralNumber = 1;
             nudDinoCharacterFoodDrain.NeutralNumber = 1;
+            NudWildDinoCharacterFoodDrainMultiplier.NeutralNumber = 1;
             NudWildDinoTorporDrainMultiplier.NeutralNumber = 1;
             nudTamedDinoCharacterFoodDrain.NeutralNumber = 1;
             nudMatingInterval.NeutralNumber = 1;
@@ -209,10 +212,24 @@ namespace ARKBreedingStats.settings
                     else _multSetter[s].Multipliers = null;
                 }
             }
-            cbSingleplayerSettings.Checked = cc.singlePlayerSettings;
-            CbAtlasSettings.Checked = _cc.AtlasSettings;
-            if (_cc.Game == Ark.Asa) RbGameAsa.Checked = true;
-            else RbGameAse.Checked = true;
+            cbSingleplayerSettings.Checked = cc.serverMultipliers?.SinglePlayerSettings == true;
+            CbAtlasSettings.Checked = _cc.serverMultipliers?.AtlasSettings == true;
+            if (_cc.Game == Ark.Asa)
+            {
+                RbGameAsa.Checked = true;
+            }
+            else
+            {
+                CbAllowSpeedLeveling.Visible = false;
+            }
+
+            switch (Properties.Settings.Default.NewLibraryGame)
+            {
+                case Ark.Game.Ase: RbNewLibraryGameAse.Checked = true; break;
+                case Ark.Game.Asa: RbNewLibraryGameAsa.Checked = true; break;
+                case Ark.Game.SameAsBefore: RbNewLibraryGameKeep.Checked = true; break;
+                default: RbNewLibraryGameAskEachTime.Checked = true; break;
+            }
 
             nudMaxDomLevels.ValueSave = cc.maxDomLevel;
             numericUpDownMaxBreedingSug.ValueSave = cc.maxBreedingSuggestions;
@@ -236,6 +253,7 @@ namespace ARKBreedingStats.settings
             nudBabyImprintAmount.ValueSave = (decimal)multipliers.BabyImprintAmountMultiplier;
             nudTamingSpeed.ValueSave = (decimal)multipliers.TamingSpeedMultiplier;
             nudDinoCharacterFoodDrain.ValueSave = (decimal)multipliers.DinoCharacterFoodDrainMultiplier;
+            NudWildDinoCharacterFoodDrainMultiplier.ValueSave = (decimal)multipliers.WildDinoCharacterFoodDrainMultiplier;
             NudWildDinoTorporDrainMultiplier.ValueSave = (decimal)multipliers.WildDinoTorporDrainMultiplier;
             nudTamedDinoCharacterFoodDrain.ValueSave = (decimal)multipliers.TamedDinoCharacterFoodDrainMultiplier;
             nudBabyFoodConsumptionSpeed.ValueSave = (decimal)multipliers.BabyFoodConsumptionSpeedMultiplier;
@@ -253,6 +271,7 @@ namespace ARKBreedingStats.settings
             nudBabyFoodConsumptionSpeedEvent.ValueSave = (decimal)multipliers.BabyFoodConsumptionSpeedMultiplier;
             #endregion
 
+            TbRemoteServerSettingsUri.Text = cc.ServerSettingsUriSource;
             checkBoxAutoSave.Checked = Properties.Settings.Default.autosave;
             chkCollectionSync.Checked = Properties.Settings.Default.syncCollection;
             NudWaitBeforeAutoLoad.ValueSave = Properties.Settings.Default.WaitBeforeAutoLoadMs;
@@ -330,7 +349,7 @@ namespace ARKBreedingStats.settings
             CbInfoGraphicDisplayMaxWildLevel.Checked = Properties.Settings.Default.InfoGraphicShowMaxWildLevel;
             CbInfoGraphicDomLevels.Checked = Properties.Settings.Default.InfoGraphicWithDomLevels;
             CbbInfoGraphicFontName.Text = Properties.Settings.Default.InfoGraphicFontName;
-            CbInfoGraphicMutations.Checked = Properties.Settings.Default.InfoGraphicDisplayMutations;
+            CbInfoGraphicMutationCounter.Checked = Properties.Settings.Default.InfoGraphicDisplayMutations;
             CbInfoGraphicGenerations.Checked = Properties.Settings.Default.InfoGraphicDisplayGeneration;
             CbInfoGraphicCreatureName.Checked = Properties.Settings.Default.InfoGraphicDisplayName;
             BtInfoGraphicBackColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicBackColor);
@@ -354,6 +373,7 @@ namespace ARKBreedingStats.settings
             CbNaturalSortIgnoreSpaces.Enabled = Properties.Settings.Default.UseNaturalSort;
             CbNaturalSortIgnoreSpaces.Checked = Properties.Settings.Default.NaturalSortIgnoreSpaces;
             CbDisplayLibraryCreatureIndex.Checked = Properties.Settings.Default.DisplayLibraryCreatureIndex;
+            CbLibraryDisplayZeroMutationLevels.Checked = Properties.Settings.Default.LibraryDisplayZeroMutationLevels;
 
             #endregion
 
@@ -426,6 +446,8 @@ namespace ARKBreedingStats.settings
 
             NudSpeciesSelectorCountLastUsed.ValueSave = Properties.Settings.Default.SpeciesSelectorCountLastSpecies;
 
+            CbStreamerMode.Checked = Properties.Settings.Default.StreamerMode;
+            CbDisplayServerTokenPopup.Checked = Properties.Settings.Default.DisplayPopupForServerToken;
             cbDevTools.Checked = Properties.Settings.Default.DevTools;
 
             cbPrettifyJSON.Checked = Properties.Settings.Default.prettifyCollectionJson;
@@ -470,19 +492,28 @@ namespace ARKBreedingStats.settings
                 }
             }
 
-            // Torpidity is handled differently by the game, IwM has no effect. Set IwM to 1.
-            // See https://github.com/cadon/ARKStatsExtractor/issues/942 for more infos about this.
-            _cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] = 1;
+            if (_cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] != 1)
+            {
+                // Torpidity is handled differently by the game, IwM has no effect. Set IwM to 1.
+                // See https://github.com/cadon/ARKStatsExtractor/issues/942 for more infos about this.
+                MessageBoxes.ShowMessageBox("The increase per wild level of torpidity setting (PerLevelStatsMultiplier_DinoWild[2]) is ignored by ARK, only the value 1 is used for that setting.\nA different value was entered for that setting.\nSmart Breeding will reset this value to 1, since the game also uses that value, regardless what is entered in the server settings. This is done to prevent extraction issues.",
+                    "Torpidity multiplier reset");
+                _cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] = 1;
+            }
 
-            _cc.singlePlayerSettings = cbSingleplayerSettings.Checked;
-            _cc.AtlasSettings = CbAtlasSettings.Checked;
+            _cc.serverMultipliers.SinglePlayerSettings = cbSingleplayerSettings.Checked;
+            _cc.serverMultipliers.AtlasSettings = CbAtlasSettings.Checked;
             _cc.Game = RbGameAsa.Checked ? Ark.Asa : Ark.Ase;
+            Properties.Settings.Default.NewLibraryGame = RbNewLibraryGameAse.Checked ? Ark.Game.Ase
+                : RbNewLibraryGameAsa.Checked ? Ark.Game.Asa
+                : RbNewLibraryGameKeep.Checked ? Ark.Game.SameAsBefore
+                : Ark.Game.Unknown;
 
             _cc.maxDomLevel = (int)nudMaxDomLevels.Value;
             _cc.maxWildLevel = (int)nudMaxWildLevels.Value;
             _cc.maxServerLevel = (int)nudMaxServerLevel.Value;
             _cc.maxChartLevel = (int)nudMaxGraphLevel.Value;
-            _cc.serverMultipliers.AllowSpeedLeveling = CbAllowSpeedLeveling.Checked;
+            _cc.serverMultipliers.AllowSpeedLeveling = CbAllowSpeedLeveling.Checked || RbGameAse.Checked;
             _cc.serverMultipliers.AllowFlyerSpeedLeveling = CbAllowFlyerSpeedLeveling.Checked;
             _cc.maxBreedingSuggestions = (int)numericUpDownMaxBreedingSug.Value;
             Properties.Settings.Default.IgnoreSexInBreedingPlan = cbIgnoreSexInBreedingPlan.Checked;
@@ -492,6 +523,7 @@ namespace ARKBreedingStats.settings
             #region non-event-multiplier
             _cc.serverMultipliers.TamingSpeedMultiplier = (double)nudTamingSpeed.Value;
             _cc.serverMultipliers.DinoCharacterFoodDrainMultiplier = (double)nudDinoCharacterFoodDrain.Value;
+            _cc.serverMultipliers.WildDinoCharacterFoodDrainMultiplier = (double)NudWildDinoCharacterFoodDrainMultiplier.Value;
             _cc.serverMultipliers.WildDinoTorporDrainMultiplier = (double)NudWildDinoTorporDrainMultiplier.Value;
             _cc.serverMultipliers.TamedDinoCharacterFoodDrainMultiplier = (double)nudTamedDinoCharacterFoodDrain.Value;
             _cc.serverMultipliers.MatingSpeedMultiplier = (double)nudMatingSpeed.Value;
@@ -518,6 +550,7 @@ namespace ARKBreedingStats.settings
             _cc.serverMultipliersEvents.BabyFoodConsumptionSpeedMultiplier = (double)nudBabyFoodConsumptionSpeedEvent.Value;
             #endregion
 
+            _cc.ServerSettingsUriSource = string.IsNullOrEmpty(TbRemoteServerSettingsUri.Text) ? null : TbRemoteServerSettingsUri.Text;
             Properties.Settings.Default.autosave = checkBoxAutoSave.Checked;
             Properties.Settings.Default.syncCollection = chkCollectionSync.Checked;
             Properties.Settings.Default.WaitBeforeAutoLoadMs = (int)NudWaitBeforeAutoLoad.Value;
@@ -583,7 +616,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.InfoGraphicShowMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked;
             Properties.Settings.Default.InfoGraphicWithDomLevels = CbInfoGraphicDomLevels.Checked;
             Properties.Settings.Default.InfoGraphicFontName = CbbInfoGraphicFontName.Text;
-            Properties.Settings.Default.InfoGraphicDisplayMutations = CbInfoGraphicMutations.Checked;
+            Properties.Settings.Default.InfoGraphicDisplayMutations = CbInfoGraphicMutationCounter.Checked;
             Properties.Settings.Default.InfoGraphicDisplayGeneration = CbInfoGraphicGenerations.Checked;
             Properties.Settings.Default.InfoGraphicDisplayName = CbInfoGraphicCreatureName.Checked;
             Properties.Settings.Default.InfoGraphicBackColor = BtInfoGraphicBackColor.BackColor;
@@ -606,6 +639,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.UseNaturalSort = CbNaturalSorting.Checked;
             Properties.Settings.Default.NaturalSortIgnoreSpaces = CbNaturalSortIgnoreSpaces.Checked;
             Properties.Settings.Default.DisplayLibraryCreatureIndex = CbDisplayLibraryCreatureIndex.Checked;
+            Properties.Settings.Default.LibraryDisplayZeroMutationLevels = CbLibraryDisplayZeroMutationLevels.Checked;
 
             #endregion
 
@@ -662,6 +696,8 @@ namespace ARKBreedingStats.settings
 
             Properties.Settings.Default.SpeciesSelectorCountLastSpecies = (int)NudSpeciesSelectorCountLastUsed.Value;
 
+            Properties.Settings.Default.StreamerMode = CbStreamerMode.Checked;
+            Properties.Settings.Default.DisplayPopupForServerToken = CbDisplayServerTokenPopup.Checked;
             Properties.Settings.Default.DevTools = cbDevTools.Checked;
 
             Properties.Settings.Default.prettifyCollectionJson = cbPrettifyJSON.Checked;
@@ -808,10 +844,10 @@ namespace ARKBreedingStats.settings
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                ParseAndSetStatMultiplier(0, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(1, @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(2, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(3, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(Stats.IndexTamingAdd, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(Stats.IndexTamingMult, @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(Stats.IndexLevelDom, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(Stats.IndexLevelWild, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
 
                 void ParseAndSetStatMultiplier(int multiplierIndex, string regexPattern)
                 {
@@ -823,6 +859,9 @@ namespace ARKBreedingStats.settings
                     }
                 }
             }
+            // some server files have a different value for wild level torpor increase, but ARK ignores that value.
+            // reset that value, so no error message pops up, so user is not confused. Error message only on manual input
+            _multSetter[Stats.Torpidity].SetMultiplier(Stats.IndexLevelWild, 1);
 
             // breeding
             ParseAndSetValue(nudMatingInterval, @"MatingIntervalMultiplier ?= ?(\d*\.?\d+)");
@@ -841,8 +880,11 @@ namespace ARKBreedingStats.settings
             // GameUserSettings.ini
             ParseAndSetValue(nudTamingSpeed, @"TamingSpeedMultiplier ?= ?(\d*\.?\d+)");
             ParseAndSetValue(nudDinoCharacterFoodDrain, @"DinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(NudWildDinoCharacterFoodDrainMultiplier, @"WildDinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
             // Game.ini
             ParseAndSetValue(NudWildDinoTorporDrainMultiplier, @"WildDinoTorporDrainMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetCheckbox(CbAllowSpeedLeveling, @"bAllowSpeedLeveling ?= ?(true|false)");
+            ParseAndSetCheckbox(CbAllowFlyerSpeedLeveling, @"bAllowFlyerSpeedLeveling ?= ?(true|false)");
 
             //// the settings below don't appear in ARK server config files directly or not at all and are used only in ASB
             // max levels
@@ -853,8 +895,6 @@ namespace ARKBreedingStats.settings
             if (ParseAndSetValue(nudWildLevelStep, @"ASBExtractorWildLevelSteps ?= ?(\d+)"))
                 cbConsiderWildLevelSteps.Checked = nudWildLevelStep.Value != 1;
             ParseAndSetCheckbox(cbAllowMoreThanHundredImprinting, @"ASBAllowHyperImprinting ?= ?(true|false)");
-            ParseAndSetCheckbox(CbAllowSpeedLeveling, @"ASBAllowSpeedLeveling ?= ?(true|false)");
-            ParseAndSetCheckbox(CbAllowFlyerSpeedLeveling, @"ASBAllowFlyerSpeedLeveling ?= ?(true|false)");
 
             // event multipliers breeding
             ParseAndSetValue(nudMatingIntervalEvent, @"ASBEvent_MatingIntervalMultiplier ?= ?(\d*\.?\d+)");
@@ -934,16 +974,21 @@ namespace ARKBreedingStats.settings
             const int roundToDigits = 6;
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                _multSetter[s].SetMultiplier(0, Math.Round(esm.TameAdd[s], roundToDigits));
-                _multSetter[s].SetMultiplier(1, Math.Round(esm.TameAff[s], roundToDigits));
-                _multSetter[s].SetMultiplier(2, Math.Round(esm.TameLevel[s], roundToDigits));
-                _multSetter[s].SetMultiplier(3, Math.Round(esm.WildLevel[s], roundToDigits));
+                _multSetter[s].SetMultiplier(Stats.IndexTamingAdd, Math.Round(esm.TameAdd[s], roundToDigits));
+                _multSetter[s].SetMultiplier(Stats.IndexTamingMult, Math.Round(esm.TameAff[s], roundToDigits));
+                _multSetter[s].SetMultiplier(Stats.IndexLevelDom, Math.Round(esm.TameLevel[s], roundToDigits));
+                _multSetter[s].SetMultiplier(Stats.IndexLevelWild, Math.Round(esm.WildLevel[s], roundToDigits));
             }
+            // some server files have a different value for wild level torpor increase, but ARK ignores that value.
+            // reset that value, so no error message pops up, so user is not confused. Error message only on manual input
+            _multSetter[Stats.Torpidity].SetMultiplier(Stats.IndexLevelWild, 1);
 
-            nudMaxWildLevels.ValueSave = esm.MaxWildLevel;
+            nudMaxWildLevels.ValueSaveDouble = Math.Ceiling(esm.MaxWildLevel);
+            nudWildLevelStep.ValueSaveDouble = Math.Round(esm.WildLevelStepSize, roundToDigits);
             nudMaxServerLevel.ValueSave = esm.DestroyTamesOverLevelClamp;
             nudTamingSpeed.ValueSaveDouble = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
             nudDinoCharacterFoodDrain.ValueSaveDouble = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
+            NudWildDinoCharacterFoodDrainMultiplier.ValueSaveDouble = Math.Round(esm.WildDinoCharacterFoodDrainMultiplier, roundToDigits);
             NudWildDinoTorporDrainMultiplier.ValueSaveDouble = Math.Round(esm.WildDinoTorporDrainMultiplier, roundToDigits);
             nudMatingSpeed.ValueSaveDouble = Math.Round(esm.MatingSpeedMultiplier, roundToDigits);
             nudMatingInterval.ValueSaveDouble = Math.Round(esm.MatingIntervalMultiplier, roundToDigits);
@@ -1105,6 +1150,7 @@ namespace ARKBreedingStats.settings
             {
                 nudTamingSpeed.ValueSave = (decimal)sm.TamingSpeedMultiplier;
                 nudDinoCharacterFoodDrain.ValueSave = (decimal)sm.DinoCharacterFoodDrainMultiplier;
+                NudWildDinoCharacterFoodDrainMultiplier.ValueSave = (decimal)sm.WildDinoCharacterFoodDrainMultiplier;
                 NudWildDinoTorporDrainMultiplier.ValueSave = (decimal)sm.WildDinoTorporDrainMultiplier;
                 nudTamedDinoCharacterFoodDrain.ValueSave = (decimal)sm.TamedDinoCharacterFoodDrainMultiplier;
                 nudEggHatchSpeed.ValueSave = (decimal)sm.EggHatchSpeedMultiplier;
@@ -1116,10 +1162,10 @@ namespace ARKBreedingStats.settings
                 nudMatingSpeed.ValueSave = (decimal)sm.MatingSpeedMultiplier;
                 nudBabyFoodConsumptionSpeed.ValueSave = (decimal)sm.BabyFoodConsumptionSpeedMultiplier;
 
-                ////numericUpDownDomLevelNr.ValueSave = ;
-                //numericUpDownMaxBreedingSug.ValueSave = cc.maxBreedingSuggestions;
-                //numericUpDownMaxWildLevel.ValueSave = cc.maxWildLevel;
-                //nudMaxServerLevel.ValueSave = cc.maxServerLevel > 0 ? cc.maxServerLevel : 0;
+                CbAllowSpeedLeveling.Checked = sm.AllowSpeedLeveling;
+                CbAllowFlyerSpeedLeveling.Checked = sm.AllowFlyerSpeedLeveling;
+                cbSingleplayerSettings.Checked = sm.SinglePlayerSettings;
+                CbAtlasSettings.Checked = sm.AtlasSettings;
             }
 
             if (sm.statMultipliers == null) return;
@@ -1222,6 +1268,7 @@ namespace ARKBreedingStats.settings
             // taming multipliers
             sb.AppendLine($"TamingSpeedMultiplier = {nudTamingSpeed.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"DinoCharacterFoodDrainMultiplier = {nudDinoCharacterFoodDrain.Value.ToString(cultureForStrings)}");
+            sb.AppendLine($"WildDinoCharacterFoodDrainMultiplier = {NudWildDinoCharacterFoodDrainMultiplier.Value.ToString(cultureForStrings)}");
             sb.AppendLine($"WildDinoTorporDrainMultiplier = {NudWildDinoTorporDrainMultiplier.Value.ToString(cultureForStrings)}");
 
             //// the settings below are not settings that appear in ARK server config files and are used only in ASB
@@ -1233,8 +1280,8 @@ namespace ARKBreedingStats.settings
             // extractor
             sb.AppendLine($"ASBExtractorWildLevelSteps = {(cbConsiderWildLevelSteps.Checked ? nudWildLevelStep.Value.ToString(cultureForStrings) : "1")}");
             sb.AppendLine($"ASBAllowHyperImprinting = {(cbAllowMoreThanHundredImprinting.Checked ? "true" : "false")}");
-            sb.AppendLine($"ASBAllowSpeedLeveling = {(CbAllowSpeedLeveling.Checked ? "true" : "false")}");
-            sb.AppendLine($"ASBAllowFlyerSpeedLeveling = {(CbAllowFlyerSpeedLeveling.Checked ? "true" : "false")}");
+            sb.AppendLine($"bAllowSpeedLeveling = {(CbAllowSpeedLeveling.Checked ? "true" : "false")}");
+            sb.AppendLine($"bAllowFlyerSpeedLeveling = {(CbAllowFlyerSpeedLeveling.Checked ? "true" : "false")}");
 
             // event multipliers
             sb.AppendLine($"ASBEvent_MatingIntervalMultiplier = {nudMatingIntervalEvent.Value.ToString(cultureForStrings)}");
@@ -1284,6 +1331,7 @@ namespace ARKBreedingStats.settings
             Loc.ControlText(BtBeepSuccess, _tt);
             Loc.ControlText(BtBeepTop, _tt);
             Loc.ControlText(BtBeepNewTop, _tt);
+            Loc.ControlText(BtBeepUpdated, _tt);
             Loc.ControlText(BtGetExportFolderAutomatically);
         }
 
@@ -1321,6 +1369,11 @@ namespace ARKBreedingStats.settings
         private void BtBeepNewTop_Click(object sender, EventArgs e)
         {
             SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Great);
+        }
+
+        private void BtBeepUpdated_Click(object sender, EventArgs e)
+        {
+            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Updated);
         }
 
         private void BtImportArchiveFolder_Click(object sender, EventArgs e)
@@ -1589,7 +1642,7 @@ namespace ARKBreedingStats.settings
                 BtInfoGraphicBorderColor.BackColor,
                 CbInfoGraphicCreatureName.Checked,
                 CbInfoGraphicDomLevels.Checked,
-                CbInfoGraphicMutations.Checked,
+                CbInfoGraphicMutationCounter.Checked,
                 CbInfoGraphicGenerations.Checked,
                 CbInfoGraphicStatValues.Checked,
                 CbInfoGraphicDisplayMaxWildLevel.Checked,
@@ -1656,9 +1709,15 @@ namespace ARKBreedingStats.settings
             }
         }
 
+        private void CbAllowSpeedLeveling_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!CbAllowSpeedLeveling.Checked)
+                CbAllowFlyerSpeedLeveling.Checked = false;
+        }
+
         private void CbAllowFlyerSpeedLeveling_CheckedChanged(object sender, EventArgs e)
         {
-            if (CbAllowFlyerSpeedLeveling.Checked)
+            if (CbAllowFlyerSpeedLeveling.Checked && RbGameAsa.Checked)
                 CbAllowSpeedLeveling.Checked = true;
         }
 
@@ -1674,18 +1733,104 @@ namespace ARKBreedingStats.settings
                 return;
             }
 
-            localConfigPaths = localConfigPaths.OrderBy(c => c.Item2 == Ark.Game.ASE).ToArray(); // display ASA first
+            localConfigPaths = localConfigPaths.OrderBy(c => c.Item2 == Ark.Game.Ase).ToArray(); // display ASA first
 
             // ask which configs to import
             var importIndex = Utils.ShowListInput(localConfigPaths.Select(c => $"{c.Item2}: {c.Item1.Replace("\\", "\\ ")}").ToArray(), // adding zero width spaces to allow word wrapping
                 "Select one of the configs to import.", "Auto import configs", 40);
             if (importIndex == -1) return;
 
+            CbAtlasSettings.Checked = false;
             ExtractSettingsFromFile(Path.Combine(localConfigPaths[importIndex].Item1, "game.ini"), true);
             ExtractSettingsFromFile(Path.Combine(localConfigPaths[importIndex].Item1, "gameUserSettings.ini"), true);
 
-            if (localConfigPaths[importIndex].Item2 == Ark.Game.ASA) RbGameAsa.Checked = true;
+            if (localConfigPaths[importIndex].Item2 == Ark.Game.Asa) RbGameAsa.Checked = true;
             else RbGameAse.Checked = true;
+        }
+
+        private async void BtRemoteServerSettingsUri_Click(object sender, EventArgs e)
+        {
+            var uri = TbRemoteServerSettingsUri.Text;
+            if (string.IsNullOrEmpty(uri))
+            {
+                MessageBoxes.ShowMessageBox("No url for a server settings file given. Enter the url to the text box near the button you just clicked.");
+                return;
+            }
+
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+                return;
+            }
+
+            try
+            {
+                var httpClient = FileService.GetHttpClient;
+                _cancellationTokenSource = new CancellationTokenSource();
+                BtRemoteServerSettingsUri.Text = "Cancel loading";
+                string settingsText = null;
+                using (var result = await httpClient.GetAsync(uri, _cancellationTokenSource.Token))
+                {
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        MessageBoxes.ShowMessageBox(
+                            $"Error when trying to load settings from{Environment.NewLine}{uri}{Environment.NewLine}StatusCode {(int)result.StatusCode}: {result.ReasonPhrase}");
+                        return;
+                    }
+
+                    settingsText = await result.Content.ReadAsStringAsync();
+                }
+
+                if (string.IsNullOrEmpty(settingsText))
+                {
+                    MessageBoxes.ShowMessageBox(
+                        $"The specified source{Environment.NewLine}{uri}{Environment.NewLine}contains not text, nothing was imported.");
+                    return;
+                }
+
+                if (MessageBox.Show($"Apply the settings of the downloaded file?{Environment.NewLine}{uri}",
+                        "Use downloaded settings?",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    ExtractSettingsFromText(settingsText, true);
+                }
+
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBoxes.ShowMessageBox(
+                    $"The given url{Environment.NewLine}{uri}{Environment.NewLine}is not valid.{Environment.NewLine}{ex.Message}",
+                    "Invalid url");
+            }
+            catch (TaskCanceledException ex)
+            {
+                if (_cancellationTokenSource?.IsCancellationRequested == true)
+                {
+                    // request canceled by user
+                    return;
+                }
+                MessageBoxes.ShowMessageBox(
+                    $"The given url{Environment.NewLine}{uri}{Environment.NewLine}didn't respond fast enough (timeout), maybe the url is incorrect.{Environment.NewLine}{ex.Message}",
+                    "Timeout when loading server settings");
+            }
+            catch (Exception ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, "Server settings file couldn't be loaded.");
+            }
+            finally
+            {
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+                BtRemoteServerSettingsUri.Text = "Load remote settings";
+            }
+        }
+
+        private void RbGameAsa_CheckedChanged(object sender, EventArgs e)
+        {
+            var isAsa = RbGameAsa.Checked;
+            CbAllowSpeedLeveling.Visible = isAsa;
+            if (isAsa && CbAllowFlyerSpeedLeveling.Checked)
+                CbAllowSpeedLeveling.Checked = true;
         }
     }
 }

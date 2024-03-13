@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -117,7 +118,7 @@ namespace ARKBreedingStats
                     if (data != null)
                         return true;
 
-                    errorMessage = $"File\n{Path.GetFullPath(filePath)}\n contains no readable data.";
+                    errorMessage = $"File\n{Path.GetFullPath(filePath)}\ncontains no readable data.";
                     return false;
                 }
             }
@@ -279,6 +280,21 @@ namespace ARKBreedingStats
             //    return true;
             //}
             //catch { return false; }
+        }
+
+        private static HttpClient _httpClient;
+
+        /// <summary>
+        /// Returns a static HttpClient. It's apparently better to reuse one object per app only.
+        /// </summary>
+        public static HttpClient GetHttpClient
+        {
+            get
+            {
+                if (_httpClient == null)
+                    _httpClient = new HttpClient();
+                return _httpClient;
+            }
         }
     }
 }

@@ -82,7 +82,7 @@ namespace ARKBreedingStats
 
             // autocomplete for species-input
             var al = new AutoCompleteStringCollection();
-            al.AddRange(_entryList.Select(e => e.SearchName).ToArray());
+            al.AddRange(_entryList.Select(e => e.DisplayName).ToArray());
             _textBox.AutoCompleteCustomSource = al;
 
             VariantSelector.SetVariants(species);
@@ -105,7 +105,7 @@ namespace ARKBreedingStats
                 entryList.Add(new SpeciesListEntry
                 {
                     DisplayName = s.name,
-                    SearchName = s.name,
+                    SearchName = (s.name + " " + s.blueprintPath).ToLowerInvariant(),
                     ModName = s.Mod?.title ?? string.Empty,
                     Species = s
                 });
@@ -118,7 +118,7 @@ namespace ARKBreedingStats
                     entryList.Add(new SpeciesListEntry
                     {
                         DisplayName = a.Key + " (→" + aliasSpecies.name + ")",
-                        SearchName = a.Key,
+                        SearchName = a.Key.ToLowerInvariant(),
                         Species = aliasSpecies,
                         ModName = aliasSpecies.Mod?.title ?? string.Empty,
                     });
@@ -149,7 +149,7 @@ namespace ARKBreedingStats
                         s.name.Contains("Polar") ? creatureColorsPolar : creatureColors
                         //colors
                         );
-                    //if (!imgExists && !speciesWOImage.Contains(s.name)) speciesWOImage.Add(s.name);
+                    //if (!imgExists && s.IsDomesticable && !speciesWOImage.Contains(s.name)) speciesWOImage.Add(s.name);
                     if (!imgExists || _iconIndices.Contains(speciesListName)) continue;
 
                     try
@@ -265,12 +265,13 @@ namespace ARKBreedingStats
             lvSpeciesList.BeginUpdate();
             lvSpeciesList.Items.Clear();
             var newItems = new List<ListViewItem>();
+            part = part?.ToLowerInvariant();
             bool inputIsEmpty = string.IsNullOrWhiteSpace(part);
             foreach (var s in _entryList)
             {
                 if ((Properties.Settings.Default.DisplayNonDomesticableSpecies || s.Species.IsDomesticable)
                     && (inputIsEmpty
-                       || s.SearchName.ToLower().Contains(part.ToLower())
+                       || s.SearchName.Contains(part)
                        )
                     && (noVariantFiltering
                         || (string.IsNullOrEmpty(s.Species.VariantInfo) ? !VariantSelector.DisabledVariants.Contains(string.Empty)
@@ -313,13 +314,25 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
+        /// Return species by entry string.
+        /// </summary>
+        public bool SetSpeciesByEntryName(string entryString)
+        {
+            if (_entryList == null || string.IsNullOrEmpty(entryString)) return false;
+            var species = _entryList.FirstOrDefault(e => e.DisplayName.Equals(entryString, StringComparison.OrdinalIgnoreCase))?.Species;
+            if (species == null) return false;
+            SetSpeciesByName(null, species);
+            return true;
+        }
+
+        /// <summary>
         /// Sets the species with the speciesName. This may not be unique.
         /// </summary>
-        /// <param name="speciesName"></param>
         /// <returns>True if the species was recognized and was already or is set.</returns>
-        public bool SetSpeciesByName(string speciesName)
+        public bool SetSpeciesByName(string speciesName, Species species = null)
         {
-            if (Values.V.TryGetSpeciesByName(speciesName, out Species species))
+            if (species != null
+                || (!string.IsNullOrEmpty(speciesName) && Values.V.TryGetSpeciesByName(speciesName, out species)))
             {
                 var speciesWasSet = SetSpecies(species);
                 if (speciesWasSet)
@@ -445,6 +458,9 @@ namespace ARKBreedingStats
 
     class SpeciesListEntry
     {
+        /// <summary>
+        /// Used for search filter, expected lower case.
+        /// </summary>
         internal string SearchName;
         internal string DisplayName;
         internal string ModName;

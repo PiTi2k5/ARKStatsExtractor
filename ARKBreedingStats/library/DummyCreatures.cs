@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ARKBreedingStats.BreedingPlanning;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.species;
 using ARKBreedingStats.values;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
 namespace ARKBreedingStats.library
 {
@@ -16,6 +16,9 @@ namespace ARKBreedingStats.library
     {
         public static DummyCreatureCreationSettings LastSettings;
 
+        private static string[] _namesFemale;
+        private static string[] _namesMale;
+
         /// <summary>
         /// Creates a list of random creatures.
         /// </summary>
@@ -24,30 +27,33 @@ namespace ARKBreedingStats.library
         /// <param name="numberSpecies">If species are randomly selected, this is the number of different species</param>
         /// <param name="breedGenerations">If &gt; 0, the creatures will be bred according to the breeding planner, the offspring will also be returned.</param>
         /// <param name="usePairsPerGeneration">If bred, this indicates how many of the top breeding pairs will be used to breed</param>
-        /// <param name="probabilityHigherStat"></param>
-        /// <param name="randomMutationChance"></param>
-        /// <param name="maxWildLevel"></param>
+        /// <param name="useMutatedLevels">Use extra mutated levels introduced in ASA</param>
+        /// <param name="maxStatLevel">Max level per stat. Ignored if -1. Can result in stat level combinations impossible in game.</param>
         /// <returns></returns>
-        public static List<Creature> CreateCreatures(int count, Species species = null, int numberSpecies = 1,
-            int breedGenerations = 0, int usePairsPerGeneration = 2, double probabilityHigherStat = 0.55, double randomMutationChance = 0.025, int maxWildLevel = 150,
-            bool setOwner = true, bool setTribe = true, bool setServer = true)
+        public static List<Creature> CreateCreatures(int count, Species species = null, int numberSpecies = 1, bool tamed = true,
+            int breedGenerations = 0, int usePairsPerGeneration = 2, bool useMutatedLevels = true, double probabilityHigherStat = 0.55, double randomMutationChance = 0.025,
+            int maxWildLevel = 150, int maxStatLevel = -1,
+            bool setOwner = true, bool setTribe = true, bool setServer = true, bool saveSettings = false)
         {
             if (count < 1) return null;
 
-            LastSettings = new DummyCreatureCreationSettings
-            {
-                CreatureCount = count,
-                OnlySelectedSpecies = species != null,
-                SpeciesCount = numberSpecies,
-                Generations = breedGenerations,
-                PairsPerGeneration = usePairsPerGeneration,
-                ProbabilityHigherStat = probabilityHigherStat,
-                RandomMutationChance = randomMutationChance,
-                MaxWildLevel = maxWildLevel,
-                SetOwner = setOwner,
-                SetTribe = setTribe,
-                SetServer = setServer
-            };
+            if (saveSettings)
+                LastSettings = new DummyCreatureCreationSettings
+                {
+                    CreatureCount = count,
+                    OnlySelectedSpecies = species != null,
+                    SpeciesCount = numberSpecies,
+                    Tamed = tamed,
+                    Generations = breedGenerations,
+                    PairsPerGeneration = usePairsPerGeneration,
+                    ProbabilityHigherStat = probabilityHigherStat,
+                    RandomMutationChance = randomMutationChance,
+                    MaxWildLevel = maxWildLevel,
+                    MaxStatLevel = maxStatLevel,
+                    SetOwner = setOwner,
+                    SetTribe = setTribe,
+                    SetServer = setServer
+                };
 
             var creatures = new List<Creature>(count);
 
@@ -91,7 +97,7 @@ namespace ARKBreedingStats.library
                 if (randomSpecies)
                     species = speciesSelection[rand.Next(speciesCount)];
 
-                creatures.Add(CreateCreature(species, difficulty, true, rand, setOwner, setTribe, setServer, nameCounter));
+                creatures.Add(CreateCreature(species, difficulty, tamed, rand, useMutatedLevels, setOwner, setTribe, setServer, nameCounter, maxStatLevel));
             }
 
             if (breedGenerations > 0)
@@ -101,7 +107,7 @@ namespace ARKBreedingStats.library
                 foreach (var s in creaturesBySpecies)
                 {
                     var newCreatures = BreedCreatures(s.Value, s.Key, breedGenerations,
-                        usePairsPerGeneration, probabilityHigherStat, randomMutationChance);
+                        usePairsPerGeneration, useMutatedLevels, probabilityHigherStat, randomMutationChance);
                     if (newCreatures != null)
                     {
                         creatures.AddRange(newCreatures);
@@ -115,7 +121,9 @@ namespace ARKBreedingStats.library
         /// <summary>
         /// Creates a creature for testing.
         /// </summary>
-        public static Creature CreateCreature(Species species, double difficulty = 5, bool doTame = true, Random rand = null, bool setOwner = true, bool setTribe = true, bool setServer = true, Dictionary<string, int> nameCounter = null)
+        public static Creature CreateCreature(Species species, double difficulty = 5, bool doTame = true, Random rand = null,
+            bool useMutatedLevels = true, bool setOwner = true, bool setTribe = true, bool setServer = true, Dictionary<string, int> nameCounter = null,
+            int maxStatLevel = -1)
         {
             if (rand == null) rand = new Random();
 
@@ -130,39 +138,86 @@ namespace ARKBreedingStats.library
 
             var levelFactor = creatureLevel / _totalLevels;
             var levelsWild = new int[Stats.StatsCount];
-            //var levelsMut = new int[Stats.StatsCount];
+            var levelsMut = useMutatedLevels ? new int[Stats.StatsCount] : null;
             var levelsDom = new int[Stats.StatsCount];
             var torpidityLevel = 0;
+            var usedLevels = new List<int>();
             for (int si = 0; si < Stats.StatsCount; si++)
             {
                 if (!species.UsesStat(si) || !species.CanLevelUpWildOrHaveMutations(si) || si == Stats.Torpidity) continue;
+                usedLevels.Add(si);
                 var level = (int)(levelFactor * GetBinomialLevel(rand));
+                if (maxStatLevel > -1 && level > maxStatLevel)
+                    level = maxStatLevel;
                 torpidityLevel += level;
                 levelsWild[si] = level;
             }
+
+            if (!doTame && usedLevels.Any())
+            {
+                // make sure wild total level is valid (probably not the same algorithm as in game)
+                var maxWildLevel = (int)(30 * difficulty);
+                var wildLevel = torpidityLevel + 1;
+                var shouldBeLevel = (int)Math.Min(maxWildLevel, Math.Round(wildLevel / difficulty) * difficulty);
+                var levelOffset = shouldBeLevel - wildLevel;
+                var delta = levelOffset > 0 ? 1 : -1;
+                var sii = 0;
+                var siCount = usedLevels.Count;
+                while (levelOffset != 0 && torpidityLevel > 0)
+                {
+                    levelsWild[usedLevels[sii]] += delta;
+                    torpidityLevel += delta;
+                    levelOffset -= delta;
+                    sii++;
+                    if (sii == siCount) sii = 0;
+                }
+
+                // if max stat level is set, ensure that. Can result in total levels impossible in game.
+                if (delta > 0 && maxStatLevel > -1)
+                {
+                    torpidityLevel = 0;
+                    foreach (var si in usedLevels)
+                    {
+                        levelsWild[si] = Math.Min(levelsWild[si], maxStatLevel);
+                        torpidityLevel += levelsWild[si];
+                    }
+                }
+            }
+
             levelsWild[Stats.Torpidity] = torpidityLevel;
 
             var sex = species.noGender ? Sex.Unknown : rand.Next(2) == 0 ? Sex.Female : Sex.Male;
             string name = null;
             if (doTame)
             {
+                if (_namesFemale == null)
+                    _namesFemale = NameList.GetNameList("F");
+                if (_namesMale == null)
+                    _namesMale = NameList.GetNameList("M");
                 var names = sex == Sex.Female ? _namesFemale : _namesMale;
-                name = names[rand.Next(names.Length)];
-                if (nameCounter != null)
+                if (names == null)
                 {
-                    if (nameCounter.TryGetValue(name, out var nameCount))
+                    name = "?";
+                }
+                else
+                {
+                    name = names[rand.Next(names.Length)];
+                    if (nameCounter != null)
                     {
-                        nameCounter[name]++;
-                        name += $" {nameCount + 1}";
-                    }
-                    else
-                    {
-                        nameCounter.Add(name, 1);
+                        if (nameCounter.TryGetValue(name, out var nameCount))
+                        {
+                            nameCounter[name]++;
+                            name += $" {nameCount + 1}";
+                        }
+                        else
+                        {
+                            nameCounter.Add(name, 1);
+                        }
                     }
                 }
             }
 
-            var creature = new Creature(species, name, sex: sex, levelsWild: levelsWild,
+            var creature = new Creature(species, name, sex: sex, levelsWild: levelsWild, levelsMutated: levelsMut,
                 levelsDom: levelsDom, tamingEff: tamingEffectiveness)
             {
                 guid = Guid.NewGuid(),
@@ -186,7 +241,7 @@ namespace ARKBreedingStats.library
         /// <summary>
         /// Combine pairs according to their breeding score and create probable offspring. Only the new creatures are returned.
         /// </summary>
-        private static List<Creature> BreedCreatures(Creature[] creatures, Species species, int generations, int usePairsPerGeneration, double probabilityHigherStat = 0.55, double randomMutationChance = 0.025)
+        private static List<Creature> BreedCreatures(Creature[] creatures, Species species, int generations, int usePairsPerGeneration, bool useMutatedLevels = true, double probabilityHigherStat = 0.55, double randomMutationChance = 0.025)
         {
             var noGender = species.noGender;
 
@@ -228,7 +283,7 @@ namespace ARKBreedingStats.library
                 var allCreaturesArray = noGender ? allCreatures.ToArray() : null;
                 var pairs = BreedingScore.CalculateBreedingScores(noGender ? allCreaturesArray : femalesMales[Sex.Female].ToArray(),
                     noGender ? allCreaturesArray : femalesMales[Sex.Male].ToArray(), species, bestPossibleLevels, statWeights, bestLevels,
-                    BreedingPlan.BreedingMode.TopStatsConservative, false, false, 0, ref filteredOutByMutationLimit);
+                    BreedingScore.BreedingMode.TopStatsConservative, false, false, 0, ref filteredOutByMutationLimit);
 
                 var pairsCount = Math.Min(usePairsPerGeneration, pairs.Count);
                 for (int i = 0; i < pairsCount; i++)
@@ -245,17 +300,32 @@ namespace ARKBreedingStats.library
 
                     // stats
                     var levelsWild = new int[Stats.StatsCount];
+                    var levelsMutated = useMutatedLevels ? new int[Stats.StatsCount] : null;
                     var torpidityLevel = 0;
                     var statIndicesForPossibleMutation = mutationPossible ? new List<int>(Stats.StatsCount) : null;
                     for (int si = 0; si < Stats.StatsCount; si++)
                     {
                         if (!species.UsesStat(si) || !species.CanLevelUpWildOrHaveMutations(si) || si == Stats.Torpidity) continue;
 
-                        var level = rand.NextDouble() < probabilityHigherStat
-                            ? Math.Max(mother.levelsWild[si], father.levelsWild[si])
-                            : Math.Min(mother.levelsWild[si], father.levelsWild[si]);
-                        torpidityLevel += level;
+                        int level;
+                        int levelMutated = 0;
+                        var useHigherLevel = rand.NextDouble() < probabilityHigherStat;
+                        if (useHigherLevel)
+                        {
+                            level = Math.Max(mother.levelsWild[si], father.levelsWild[si]);
+                            if (useMutatedLevels)
+                                levelMutated = Math.Max(mother.levelsMutated?[si] ?? 0, father.levelsMutated?[si] ?? 0);
+                        }
+                        else
+                        {
+                            level = Math.Min(mother.levelsWild[si], father.levelsWild[si]);
+                            if (useMutatedLevels)
+                                levelMutated = Math.Min(mother.levelsMutated[si], father.levelsMutated[si]);
+                        }
                         levelsWild[si] = level;
+                        if (useMutatedLevels)
+                            levelsMutated[si] = levelMutated;
+                        torpidityLevel += level + levelMutated;
                         if (mutationPossible && species.stats[si].AddWhenTamed != 0)
                             statIndicesForPossibleMutation.Add(si);
                     }
@@ -295,11 +365,21 @@ namespace ARKBreedingStats.library
                             // check if mutation occurs
                             if (rand.NextDouble() >= randomMutationChance) continue;
 
-                            var newLevel = levelsWild[statIndexForMutation] + Ark.LevelsAddedPerMutation;
-                            if (newLevel > 255) continue;
+                            if (useMutatedLevels)
+                            {
+                                var newLevel = levelsMutated[statIndexForMutation] + Ark.LevelsAddedPerMutation;
+                                if (newLevel > 255) continue;
+                                levelsMutated[statIndexForMutation] = newLevel;
+                            }
+                            else
+                            {
+                                var newLevel = levelsWild[statIndexForMutation] + Ark.LevelsAddedPerMutation;
+                                if (newLevel > 255) continue;
+                                levelsWild[statIndexForMutation] = newLevel;
+                            }
 
                             mutationHappened = true;
-                            levelsWild[statIndexForMutation] = newLevel;
+                            levelsWild[Stats.Torpidity] += Ark.LevelsAddedPerMutation;
                             if (mutationFromMother) mutationsMaternal++;
                             else mutationsPaternal++;
 
@@ -309,7 +389,6 @@ namespace ARKBreedingStats.library
                                 var mutatedRegion = colorRegionsForPossibleMutation[rand.Next(colorRegionsForMutationsCount)];
                                 colors[mutatedRegion] = (byte)rand.Next(100); // for now considering all color ids up to 99
                             }
-
                         }
                     }
 
@@ -320,6 +399,7 @@ namespace ARKBreedingStats.library
                         mutationsPaternal = mutationsPaternal,
                         Mother = mother,
                         Father = father,
+                        levelsMutated = levelsMutated,
                         colors = colors,
                         owner = mother.owner ?? father.owner,
                         tribe = mother.tribe ?? father.tribe,
@@ -350,9 +430,6 @@ namespace ARKBreedingStats.library
             return newCreatures;
 
         }
-
-        private static readonly string[] _namesFemale = { "Aurora", "Bess", "Bones", "Breeze", "Casey", "Casia", "Catlin", "Chromy", "Chuckles", "Cosmo", "Cupcake", "Danele", "Daphne", "Durva", "Electra", "Ellie", "Elora", "Flare", "Ginger", "Hope", "Indigo", "Jackie", "Layka", "Myst", "Nectar", "Oracle", "Pandora", "Peachy", "Peanuts", "Princess", "Raye", "Sabre", "Shellbie", "Shine", "Tia", "Vanity", "Wilde", "Zara" };
-        private static readonly string[] _namesMale = { "Austin", "Bran", "Cosmo", "Dearborn", "Eclipse", "Fuzz", "Gazoo", "Hercules", "Indy", "Jiggles", "Lightning", "Marble", "Noah", "Pepper", "Rancher", "Sparkler", "Tweeter", "Whiskers", "Zion" };
 
         #region Binomial distributed levels
 
@@ -427,30 +504,18 @@ namespace ARKBreedingStats.library
     /// </summary>
     public class DummyCreatureCreationSettings
     {
-        public DummyCreatureCreationSettings()
-        {
-            CreatureCount = 20;
-            OnlySelectedSpecies = true;
-            SpeciesCount = 10;
-            Generations = 4;
-            PairsPerGeneration = 2;
-            ProbabilityHigherStat = Ark.ProbabilityInheritHigherLevel;
-            RandomMutationChance = Ark.ProbabilityOfMutation;
-            MaxWildLevel = CreatureCollection.CurrentCreatureCollection?.maxWildLevel ?? 150;
-            SetOwner = true;
-            SetTribe = true;
-            SetServer = true;
-        }
-        public int CreatureCount;
-        public bool OnlySelectedSpecies;
-        public int SpeciesCount;
-        public int Generations;
-        public int PairsPerGeneration;
-        public double ProbabilityHigherStat;
-        public double RandomMutationChance;
-        public int MaxWildLevel;
-        public bool SetOwner;
-        public bool SetTribe;
-        public bool SetServer;
+        public int CreatureCount = 20;
+        public bool OnlySelectedSpecies = true;
+        public int SpeciesCount = 10;
+        public bool Tamed = true;
+        public int Generations = 4;
+        public int PairsPerGeneration = 2;
+        public double ProbabilityHigherStat = Ark.ProbabilityInheritHigherLevel;
+        public double RandomMutationChance = Ark.ProbabilityOfMutation;
+        public int MaxWildLevel = CreatureCollection.CurrentCreatureCollection?.maxWildLevel ?? 150;
+        public int MaxStatLevel = -1;
+        public bool SetOwner = true;
+        public bool SetTribe = true;
+        public bool SetServer = true;
     }
 }

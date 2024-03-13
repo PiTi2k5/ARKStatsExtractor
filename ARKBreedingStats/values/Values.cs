@@ -151,7 +151,7 @@ namespace ARKBreedingStats.values
         /// <summary>
         /// Sets food for species, orders species, orders and initializes colors. Call after all values and mod values are loaded.
         /// </summary>
-        private void InitializeSpeciesAndColors()
+        private void InitializeSpeciesAndColors(bool undefinedColorAsa = false)
         {
             //var speciesWoFoodData = new List<string>(); // to determine which species has no food data yet
             if (specialFoodData != null)
@@ -173,7 +173,7 @@ namespace ARKBreedingStats.values
             LoadAndInitializeAliases();
             UpdateSpeciesBlueprintDictionaries();
 
-            InitializeArkColors();
+            InitializeArkColors(undefinedColorAsa);
             _speciesAndColorsInitialized = true;
         }
 
@@ -269,14 +269,16 @@ namespace ARKBreedingStats.values
                 return false;
             }
 
-            InitializeSpeciesAndColors();
+            var asaLoaded = loadedMods.Any(m => m.id == Ark.Asa); // ASA values used
+            InitializeSpeciesAndColors(asaLoaded);
 
             return true;
         }
 
-        private void InitializeArkColors()
+        private void InitializeArkColors(bool undefinedColorAsa)
         {
-            _V.Colors.InitializeArkColors();
+            Ark.SetUndefinedColorId(undefinedColorAsa);
+            _V.Colors.InitializeArkColors(Ark.UndefinedColorId);
             foreach (var s in _V.species)
                 s.InitializeColors(_V.Colors);
             _V.InvisibleColorRegionsExist = _V.species.Any(s => s.colors?.Any(r => r?.invisible == true) == true);
@@ -466,8 +468,8 @@ namespace ARKBreedingStats.values
         /// </summary>
         public void ApplyMultipliers(CreatureCollection cc, bool eventMultipliers = false, bool applyStatMultipliers = true)
         {
-            currentServerMultipliers = (eventMultipliers ? cc.serverMultipliersEvents : cc.serverMultipliers)?.Copy(false);
-            if (currentServerMultipliers == null) currentServerMultipliers = V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
+            currentServerMultipliers = (eventMultipliers ? cc.serverMultipliersEvents : cc.serverMultipliers)?.Copy(false)
+                                       ?? V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
             if (currentServerMultipliers == null)
             {
                 throw new FileNotFoundException("No default server multiplier values found.\nIt's recommend to redownload ARK Smart Breeding.");
@@ -475,9 +477,9 @@ namespace ARKBreedingStats.values
 
             ServerMultipliers singlePlayerServerMultipliers = null;
 
-            if (cc.singlePlayerSettings)
+            if (currentServerMultipliers.SinglePlayerSettings)
             {
-                // The singleplayer multipliers are saved as a regular multiplierpreset, but they work differently
+                // The singleplayer multipliers are saved as a regular multiplier preset, but they work differently
                 // in the way they are multiplied on existing multipliers and won't work on their own.
                 // The preset name "singleplayer" should only be used for this purpose.
                 singlePlayerServerMultipliers = serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Singleplayer);
@@ -496,8 +498,10 @@ namespace ARKBreedingStats.values
 
             currentServerMultipliers.FixZeroValues();
             double[] defaultMultipliers = new double[] { 1, 1, 1, 1 }; // used if serverMultipliers don't specify non-default values
-            var allowSpeedLeveling = cc.serverMultipliers.AllowSpeedLeveling || cc.Game != Ark.Asa;
-            var allowFlyerSpeedLeveling = cc.serverMultipliers.AllowFlyerSpeedLeveling;
+            // server multipliers for all multipliers except taming and breeding
+            var serverMultipliersNonBreedingTaming = cc.serverMultipliers ?? V.serverMultipliersPresets.GetPreset(ServerMultipliersPresets.Official);
+            var allowSpeedLeveling = serverMultipliersNonBreedingTaming.AllowSpeedLeveling || cc.Game != Ark.Asa;
+            var allowFlyerSpeedLeveling = serverMultipliersNonBreedingTaming.AllowFlyerSpeedLeveling;
 
             foreach (Species sp in species)
             {
@@ -534,6 +538,7 @@ namespace ARKBreedingStats.values
                         }
 
                         sp.stats[s].IncPerWildLevel = GetRawStatValue(s, 1, customOverrideForThisStatExists) * statMultipliers[3];
+                        sp.stats[s].IncPerMutatedLevel = sp.stats[s].IncPerWildLevel; // todo consider adjustments if they're implemented
 
                         // set troodonism values
                         if (sp.altStats?[s] != null && sp.stats[s].BaseValue != 0)
@@ -589,8 +594,7 @@ namespace ARKBreedingStats.values
                     sp.SetCustomImprintingMultipliers(imprintingMultiplierOverrides);
 
                     // ATLAS multipliers
-
-                    if (cc.AtlasSettings)
+                    if (cc.serverMultipliers.AtlasSettings)
                     {
                         sp.stats[Stats.Health].BaseValue *= 1.25;
                         sp.stats[Stats.Health].IncPerTamedLevel *= 1.5;
@@ -673,7 +677,7 @@ namespace ARKBreedingStats.values
             {
                 if (!string.IsNullOrEmpty(s.blueprintPath))
                 {
-                    _blueprintToSpecies[s.blueprintPath] = s;
+                    _blueprintToSpecies[s.blueprintPath.ToLowerInvariant()] = s;
 
                     string speciesName = s.name;
                     if (_nameToSpecies.TryGetValue(speciesName, out var existingSpecies))
@@ -692,10 +696,7 @@ namespace ARKBreedingStats.values
                     if (classNameMatch.Success)
                     {
                         string className = classNameMatch.Value + "_C";
-                        if (_classNameToSpecies.ContainsKey(className))
-                            _classNameToSpecies[className] = s;
-                        else
-                            _classNameToSpecies.Add(className, s);
+                        _classNameToSpecies[className] = s;
                     }
                 }
             }
@@ -767,7 +768,7 @@ namespace ARKBreedingStats.values
             {
                 blueprintPath = realBlueprintPath;
             }
-            return _blueprintToSpecies.TryGetValue(blueprintPath, out var s) ? s : null;
+            return _blueprintToSpecies.TryGetValue(blueprintPath.ToLowerInvariant(), out var s) ? s : null;
         }
 
         /// <summary>

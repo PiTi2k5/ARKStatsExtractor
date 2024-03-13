@@ -14,11 +14,6 @@ namespace ARKBreedingStats.Library
     {
         public const string CurrentLibraryFormatVersion = "1.13";
 
-        public CreatureCollection()
-        {
-            FormatVersion = CurrentLibraryFormatVersion;
-        }
-
         public const int MaxDomLevelDefault = 88;
         public const int MaxDomLevelSinglePlayerDefault = 88;
 
@@ -28,7 +23,7 @@ namespace ARKBreedingStats.Library
         [JsonIgnore]
         public static CreatureCollection CurrentCreatureCollection;
         [JsonProperty]
-        public string FormatVersion;
+        public string FormatVersion = CurrentLibraryFormatVersion;
         [JsonProperty]
         public List<Creature> creatures = new List<Creature>();
         [JsonProperty]
@@ -64,14 +59,21 @@ namespace ARKBreedingStats.Library
 
         [JsonProperty]
         public ServerMultipliers serverMultipliers;
-        [JsonProperty]
-        public ServerMultipliers serverMultipliersEvents; // this object's statMultipliers are not used
 
+        /// <summary>
+        /// Only the taming and breeding multipliers of this are used.
+        /// </summary>
         [JsonProperty]
+        public ServerMultipliers serverMultipliersEvents;
+
+        /// <summary>
+        /// Deprecated setting, remove on 2025-01-01
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool singlePlayerSettings;
 
         /// <summary>
-        /// If true, apply extra multipliers for the game ATLAS.
+        /// Deprecated setting, remove on 2025-01-01
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool AtlasSettings;
@@ -80,7 +82,7 @@ namespace ARKBreedingStats.Library
         /// Indicates the game the library is used for. Possible values are "ASE" (default) for ARK: Survival Evolved or "ASA" for ARK: Survival Ascended.
         /// </summary>
         [JsonProperty("Game")]
-        private string _game = "ASE";
+        private string _game = Ark.Ase;
 
         /// <summary>
         /// Used for the exportGun mod.
@@ -148,6 +150,13 @@ namespace ARKBreedingStats.Library
         public Dictionary<string, double?[][]> CustomSpeciesStats;
 
         private Dictionary<string, int> _creatureCountBySpecies;
+        private int _totalCreatureCount;
+
+        /// <summary>
+        /// ServerMultipliers uri on the server to pull the settings.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ServerSettingsUriSource;
 
         /// <summary>
         /// Calculates a hashcode for a list of mods and their order. Can be used to check for changes.
@@ -208,12 +217,12 @@ namespace ARKBreedingStats.Library
             string onlyThisSpeciesBlueprintAdded = null;
             bool onlyOneSpeciesAdded = true;
 
-            var guidDict = creatures.ToDictionary(c => c.guid);
-
             if (removeCreatures != null)
             {
                 creaturesWereAddedOrUpdated = creatures.RemoveAll(c => removeCreatures.Contains(c.guid)) > 0;
             }
+
+            var guidDict = creatures.ToDictionary(c => c.guid);
 
             foreach (Creature creatureNew in creaturesToMerge)
             {
@@ -317,6 +326,14 @@ namespace ARKBreedingStats.Library
                         creaturesWereAddedOrUpdated = true;
                     }
 
+                    if ((creatureExisting.levelsMutated == null && creatureNew.levelsMutated != null)
+                        || (creatureExisting.levelsMutated != null && creatureNew.levelsMutated != null && !creatureExisting.levelsMutated.SequenceEqual(creatureNew.levelsMutated)))
+                    {
+                        creatureExisting.levelsMutated = creatureNew.levelsMutated;
+                        recalculate = true;
+                        creaturesWereAddedOrUpdated = true;
+                    }
+
                     if (!creatureExisting.levelsDom.SequenceEqual(creatureNew.levelsDom))
                     {
                         creatureExisting.levelsDom = creatureNew.levelsDom;
@@ -354,6 +371,7 @@ namespace ARKBreedingStats.Library
             {
                 ResetExistingColors(onlyOneSpeciesAdded ? onlyThisSpeciesBlueprintAdded : null);
                 _creatureCountBySpecies = null;
+                _totalCreatureCount = -1;
             }
 
             return creaturesWereAddedOrUpdated;
@@ -371,6 +389,7 @@ namespace ARKBreedingStats.Library
             DeletedCreatureGuids.Add(c.guid);
             ResetExistingColors(c.Species.blueprintPath);
             _creatureCountBySpecies = null;
+            _totalCreatureCount = -1;
         }
 
         public int? getWildLevelStep()
@@ -463,6 +482,18 @@ namespace ARKBreedingStats.Library
         private void InitializeProperties(StreamingContext ct)
         {
             if (tags == null) tags = new List<string>();
+
+            // backwards compatibility, remove 10 lines below in 2025-01-01
+            if (singlePlayerSettings && serverMultipliers != null)
+            {
+                serverMultipliers.SinglePlayerSettings = singlePlayerSettings;
+                singlePlayerSettings = false;
+            }
+            if (AtlasSettings && serverMultipliers != null)
+            {
+                serverMultipliers.AtlasSettings = AtlasSettings;
+                AtlasSettings = false;
+            }
 
             // convert DateTimes to local times
             foreach (var tle in timerListEntries)
@@ -630,6 +661,17 @@ namespace ARKBreedingStats.Library
             }
 
             return _creatureCountBySpecies;
+        }
+
+        /// <summary>
+        /// Returns total creature count. Ignoring placeholders.
+        /// </summary>
+        /// <returns></returns>
+        public int GetTotalCreatureCount()
+        {
+            if (_totalCreatureCount == -1)
+                _totalCreatureCount = creatures.Count(c => !c.flags.HasFlag(CreatureFlags.Placeholder));
+            return _totalCreatureCount;
         }
     }
 }

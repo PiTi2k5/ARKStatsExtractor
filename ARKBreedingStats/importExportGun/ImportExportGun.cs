@@ -13,9 +13,9 @@ namespace ARKBreedingStats.importExportGun
     internal static class ImportExportGun
     {
         /// <summary>
-        /// Import file created with the export gun (mod).
+        /// Load creature from file created with the export gun (mod).
         /// </summary>
-        public static Creature ImportCreature(string filePath, out string resultText, out string serverMultipliersHash)
+        public static Creature LoadCreature(string filePath, out string resultText, out string serverMultipliersHash)
         {
             resultText = null;
             serverMultipliersHash = null;
@@ -40,7 +40,7 @@ namespace ARKBreedingStats.importExportGun
                             break;
                     }
 
-                    return ImportCreatureFromJson(jsonText, resultText, out resultText, out serverMultipliersHash);
+                    return LoadCreatureFromJson(jsonText, resultText, out resultText, out serverMultipliersHash);
 
                 }
                 catch (IOException) when (tryIndex < tryLoadCount - 1)
@@ -58,7 +58,7 @@ namespace ARKBreedingStats.importExportGun
             return null;
         }
 
-        public static Creature ImportCreatureFromJson(string jsonText, string resultSoFar, out string resultText, out string serverMultipliersHash, string filePath = null)
+        public static Creature LoadCreatureFromJson(string jsonText, string resultSoFar, out string resultText, out string serverMultipliersHash, string filePath = null)
         {
             resultText = resultSoFar;
             serverMultipliersHash = null;
@@ -71,6 +71,12 @@ namespace ARKBreedingStats.importExportGun
             if (exportedCreature == null)
             {
                 resultText = "jsonText couldn't be deserialized";
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(exportedCreature.BlueprintPath))
+            {
+                resultText = "file contains no blueprint path, it's probably not a creature file"; // could be a server multipliers file
                 return null;
             }
 
@@ -113,9 +119,15 @@ namespace ARKBreedingStats.importExportGun
                          && ec.OwningPlayerID == 0
                          ;
 
-            var c = new Creature(species, ec.DinoName, !string.IsNullOrEmpty(ec.OwningPlayerName) ? ec.OwningPlayerName : !string.IsNullOrEmpty(ec.ImprinterName) ? ec.ImprinterName : ec.TamerString,
-                ec.TribeName, species.noGender ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male, wildLevels, domLevels, mutLevels,
-                isWild ? -3 : ec.TameEffectiveness, !string.IsNullOrEmpty(ec.ImprinterName), ec.DinoImprintingQuality,
+            var isBred = !string.IsNullOrEmpty(ec.ImprinterName)
+                         || (ec.DinoImprintingQuality > 0 && ec.TameEffectiveness > 0.9999);
+
+            var owner = !string.IsNullOrEmpty(ec.OwningPlayerName) ? ec.OwningPlayerName
+                : !string.IsNullOrEmpty(ec.ImprinterName) ? ec.ImprinterName
+                : ec.TamerString;
+
+            var c = new Creature(species, ec.DinoName, owner, ec.TribeName, species.noGender ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male,
+                wildLevels, domLevels, mutLevels, isWild ? -3 : ec.TameEffectiveness, isBred, ec.DinoImprintingQuality,
                 CreatureCollection.CurrentCreatureCollection?.wildLevelStep)
             {
                 ArkId = arkId,
@@ -125,7 +137,8 @@ namespace ARKBreedingStats.importExportGun
                 colors = ec.ColorIds,
                 Maturation = ec.BabyAge,
                 mutationsMaternal = ec.RandomMutationsFemale,
-                mutationsPaternal = ec.RandomMutationsMale
+                mutationsPaternal = ec.RandomMutationsMale,
+                generation = -1 // indication that it has to be recalculated
             };
 
             c.RecalculateCreatureValues(CreatureCollection.CurrentCreatureCollection?.wildLevelStep);
@@ -277,10 +290,21 @@ namespace ARKBreedingStats.importExportGun
         public static ExportGunServerFile ReadServerMultipliersFromJson(string jsonText, string resultSoFar, out string resultText, string game = null, string filePath = null)
         {
             resultText = resultSoFar;
-            var exportedServerMultipliers = JsonConvert.DeserializeObject<ExportGunServerFile>(jsonText);
             if (string.IsNullOrEmpty(jsonText))
             {
-                resultText = $"Error when importing file {filePath}: {resultText}";
+                resultText = $"The file is empty and cannot be imported: {filePath}{Environment.NewLine}{resultText}";
+                return null;
+            }
+            var exportedServerMultipliers = JsonConvert.DeserializeObject<ExportGunServerFile>(jsonText);
+
+            // check if the file is a valid server settings file
+            if (exportedServerMultipliers?.WildLevel == null
+                || exportedServerMultipliers.TameLevel == null
+                || exportedServerMultipliers.TameAdd == null
+                || exportedServerMultipliers.TameAff == null
+               )
+            {
+                resultText = $"The file is not a valid server multipliers file and cannot be imported: {filePath}{Environment.NewLine}{resultText}";
                 return null;
             }
 
@@ -292,7 +316,13 @@ namespace ARKBreedingStats.importExportGun
 
         internal static bool SetServerMultipliers(CreatureCollection cc, ExportGunServerFile esm, string newServerMultipliersHash)
         {
-            if (cc == null) return false;
+            if (cc == null
+                || esm?.TameAdd == null
+                || esm.TameAff == null
+                || esm.WildLevel == null
+                || esm.TameLevel == null
+                )
+                return false; // invalid server multipliers
 
             const int roundToDigits = 6;
 
@@ -303,10 +333,12 @@ namespace ARKBreedingStats.importExportGun
                 cc.serverMultipliers.statMultipliers[s][Stats.IndexLevelWild] = Math.Round(esm.WildLevel[s], roundToDigits);
                 cc.serverMultipliers.statMultipliers[s][Stats.IndexLevelDom] = Math.Round(esm.TameLevel[s], roundToDigits);
             }
-            cc.maxWildLevel = esm.MaxWildLevel;
+            cc.maxWildLevel = (int)Math.Ceiling(esm.MaxWildLevel);
             cc.maxServerLevel = esm.DestroyTamesOverLevelClamp;
             cc.serverMultipliers.TamingSpeedMultiplier = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
             cc.serverMultipliers.DinoCharacterFoodDrainMultiplier = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
+            cc.serverMultipliers.WildDinoCharacterFoodDrainMultiplier = Math.Round(esm.WildDinoCharacterFoodDrainMultiplier, roundToDigits);
+            cc.serverMultipliers.TamedDinoCharacterFoodDrainMultiplier = Math.Round(esm.TamedDinoCharacterFoodDrainMultiplier, roundToDigits);
             cc.serverMultipliers.WildDinoTorporDrainMultiplier = Math.Round(esm.WildDinoTorporDrainMultiplier, roundToDigits);
             cc.serverMultipliers.MatingSpeedMultiplier = Math.Round(esm.MatingSpeedMultiplier, roundToDigits);
             cc.serverMultipliers.MatingIntervalMultiplier = Math.Round(esm.MatingIntervalMultiplier, roundToDigits);
@@ -316,10 +348,9 @@ namespace ARKBreedingStats.importExportGun
             cc.serverMultipliers.BabyImprintAmountMultiplier = Math.Round(esm.BabyImprintAmountMultiplier, roundToDigits);
             cc.serverMultipliers.BabyImprintingStatScaleMultiplier = Math.Round(esm.BabyImprintingStatScaleMultiplier, roundToDigits);
             cc.serverMultipliers.BabyFoodConsumptionSpeedMultiplier = Math.Round(esm.BabyFoodConsumptionSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.TamedDinoCharacterFoodDrainMultiplier = Math.Round(esm.TamedDinoCharacterFoodDrainMultiplier, roundToDigits);
             cc.serverMultipliers.AllowSpeedLeveling = esm.AllowSpeedLeveling;
             cc.serverMultipliers.AllowFlyerSpeedLeveling = esm.AllowFlyerSpeedLeveling;
-            cc.singlePlayerSettings = esm.UseSingleplayerSettings;
+            cc.serverMultipliers.SinglePlayerSettings = esm.UseSingleplayerSettings;
             cc.Game = esm.Game;
 
             cc.ServerMultipliersHash = newServerMultipliersHash;

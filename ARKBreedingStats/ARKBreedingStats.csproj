@@ -84,6 +84,7 @@
     </Compile>
     <Compile Include="Ark.cs" />
     <Compile Include="AsbServer\Connection.cs" />
+    <Compile Include="AsbServer\ProgressReportAsbServer.cs" />
     <Compile Include="BreedingPlanning\Score.cs" />
     <Compile Include="BreedingPlanning\BreedingScore.cs" />
     <Compile Include="importExportGun\ExportGunCreatureFile.cs" />
@@ -98,7 +99,9 @@
     </Compile>
     <Compile Include="library\CreatureSpawnCommand.cs" />
     <Compile Include="library\DummyCreatures.cs" />
+    <Compile Include="library\LevelStatusFlags.cs" />
     <Compile Include="multiplierTesting\CalculateMultipliers.cs" />
+    <Compile Include="NamePatterns\NameList.cs" />
     <Compile Include="NamePatterns\NamePatternEntry.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -107,6 +110,15 @@
     <Compile Include="Pedigree\PedigreeCreation.cs" />
     <Compile Include="Pedigree\IPedigreeCreature.cs" />
     <Compile Include="species\ArkColors.cs" />
+    <Compile Include="uiControls\ArkVersionDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="uiControls\ColorPickerWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="uiControls\ColorPickerWindow.Designer.cs">
+      <DependentUpon>ColorPickerWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="uiControls\CreatureAnalysis.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -129,6 +141,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="uiControls\LibraryInfo.cs" />
+    <Compile Include="uiControls\LibraryInfoControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="uiControls\PopupMessage.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="uiControls\StatSelector.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -247,7 +265,6 @@
       <DependentUpon>StatsMultiplierTesting.cs</DependentUpon>
     </Compile>
     <Compile Include="mods\Mod.cs" />
-    <Compile Include="species\SpeciesListBoxEntry.cs" />
     <Compile Include="testCases\ExtractionTestCase.cs" />
     <Compile Include="ocr\ArkOcr.cs" />
     <Compile Include="ARKOverlay.cs">
@@ -513,11 +530,11 @@
     <Compile Include="uiControls\MultiSetter.Designer.cs">
       <DependentUpon>MultiSetter.cs</DependentUpon>
     </Compile>
-    <Compile Include="uiControls\MyColorPicker.cs">
-      <SubType>Form</SubType>
+    <Compile Include="uiControls\ColorPickerControl.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="uiControls\MyColorPicker.Designer.cs">
-      <DependentUpon>MyColorPicker.cs</DependentUpon>
+    <Compile Include="uiControls\ColorPickerControl.Designer.cs">
+      <DependentUpon>ColorPickerControl.cs</DependentUpon>
     </Compile>
     <Compile Include="uiControls\ParentComboBox.cs">
       <SubType>Component</SubType>
@@ -653,7 +670,7 @@
     <Compile Include="values\Values.cs" />
     <Compile Include="utils\Win32API.cs" />
     <Compile Include="values\ValuesFile.cs" />
-    <None Include="json\equalColorIds.json">
+    <None Include="json\values\ASA-values.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\success.wav" />
@@ -664,6 +681,17 @@
     <None Include="json\variantsDefaultUnselected.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="json\creatureNamesF.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="json\creatureNamesM.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="json\creatureNamesU.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\updated.wav" />
+    <None Include="Resources\newMutation.wav" />
     <Content Include="_manifest.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>_manifest.json</LastGenOutput>
@@ -682,6 +710,9 @@
     <EmbeddedResource Include="local\strings.zh-tw.resx" />
     <EmbeddedResource Include="ocr\PatternMatching\RecognitionTrainingForm.resx">
       <DependentUpon>RecognitionTrainingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="uiControls\ColorPickerWindow.resx">
+      <DependentUpon>ColorPickerWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="uiControls\CreatureAnalysis.resx">
       <DependentUpon>CreatureAnalysis.cs</DependentUpon>
@@ -891,6 +922,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BreedingPlanning\BreedingPlan.resx">
       <DependentUpon>BreedingPlan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CreatureBox.resx">
       <DependentUpon>CreatureBox.cs</DependentUpon>
@@ -908,8 +940,8 @@
     <EmbeddedResource Include="uiControls\MultiSetter.resx">
       <DependentUpon>MultiSetter.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="uiControls\MyColorPicker.resx">
-      <DependentUpon>MyColorPicker.cs</DependentUpon>
+    <EmbeddedResource Include="uiControls\ColorPickerControl.resx">
+      <DependentUpon>ColorPickerControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Pedigree\PedigreeControl.resx">
       <DependentUpon>PedigreeControl.cs</DependentUpon>

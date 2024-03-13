@@ -1,4 +1,5 @@
 ﻿using System.Media;
+using ARKBreedingStats.library;
 
 namespace ARKBreedingStats.utils
 {
@@ -13,10 +14,12 @@ namespace ARKBreedingStats.utils
             Success,
             Good,
             Great,
-            Indifferent
+            Indifferent,
+            Updated,
+            NewMutation
         }
 
-        private static readonly SoundPlayer _sp = new SoundPlayer();
+        private static readonly SoundPlayer Sp = new SoundPlayer();
 
         /// <summary>
         /// Beeps.
@@ -25,26 +28,58 @@ namespace ARKBreedingStats.utils
         {
             switch (kind)
             {
+                case FeedbackSounds.Updated:
+                    Sp.Stream = Properties.Resources.updated;
+                    Sp.Play();
+                    return;
                 case FeedbackSounds.Indifferent:
-                    _sp.Stream = Properties.Resources.indifferent;
-                    _sp.Play();
+                    Sp.Stream = Properties.Resources.indifferent;
+                    Sp.Play();
                     return;
                 case FeedbackSounds.Failure:
-                    _sp.Stream = Properties.Resources.failure;
-                    _sp.Play();
+                    Sp.Stream = Properties.Resources.failure;
+                    Sp.Play();
                     return;
                 case FeedbackSounds.Success:
-                    _sp.Stream = Properties.Resources.success;
-                    _sp.Play();
+                    Sp.Stream = Properties.Resources.success;
+                    Sp.Play();
                     return;
                 case FeedbackSounds.Good:
-                    _sp.Stream = Properties.Resources.topstat;
-                    _sp.Play();
+                    Sp.Stream = Properties.Resources.topstat;
+                    Sp.Play();
                     return;
                 case FeedbackSounds.Great:
-                    _sp.Stream = Properties.Resources.newtopstat;
-                    _sp.Play();
+                    Sp.Stream = Properties.Resources.newtopstat;
+                    Sp.Play();
                     return;
+                case FeedbackSounds.NewMutation:
+                    Sp.Stream = Properties.Resources.newMutation;
+                    Sp.Play();
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// Sound feedback according to current LevelStatusFlags.
+        /// </summary>
+        public static void BeepSignalCurrentLevelFlags(bool creatureAlreadyExists = false, bool extractionSuccessful = true)
+        {
+            if (extractionSuccessful)
+            {
+                if (creatureAlreadyExists)
+                    BeepSignal(FeedbackSounds.Updated);
+                else if (LevelStatusFlags.CombinedLevelStatusFlags.HasFlag(LevelStatusFlags.LevelStatus.NewMutation))
+                    BeepSignal(FeedbackSounds.NewMutation);
+                else if (LevelStatusFlags.CombinedLevelStatusFlags.HasFlag(LevelStatusFlags.LevelStatus.NewTopLevel))
+                    BeepSignal(FeedbackSounds.Great);
+                else if (LevelStatusFlags.CombinedLevelStatusFlags.HasFlag(LevelStatusFlags.LevelStatus.TopLevel))
+                    BeepSignal(FeedbackSounds.Good);
+                else
+                    BeepSignal(FeedbackSounds.Success);
+            }
+            else
+            {
+                BeepSignal(FeedbackSounds.Failure);
             }
         }
     }
