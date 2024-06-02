@@ -28,16 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatsMultiplierTesting));
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.BtResetSpeciesValues = new System.Windows.Forms.Button();
             this.cbUpdateOnSpeciesChange = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.CbAllowSpeedLeveling = new System.Windows.Forms.CheckBox();
             this.CbAtlas = new System.Windows.Forms.CheckBox();
             this.CbAllowFlyerSpeedLeveling = new System.Windows.Forms.CheckBox();
             this.cbSingleplayerSettings = new System.Windows.Forms.CheckBox();
             this.btUseMultipliersFromSettings = new System.Windows.Forms.Button();
-            this.llStatCalculation = new System.Windows.Forms.LinkLabel();
+            this.LbSpeciesValuesExtractor = new System.Windows.Forms.Label();
             this.LbBlueprintPath = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.rbBred = new System.Windows.Forms.RadioButton();
@@ -46,11 +48,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.LbCalculatedWildLevel = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.nudTE = new ARKBreedingStats.uiControls.Nud();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.nudIBM = new ARKBreedingStats.uiControls.Nud();
-            this.nudIB = new ARKBreedingStats.uiControls.Nud();
             this.gbFineAdjustment = new System.Windows.Forms.GroupBox();
             this.tbFineAdjustments = new System.Windows.Forms.TrackBar();
             this.lBDummyEmptyFlowBreak = new System.Windows.Forms.Label();
@@ -72,7 +71,6 @@
             this.lbLevelSumDom = new System.Windows.Forms.Label();
             this.lbLevelSumWild = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
-            this.nudCreatureLevel = new ARKBreedingStats.uiControls.Nud();
             this.LbAbbreviations = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.statMultipliersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -85,28 +83,36 @@
             this.idMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.taMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tmMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.allIwToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.allIdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setAllLvlToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allWildLvlToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allDomLvlToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.setAllWildLevelsToTheClosestValueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setAllDomLevelsToTheClosestValueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.CbAllowSpeedLeveling = new System.Windows.Forms.CheckBox();
+            this.copyStatValuesToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openWikiPageOnStatCalculationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nudTE = new ARKBreedingStats.uiControls.Nud();
+            this.nudIBM = new ARKBreedingStats.uiControls.Nud();
+            this.nudIB = new ARKBreedingStats.uiControls.Nud();
+            this.nudCreatureLevel = new ARKBreedingStats.uiControls.Nud();
             this.flowLayoutPanel1.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudTE)).BeginInit();
             this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudIBM)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudIB)).BeginInit();
             this.gbFineAdjustment.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbFineAdjustments)).BeginInit();
             this.panel1.SuspendLayout();
             this.gbLevel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCreatureLevel)).BeginInit();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTE)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudIBM)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudIB)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCreatureLevel)).BeginInit();
             this.SuspendLayout();
             // 
             // flowLayoutPanel1
@@ -115,7 +121,7 @@
             this.flowLayoutPanel1.Controls.Add(this.groupBox4);
             this.flowLayoutPanel1.Controls.Add(this.groupBox5);
             this.flowLayoutPanel1.Controls.Add(this.btUseMultipliersFromSettings);
-            this.flowLayoutPanel1.Controls.Add(this.llStatCalculation);
+            this.flowLayoutPanel1.Controls.Add(this.LbSpeciesValuesExtractor);
             this.flowLayoutPanel1.Controls.Add(this.LbBlueprintPath);
             this.flowLayoutPanel1.Controls.Add(this.groupBox1);
             this.flowLayoutPanel1.Controls.Add(this.groupBox2);
@@ -133,7 +139,7 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.button1);
+            this.groupBox4.Controls.Add(this.BtResetSpeciesValues);
             this.groupBox4.Controls.Add(this.cbUpdateOnSpeciesChange);
             this.groupBox4.Location = new System.Drawing.Point(3, 3);
             this.groupBox4.Name = "groupBox4";
@@ -142,15 +148,15 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Species Values";
             // 
-            // button1
+            // BtResetSpeciesValues
             // 
-            this.button1.Location = new System.Drawing.Point(6, 42);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(125, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Set to current Species";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.btUpdateSpecies_Click);
+            this.BtResetSpeciesValues.Location = new System.Drawing.Point(6, 42);
+            this.BtResetSpeciesValues.Name = "BtResetSpeciesValues";
+            this.BtResetSpeciesValues.Size = new System.Drawing.Size(284, 23);
+            this.BtResetSpeciesValues.TabIndex = 1;
+            this.BtResetSpeciesValues.Text = "Reset species values";
+            this.BtResetSpeciesValues.UseVisualStyleBackColor = true;
+            this.BtResetSpeciesValues.Click += new System.EventHandler(this.btUpdateSpecies_Click);
             // 
             // cbUpdateOnSpeciesChange
             // 
@@ -176,6 +182,17 @@
             this.groupBox5.TabIndex = 10;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Settings";
+            // 
+            // CbAllowSpeedLeveling
+            // 
+            this.CbAllowSpeedLeveling.AutoSize = true;
+            this.CbAllowSpeedLeveling.Location = new System.Drawing.Point(6, 42);
+            this.CbAllowSpeedLeveling.Name = "CbAllowSpeedLeveling";
+            this.CbAllowSpeedLeveling.Size = new System.Drawing.Size(122, 17);
+            this.CbAllowSpeedLeveling.TabIndex = 3;
+            this.CbAllowSpeedLeveling.Text = "AllowSpeedLeveling";
+            this.CbAllowSpeedLeveling.UseVisualStyleBackColor = true;
+            this.CbAllowSpeedLeveling.CheckedChanged += new System.EventHandler(this.CbAllowSpeedLeveling_CheckedChanged);
             // 
             // CbAtlas
             // 
@@ -222,24 +239,27 @@
             this.btUseMultipliersFromSettings.UseVisualStyleBackColor = false;
             this.btUseMultipliersFromSettings.Click += new System.EventHandler(this.btUseMultipliersFromSettings_Click);
             // 
-            // llStatCalculation
+            // LbSpeciesValuesExtractor
             // 
-            this.llStatCalculation.AutoSize = true;
-            this.flowLayoutPanel1.SetFlowBreak(this.llStatCalculation, true);
-            this.llStatCalculation.Location = new System.Drawing.Point(835, 16);
-            this.llStatCalculation.Margin = new System.Windows.Forms.Padding(3, 16, 3, 0);
-            this.llStatCalculation.Name = "llStatCalculation";
-            this.llStatCalculation.Size = new System.Drawing.Size(160, 13);
-            this.llStatCalculation.TabIndex = 3;
-            this.llStatCalculation.TabStop = true;
-            this.llStatCalculation.Text = "Stat Calculation on the ARK-wiki";
-            this.llStatCalculation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llStatCalculation_LinkClicked);
+            this.LbSpeciesValuesExtractor.AllowDrop = true;
+            this.LbSpeciesValuesExtractor.AutoSize = true;
+            this.LbSpeciesValuesExtractor.BackColor = System.Drawing.Color.White;
+            this.flowLayoutPanel1.SetFlowBreak(this.LbSpeciesValuesExtractor, true);
+            this.LbSpeciesValuesExtractor.Location = new System.Drawing.Point(3, 77);
+            this.LbSpeciesValuesExtractor.Name = "LbSpeciesValuesExtractor";
+            this.LbSpeciesValuesExtractor.Padding = new System.Windows.Forms.Padding(3, 12, 3, 12);
+            this.LbSpeciesValuesExtractor.Size = new System.Drawing.Size(243, 37);
+            this.LbSpeciesValuesExtractor.TabIndex = 15;
+            this.LbSpeciesValuesExtractor.Text = "Drop exportGun files to determine species values";
+            this.LbSpeciesValuesExtractor.DragDrop += new System.Windows.Forms.DragEventHandler(this.LbSpeciesValuesExtractor_DragDrop);
+            this.LbSpeciesValuesExtractor.DragEnter += new System.Windows.Forms.DragEventHandler(this.LbSpeciesValuesExtractor_DragEnter);
+            this.LbSpeciesValuesExtractor.DragLeave += new System.EventHandler(this.LbSpeciesValuesExtractor_DragLeave);
             // 
             // LbBlueprintPath
             // 
             this.flowLayoutPanel1.SetFlowBreak(this.LbBlueprintPath, true);
             this.LbBlueprintPath.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.LbBlueprintPath.Location = new System.Drawing.Point(3, 77);
+            this.LbBlueprintPath.Location = new System.Drawing.Point(3, 114);
             this.LbBlueprintPath.Name = "LbBlueprintPath";
             this.LbBlueprintPath.Size = new System.Drawing.Size(901, 21);
             this.LbBlueprintPath.TabIndex = 14;
@@ -250,7 +270,7 @@
             this.groupBox1.Controls.Add(this.rbBred);
             this.groupBox1.Controls.Add(this.rbTamed);
             this.groupBox1.Controls.Add(this.rbWild);
-            this.groupBox1.Location = new System.Drawing.Point(3, 101);
+            this.groupBox1.Location = new System.Drawing.Point(3, 138);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(167, 49);
             this.groupBox1.TabIndex = 4;
@@ -295,7 +315,7 @@
             this.groupBox2.Controls.Add(this.LbCalculatedWildLevel);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Controls.Add(this.nudTE);
-            this.groupBox2.Location = new System.Drawing.Point(176, 101);
+            this.groupBox2.Location = new System.Drawing.Point(176, 138);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(163, 49);
             this.groupBox2.TabIndex = 5;
@@ -320,27 +340,12 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "%";
             // 
-            // nudTE
-            // 
-            this.nudTE.DecimalPlaces = 3;
-            this.nudTE.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudTE.Location = new System.Drawing.Point(6, 19);
-            this.nudTE.Name = "nudTE";
-            this.nudTE.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudTE.Size = new System.Drawing.Size(71, 20);
-            this.nudTE.TabIndex = 1;
-            this.nudTE.ValueChanged += new System.EventHandler(this.nudTE_ValueChanged);
-            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Controls.Add(this.nudIBM);
             this.groupBox3.Controls.Add(this.nudIB);
-            this.groupBox3.Location = new System.Drawing.Point(345, 101);
+            this.groupBox3.Location = new System.Drawing.Point(345, 138);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(213, 49);
             this.groupBox3.TabIndex = 6;
@@ -356,55 +361,10 @@
             this.label2.TabIndex = 3;
             this.label2.Text = "% IBM";
             // 
-            // nudIBM
-            // 
-            this.nudIBM.DecimalPlaces = 4;
-            this.nudIBM.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.nudIBM.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.nudIBM.Location = new System.Drawing.Point(135, 19);
-            this.nudIBM.Name = "nudIBM";
-            this.nudIBM.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudIBM.Size = new System.Drawing.Size(71, 20);
-            this.nudIBM.TabIndex = 2;
-            this.nudIBM.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudIBM.ValueChanged += new System.EventHandler(this.nudIBM_ValueChanged);
-            // 
-            // nudIB
-            // 
-            this.nudIB.DecimalPlaces = 6;
-            this.nudIB.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudIB.Location = new System.Drawing.Point(6, 19);
-            this.nudIB.Maximum = new decimal(new int[] {
-            200,
-            0,
-            0,
-            0});
-            this.nudIB.Name = "nudIB";
-            this.nudIB.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudIB.Size = new System.Drawing.Size(80, 20);
-            this.nudIB.TabIndex = 1;
-            this.nudIB.ValueChanged += new System.EventHandler(this.nudIB_ValueChanged);
-            // 
             // gbFineAdjustment
             // 
             this.gbFineAdjustment.Controls.Add(this.tbFineAdjustments);
-            this.gbFineAdjustment.Location = new System.Drawing.Point(564, 101);
+            this.gbFineAdjustment.Location = new System.Drawing.Point(564, 138);
             this.gbFineAdjustment.Name = "gbFineAdjustment";
             this.gbFineAdjustment.Size = new System.Drawing.Size(376, 49);
             this.gbFineAdjustment.TabIndex = 7;
@@ -427,7 +387,7 @@
             // 
             this.lBDummyEmptyFlowBreak.AutoSize = true;
             this.flowLayoutPanel1.SetFlowBreak(this.lBDummyEmptyFlowBreak, true);
-            this.lBDummyEmptyFlowBreak.Location = new System.Drawing.Point(946, 98);
+            this.lBDummyEmptyFlowBreak.Location = new System.Drawing.Point(946, 135);
             this.lBDummyEmptyFlowBreak.Name = "lBDummyEmptyFlowBreak";
             this.lBDummyEmptyFlowBreak.Size = new System.Drawing.Size(0, 13);
             this.lBDummyEmptyFlowBreak.TabIndex = 11;
@@ -448,7 +408,7 @@
             this.panel1.Controls.Add(this.LbLw);
             this.panel1.Controls.Add(this.LbBaseValue);
             this.flowLayoutPanel1.SetFlowBreak(this.panel1, true);
-            this.panel1.Location = new System.Drawing.Point(3, 156);
+            this.panel1.Location = new System.Drawing.Point(3, 193);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1005, 29);
             this.panel1.TabIndex = 8;
@@ -589,7 +549,7 @@
             this.gbLevel.Controls.Add(this.lbLevelSumWild);
             this.gbLevel.Controls.Add(this.label16);
             this.gbLevel.Controls.Add(this.nudCreatureLevel);
-            this.gbLevel.Location = new System.Drawing.Point(3, 191);
+            this.gbLevel.Location = new System.Drawing.Point(3, 228);
             this.gbLevel.Name = "gbLevel";
             this.gbLevel.Size = new System.Drawing.Size(200, 81);
             this.gbLevel.TabIndex = 9;
@@ -623,42 +583,23 @@
             this.label16.TabIndex = 14;
             this.label16.Text = "Creature-Level";
             // 
-            // nudCreatureLevel
-            // 
-            this.nudCreatureLevel.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudCreatureLevel.Location = new System.Drawing.Point(87, 19);
-            this.nudCreatureLevel.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.nudCreatureLevel.Name = "nudCreatureLevel";
-            this.nudCreatureLevel.NeutralNumber = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudCreatureLevel.Size = new System.Drawing.Size(107, 20);
-            this.nudCreatureLevel.TabIndex = 13;
-            this.nudCreatureLevel.ValueChanged += new System.EventHandler(this.nudCreatureLevel_ValueChanged);
-            // 
             // LbAbbreviations
             // 
             this.LbAbbreviations.AutoSize = true;
-            this.LbAbbreviations.Location = new System.Drawing.Point(209, 188);
+            this.LbAbbreviations.Location = new System.Drawing.Point(209, 225);
             this.LbAbbreviations.Name = "LbAbbreviations";
-            this.LbAbbreviations.Size = new System.Drawing.Size(780, 13);
+            this.LbAbbreviations.Size = new System.Drawing.Size(780, 39);
             this.LbAbbreviations.TabIndex = 13;
-            this.LbAbbreviations.Text = "C: Calculate best value; R: Reset value (hold Ctrl to reset to game default); TE:" +
-    " Taming Effectivenes; IB: Imprinting Bonus; IBM: ~Multiplier; Trod: Troodonism-v" +
-    "ariant";
+            this.LbAbbreviations.Text = resources.GetString("LbAbbreviations.Text");
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statMultipliersToolStripMenuItem,
             this.calculateToolStripMenuItem,
-            this.setAllLvlToToolStripMenuItem});
+            this.setAllLvlToToolStripMenuItem,
+            this.copyStatValuesToClipboardToolStripMenuItem,
+            this.openWikiPageOnStatCalculationToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1011, 24);
@@ -708,10 +649,13 @@
             this.idMToolStripMenuItem1,
             this.idMToolStripMenuItem,
             this.taMToolStripMenuItem,
-            this.tmMToolStripMenuItem});
+            this.tmMToolStripMenuItem,
+            this.toolStripSeparator3,
+            this.allIwToolStripMenuItem,
+            this.allIdToolStripMenuItem});
             this.calculateToolStripMenuItem.Name = "calculateToolStripMenuItem";
-            this.calculateToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
-            this.calculateToolStripMenuItem.Text = "Calculate";
+            this.calculateToolStripMenuItem.Size = new System.Drawing.Size(83, 20);
+            this.calculateToolStripMenuItem.Text = "Calculate all";
             // 
             // idMToolStripMenuItem1
             // 
@@ -740,6 +684,25 @@
             this.tmMToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.tmMToolStripMenuItem.Text = "all TmM";
             this.tmMToolStripMenuItem.Click += new System.EventHandler(this.tmMToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(113, 6);
+            // 
+            // allIwToolStripMenuItem
+            // 
+            this.allIwToolStripMenuItem.Name = "allIwToolStripMenuItem";
+            this.allIwToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.allIwToolStripMenuItem.Text = "all Iw";
+            this.allIwToolStripMenuItem.Click += new System.EventHandler(this.allIwToolStripMenuItem_Click);
+            // 
+            // allIdToolStripMenuItem
+            // 
+            this.allIdToolStripMenuItem.Name = "allIdToolStripMenuItem";
+            this.allIdToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.allIdToolStripMenuItem.Text = "all Id";
+            this.allIdToolStripMenuItem.Click += new System.EventHandler(this.allIdToolStripMenuItem_Click);
             // 
             // setAllLvlToToolStripMenuItem
             // 
@@ -786,25 +749,110 @@
             this.setAllDomLevelsToTheClosestValueToolStripMenuItem.Text = "Set all Dom levels to the closest value";
             this.setAllDomLevelsToTheClosestValueToolStripMenuItem.Click += new System.EventHandler(this.setAllDomLevelsToTheClosestValueToolStripMenuItem_Click);
             // 
-            // CbAllowSpeedLeveling
+            // copyStatValuesToClipboardToolStripMenuItem
             // 
-            this.CbAllowSpeedLeveling.AutoSize = true;
-            this.CbAllowSpeedLeveling.Location = new System.Drawing.Point(6, 42);
-            this.CbAllowSpeedLeveling.Name = "CbAllowSpeedLeveling";
-            this.CbAllowSpeedLeveling.Size = new System.Drawing.Size(122, 17);
-            this.CbAllowSpeedLeveling.TabIndex = 3;
-            this.CbAllowSpeedLeveling.Text = "AllowSpeedLeveling";
-            this.CbAllowSpeedLeveling.UseVisualStyleBackColor = true;
-            this.CbAllowSpeedLeveling.CheckedChanged += new System.EventHandler(this.CbAllowSpeedLeveling_CheckedChanged);
+            this.copyStatValuesToClipboardToolStripMenuItem.Name = "copyStatValuesToClipboardToolStripMenuItem";
+            this.copyStatValuesToClipboardToolStripMenuItem.Size = new System.Drawing.Size(235, 20);
+            this.copyStatValuesToClipboardToolStripMenuItem.Text = "Copy raw species stat values to clipboard";
+            this.copyStatValuesToClipboardToolStripMenuItem.Click += new System.EventHandler(this.copyStatValuesToClipboardToolStripMenuItem_Click);
+            // 
+            // openWikiPageOnStatCalculationToolStripMenuItem
+            // 
+            this.openWikiPageOnStatCalculationToolStripMenuItem.Name = "openWikiPageOnStatCalculationToolStripMenuItem";
+            this.openWikiPageOnStatCalculationToolStripMenuItem.Size = new System.Drawing.Size(201, 20);
+            this.openWikiPageOnStatCalculationToolStripMenuItem.Text = "Open wiki page on stat calculation";
+            this.openWikiPageOnStatCalculationToolStripMenuItem.Click += new System.EventHandler(this.openWikiPageOnStatCalculationToolStripMenuItem_Click);
+            // 
+            // nudTE
+            // 
+            this.nudTE.DecimalPlaces = 3;
+            this.nudTE.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudTE.Location = new System.Drawing.Point(6, 19);
+            this.nudTE.Name = "nudTE";
+            this.nudTE.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudTE.Size = new System.Drawing.Size(71, 20);
+            this.nudTE.TabIndex = 1;
+            this.nudTE.ValueChanged += new System.EventHandler(this.nudTE_ValueChanged);
+            // 
+            // nudIBM
+            // 
+            this.nudIBM.DecimalPlaces = 4;
+            this.nudIBM.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.nudIBM.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.nudIBM.Location = new System.Drawing.Point(135, 19);
+            this.nudIBM.Name = "nudIBM";
+            this.nudIBM.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudIBM.Size = new System.Drawing.Size(71, 20);
+            this.nudIBM.TabIndex = 2;
+            this.nudIBM.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudIBM.ValueChanged += new System.EventHandler(this.nudIBM_ValueChanged);
+            // 
+            // nudIB
+            // 
+            this.nudIB.DecimalPlaces = 6;
+            this.nudIB.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudIB.Location = new System.Drawing.Point(6, 19);
+            this.nudIB.Maximum = new decimal(new int[] {
+            200,
+            0,
+            0,
+            0});
+            this.nudIB.Name = "nudIB";
+            this.nudIB.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudIB.Size = new System.Drawing.Size(80, 20);
+            this.nudIB.TabIndex = 1;
+            this.nudIB.ValueChanged += new System.EventHandler(this.nudIB_ValueChanged);
+            // 
+            // nudCreatureLevel
+            // 
+            this.nudCreatureLevel.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.nudCreatureLevel.Location = new System.Drawing.Point(87, 19);
+            this.nudCreatureLevel.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.nudCreatureLevel.Name = "nudCreatureLevel";
+            this.nudCreatureLevel.NeutralNumber = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudCreatureLevel.Size = new System.Drawing.Size(107, 20);
+            this.nudCreatureLevel.TabIndex = 13;
+            this.nudCreatureLevel.ValueChanged += new System.EventHandler(this.nudCreatureLevel_ValueChanged);
             // 
             // StatsMultiplierTesting
             // 
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.Name = "StatsMultiplierTesting";
             this.Size = new System.Drawing.Size(1011, 532);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.StatsMultiplierTesting_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.StatsMultiplierTesting_DragEnter);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.groupBox4.ResumeLayout(false);
@@ -815,19 +863,19 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudTE)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudIBM)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudIB)).EndInit();
             this.gbFineAdjustment.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.tbFineAdjustments)).EndInit();
             this.panel1.ResumeLayout(false);
             this.gbLevel.ResumeLayout(false);
             this.gbLevel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudCreatureLevel)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudTE)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudIBM)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudIB)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudCreatureLevel)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -844,7 +892,7 @@
         private uiControls.Nud nudIBM;
         private uiControls.Nud nudIB;
         private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button BtResetSpeciesValues;
         private System.Windows.Forms.CheckBox cbUpdateOnSpeciesChange;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label LbFinalValue;
@@ -860,7 +908,6 @@
         private System.Windows.Forms.Label LbIw;
         private System.Windows.Forms.Label LbLw;
         private System.Windows.Forms.Label LbBaseValue;
-        private System.Windows.Forms.LinkLabel llStatCalculation;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton rbBred;
         private System.Windows.Forms.RadioButton rbTamed;
@@ -899,5 +946,11 @@
         private System.Windows.Forms.Label LbCalculatedWildLevel;
         private System.Windows.Forms.CheckBox CbAtlas;
         private System.Windows.Forms.CheckBox CbAllowSpeedLeveling;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem allIwToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem allIdToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyStatValuesToClipboardToolStripMenuItem;
+        private System.Windows.Forms.Label LbSpeciesValuesExtractor;
+        private System.Windows.Forms.ToolStripMenuItem openWikiPageOnStatCalculationToolStripMenuItem;
     }
 }

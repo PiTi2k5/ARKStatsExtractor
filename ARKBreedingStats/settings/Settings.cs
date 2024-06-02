@@ -284,6 +284,7 @@ namespace ARKBreedingStats.settings
             else radioButtonFahrenheit.Checked = true;
             cbIgnoreSexInBreedingPlan.Checked = Properties.Settings.Default.IgnoreSexInBreedingPlan;
             checkBoxDisplayHiddenStats.Checked = Properties.Settings.Default.DisplayHiddenStats;
+            CbSetMutationLevelsExtractor.Checked = Properties.Settings.Default.MoveMutationLevelsOnExtractionIfUnique;
             CbbAppDefaultFontName.Text = Properties.Settings.Default.DefaultFontName;
             nudDefaultFontSize.Value = (decimal)Properties.Settings.Default.DefaultFontSize;
 
@@ -298,6 +299,8 @@ namespace ARKBreedingStats.settings
             nudOverlayTimerPosY.ValueSave = Properties.Settings.Default.OverlayTimerPosition.Y;
             nudOverlayInfoPosDFR.ValueSave = Properties.Settings.Default.OverlayInfoPosition.X;
             nudOverlayInfoPosY.ValueSave = Properties.Settings.Default.OverlayInfoPosition.Y;
+            nudOverlayInfoWidth.ValueSave = Properties.Settings.Default.OverlayInfoSize.Width;
+            nudOverlayInfoHeight.ValueSave = Properties.Settings.Default.OverlayInfoSize.Height;
             cbCustomOverlayLocation.Checked = Properties.Settings.Default.UseCustomOverlayLocation;
             nudCustomOverlayLocX.ValueSave = Properties.Settings.Default.CustomOverlayLocation.X;
             nudCustomOverlayLocY.ValueSave = Properties.Settings.Default.CustomOverlayLocation.Y;
@@ -347,7 +350,11 @@ namespace ARKBreedingStats.settings
 
             nudInfoGraphicHeight.ValueSave = Properties.Settings.Default.InfoGraphicHeight;
             CbInfoGraphicDisplayMaxWildLevel.Checked = Properties.Settings.Default.InfoGraphicShowMaxWildLevel;
-            CbInfoGraphicDomLevels.Checked = Properties.Settings.Default.InfoGraphicWithDomLevels;
+            if (Properties.Settings.Default.InfoGraphicWithDomLevels)
+                RbInfoGraphicDomValues.Checked = true;
+            else
+                RbInfoGraphicBreedingValues.Checked = true;
+            CbInfoGraphicSumWildMut.Checked = Properties.Settings.Default.InfoGraphicDisplaySumWildMut;
             CbbInfoGraphicFontName.Text = Properties.Settings.Default.InfoGraphicFontName;
             CbInfoGraphicMutationCounter.Checked = Properties.Settings.Default.InfoGraphicDisplayMutations;
             CbInfoGraphicGenerations.Checked = Properties.Settings.Default.InfoGraphicDisplayGeneration;
@@ -393,6 +400,7 @@ namespace ARKBreedingStats.settings
             cbApplyNamePatternOnImportOnEmptyNames.Checked = Properties.Settings.Default.applyNamePatternOnImportIfEmptyName;
             cbApplyNamePatternOnImportOnNewCreatures.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures;
             cbCopyPatternNameToClipboard.Checked = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied;
+            CbCopyNameToClipboardOnImport.Checked = Properties.Settings.Default.CopyNameToClipboardOnImport;
             cbAutoImportExported.Checked = Properties.Settings.Default.AutoImportExportedCreatures;
             CbAutoExtractAddToLibrary.Checked = Properties.Settings.Default.OnAutoImportAddToLibrary;
             cbPlaySoundOnAutomaticImport.Checked = Properties.Settings.Default.PlaySoundOnAutoImport;
@@ -492,13 +500,13 @@ namespace ARKBreedingStats.settings
                 }
             }
 
-            if (_cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] != 1)
+            if (_cc.serverMultipliers.statMultipliers[Stats.Torpidity][ServerMultipliers.IndexLevelWild] != 1)
             {
                 // Torpidity is handled differently by the game, IwM has no effect. Set IwM to 1.
                 // See https://github.com/cadon/ARKStatsExtractor/issues/942 for more infos about this.
                 MessageBoxes.ShowMessageBox("The increase per wild level of torpidity setting (PerLevelStatsMultiplier_DinoWild[2]) is ignored by ARK, only the value 1 is used for that setting.\nA different value was entered for that setting.\nSmart Breeding will reset this value to 1, since the game also uses that value, regardless what is entered in the server settings. This is done to prevent extraction issues.",
                     "Torpidity multiplier reset");
-                _cc.serverMultipliers.statMultipliers[Stats.Torpidity][Stats.IndexLevelWild] = 1;
+                _cc.serverMultipliers.statMultipliers[Stats.Torpidity][ServerMultipliers.IndexLevelWild] = 1;
             }
 
             _cc.serverMultipliers.SinglePlayerSettings = cbSingleplayerSettings.Checked;
@@ -561,6 +569,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.SpeechRecognition = chkbSpeechRecognition.Checked;
             Properties.Settings.Default.celsius = radioButtonCelsius.Checked;
             Properties.Settings.Default.DisplayHiddenStats = checkBoxDisplayHiddenStats.Checked;
+            Properties.Settings.Default.MoveMutationLevelsOnExtractionIfUnique = CbSetMutationLevelsExtractor.Checked;
             Properties.Settings.Default.DefaultFontName = CbbAppDefaultFontName.Text;
             Properties.Settings.Default.DefaultFontSize = (float)nudDefaultFontSize.Value;
 
@@ -570,6 +579,8 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.OverlayInfoDuration = (int)nudOverlayInfoDuration.Value;
             Properties.Settings.Default.OverlayTimerPosition = new Point((int)nudOverlayTimerPosX.Value, (int)nudOverlayTimerPosY.Value);
             Properties.Settings.Default.OverlayInfoPosition = new Point((int)nudOverlayInfoPosDFR.Value, (int)nudOverlayInfoPosY.Value);
+            Properties.Settings.Default.OverlayInfoSize = new Size((int)nudOverlayInfoWidth.Value, (int)nudOverlayInfoHeight.Value);
+
             Properties.Settings.Default.UseCustomOverlayLocation = cbCustomOverlayLocation.Checked;
             Properties.Settings.Default.CustomOverlayLocation = new Point((int)nudCustomOverlayLocX.Value, (int)nudCustomOverlayLocY.Value);
             Properties.Settings.Default.DisplayInheritanceInOverlay = CbOverlayDisplayInheritance.Checked;
@@ -614,7 +625,8 @@ namespace ARKBreedingStats.settings
 
             Properties.Settings.Default.InfoGraphicHeight = (int)nudInfoGraphicHeight.Value;
             Properties.Settings.Default.InfoGraphicShowMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked;
-            Properties.Settings.Default.InfoGraphicWithDomLevels = CbInfoGraphicDomLevels.Checked;
+            Properties.Settings.Default.InfoGraphicWithDomLevels = RbInfoGraphicDomValues.Checked;
+            Properties.Settings.Default.InfoGraphicDisplaySumWildMut = CbInfoGraphicSumWildMut.Checked;
             Properties.Settings.Default.InfoGraphicFontName = CbbInfoGraphicFontName.Text;
             Properties.Settings.Default.InfoGraphicDisplayMutations = CbInfoGraphicMutationCounter.Checked;
             Properties.Settings.Default.InfoGraphicDisplayGeneration = CbInfoGraphicGenerations.Checked;
@@ -653,6 +665,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.applyNamePatternOnImportIfEmptyName = cbApplyNamePatternOnImportOnEmptyNames.Checked;
             Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures = cbApplyNamePatternOnImportOnNewCreatures.Checked;
             Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied = cbCopyPatternNameToClipboard.Checked;
+            Properties.Settings.Default.CopyNameToClipboardOnImport = CbCopyNameToClipboardOnImport.Checked;
             Properties.Settings.Default.AutoImportExportedCreatures = cbAutoImportExported.Checked;
             Properties.Settings.Default.OnAutoImportAddToLibrary = CbAutoExtractAddToLibrary.Checked;
             Properties.Settings.Default.PlaySoundOnAutoImport = cbPlaySoundOnAutomaticImport.Checked;
@@ -844,10 +857,10 @@ namespace ARKBreedingStats.settings
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                ParseAndSetStatMultiplier(Stats.IndexTamingAdd, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(Stats.IndexTamingMult, @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(Stats.IndexLevelDom, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
-                ParseAndSetStatMultiplier(Stats.IndexLevelWild, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(ServerMultipliers.IndexTamingAdd, @"PerLevelStatsMultiplier_DinoTamed_Add\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(ServerMultipliers.IndexTamingMult, @"PerLevelStatsMultiplier_DinoTamed_Affinity\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(ServerMultipliers.IndexLevelDom, @"PerLevelStatsMultiplier_DinoTamed\[" + s + @"\] ?= ?(\d*\.?\d+)");
+                ParseAndSetStatMultiplier(ServerMultipliers.IndexLevelWild, @"PerLevelStatsMultiplier_DinoWild\[" + s + @"\] ?= ?(\d*\.?\d+)");
 
                 void ParseAndSetStatMultiplier(int multiplierIndex, string regexPattern)
                 {
@@ -861,7 +874,7 @@ namespace ARKBreedingStats.settings
             }
             // some server files have a different value for wild level torpor increase, but ARK ignores that value.
             // reset that value, so no error message pops up, so user is not confused. Error message only on manual input
-            _multSetter[Stats.Torpidity].SetMultiplier(Stats.IndexLevelWild, 1);
+            _multSetter[Stats.Torpidity].SetMultiplier(ServerMultipliers.IndexLevelWild, 1);
 
             // breeding
             ParseAndSetValue(nudMatingInterval, @"MatingIntervalMultiplier ?= ?(\d*\.?\d+)");
@@ -964,6 +977,45 @@ namespace ARKBreedingStats.settings
         }
 
         /// <summary>
+        /// Parse the text and set the recognized event settings accordingly.
+        /// </summary>
+        /// <param name="text">Text containing the settings</param>
+        private void ExtractEventSettingsFromText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            // ignore lines that start with a semicolon (comments)
+            text = Regex.Replace(text, @"(?:\A|[\r\n]+);[^\r\n]*", string.Empty);
+
+            double d;
+            Match m;
+            var cultureForStrings = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+
+            ParseAndSetValue(nudTamingSpeedEvent, @"TamingSpeedMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudMatingIntervalEvent, @"MatingIntervalMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudEggHatchSpeedEvent, @"EggHatchSpeedMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyMatureSpeedEvent, @"BabyMatureSpeedMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyImprintAmountEvent, @"BabyImprintAmountMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyCuddleIntervalEvent, @"BabyCuddleIntervalMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudBabyFoodConsumptionSpeedEvent, @"BabyFoodConsumptionSpeedMultiplier ?= ?(\d*\.?\d+)");
+            ParseAndSetValue(nudTamedDinoCharacterFoodDrainEvent, @"TamedDinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
+
+            bool ParseAndSetValue(Nud nud, string regexPattern)
+            {
+                m = Regex.Match(text, regexPattern);
+                if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint,
+                    cultureForStrings, out d))
+                {
+                    nud.ValueSave = (decimal)d;
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+
+        /// <summary>
         /// Load server multipliers from a file created by the export gun mod.
         /// </summary>
         private void LoadServerMultipliersFromSavFile(string filePath)
@@ -974,14 +1026,14 @@ namespace ARKBreedingStats.settings
             const int roundToDigits = 6;
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                _multSetter[s].SetMultiplier(Stats.IndexTamingAdd, Math.Round(esm.TameAdd[s], roundToDigits));
-                _multSetter[s].SetMultiplier(Stats.IndexTamingMult, Math.Round(esm.TameAff[s], roundToDigits));
-                _multSetter[s].SetMultiplier(Stats.IndexLevelDom, Math.Round(esm.TameLevel[s], roundToDigits));
-                _multSetter[s].SetMultiplier(Stats.IndexLevelWild, Math.Round(esm.WildLevel[s], roundToDigits));
+                _multSetter[s].SetMultiplier(ServerMultipliers.IndexTamingAdd, Math.Round(esm.TameAdd[s], roundToDigits));
+                _multSetter[s].SetMultiplier(ServerMultipliers.IndexTamingMult, Math.Round(esm.TameAff[s], roundToDigits));
+                _multSetter[s].SetMultiplier(ServerMultipliers.IndexLevelDom, Math.Round(esm.TameLevel[s], roundToDigits));
+                _multSetter[s].SetMultiplier(ServerMultipliers.IndexLevelWild, Math.Round(esm.WildLevel[s], roundToDigits));
             }
             // some server files have a different value for wild level torpor increase, but ARK ignores that value.
             // reset that value, so no error message pops up, so user is not confused. Error message only on manual input
-            _multSetter[Stats.Torpidity].SetMultiplier(Stats.IndexLevelWild, 1);
+            _multSetter[Stats.Torpidity].SetMultiplier(ServerMultipliers.IndexLevelWild, 1);
 
             nudMaxWildLevels.ValueSaveDouble = Math.Ceiling(esm.MaxWildLevel);
             nudWildLevelStep.ValueSaveDouble = Math.Round(esm.WildLevelStepSize, roundToDigits);
@@ -1492,6 +1544,7 @@ namespace ARKBreedingStats.settings
             nudBabyImprintAmount.SetExtraHighlightNonDefault(highlight);
             nudBabyImprintingStatScale.SetExtraHighlightNonDefault(highlight);
             nudBabyFoodConsumptionSpeed.SetExtraHighlightNonDefault(highlight);
+            nudTamedDinoCharacterFoodDrain.SetExtraHighlightNonDefault(highlight);
             HighlightCheckbox(cbSingleplayerSettings);
             HighlightCheckbox(CbAllowSpeedLeveling);
             HighlightCheckbox(CbAllowFlyerSpeedLeveling);
@@ -1624,7 +1677,7 @@ namespace ARKBreedingStats.settings
         private Creature _infoGraphicPreviewCreature;
         private readonly Debouncer _infoGraphicPreviewDebouncer = new Debouncer();
 
-        private void CbInfoGraphicCheckBoxChanged(object sender, EventArgs e)
+        private void CbInfoGraphicCheckBoxRadioButtonChanged(object sender, EventArgs e)
         {
             _infoGraphicPreviewDebouncer.Debounce(300, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
         }
@@ -1641,7 +1694,8 @@ namespace ARKBreedingStats.settings
                 BtInfoGraphicBackColor.BackColor,
                 BtInfoGraphicBorderColor.BackColor,
                 CbInfoGraphicCreatureName.Checked,
-                CbInfoGraphicDomLevels.Checked,
+                RbInfoGraphicDomValues.Checked,
+                CbInfoGraphicSumWildMut.Checked,
                 CbInfoGraphicMutationCounter.Checked,
                 CbInfoGraphicGenerations.Checked,
                 CbInfoGraphicStatValues.Checked,
@@ -1671,6 +1725,15 @@ namespace ARKBreedingStats.settings
             _infoGraphicPreviewCreature.levelsDom[Stats.Stamina] = rand.Next(20);
             _infoGraphicPreviewCreature.levelsDom[Stats.Weight] = rand.Next(20);
             _infoGraphicPreviewCreature.levelsDom[Stats.MeleeDamageMultiplier] = rand.Next(20);
+            if (RbGameAsa.Checked)
+            {
+                _infoGraphicPreviewCreature.levelsMutated[Stats.Health] = rand.Next(5) * Ark.LevelsAddedPerMutation;
+                _infoGraphicPreviewCreature.levelsMutated[Stats.Stamina] = rand.Next(5) * Ark.LevelsAddedPerMutation;
+                _infoGraphicPreviewCreature.levelsMutated[Stats.Weight] = rand.Next(5) * Ark.LevelsAddedPerMutation;
+                _infoGraphicPreviewCreature.levelsMutated[Stats.MeleeDamageMultiplier] = rand.Next(5) * Ark.LevelsAddedPerMutation;
+            }
+            _infoGraphicPreviewCreature.mutationsMaternal = _infoGraphicPreviewCreature.levelsMutated.Sum() / Ark.LevelsAddedPerMutation + rand.Next(5);
+
             _infoGraphicPreviewCreature.RecalculateCreatureValues(_cc.wildLevelStep);
         }
 
@@ -1831,6 +1894,28 @@ namespace ARKBreedingStats.settings
             CbAllowSpeedLeveling.Visible = isAsa;
             if (isAsa && CbAllowFlyerSpeedLeveling.Checked)
                 CbAllowSpeedLeveling.Checked = true;
+        }
+
+        private void BtnUpdateOfficialEventValues_Click(object sender, EventArgs e)
+        {
+            var gameType = CbbOfficialMultipliers.Text;
+
+            try
+            {
+                var url = gameType == "ASA Arkpocalypse" ? "https://cdn2.arkdedicated.com/asa/arkpocalypse_dynamicconfig.ini"
+                  : gameType == "ASA Smalltribes" ? "https://cdn2.arkdedicated.com/asa/smalltribes_dynamicconfig.ini"
+                  : gameType == "ASA Official" ? "https://cdn2.arkdedicated.com/asa/dynamicconfig.ini"
+                  : throw new Exception($"Unexpected official multipliers option {gameType}");
+
+                var httpClient = FileService.GetHttpClient;
+
+                var settingsText = httpClient.GetStringAsync(url).Result;
+                ExtractEventSettingsFromText(settingsText);
+            }
+            catch (Exception ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, "Server settings file couldn't be loaded.");
+            }
         }
     }
 }

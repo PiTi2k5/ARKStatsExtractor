@@ -13,6 +13,7 @@ using ARKBreedingStats.library;
 using ARKBreedingStats.utils;
 using ARKBreedingStats.ocr;
 using ARKBreedingStats.uiControls;
+using System.Reflection;
 
 namespace ARKBreedingStats
 {
@@ -140,57 +141,77 @@ namespace ARKBreedingStats
             bool allValid = valid && inbound && torporLevelValid && _extractor.ValidResults;
             if (allValid)
             {
-                radarChartExtractor.SetLevels(_statIOs.Select(s => s.LevelWild).ToArray(), _statIOs.Select(s => s.LevelMut).ToArray(), speciesSelector1.SelectedSpecies);
-                cbExactlyImprinting.BackColor = Color.Transparent;
-                var species = speciesSelector1.SelectedSpecies;
-                _highestSpeciesLevels.TryGetValue(species, out int[] highSpeciesLevels);
-                _lowestSpeciesLevels.TryGetValue(species, out int[] lowSpeciesLevels);
-                _highestSpeciesMutationLevels.TryGetValue(species, out int[] highSpeciesMutationLevels);
-                //_lowestSpeciesMutationLevels.TryGetValue(species, out int[] lowSpeciesMutationLevels);
-
-                var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
-
-                LevelStatusFlags.DetermineLevelStatus(species, highSpeciesLevels, lowSpeciesLevels, highSpeciesMutationLevels,
-                    statWeights, GetCurrentWildLevels(), GetCurrentMutLevels(), GetCurrentBreedingValues(),
-                    out var topStatsText, out var newTopStatsText);
-
-                for (var s = 0; s < Stats.StatsCount; s++)
-                {
-                    var levelStatusForStatIo = LevelStatusFlags.LevelStatusFlagsCurrentNewCreature[s];
-
-                    // ASA can have up to 511 levels because 255 mutation levels also contribute to the wild value. TODO separate to mutation levels
-                    if (_creatureCollection.Game != Ark.Asa && s != Stats.Torpidity)
-                    {
-                        if (_statIOs[s].LevelWild > 255)
-                            levelStatusForStatIo |= LevelStatusFlags.LevelStatus.UltraMaxLevel;
-                        else if (_statIOs[s].LevelWild == 255)
-                            levelStatusForStatIo |= LevelStatusFlags.LevelStatus.MaxLevel;
-                        else if (_statIOs[s].LevelWild == 254)
-                            levelStatusForStatIo |= LevelStatusFlags.LevelStatus.MaxLevelForLevelUp;
-                    }
-
-                    _statIOs[s].TopLevel = levelStatusForStatIo;
-                }
-
-                string infoText = null;
-                if (newTopStatsText.Any())
-                {
-                    infoText = $"New top stats: {string.Join(", ", newTopStatsText)}";
-                }
-                if (topStatsText.Any())
-                {
-                    infoText += $"{(infoText == null ? null : "\n")}Existing top stats: {string.Join(", ", topStatsText)}";
-                }
-
-                if (infoText == null) infoText = "No top stats";
-
-                creatureAnalysis1.SetStatsAnalysis(LevelStatusFlags.CombinedLevelStatusFlags, infoText);
+                UpdateStatusInfoOfExtractorCreature();
             }
-            creatureInfoInputExtractor.ButtonEnabled = allValid;
-            groupBoxRadarChartExtractor.Visible = allValid;
-            creatureAnalysis1.Visible = allValid;
+
+            UpdateAddToLibraryButtonAccordingToExtractorValidity(allValid);
+        }
+
+        /// <summary>
+        /// Updates level analysis of creature levels in extractor.
+        /// </summary>
+        private void UpdateStatusInfoOfExtractorCreature()
+        {
+            radarChartExtractor.SetLevels(_statIOs.Select(s => s.LevelWild).ToArray(), _statIOs.Select(s => s.LevelMut).ToArray(), speciesSelector1.SelectedSpecies);
+            cbExactlyImprinting.BackColor = Color.Transparent;
+            var species = speciesSelector1.SelectedSpecies;
+            _highestSpeciesLevels.TryGetValue(species, out int[] highSpeciesLevels);
+            _lowestSpeciesLevels.TryGetValue(species, out int[] lowSpeciesLevels);
+            _highestSpeciesMutationLevels.TryGetValue(species, out int[] highSpeciesMutationLevels);
+            //_lowestSpeciesMutationLevels.TryGetValue(species, out int[] lowSpeciesMutationLevels);
+
+            var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
+
+            LevelStatusFlags.DetermineLevelStatus(species, highSpeciesLevels, lowSpeciesLevels, highSpeciesMutationLevels,
+                statWeights, GetCurrentWildLevels(), GetCurrentMutLevels(), GetCurrentBreedingValues(),
+                out var topStatsText, out var newTopStatsText);
+
+            for (var s = 0; s < Stats.StatsCount; s++)
+            {
+                var levelStatusForStatIo = LevelStatusFlags.LevelStatusFlagsCurrentNewCreature[s];
+
+                // ASA can have up to 511 levels because 255 mutation levels also contribute to the wild value. TODO separate to mutation levels
+                if (_creatureCollection.Game != Ark.Asa && s != Stats.Torpidity)
+                {
+                    if (_statIOs[s].LevelWild > 255)
+                        levelStatusForStatIo |= LevelStatusFlags.LevelStatus.UltraMaxLevel;
+                    else if (_statIOs[s].LevelWild == 255)
+                        levelStatusForStatIo |= LevelStatusFlags.LevelStatus.MaxLevel;
+                    else if (_statIOs[s].LevelWild == 254)
+                        levelStatusForStatIo |= LevelStatusFlags.LevelStatus.MaxLevelForLevelUp;
+                }
+
+                _statIOs[s].TopLevel = levelStatusForStatIo;
+            }
+
+            string infoText = null;
+            if (newTopStatsText.Any())
+            {
+                infoText = $"New top stats: {string.Join(", ", newTopStatsText)}";
+            }
+            if (topStatsText.Any())
+            {
+                infoText += $"{(infoText == null ? null : "\n")}Existing top stats: {string.Join(", ", topStatsText)}";
+            }
+
+            if (infoText == null) infoText = "No top stats";
+
+            creatureAnalysis1.SetStatsAnalysis(LevelStatusFlags.CombinedLevelStatusFlags, infoText);
+        }
+
+        private void UpdateAddToLibraryButtonAccordingToExtractorValidity(bool valid)
+        {
+            creatureInfoInputExtractor.ButtonEnabled = valid;
+            groupBoxRadarChartExtractor.Visible = valid;
+            creatureAnalysis1.Visible = valid;
             // update inheritance info
             CreatureInfoInput_CreatureDataRequested(creatureInfoInputExtractor, false, true, false, 0, null);
+        }
+
+        private void SetAllExtractorLevelsToStatus(StatIOStatus status)
+        {
+            foreach (var sio in _statIOs)
+                sio.Status = status;
         }
 
         /// <summary>
@@ -259,8 +280,9 @@ namespace ARKBreedingStats
             var mutagenApplied = possiblyMutagenApplied || creatureInfoInputExtractor.CreatureFlags.HasFlag(CreatureFlags.MutagenApplied);
             var bred = rbBredExtractor.Checked;
             bool imprintingBonusChanged = false;
+            var useTroodonism = Troodonism.AffectedStats.None;
 
-            for (int i = 0; i < 2; i++)
+            while (true)
             {
                 _extractor.ExtractLevels(speciesSelector1.SelectedSpecies, (int)numericUpDownLevel.Value, _statIOs,
                     (double)numericUpDownLowerTEffBound.Value / 100, (double)numericUpDownUpperTEffBound.Value / 100,
@@ -269,14 +291,14 @@ namespace ARKBreedingStats
                     _creatureCollection.allowMoreThanHundredImprinting,
                     _creatureCollection.serverMultipliers.BabyImprintingStatScaleMultiplier,
                     _creatureCollection.considerWildLevelSteps, _creatureCollection.wildLevelStep,
-                    statInputsHighPrecision, mutagenApplied, out imprintingBonusChanged);
+                    statInputsHighPrecision, mutagenApplied, out imprintingBonusChanged, useTroodonism);
 
                 // wild claimed babies look like bred creatures in the export files, but have to be considered tamed when imported
                 // if the extraction of an exported creature doesn't work, try with tamed settings
                 if (bred && numericUpDownImprintingBonusExtractor.Value == 0 && statInputsHighPrecision)
                 {
                     var someStatsHaveNoResults = false;
-                    var onlyStatsWithTEHaveNoResults = true;
+                    var onlyStatsWithTeHaveNoResults = true;
                     // check if only stats affected by TE have no result
                     for (int s = 0; s < Stats.StatsCount; s++)
                     {
@@ -286,18 +308,31 @@ namespace ARKBreedingStats
                             if (!_extractor.StatsWithTE.Contains(s))
                             {
                                 // the issue is not related to TE, so it's a different issue
-                                onlyStatsWithTEHaveNoResults = false;
+                                onlyStatsWithTeHaveNoResults = false;
                             }
                         }
                     }
 
-                    if (!someStatsHaveNoResults || !onlyStatsWithTEHaveNoResults) break;
+                    if (!someStatsHaveNoResults || !onlyStatsWithTeHaveNoResults) break;
 
                     // issue could be a wild claimed baby that should be considered tamed
                     _extractor.Clear();
                     rbTamedExtractor.Checked = true;
                     bred = false;
 
+                    continue;
+                }
+
+                // if extraction failed, it could be due to the troodonism bug. If the creature has alt stats and for one of these stats there is no result, try these
+                if (useTroodonism == Troodonism.AffectedStats.None
+                    && speciesSelector1.SelectedSpecies.altBaseStatsRaw?
+                        .Any(kv => !_extractor.Results[kv.Key].Any()) == true)
+                {
+                    if (rbWildExtractor.Checked)
+                        useTroodonism = Troodonism.AffectedStats.WildCombination;
+                    else
+                        useTroodonism = Troodonism.AffectedStats.UncryoCombination;
+                    _extractor.Clear();
                     continue;
                 }
 
@@ -437,7 +472,7 @@ namespace ARKBreedingStats
             }
             if (domLevelsChosenSum != _extractor.LevelDomSum)
             {
-                // sum of domlevels is not correct. Try to find another combination
+                // sum of dom levels is not correct. Try to find another combination
                 domLevelsChosenSum -= _extractor.Results[Stats.MeleeDamageMultiplier][_extractor.ChosenResults[Stats.MeleeDamageMultiplier]].levelDom;
                 bool changeChosenResult = false;
                 int cR = 0;
@@ -604,26 +639,14 @@ namespace ARKBreedingStats
                 redInfoText = Loc.S("lbImprintingFailInfo");
             }
             if (!rbWildExtractor.Checked
-                && new[]{
-                            "Desert Titan",
-                            "Desert Titan Flock",
-                            "Ice Titan",
-                            "Gacha",
-                            "Aberrant Electrophorus",
-                            "Electrophorus",
-                            "Aberrant Pulmonoscorpius",
-                            "Pulmonoscorpius",
-                            "Aberrant Titanoboa",
-                            "Titanoboa",
-                            "Pegomastax",
-                            "Procoptodon",
-                            "Troodon"
-                        }.Contains(speciesSelector1.SelectedSpecies.name))
+                && speciesSelector1.SelectedSpecies.altBaseStatsRaw?
+                    .Any(kv => _statIOs[kv.Key].Status == StatIOStatus.Error) == true
+                )
             {
-                // creatures that display wrong stat-values after taming
+                // creatures that display wrong stat-values after taming (Troodonism bug)
                 redInfoText = (string.IsNullOrEmpty(redInfoText) ? string.Empty : redInfoText + "\n")
-                        + $"The {speciesSelector1.SelectedSpecies.name} is known for displaying wrong stat-values after taming. " +
-                        "This can prevent a successful extraction. Currently there's no known fix for that issue.";
+                        + $"The {speciesSelector1.SelectedSpecies.name} is known for displaying wrong stat-values after taming (Troodonism bug). " +
+                        "This can prevent a successful extraction. The correct stat value should be displayed directly after a server restart and is unreliable else.";
             }
 
             if (!string.IsNullOrEmpty(redInfoText))
@@ -901,7 +924,7 @@ namespace ARKBreedingStats
             {
                 try
                 {
-                    cv = importExported.ImportExported.ImportExportedCreature(exportFilePath);
+                    cv = importExported.ImportExported.ReadExportedCreature(exportFilePath);
                     break;
                 }
                 catch (IOException ex)
@@ -959,6 +982,7 @@ namespace ARKBreedingStats
         /// </summary>
         private bool GenerateCreatureNameAndCopyNameToClipboardIfSet(Creature alreadyExistingCreature)
         {
+            var nameWasApplied = false;
             if (Properties.Settings.Default.applyNamePatternOnAutoImportAlways
                 || (Properties.Settings.Default.applyNamePatternOnImportIfEmptyName
                     && string.IsNullOrEmpty(creatureInfoInputExtractor.CreatureName))
@@ -967,10 +991,9 @@ namespace ARKBreedingStats
             )
             {
                 CreatureInfoInput_CreatureDataRequested(creatureInfoInputExtractor, false, false, false, 0, alreadyExistingCreature);
-                return CopyCreatureNameToClipboardOnImportIfSetting(creatureInfoInputExtractor.CreatureName);
+                nameWasApplied = true;
             }
-
-            return false;
+            return CopyCreatureNameToClipboardOnImportIfSetting(creatureInfoInputExtractor.CreatureName, nameWasApplied);
         }
 
         /// <summary>
@@ -1055,6 +1078,41 @@ namespace ARKBreedingStats
 
             ExtractLevels(autoExtraction, highPrecisionValues, existingCreature: alreadyExistingCreature, possiblyMutagenApplied: cv.flags.HasFlag(CreatureFlags.MutagenApplied));
 
+            UpdateMutationLevels(cv, alreadyExistingCreature);
+            SetCreatureValuesToInfoInput(cv, creatureInfoInputExtractor);
+            UpdateParentListInput(creatureInfoInputExtractor); // this function is only used for single-creature extractions, e.g. LastExport
+            creatureInfoInputExtractor.AlreadyExistingCreature = alreadyExistingCreature;
+            if (!string.IsNullOrEmpty(filePath))
+                SetMessageLabelText(Loc.S("creatureOfFile") + Environment.NewLine + filePath, path: filePath);
+            return creatureExists;
+        }
+
+        /// <summary>
+        /// Tries to determine mutation levels, i.e. separate wild and mutation levels, depending on the ancestry information.
+        /// </summary>
+        /// <returns>True if mutation levels where adjusted, false if no levels were moved.</returns>
+        private bool UpdateMutationLevels(CreatureValues cv, Creature alreadyExistingCreature)
+        {
+            if (!Properties.Settings.Default.MoveMutationLevelsOnExtractionIfUnique) return false;
+            bool mutationLevelsAdjusted = false;
+            // Do we have enough information to assume the mutation counts are accurate
+            bool AreMutationCountsAccurate(Creature creature)
+            {
+                // assume non-zero mutation counts are accurate
+                return creature.Mutations > 0
+                    // assume creatures with parents have accurate mutation counts
+                    || creature.motherGuid != Guid.Empty || creature.fatherGuid != Guid.Empty
+                    // trust a zero mutation count if the creature is tamed (TamerString, but no ImprinterName or Ancestry)
+                    || (!string.IsNullOrEmpty(creature.tribe) && string.IsNullOrEmpty(creature.imprinterName));
+            }
+
+            // Do we have enough information to assume the mutation levels are accurate
+            bool AreMutationLevelsAccurate(Creature creature)
+            {
+                // trust non-zero mutation levels or zeros if the mutation count is accurate
+                return creature.levelsMutated?.Any(m => m != 0) == true || AreMutationCountsAccurate(creature);
+            }
+
             if (alreadyExistingCreature?.levelsMutated != null)
             {
                 // use already set mutation levels
@@ -1065,16 +1123,137 @@ namespace ARKBreedingStats
                     {
                         _statIOs[s].LevelMut = mutationLevels;
                         _statIOs[s].LevelWild -= mutationLevels;
+                        mutationLevelsAdjusted = true;
+                    }
+                }
+            }
+            else if (cv.Mother?.levelsWild != null && cv.Father?.levelsWild != null
+                && AreMutationLevelsAccurate(cv.Mother) && AreMutationCountsAccurate(cv.Mother)
+                && AreMutationLevelsAccurate(cv.Father) && AreMutationCountsAccurate(cv.Father))
+            {
+                // This doesn't handle the case where a wild baby with mutations and their single parent is extracted
+                // In that case, the baby will have a single parent, but we can trust that they only have 1 parent to mutate from
+
+                // Derive mutation levels from parents
+
+                // Given child with 16 points and 3 new mutations in a given stat
+                //   and a mother with 10 wild and 2 mutations
+                //   and a father with 14 wild and 2 mutations
+                //
+                // Then the possible child values would be:
+                //   | wild | mutations | new mutations |
+                //   |------|-----------|---------------|
+                //   |   10 |         6 |             2 |
+                //   |   14 |         2 |             0 |
+                //
+                //
+                // Given child with 18 points and 2 new mutation
+                //   and a mother with 14 wild and 2 mutations
+                //   and a father with 12 wild and 4 mutations
+                //
+                // Then the possible child values would be:
+                //   | wild | mutations | new mutations |
+                //   |------|-----------|---------------|
+                //   |   14 |         4 |             1 |
+                //   |   12 |         6 |             2 |
+                //
+
+                var possibileLevelsByStat = new List<(int wild, int mutated, int change)>[Stats.StatsCount];
+
+                for (int s = 0; s < Stats.StatsCount; s++)
+                {
+                    var possibleLevels = new List<(int, int, int)>();
+                    var extractedWild = _statIOs[s].LevelWild;
+
+                    if (s == Stats.Torpidity)
+                    {
+                        // Torpidity is not mutated
+                        possibleLevels.Add((extractedWild, 0, 0));
+                    }
+                    else
+                    {
+                        var motherWild = cv.Mother.levelsWild[s];
+                        var motherMutated = cv.Mother.levelsMutated?[s] ?? 0;
+                        var fatherWild = cv.Father.levelsWild[s];
+                        var fatherMutated = cv.Father.levelsMutated?[s] ?? 0;
+
+                        var lowWild = Math.Min(motherWild, fatherWild);
+                        var highWild = Math.Max(motherWild, fatherWild);
+                        var lowMutated = Math.Min(motherMutated, fatherMutated);
+                        var highMutated = Math.Max(motherMutated, fatherMutated);
+
+                        // The number of levels that would have been gained from mutation if the parents' low stats were used
+                        var lowChange = extractedWild - lowWild - lowMutated;
+
+                        // The number of levels that would have been gained from mutation if the parents' low stats were used
+                        var highChange = extractedWild - highWild - highMutated;
+
+                        var newLowStats = (wild: lowWild, mutated: lowMutated + lowChange, change: lowChange);
+                        var newHighStats = (wild: highWild, mutated: highMutated + highChange, change: highChange);
+
+                        // only add low value variation it adds an even number of level and adds less than or equal to the new mutations
+                        if (lowChange >= 0 && lowChange <= Ark.MutationRolls * Ark.LevelsAddedPerMutation && lowChange % Ark.LevelsAddedPerMutation == 0)
+                        {
+                            possibleLevels.Add(newLowStats);
+                        }
+
+                        // only add a high pair variation if it's not the same as the low
+                        if (newLowStats != newHighStats && highChange >= 0 && highChange <= Ark.MutationRolls * Ark.LevelsAddedPerMutation && highChange % Ark.LevelsAddedPerMutation == 0)
+                        {
+                            possibleLevels.Add(newHighStats);
+                        }
+                    }
+
+                    possibileLevelsByStat[s] = possibleLevels;
+                }
+
+                // It's possible for more than one combination of parent levels and new mutations to account for the
+                // child's levels. If there is only 1 set, use that
+                if (possibileLevelsByStat.All(x => x.Count == 1))
+                {
+                    for (int s = 0; s < Stats.StatsCount; s++)
+                    {
+                        var statIo = _statIOs[s];
+                        var levels = possibileLevelsByStat[s][0];
+
+                        statIo.LevelWild = levels.wild;
+                        statIo.LevelMut = levels.mutated;
+                        statIo.Status = StatIOStatus.Neutral;
+                    }
+                    mutationLevelsAdjusted = true;
+                }
+                else
+                {
+                    // When it's ambiguous which parent's stats + new mutations went into the child's stats, we try to
+                    // reduce the set of possible new mutation combinations to only those that match the mutation count
+                    // difference between the child and the parents
+                    var newMutationsMaternal = Math.Max(cv.mutationCounterMother - cv.Mother.Mutations, 0);
+                    var newMutationsPaternal = Math.Max(cv.mutationCounterFather - cv.Father.Mutations, 0);
+                    var totalNewMutations = newMutationsMaternal + newMutationsPaternal;
+
+                    var validLevelCombinations = possibileLevelsByStat
+                        .CartesianProduct()
+                        .Where(x => x.Sum(y => y.change) == totalNewMutations * Ark.LevelsAddedPerMutation)
+                        .ToArray();
+
+                    if (validLevelCombinations.Length == 1)
+                    {
+                        var validCombination = validLevelCombinations[0];
+                        for (int s = 0; s < Stats.StatsCount; s++)
+                        {
+                            var statIo = _statIOs[s];
+                            var levels = validCombination[s];
+
+                            statIo.LevelWild = levels.wild;
+                            statIo.LevelMut = levels.mutated;
+                            statIo.Status = StatIOStatus.Neutral;
+                        }
+                        mutationLevelsAdjusted = true;
                     }
                 }
             }
 
-            SetCreatureValuesToInfoInput(cv, creatureInfoInputExtractor);
-            UpdateParentListInput(creatureInfoInputExtractor); // this function is only used for single-creature extractions, e.g. LastExport
-            creatureInfoInputExtractor.AlreadyExistingCreature = alreadyExistingCreature;
-            if (!string.IsNullOrEmpty(filePath))
-                SetMessageLabelText(Loc.S("creatureOfFile") + Environment.NewLine + filePath, path: filePath);
-            return creatureExists;
+            return mutationLevelsAdjusted;
         }
 
         /// <summary>
@@ -1220,6 +1399,57 @@ namespace ARKBreedingStats
             return creature;
         }
 
+        private void SetCreatureValuesToExtractor(Creature c, bool onlyWild = false)
+        {
+            if (c == null) return;
+            Species species = c.Species;
+            if (species == null)
+            {
+                MessageBoxes.ShowMessageBox($"Unknown species\n{c.speciesBlueprint}\nTry to update the species-stats, or redownload the tool.");
+                return;
+            }
+
+            ClearAll();
+            speciesSelector1.SetSpecies(species);
+            // copy values over to extractor
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                _statIOs[s].Input = onlyWild
+                    ? StatValueCalculation.CalculateValue(species, s, c.levelsWild[s], c.levelsMutated[s], 0, true, c.tamingEff,
+                        c.imprintingBonus)
+                    : c.valuesDom[s];
+                if (c.levelsDom[s] > 0) _statIOs[s].DomLevelLockedZero = false;
+            }
+
+            if (c.isBred)
+                rbBredExtractor.Checked = true;
+            else if (c.isDomesticated)
+                rbTamedExtractor.Checked = true;
+            else
+                rbWildExtractor.Checked = true;
+
+            numericUpDownImprintingBonusExtractor.ValueSave = (decimal)c.imprintingBonus * 100;
+            // set total level
+            int level = onlyWild ? c.levelsWild[Stats.Torpidity] : c.Level;
+            numericUpDownLevel.ValueSave = level;
+
+            // set colors
+            creatureInfoInputExtractor.RegionColors = c.colors;
+
+            tabControlMain.SelectedTab = tabPageExtractor;
+        }
+
+        private void SetCreatureLevelsToExtractor(Creature c)
+        {
+            for (var si = 0; si < Stats.StatsCount; si++)
+            {
+                _statIOs[si].LevelWild = c.levelsWild[si];
+                _statIOs[si].LevelDom = c.levelsDom[si];
+                _statIOs[si].LevelMut = c.levelsMutated?[si] ?? 0;
+                _statIOs[si].BreedingValue = c.valuesBreeding[si];
+            }
+        }
+
         /// <summary>
         /// Gives feedback to the user if the current creature in the extractor is already in the library.
         /// This uses the ARK-ID and only works if exported creatures are imported
@@ -1279,7 +1509,9 @@ namespace ARKBreedingStats
 
         private void ExtractorStatLevelChanged(StatIO _)
         {
-            radarChartExtractor.SetLevels(_statIOs.Select(s => s.LevelWild).ToArray(), _statIOs.Select(s => s.LevelMut).ToArray(), speciesSelector1.SelectedSpecies);
+            var cr = CreateCreatureFromExtractorOrTester(creatureInfoInputExtractor);
+            radarChartExtractor.SetLevels(cr.levelsWild, cr.levelsMutated, cr.Species);
+            creatureInfoInputExtractor.UpdateParentInheritances(cr);
         }
 
         #region OCR label sets

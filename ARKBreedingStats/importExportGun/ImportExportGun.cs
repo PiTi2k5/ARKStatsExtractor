@@ -14,8 +14,31 @@ namespace ARKBreedingStats.importExportGun
     {
         /// <summary>
         /// Load creature from file created with the export gun (mod).
+        /// Supports .sav files (ASE) and .json files (ASA).
+        /// The out parameter statValues contains the stat values of the export file.
         /// </summary>
-        public static Creature LoadCreature(string filePath, out string resultText, out string serverMultipliersHash)
+        public static Creature LoadCreature(string filePath, out string resultText, out string serverMultipliersHash,
+            out double[] statValues, bool allowUnknownSpecies = false)
+        {
+            var exportedCreature = LoadCreatureFile(filePath, out resultText, out serverMultipliersHash);
+
+            if (exportedCreature == null)
+            {
+                statValues = null;
+                return null;
+            }
+
+            var creature = ConvertExportGunToCreature(exportedCreature, out resultText, out statValues, allowUnknownSpecies);
+            if (creature != null)
+                creature.domesticatedAt = File.GetLastWriteTime(filePath);
+            return creature;
+        }
+
+        /// <summary>
+        /// Load exportGunCreatureFile from file created with the export gun (mod).
+        /// Supports .sav files (ASE) and .json files (ASA).
+        /// </summary>
+        public static ExportGunCreatureFile LoadCreatureFile(string filePath, out string resultText, out string serverMultipliersHash)
         {
             resultText = null;
             serverMultipliersHash = null;
@@ -40,8 +63,9 @@ namespace ARKBreedingStats.importExportGun
                             break;
                     }
 
-                    return LoadCreatureFromJson(jsonText, resultText, out resultText, out serverMultipliersHash);
+                    var creature = LoadExportGunCreatureFromJson(jsonText, resultText, out resultText, out serverMultipliersHash, filePath);
 
+                    return creature;
                 }
                 catch (IOException) when (tryIndex < tryLoadCount - 1)
                 {
@@ -58,13 +82,25 @@ namespace ARKBreedingStats.importExportGun
             return null;
         }
 
-        public static Creature LoadCreatureFromJson(string jsonText, string resultSoFar, out string resultText, out string serverMultipliersHash, string filePath = null)
+        public static Creature LoadCreatureFromExportGunJson(string jsonText, out string resultText, out string serverMultipliersHash, string filePath = null, bool allowUnknownSpecies = false)
+        {
+            var exportGunFile = LoadExportGunCreatureFromJson(jsonText, null, out resultText,
+                out serverMultipliersHash, filePath);
+            if (exportGunFile == null)
+            {
+                return null;
+            }
+
+            return ConvertExportGunToCreature(exportGunFile, out resultText, out double[] statValues, allowUnknownSpecies);
+        }
+
+        public static ExportGunCreatureFile LoadExportGunCreatureFromJson(string jsonText, string resultSoFar, out string resultText, out string serverMultipliersHash, string filePath = null)
         {
             resultText = resultSoFar;
             serverMultipliersHash = null;
             if (string.IsNullOrEmpty(jsonText))
             {
-                resultText = $"Error when importing file {filePath}: {resultText}";
+                resultText = $"Error when importing file {filePath}: file is empty. {resultText}";
                 return null;
             }
             var exportedCreature = JsonConvert.DeserializeObject<ExportGunCreatureFile>(jsonText);
@@ -76,58 +112,46 @@ namespace ARKBreedingStats.importExportGun
 
             if (string.IsNullOrEmpty(exportedCreature.BlueprintPath))
             {
-                resultText = "file contains no blueprint path, it's probably not a creature file"; // could be a server multipliers file
+                resultText = $"file {filePath} contains no blueprint path, it's probably not a creature file (could be a server multipliers file).";
                 return null;
             }
 
             serverMultipliersHash = exportedCreature.ServerMultipliersHash;
-
-            return ConvertExportGunToCreature(exportedCreature, out resultText);
+            return exportedCreature;
         }
 
-        private static Creature ConvertExportGunToCreature(ExportGunCreatureFile ec, out string error)
+        private static Creature ConvertExportGunToCreature(ExportGunCreatureFile ec, out string error, out double[] statValues, bool allowUnknownSpecies = false)
         {
             error = null;
+            statValues = null;
             if (ec == null) return null;
 
             var species = Values.V.SpeciesByBlueprint(ec.BlueprintPath, true);
             if (species == null)
             {
-                error = $"blueprintpath {ec.BlueprintPath} couldn't be found, maybe you need to load a mod values file.";
-                return null;
+                error = $"Unknown species. The blueprint path {ec.BlueprintPath} couldn't be found, maybe you need to load a mod values file.";
+                if (!allowUnknownSpecies)
+                    return null;
             }
 
             var wildLevels = new int[Stats.StatsCount];
             var domLevels = new int[Stats.StatsCount];
             var mutLevels = new int[Stats.StatsCount];
+            statValues = new double[Stats.StatsCount];
             var si = 0;
             foreach (var s in ec.Stats)
             {
                 wildLevels[si] = s.Wild;
                 domLevels[si] = s.Tamed;
                 mutLevels[si] = s.Mutated;
+                statValues[si] = s.Value + (Stats.IsPercentage(si) ? 1 : 0);
                 si++;
             }
 
             var arkId = Utils.ConvertArkIdsToLongArkId(ec.DinoId1Int, ec.DinoId2Int);
 
-            var isWild = string.IsNullOrEmpty(ec.DinoName)
-                         && string.IsNullOrEmpty(ec.TribeName)
-                         && string.IsNullOrEmpty(ec.TamerString)
-                         && string.IsNullOrEmpty(ec.OwningPlayerName)
-                         && string.IsNullOrEmpty(ec.ImprinterName)
-                         && ec.OwningPlayerID == 0
-                         ;
-
-            var isBred = !string.IsNullOrEmpty(ec.ImprinterName)
-                         || (ec.DinoImprintingQuality > 0 && ec.TameEffectiveness > 0.9999);
-
-            var owner = !string.IsNullOrEmpty(ec.OwningPlayerName) ? ec.OwningPlayerName
-                : !string.IsNullOrEmpty(ec.ImprinterName) ? ec.ImprinterName
-                : ec.TamerString;
-
-            var c = new Creature(species, ec.DinoName, owner, ec.TribeName, species.noGender ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male,
-                wildLevels, domLevels, mutLevels, isWild ? -3 : ec.TameEffectiveness, isBred, ec.DinoImprintingQuality,
+            var c = new Creature(species, ec.DinoName, ec.Owner(), ec.TribeName, species?.noGender != false ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male,
+                wildLevels, domLevels, mutLevels, ec.IsWild() ? -3 : ec.TameEffectiveness, ec.IsBred(), ec.DinoImprintingQuality,
                 CreatureCollection.CurrentCreatureCollection?.wildLevelStep)
             {
                 ArkId = arkId,
@@ -177,7 +201,7 @@ namespace ARKBreedingStats.importExportGun
                     Wild = c.levelsWild?[si] ?? 0,
                     Tamed = c.levelsDom?[si] ?? 0,
                     Mutated = c.levelsMutated?[si] ?? 0,
-                    Value = (float)c.valuesDom[si]
+                    Value = (float)(c.valuesDom[si] - (Stats.IsPercentage(si) ? 1 : 0))
                 };
             }
 
@@ -230,7 +254,7 @@ namespace ARKBreedingStats.importExportGun
         {
             var exportedServerMultipliers = ReadServerMultipliers(filePath, out resultText);
             if (exportedServerMultipliers == null) return false;
-            return SetServerMultipliers(cc, exportedServerMultipliers, newServerMultipliersHash);
+            return SetCollectionMultipliers(cc, exportedServerMultipliers, newServerMultipliersHash);
         }
 
         /// <summary>
@@ -240,7 +264,7 @@ namespace ARKBreedingStats.importExportGun
         {
             var exportedServerMultipliers = ReadServerMultipliersFromJson(jsonServerMultipliers, null, out resultText);
             if (exportedServerMultipliers == null) return false;
-            return SetServerMultipliers(cc, exportedServerMultipliers, newServerMultipliersHash);
+            return SetCollectionMultipliers(cc, exportedServerMultipliers, newServerMultipliersHash);
         }
 
         internal static ExportGunServerFile ReadServerMultipliers(string filePath, out string resultText)
@@ -314,9 +338,35 @@ namespace ARKBreedingStats.importExportGun
             return exportedServerMultipliers;
         }
 
-        internal static bool SetServerMultipliers(CreatureCollection cc, ExportGunServerFile esm, string newServerMultipliersHash)
+        internal static bool SetCollectionMultipliers(CreatureCollection cc, ExportGunServerFile esm, string newServerMultipliersHash)
         {
-            if (cc == null
+            if (cc?.serverMultipliers == null
+                || esm?.TameAdd == null
+                || esm.TameAff == null
+                || esm.WildLevel == null
+                || esm.TameLevel == null
+                )
+                return false; // invalid server multipliers
+
+            SetServerMultipliers(cc.serverMultipliers, esm);
+
+            cc.maxWildLevel = (int)Math.Ceiling(esm.MaxWildLevel);
+            cc.maxServerLevel = esm.DestroyTamesOverLevelClamp;
+            cc.Game = esm.Game;
+
+            cc.ServerMultipliersHash = newServerMultipliersHash;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Sets the properties of the exportGunServerFile to the passed ServerMultipliers.
+        /// </summary>
+        /// <param name="sm">The properties of this object are set</param>
+        /// <param name="esm">The properties of this object are used</param>
+        internal static bool SetServerMultipliers(ServerMultipliers sm, ExportGunServerFile esm)
+        {
+            if (sm == null
                 || esm?.TameAdd == null
                 || esm.TameAff == null
                 || esm.WildLevel == null
@@ -328,32 +378,27 @@ namespace ARKBreedingStats.importExportGun
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                cc.serverMultipliers.statMultipliers[s][Stats.IndexTamingAdd] = Math.Round(esm.TameAdd[s], roundToDigits);
-                cc.serverMultipliers.statMultipliers[s][Stats.IndexTamingMult] = Math.Round(esm.TameAff[s], roundToDigits);
-                cc.serverMultipliers.statMultipliers[s][Stats.IndexLevelWild] = Math.Round(esm.WildLevel[s], roundToDigits);
-                cc.serverMultipliers.statMultipliers[s][Stats.IndexLevelDom] = Math.Round(esm.TameLevel[s], roundToDigits);
+                sm.statMultipliers[s][ServerMultipliers.IndexTamingAdd] = Math.Round(esm.TameAdd[s], roundToDigits);
+                sm.statMultipliers[s][ServerMultipliers.IndexTamingMult] = Math.Round(esm.TameAff[s], roundToDigits);
+                sm.statMultipliers[s][ServerMultipliers.IndexLevelWild] = Math.Round(esm.WildLevel[s], roundToDigits);
+                sm.statMultipliers[s][ServerMultipliers.IndexLevelDom] = Math.Round(esm.TameLevel[s], roundToDigits);
             }
-            cc.maxWildLevel = (int)Math.Ceiling(esm.MaxWildLevel);
-            cc.maxServerLevel = esm.DestroyTamesOverLevelClamp;
-            cc.serverMultipliers.TamingSpeedMultiplier = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.DinoCharacterFoodDrainMultiplier = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
-            cc.serverMultipliers.WildDinoCharacterFoodDrainMultiplier = Math.Round(esm.WildDinoCharacterFoodDrainMultiplier, roundToDigits);
-            cc.serverMultipliers.TamedDinoCharacterFoodDrainMultiplier = Math.Round(esm.TamedDinoCharacterFoodDrainMultiplier, roundToDigits);
-            cc.serverMultipliers.WildDinoTorporDrainMultiplier = Math.Round(esm.WildDinoTorporDrainMultiplier, roundToDigits);
-            cc.serverMultipliers.MatingSpeedMultiplier = Math.Round(esm.MatingSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.MatingIntervalMultiplier = Math.Round(esm.MatingIntervalMultiplier, roundToDigits);
-            cc.serverMultipliers.EggHatchSpeedMultiplier = Math.Round(esm.EggHatchSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.BabyMatureSpeedMultiplier = Math.Round(esm.BabyMatureSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.BabyCuddleIntervalMultiplier = Math.Round(esm.BabyCuddleIntervalMultiplier, roundToDigits);
-            cc.serverMultipliers.BabyImprintAmountMultiplier = Math.Round(esm.BabyImprintAmountMultiplier, roundToDigits);
-            cc.serverMultipliers.BabyImprintingStatScaleMultiplier = Math.Round(esm.BabyImprintingStatScaleMultiplier, roundToDigits);
-            cc.serverMultipliers.BabyFoodConsumptionSpeedMultiplier = Math.Round(esm.BabyFoodConsumptionSpeedMultiplier, roundToDigits);
-            cc.serverMultipliers.AllowSpeedLeveling = esm.AllowSpeedLeveling;
-            cc.serverMultipliers.AllowFlyerSpeedLeveling = esm.AllowFlyerSpeedLeveling;
-            cc.serverMultipliers.SinglePlayerSettings = esm.UseSingleplayerSettings;
-            cc.Game = esm.Game;
-
-            cc.ServerMultipliersHash = newServerMultipliersHash;
+            sm.TamingSpeedMultiplier = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
+            sm.DinoCharacterFoodDrainMultiplier = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
+            sm.WildDinoCharacterFoodDrainMultiplier = Math.Round(esm.WildDinoCharacterFoodDrainMultiplier, roundToDigits);
+            sm.TamedDinoCharacterFoodDrainMultiplier = Math.Round(esm.TamedDinoCharacterFoodDrainMultiplier, roundToDigits);
+            sm.WildDinoTorporDrainMultiplier = Math.Round(esm.WildDinoTorporDrainMultiplier, roundToDigits);
+            sm.MatingSpeedMultiplier = Math.Round(esm.MatingSpeedMultiplier, roundToDigits);
+            sm.MatingIntervalMultiplier = Math.Round(esm.MatingIntervalMultiplier, roundToDigits);
+            sm.EggHatchSpeedMultiplier = Math.Round(esm.EggHatchSpeedMultiplier, roundToDigits);
+            sm.BabyMatureSpeedMultiplier = Math.Round(esm.BabyMatureSpeedMultiplier, roundToDigits);
+            sm.BabyCuddleIntervalMultiplier = Math.Round(esm.BabyCuddleIntervalMultiplier, roundToDigits);
+            sm.BabyImprintAmountMultiplier = Math.Round(esm.BabyImprintAmountMultiplier, roundToDigits);
+            sm.BabyImprintingStatScaleMultiplier = Math.Round(esm.BabyImprintingStatScaleMultiplier, roundToDigits);
+            sm.BabyFoodConsumptionSpeedMultiplier = Math.Round(esm.BabyFoodConsumptionSpeedMultiplier, roundToDigits);
+            sm.AllowSpeedLeveling = esm.AllowSpeedLeveling;
+            sm.AllowFlyerSpeedLeveling = esm.AllowFlyerSpeedLeveling;
+            sm.SinglePlayerSettings = esm.UseSingleplayerSettings;
 
             return true;
         }

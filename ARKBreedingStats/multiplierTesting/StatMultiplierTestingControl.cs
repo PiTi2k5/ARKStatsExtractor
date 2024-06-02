@@ -4,6 +4,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Input;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.multiplierTesting
 {
@@ -108,6 +109,19 @@ namespace ARKBreedingStats.multiplierTesting
             updateValues = true;
         }
 
+        public StatMultiplierTestingControl(ToolTip tt) : this()
+        {
+            SetTooltips(tt);
+        }
+
+        public void SetTooltips(ToolTip tt)
+        {
+            if (tt == null) return;
+            tt.SetToolTip(BtSolveTaTm, "Solves Ta and Tm (species stat multipliers) with two equations");
+            tt.SetToolTip(BtSolveTaMTmM, "Solves TaM and TmM (server stat multipliers) with two equations");
+            tt.SetToolTip(BtSolveTaTbhm, "Solves Ta and TBHM (species stat multipliers, TBHM used only for HP) with two equations.");
+        }
+
         private void UpdateCalculations(bool forceUpdate = false)
         {
             updateValues = updateValues || forceUpdate;
@@ -148,6 +162,9 @@ namespace ARKBreedingStats.multiplierTesting
             set => lStatName.Text = value;
         }
 
+        /// <summary>
+        /// [tamingAdd, tamingMult, levelupDom, levelupWild]
+        /// </summary>
         public double[] StatMultipliers
         {
             get => new[] { (double)nudTaM.Value, (double)nudTmM.Value, (double)nudIdM.Value, (double)nudIwM.Value };
@@ -158,10 +175,10 @@ namespace ARKBreedingStats.multiplierTesting
                 var updateValuesKeeper = updateValues;
                 updateValues = false;
                 // 0:tamingAdd, 1:tamingMult, 2:levelupDom, 3:levelupWild
-                nudTaM.Value = (decimal)value[0];
-                nudTmM.Value = (decimal)value[1];
-                nudIdM.Value = (decimal)value[2];
-                nudIwM.Value = (decimal)value[3];
+                nudTaM.ValueSaveDouble = value[0];
+                nudTmM.ValueSaveDouble = value[1];
+                nudIdM.ValueSaveDouble = value[2];
+                nudIwM.ValueSaveDouble = value[3];
                 UpdateCalculations(updateValuesKeeper);
             }
         }
@@ -205,6 +222,8 @@ namespace ARKBreedingStats.multiplierTesting
                 UpdateCalculations(updateValuesKeeper);
             }
         }
+
+        public double[] StatValues => new[] { nudB.ValueDouble, nudIw.ValueDouble, nudId.ValueDouble, nudTa.ValueDouble, nudTm.ValueDouble };
 
         public double StatValue
         {
@@ -365,11 +384,11 @@ namespace ARKBreedingStats.multiplierTesting
         {
             if (nudLw.Value != 0 && nudIw.Value != 0)
             {
-                var iwM = CalculateMultipliers.IwM((double)nudStatValue.Value * (_percent ? 0.01 : 1), (double)nudB.Value * AtlasBaseMultiplier, (int)nudLw.Value, (double)nudIw.Value,
-                    (double)nudIwM.Value, _spIw, (double)nudTBHM.Value, (double)nudTa.Value, (double)nudTaM.Value, _spTa,
+                var iwM = CalculateMultipliers.IwM((double)nudStatValue.Value * (_percent ? 0.01 : 1), (double)nudB.Value * AtlasBaseMultiplier, (int)nudLw.Value,
+                    (double)nudIw.Value, _spIw, (double)nudTBHM.Value, (double)nudTa.Value, (double)nudTaM.Value, _spTa,
                     (double)nudTm.Value, (double)nudTmM.Value, _spTm, _tamed, _bred, _NoIB, _TE, (int)nudLd.Value, (double)nudId.Value, (double)nudIdM.Value * AtlasIdMultiplier,
                     _spId, _IB, _IBM, _sIBM) ?? 0;
-                nudIwM.ValueSaveDouble = Math.Round(iwM, 5);
+                nudIwM.ValueSaveDouble = Math.Round(iwM, DecimalPlaces);
                 return true;
             }
             if (!silent) MessageBox.Show("Divide by Zero-error, e.g. Lw or Iw needs to be at least 1.");
@@ -381,7 +400,7 @@ namespace ARKBreedingStats.multiplierTesting
             var idM = CalculateMultipliers.IdM((double)nudStatValue.Value * (_percent ? 0.01 : 1), Vd, (int)nudLd.Value, (double)nudId.Value * AtlasIdMultiplier, _spId);
             if (idM != null)
             {
-                nudIdM.ValueSaveDouble = Math.Round(idM.Value, 5);
+                nudIdM.ValueSaveDouble = Math.Round(idM.Value, DecimalPlaces);
                 return true;
             }
 
@@ -399,7 +418,7 @@ namespace ARKBreedingStats.multiplierTesting
 
             if (taM.HasValue)
             {
-                nudTaM.ValueSaveDouble = Math.Round(taM.Value, 5);
+                nudTaM.ValueSaveDouble = Math.Round(taM.Value, DecimalPlaces);
                 return true;
             }
             if (!silent) MessageBox.Show("Divide by Zero-error, e.g. Ta needs to be > 0.");
@@ -414,10 +433,39 @@ namespace ARKBreedingStats.multiplierTesting
                     (double)nudIwM.Value, _spIw, (double)nudTBHM.Value, (double)nudTa.Value, (double)nudTaM.Value, _spTa,
                     (double)nudTm.Value, (double)nudTmM.Value, _spTm, _tamed, _bred, _NoIB, _TE, (int)nudLd.Value, (double)nudId.Value, (double)nudIdM.Value * AtlasIdMultiplier,
                     _spId, _IB, _IBM, _sIBM) ?? 0;
-                nudTmM.ValueSaveDouble = Math.Round(tmM, 5);
+                nudTmM.ValueSaveDouble = Math.Round(tmM, DecimalPlaces);
                 return true;
             }
             if (!silent) MessageBox.Show("Divide by Zero-error, e.g. Tm and TE needs to be > 0.");
+            return false;
+        }
+
+        public bool CalculateIw(bool silent = true)
+        {
+            if (nudB.ValueDouble == 0) return true; // silently ignore this apparently unused stat
+            if (nudLw.Value != 0 && nudIwM.Value != 0)
+            {
+                var iw = CalculateMultipliers.Iw((double)nudStatValue.Value * (_percent ? 0.01 : 1), (double)nudB.Value * AtlasBaseMultiplier, (int)nudLw.Value,
+                    (double)nudIwM.Value, _spIw, (double)nudTBHM.Value, (double)nudTa.Value, (double)nudTaM.Value, _spTa,
+                    (double)nudTm.Value, (double)nudTmM.Value, _spTm, _tamed, _bred, _NoIB, _TE, (int)nudLd.Value, (double)nudId.Value, (double)nudIdM.Value * AtlasIdMultiplier,
+                    _spId, _IB, _IBM, _sIBM) ?? 0;
+                nudIw.ValueSaveDouble = Math.Round(iw, DecimalPlaces);
+                return true;
+            }
+            if (!silent) MessageBox.Show("Divide by Zero-error, e.g. Lw or IwM needs to be greater than 0.");
+            return false;
+        }
+
+        public bool CalculateId(bool silent = true)
+        {
+            var id = CalculateMultipliers.Id((double)nudStatValue.Value * (_percent ? 0.01 : 1), Vd, (int)nudLd.Value, (double)nudIdM.Value * AtlasIdMultiplier, _spId);
+            if (id != null)
+            {
+                nudId.ValueSaveDouble = Math.Round(id.Value, DecimalPlaces);
+                return true;
+            }
+
+            if (!silent) MessageBox.Show("Divide by Zero-error, e.g. Ld needs to be at least 1.");
             return false;
         }
 
@@ -777,6 +825,16 @@ namespace ARKBreedingStats.multiplierTesting
             ResetMultiplier(1, Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control));
         }
 
+        private void calculateIwToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CalculateIw(false);
+        }
+
+        private void calculateIdToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CalculateId(false);
+        }
+
         private void btCalculateDomLevel_Click(object sender, EventArgs e)
         {
             SetClosestDomLevel();
@@ -854,6 +912,97 @@ namespace ARKBreedingStats.multiplierTesting
             updateValues = true;
             if (doUpdate)
                 UpdateCalculations(true);
+        }
+
+        #region Ta-Tm-solver
+        private TaTmSolver _taTmSolver = null;
+
+        private void BtStoreTaTm_Click(object sender, EventArgs e)
+        {
+            if (_taTmSolver == null) _taTmSolver = new TaTmSolver();
+            _taTmSolver.SetFirstEquation(nudStatValue.ValueDouble * (_percent ? 0.01 : 1), nudB.ValueDouble, nudLw.ValueDouble, nudIw.ValueDouble,
+                nudIwM.ValueDouble, nudTBHM.ValueDouble, _IB, _sIBM, _IBM, _TE, nudLd.ValueDouble, nudId.ValueDouble, nudIdM.ValueDouble);
+            LbTaTmTeStored.Text = $"TE: {_TE:p0}";
+            LbTaTmTeStored.BackColor = Color.LightGreen;
+        }
+
+        #endregion
+
+        private void BtSolveTaMTmM_Click(object sender, EventArgs e)
+        {
+            SolveTaMTmM(true);
+        }
+
+        private void BtSolveTaTm_Click(object sender, EventArgs e)
+        {
+            SolveTaMTmM(false);
+        }
+
+        private void BtSolveTaTbhm_Click(object sender, EventArgs e)
+        {
+            SolveTaMTbhm();
+        }
+
+        /// <summary>
+        /// Solve a = Ta * TaM and b = Tm * TmM with two equations.
+        /// </summary>
+        /// <param name="serverValues">If true it solves for TaM and TmM, if false it solves for Ta and Tm</param>
+        private void SolveTaMTmM(bool serverValues)
+        {
+            if (_taTmSolver == null)
+            {
+                MessageBoxes.ShowMessageBox("Set first equation first");
+                return;
+            }
+
+            var errorText = _taTmSolver.CalculateTaTm(nudStatValue.ValueDouble * (_percent ? 0.01 : 1), nudB.ValueDouble, nudLw.ValueDouble, nudIw.ValueDouble,
+                nudIwM.ValueDouble, nudTBHM.ValueDouble, _IB, _sIBM, _IBM, _TE, nudLd.ValueDouble, nudId.ValueDouble,
+                nudIdM.ValueDouble, out var taTaM, out var tmTmM);
+            if (!string.IsNullOrEmpty(errorText))
+            {
+                MessageBoxes.ShowMessageBox(errorText);
+                return;
+            }
+
+            if (serverValues)
+            {
+                if (nudTa.ValueDouble != 0)
+                    nudTaM.ValueSaveDouble = Math.Round(taTaM / nudTa.ValueDouble, DecimalPlaces);
+                if (nudTm.ValueDouble != 0)
+                    nudTmM.ValueSaveDouble = Math.Round(tmTmM / nudTm.ValueDouble, DecimalPlaces);
+            }
+            else
+            {
+                if (nudTaM.ValueDouble != 0)
+                    nudTa.ValueSaveDouble = Math.Round(taTaM / nudTaM.ValueDouble, DecimalPlaces);
+                if (nudTmM.ValueDouble != 0)
+                    nudTm.ValueSaveDouble = Math.Round(tmTmM / nudTmM.ValueDouble, DecimalPlaces);
+            }
+        }
+
+        /// <summary>
+        /// Solve a = Ta * TaM and TBHM with two equations.
+        /// </summary>
+        private void SolveTaMTbhm()
+        {
+            if (_taTmSolver == null)
+            {
+                MessageBoxes.ShowMessageBox("Set first equation first");
+                return;
+            }
+
+            var errorText = _taTmSolver.CalculateTaTbhm(nudStatValue.ValueDouble * (_percent ? 0.01 : 1), nudB.ValueDouble, nudLw.ValueDouble, nudIw.ValueDouble,
+                nudIwM.ValueDouble, _IB, _sIBM, _IBM, _TE, nudLd.ValueDouble, nudId.ValueDouble,
+                nudIdM.ValueDouble, out var taTaM, out var tbhm);
+            if (!string.IsNullOrEmpty(errorText))
+            {
+                MessageBoxes.ShowMessageBox(errorText);
+                return;
+            }
+
+            if (nudTaM.ValueDouble != 0)
+                nudTa.ValueSaveDouble = Math.Round(taTaM / nudTaM.ValueDouble, DecimalPlaces);
+            nudTBHM.ValueSaveDouble = Math.Round(tbhm, DecimalPlaces);
         }
     }
 }

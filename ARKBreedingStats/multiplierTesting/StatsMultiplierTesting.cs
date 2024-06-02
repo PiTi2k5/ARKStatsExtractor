@@ -4,15 +4,23 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.values;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
 using ARKBreedingStats.utils;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using ARKBreedingStats.importExportGun;
 
 namespace ARKBreedingStats.multiplierTesting
 {
     public partial class StatsMultiplierTesting : UserControl
     {
         public event Action OnApplyMultipliers;
+        public event Form1.SetMessageLabelTextEventHandler SetMessageLabelText;
 
         private readonly StatMultiplierTestingControl[] _statControls;
         private CreatureCollection _cc;
@@ -29,8 +37,8 @@ namespace ARKBreedingStats.multiplierTesting
             _statControls = new StatMultiplierTestingControl[Stats.StatsCount];
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                var sc = new StatMultiplierTestingControl();
-                if (Utils.Precision(s) == 3)
+                var sc = new StatMultiplierTestingControl(_tt);
+                if (Stats.IsPercentage(s))
                     sc.Percent = true;
                 sc.OnLevelChanged += Sc_OnLevelChanged;
                 sc.OnTECalculated += SetTE;
@@ -39,10 +47,10 @@ namespace ARKBreedingStats.multiplierTesting
                 _statControls[s] = sc;
             }
             // add controls in order like in-game
-            for (int s = 0; s < Stats.StatsCount; s++)
+            foreach (var s in Stats.DisplayOrder)
             {
-                flowLayoutPanel1.Controls.Add(_statControls[Stats.DisplayOrder[s]]);
-                flowLayoutPanel1.SetFlowBreak(_statControls[Stats.DisplayOrder[s]], true);
+                flowLayoutPanel1.Controls.Add(_statControls[s]);
+                flowLayoutPanel1.SetFlowBreak(_statControls[s], true);
             }
 
             // set bottom controls to bottom
@@ -148,10 +156,11 @@ namespace ARKBreedingStats.multiplierTesting
 
         private void nudTE_ValueChanged(object sender, EventArgs e)
         {
+            var te = (double)nudTE.Value / 100;
             for (int s = 0; s < Stats.StatsCount; s++)
-                _statControls[s].TE = (double)nudTE.Value / 100;
+                _statControls[s].TE = te;
             if (rbTamed.Checked)
-                LbCalculatedWildLevel.Text = $"LW: {Creature.CalculatePreTameWildLevel(_statControls[Stats.Torpidity].LevelWild + 1, (double)nudTE.Value / 100)}";
+                LbCalculatedWildLevel.Text = $"LW: {Creature.CalculatePreTameWildLevel(_statControls[Stats.Torpidity].LevelWild + 1, te)}";
         }
 
         private void nudIB_ValueChanged(object sender, EventArgs e)
@@ -235,6 +244,7 @@ namespace ARKBreedingStats.multiplierTesting
                 (!forceUpdate && (_selectedSpecies == species || !cbUpdateOnSpeciesChange.Checked))) return;
 
             _selectedSpecies = species;
+            BtResetSpeciesValues.Text = $"Reset species values - {_selectedSpecies.DescriptiveNameAndMod}";
             LbBlueprintPath.Text = $"BlueprintPath: {species.blueprintPath}";
 
             double?[][] customStatOverrides = null;
@@ -246,7 +256,7 @@ namespace ARKBreedingStats.multiplierTesting
             for (int s = 0; s < Stats.StatsCount; s++)
             {
                 _statControls[s].SetStatValues(_selectedSpecies.fullStatsRaw[s], customStatsAvailable ? customStatOverrides?[s] : null,
-                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(s, out var altV) ? altV / _selectedSpecies.fullStatsRaw[s][0] : 1,
+                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(s, out var altV) ? altV / _selectedSpecies.fullStatsRaw[s][Species.StatsRawIndexBase] : 1,
                     s == Stats.SpeedMultiplier && !(CbAllowSpeedLeveling.Checked && (CbAllowFlyerSpeedLeveling.Checked || !species.isFlyer)));
                 _statControls[s].StatImprintingBonusMultiplier = customStatsAvailable ? customStatOverrides?[Stats.StatsCount]?[s] ?? statImprintMultipliers[s] : statImprintMultipliers[s];
                 _statControls[s].Visible = species.UsesStat(s);
@@ -302,10 +312,10 @@ namespace ARKBreedingStats.multiplierTesting
             SetTE(TE);
             SetIB(IB);
 
-            if (tamed)
-                rbTamed.Checked = true;
-            else if (bred)
+            if (bred)
                 rbBred.Checked = true;
+            else if (tamed)
+                rbTamed.Checked = true;
             else rbWild.Checked = true;
 
             for (int s = 0; s < Stats.StatsCount; s++)
@@ -345,11 +355,6 @@ namespace ARKBreedingStats.multiplierTesting
             btUseMultipliersFromSettings.Visible = showWarning;
         }
 
-        private void llStatCalculation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            ArkWiki.OpenPage("Creature_stats_calculation");
-        }
-
         public CreatureCollection CreatureCollection
         {
             set
@@ -367,7 +372,7 @@ namespace ARKBreedingStats.multiplierTesting
                 if (s != Stats.Torpidity)
                     error = !_statControls[s].CalculateIwM() || error;
             }
-            if (error) MessageBox.Show("For some stats the IwM couldn't be calculated, because of a Divide by Zero-error, e.g. Lw and Iw needs to be >0.");
+            if (error) SetMessageLabelText?.Invoke("For some stats the IwM couldn't be calculated, because of a Divide by Zero-error, e.g. Lw and Iw needs to be >0.", MessageBoxIcon.Error);
         }
 
         private void idMToolStripMenuItem_Click(object sender, EventArgs e)
@@ -378,7 +383,7 @@ namespace ARKBreedingStats.multiplierTesting
                 if (s != Stats.Torpidity)
                     error = !_statControls[s].CalculateIdM() || error;
             }
-            if (error) MessageBox.Show("For some stats the IdM couldn't be calculated, because of a Divide by Zero-error, e.g. Ld needs to be at least 1.");
+            if (error) SetMessageLabelText?.Invoke("For some stats the IdM couldn't be calculated, because of a Divide by Zero-error, e.g. Ld needs to be at least 1.", MessageBoxIcon.Error);
         }
 
         private void taMToolStripMenuItem_Click(object sender, EventArgs e)
@@ -389,7 +394,7 @@ namespace ARKBreedingStats.multiplierTesting
                 if (s != Stats.Torpidity)
                     error = !_statControls[s].CalculateTaM() || error;
             }
-            if (error) MessageBox.Show("For some stats the TaM couldn't be calculated, because of a Divide by Zero-error, e.g. Ta needs to be at least 1.");
+            if (error) SetMessageLabelText?.Invoke("For some stats the TaM couldn't be calculated, because of a Divide by Zero-error, e.g. Ta needs to be at least 1.", MessageBoxIcon.Error);
         }
 
         private void tmMToolStripMenuItem_Click(object sender, EventArgs e)
@@ -400,7 +405,29 @@ namespace ARKBreedingStats.multiplierTesting
                 if (s != Stats.Torpidity)
                     error = !_statControls[s].CalculateTmM() || error;
             }
-            if (error) MessageBox.Show("For some stats the TmM couldn't be calculated, because of a Divide by Zero-error, e.g. Tm needs to be at least 1.");
+            if (error) SetMessageLabelText?.Invoke("For some stats the TmM couldn't be calculated, because of a Divide by Zero-error, e.g. Tm needs to be at least 1.", MessageBoxIcon.Error);
+        }
+
+        private void allIwToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool error = false;
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                error = !_statControls[s].CalculateIw() || error;
+            }
+            if (error) SetMessageLabelText?.Invoke("Divide by Zero-error, e.g. Lw or IwM needs to be greater than 0.", MessageBoxIcon.Error);
+        }
+
+        private void allIdToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool error = false;
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                if (s != Stats.Torpidity)
+                    error = !_statControls[s].CalculateId() || error;
+            }
+            if (error) SetMessageLabelText?.Invoke("Divide by Zero-error, e.g. Ld needs to be at least 1.", MessageBoxIcon.Error);
+
         }
 
         private void useStatMultipliersOfSettingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -462,7 +489,10 @@ namespace ARKBreedingStats.multiplierTesting
                         if (spM.statMultipliers[s] == null)
                             _statControls[s].SetSinglePlayerSettings();
                         else
-                            _statControls[s].SetSinglePlayerSettings(spM.statMultipliers[s][Stats.IndexLevelWild], spM.statMultipliers[s][Stats.IndexLevelDom], spM.statMultipliers[s][Stats.IndexTamingAdd], spM.statMultipliers[s][Stats.IndexTamingMult]);
+                            _statControls[s].SetSinglePlayerSettings(spM.statMultipliers[s][ServerMultipliers.IndexLevelWild],
+                                spM.statMultipliers[s][ServerMultipliers.IndexLevelDom],
+                                spM.statMultipliers[s][ServerMultipliers.IndexTamingAdd],
+                                spM.statMultipliers[s][ServerMultipliers.IndexTamingMult]);
                     }
                     return;
                 }
@@ -500,7 +530,9 @@ namespace ARKBreedingStats.multiplierTesting
                 _cc?.CustomSpeciesStats?.TryGetValue(_selectedSpecies.blueprintPath, out customStatOverrides) ?? false;
 
             _statControls[Stats.SpeedMultiplier].SetStatValues(_selectedSpecies.fullStatsRaw[Stats.SpeedMultiplier], customStatsAvailable ? customStatOverrides?[Stats.SpeedMultiplier] : null,
-                    _selectedSpecies.altBaseStatsRaw != null && _selectedSpecies.altBaseStatsRaw.TryGetValue(Stats.SpeedMultiplier, out var altV) ? altV / _selectedSpecies.fullStatsRaw[Stats.SpeedMultiplier][0] : 1,
+                    _selectedSpecies.altBaseStatsRaw != null
+                    && _selectedSpecies.altBaseStatsRaw.TryGetValue(Stats.SpeedMultiplier, out var altV)
+                        ? altV / _selectedSpecies.fullStatsRaw[Stats.SpeedMultiplier][Species.StatsRawIndexBase] : 1,
                     !speedLevelingAllowed);
         }
 
@@ -555,6 +587,285 @@ namespace ARKBreedingStats.multiplierTesting
             _tt.SetToolTip(LbIdM, "Increase per domestic level global multiplier | per level stats multiplier dino tamed");
             _tt.SetToolTip(LbFinalValue, "Final stat value displayed in the game");
             _tt.SetToolTip(LbCalculatedWildLevel, "Calculated pre tame level, dependent on the taming effectiveness and the post tame level");
+            _tt.SetToolTip(LbSpeciesValuesExtractor, @"Drop export gun files or folders with export gun files on this label to extract the species stat values.
+If one of the files is an export gun server multiplier file, its values are used.
+To determine all species values, the files with the following creature combinations are needed
+* wild level 1 creature for base values
+* wild creature with at least one level in all possible stats
+* two tamed creature with no applied levels and different TE (TE difference should be large to avoid rounding errors, at least 10 %points difference should be good) and different wild levels in HP (for TBHM)
+* a tamed creature with at least one level in all possible stats
+* a creature with imprinting (probably an imprinting value of at least 10 % should result in good results) to determine which stats are effected by imprinting in what extend
+");
+        }
+
+        private void StatsMultiplierTesting_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }
+
+        /// <summary>
+        /// Use stat values of file, and if it's an export gun files also the levels.
+        /// </summary>
+        private void StatsMultiplierTesting_DragDrop(object sender, DragEventArgs e)
+        {
+            if (!(e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Any()))
+                return;
+            ProcessDroppedFiles(files);
+        }
+
+        private void ProcessDroppedFiles(string[] files)
+        {
+            var creatureImported = false; // only import one creature (second would only overwrite first)
+            var serverMultipliersImported = false;
+            var errorOccured = false;
+            var results = new List<string>();
+            string lastFilePath = null;
+            foreach (var filePath in files)
+            {
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) continue;
+
+                var extension = Path.GetExtension(filePath);
+                lastFilePath = filePath;
+                switch (extension)
+                {
+                    case ".ini":
+                        // export file
+                        if (creatureImported) continue;
+                        var cv = importExported.ImportExported.ReadExportedCreature(filePath);
+                        SetCreatureValueValues(cv);
+                        results.Add($"imported creature values from {filePath}");
+                        continue;
+                    case ".sav":
+                    case ".json":
+                        // export gun file of ASE
+                        string lastError = null;
+                        string serverMultipliersHash = null;
+                        Creature creature = null;
+                        double[] statValues = null;
+                        if (!creatureImported)
+                            creature = ImportExportGun.LoadCreature(filePath, out lastError, out serverMultipliersHash, out statValues, true);
+                        if (creature != null)
+                        {
+                            SetCreatureValuesAndLevels(creature, statValues);
+                            results.Add($"imported creature values and levels from {filePath}{(string.IsNullOrEmpty(lastError) ? string.Empty : $". {lastError}")}");
+                            creatureImported = true;
+                        }
+                        else if (lastError != null)
+                        {
+                            if (!serverMultipliersImported)
+                            {
+                                // file could be a server multiplier file, try to read it that way
+                                var esm = ImportExportGun.ReadServerMultipliers(filePath, out var serverImportResult);
+                                if (esm != null)
+                                {
+                                    SetServerMultipliers(esm);
+                                    results.Add($"imported server multipliers from {filePath}");
+                                    serverMultipliersImported = true;
+                                    continue;
+                                }
+                                if (string.IsNullOrEmpty(serverImportResult))
+                                    results.Add(serverImportResult);
+                                continue;
+                            }
+
+                            results.Add($"error when importing file {filePath}: {lastError}");
+                            errorOccured = true;
+                        }
+
+                        break;
+                }
+            }
+            SetMessageLabelText?.Invoke(string.Join(Environment.NewLine, results),
+                errorOccured ? MessageBoxIcon.Error : MessageBoxIcon.Information, lastFilePath);
+        }
+
+        private void SetCreatureValueValues(CreatureValues cv)
+        {
+            SetCreatureValues(cv.statValues, null, null, cv.level, (cv.tamingEffMax - cv.tamingEffMin) / 2, cv.imprintingBonus, cv.isTamed, cv.isBred, cv.Species);
+        }
+
+        private void SetCreatureValuesAndLevels(Creature cr, double[] statValues = null)
+        {
+            var levelsWildAndMutated = cr.levelsWild.ToArray();
+            if (cr.levelsMutated != null)
+            {
+                for (int si = 0; si < Stats.StatsCount; si++)
+                    levelsWildAndMutated[si] = cr.levelsWild[si] + cr.levelsMutated[si];
+            }
+            SetCreatureValues(statValues ?? cr.valuesDom, levelsWildAndMutated, cr.levelsDom, cr.Level, cr.tamingEff, cr.imprintingBonus, cr.isDomesticated, cr.isBred, cr.Species);
+        }
+
+        private void SetServerMultipliers(ExportGunServerFile esm)
+        {
+            if (esm?.WildLevel == null) return;
+
+            for (int si = 0; si < Stats.StatsCount; si++)
+            {
+                _statControls[si].StatMultipliers = new[]
+                    { esm.TameAdd[si], esm.TameAff[si], esm.TameLevel[si], esm.WildLevel[si] };
+            }
+            SetIBM(esm.BabyImprintingStatScaleMultiplier);
+
+            cbSingleplayerSettings.Checked = esm.UseSingleplayerSettings;
+            CbAtlas.Checked = false; // atlas has no export gun mod
+            CbAllowSpeedLeveling.Checked = esm.AllowSpeedLeveling;
+            CbAllowFlyerSpeedLeveling.Checked = esm.AllowFlyerSpeedLeveling;
+
+            CheckIfMultipliersAreEqualToSettings();
+        }
+
+        /// <summary>
+        /// Returns the currently set server multipliers in an exportGunServerFile.
+        /// </summary>
+        private ExportGunServerFile GetServerMultipliers()
+        {
+            var esm = new ExportGunServerFile
+            {
+                BabyImprintingStatScaleMultiplier = nudIBM.ValueDouble,
+                UseSingleplayerSettings = cbSingleplayerSettings.Checked,
+                AllowSpeedLeveling = CbAllowSpeedLeveling.Checked,
+                AllowFlyerSpeedLeveling = CbAllowFlyerSpeedLeveling.Checked,
+                WildLevel = new double[Stats.StatsCount],
+                TameLevel = new double[Stats.StatsCount],
+                TameAdd = new double[Stats.StatsCount],
+                TameAff = new double[Stats.StatsCount]
+            };
+
+            for (int si = 0; si < Stats.StatsCount; si++)
+            {
+                var mults = _statControls[si].StatMultipliers;
+                esm.WildLevel[si] = mults[3];
+                esm.TameLevel[si] = mults[2];
+                esm.TameAdd[si] = mults[0];
+                esm.TameAff[si] = mults[1];
+            }
+
+            return esm;
+        }
+
+        private void copyStatValuesToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CopySpeciesStatsToClipboard();
+        }
+
+        private void CopySpeciesStatsToClipboard(string speciesBlueprintPath = null, double[] speciesImprintingMultipliers = null)
+        {
+            // copy stat values in the format of the values.json to clipboard
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(speciesBlueprintPath))
+                sb.AppendLine($"\"blueprintPath\": \"{speciesBlueprintPath}\",");
+            sb.AppendLine("\"fullStatsRaw\": [");
+            var currentCulture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+            for (var s = 0; s < Stats.StatsCount; s++)
+            {
+                var sv = _statControls[s].StatValues;
+                if (sv == null || sv.All(v => v == 0))
+                {
+                    sb.AppendLine("    null,");
+                }
+                else
+                {
+                    sb.AppendLine($"    [ {string.Join(", ", sv)} ],");
+                }
+            }
+            sb.AppendLine("]");
+
+            if (speciesImprintingMultipliers != null)
+            {
+                sb.AppendLine($"\"statImprintMult\": [ {string.Join(", ", speciesBlueprintPath)} ]");
+            }
+
+            CultureInfo.CurrentCulture = currentCulture;
+            Clipboard.SetText(sb.ToString());
+            SetMessageLabelText?.Invoke("Raw stat values copied to clipboard.", MessageBoxIcon.Information);
+        }
+
+        private void LbSpeciesValuesExtractor_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            e.Effect = DragDropEffects.Copy;
+            LbSpeciesValuesExtractor.BackColor = Color.LightGreen;
+        }
+
+        private void LbSpeciesValuesExtractor_DragLeave(object sender, EventArgs e)
+        {
+            LbSpeciesValuesExtractor.BackColor = Color.White;
+        }
+
+        private void LbSpeciesValuesExtractor_DragDrop(object sender, DragEventArgs e)
+        {
+            LbSpeciesValuesExtractor.BackColor = Color.White;
+            if (!(e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Any()))
+                return;
+            ExtractSpeciesValuesFromExportFiles(files);
+        }
+
+        private void ExtractSpeciesValuesFromExportFiles(string[] files)
+        {
+            // only export gun files are supported
+            var creatureFiles = new List<ExportGunCreatureFile>();
+            ExportGunServerFile serverMultipliersFile = null;
+            string lastError = null;
+
+            var filePaths = new List<string>();
+            foreach (var filePath in files)
+            {
+                if (File.Exists(filePath))
+                    filePaths.Add(filePath);
+                else if (Directory.Exists(filePath))
+                    filePaths.AddRange(Directory.GetFiles(filePath, "*", SearchOption.AllDirectories));
+            }
+
+            foreach (var filePath in filePaths)
+            {
+                var creature = ImportExportGun.LoadCreatureFile(filePath, out lastError, out _);
+                if (creature != null)
+                {
+                    creatureFiles.Add(creature);
+                    continue;
+                }
+
+                var svMults = ImportExportGun.ReadServerMultipliers(filePath, out _);
+                if (svMults != null)
+                    serverMultipliersFile = svMults;
+            }
+
+            if (!creatureFiles.Any())
+            {
+                if (!string.IsNullOrEmpty(lastError))
+                    lastError = Environment.NewLine + lastError;
+                MessageBoxes.ShowMessageBox("No creature files could be read" + lastError);
+                return;
+            }
+
+            if (serverMultipliersFile != null)
+                SetServerMultipliers(serverMultipliersFile);
+
+            var sm = new ServerMultipliers(true);
+            ImportExportGun.SetServerMultipliers(sm, serverMultipliersFile ?? GetServerMultipliers());
+
+            SpeciesStatsExtractor.ExtractStatValues(creatureFiles, sm, out var species, out var resultText, out var isError);
+            SetSpecies(species);
+
+            if (isError)
+            {
+                SetMessageLabelText?.Invoke("Error while trying to determine the species stats." + Environment.NewLine + resultText, MessageBoxIcon.Error);
+                return;
+            }
+
+            CopySpeciesStatsToClipboard(species.blueprintPath, species.StatImprintMultipliersRaw);
+            if (!string.IsNullOrEmpty(resultText))
+                resultText += Environment.NewLine;
+            SetMessageLabelText?.Invoke(resultText +
+                "Extracted the species values and copied them to the clipboard. Note the TBHM and singleplayer is not supported and may lead to wrong values.",
+                MessageBoxIcon.Information);
+        }
+
+        private void openWikiPageOnStatCalculationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ArkWiki.OpenPage("Creature stats calculation");
         }
     }
 }

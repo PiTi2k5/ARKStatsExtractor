@@ -181,23 +181,6 @@ namespace ARKBreedingStats
         public const int CraftingSpeedMultiplier = 11;
 
         /// <summary>
-        /// Index of additive taming multiplier in stat multipliers.
-        /// </summary>
-        public const int IndexTamingAdd = 0;
-        /// <summary>
-        /// Index of multiplicative taming multiplier in stat multipliers.
-        /// </summary>
-        public const int IndexTamingMult = 1;
-        /// <summary>
-        /// Index of domesticated level multiplier in stat multipliers.
-        /// </summary>
-        public const int IndexLevelDom = 2;
-        /// <summary>
-        /// Index of wild level multiplier in stat multipliers.
-        /// </summary>
-        public const int IndexLevelWild = 3;
-
-        /// <summary>
         /// Returns the stat-index for the given order index (like it is ordered in game).
         /// </summary>
         public static readonly int[] DisplayOrder = {
@@ -232,5 +215,25 @@ namespace ARKBreedingStats
             false, //TemperatureFortitude,
             false, //CraftingSpeedMultiplier
         };
+
+        /// <summary>
+        /// Returns if the stat is a percentage value.
+        /// </summary>
+        public static bool IsPercentage(int statIndex)
+        {
+            return statIndex == MeleeDamageMultiplier
+                   || statIndex == SpeedMultiplier
+                   || statIndex == TemperatureFortitude
+                   || statIndex == CraftingSpeedMultiplier;
+        }
+
+        /// <summary>
+        /// Returns the displayed decimal values of the stat with the given index
+        /// </summary>
+        public static int Precision(int statIndex)
+        {
+            // damage and speed are percentage values and thus the displayed values have a higher precision
+            return IsPercentage(statIndex) ? 3 : 1;
+        }
     }
 }
