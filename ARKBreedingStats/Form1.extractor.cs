@@ -155,16 +155,12 @@ namespace ARKBreedingStats
             radarChartExtractor.SetLevels(_statIOs.Select(s => s.LevelWild).ToArray(), _statIOs.Select(s => s.LevelMut).ToArray(), speciesSelector1.SelectedSpecies);
             cbExactlyImprinting.BackColor = Color.Transparent;
             var species = speciesSelector1.SelectedSpecies;
-            _highestSpeciesLevels.TryGetValue(species, out int[] highSpeciesLevels);
-            _lowestSpeciesLevels.TryGetValue(species, out int[] lowSpeciesLevels);
-            _highestSpeciesMutationLevels.TryGetValue(species, out int[] highSpeciesMutationLevels);
-            //_lowestSpeciesMutationLevels.TryGetValue(species, out int[] lowSpeciesMutationLevels);
+            _topLevels.TryGetValue(species, out var topLevels);
 
             var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
 
-            LevelStatusFlags.DetermineLevelStatus(species, highSpeciesLevels, lowSpeciesLevels, highSpeciesMutationLevels,
-                statWeights, GetCurrentWildLevels(), GetCurrentMutLevels(), GetCurrentBreedingValues(),
-                out var topStatsText, out var newTopStatsText);
+            LevelStatusFlags.DetermineLevelStatus(species, topLevels, statWeights, GetCurrentWildLevels(), GetCurrentMutLevels(),
+                GetCurrentBreedingValues(), out var topStatsText, out var newTopStatsText);
 
             for (var s = 0; s < Stats.StatsCount; s++)
             {
@@ -1287,7 +1283,7 @@ namespace ARKBreedingStats
                 }
                 else if (cv.motherArkId != 0)
                 {
-                    cv.Mother = new Creature(cv.motherArkId);
+                    cv.Mother = new Creature(cv.motherArkId, cv.Species);
                     _creatureCollection.creatures.Add(cv.Mother);
                 }
             }
@@ -1300,7 +1296,7 @@ namespace ARKBreedingStats
                 }
                 else if (cv.fatherArkId != 0)
                 {
-                    cv.Father = new Creature(cv.fatherArkId);
+                    cv.Father = new Creature(cv.fatherArkId, cv.Species);
                     _creatureCollection.creatures.Add(cv.Father);
                 }
             }
@@ -1546,5 +1542,19 @@ namespace ARKBreedingStats
         }
 
         #endregion
+
+        private void BtSetImprinting0_Click(object sender, EventArgs e)
+            => numericUpDownImprintingBonusExtractor.ValueSave = 0;
+
+        private void BtSetImprinting100_Click(object sender, EventArgs e)
+            => numericUpDownImprintingBonusExtractor.ValueSave = 100;
+
+        private void numericUpDownLevel_ValueChanged(object sender, EventArgs e)
+        {
+            if (!(rbWildExtractor.Checked && speciesSelector1.SelectedSpecies is Species species)) return;
+
+            _statIOs[Stats.Torpidity].Input = StatValueCalculation.CalculateValue(species,
+                Stats.Torpidity, (int)numericUpDownLevel.Value, 0, 0, false);
+        }
     }
 }

@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.species;
 using ARKBreedingStats.utils;
+
 using static ARKBreedingStats.Library.CreatureCollection;
 
 namespace ARKBreedingStats.NamePatterns
@@ -17,14 +21,28 @@ namespace ARKBreedingStats.NamePatterns
         private const string PipeEscapeSequence = @"\pipe";
 
         public static Random Random = new Random();
+        private static readonly Func<TokenModel, StatModel>[] StatAccessors = {
+            m => m.hp, // StatNames.Health;
+            m => m.st, // StatNames.Stamina;
+            m => m.to, // StatNames.Torpidity;
+            m => m.ox, // StatNames.Oxygen;
+            m => m.fo, // StatNames.Food;
+            m => m.wa, // StatNames.Water;
+            m => m.te, // StatNames.Temperature;
+            m => m.we, // StatNames.Weight;
+            m => m.dm, // StatNames.MeleeDamageMultiplier;
+            m => m.sp, // StatNames.SpeedMultiplier;
+            m => m.fr, // StatNames.TemperatureFortitude;
+            m => m.cr  // StatNames.CraftingSpeedMultiplier;
+        };
 
         /// <summary>
         /// Generate a creature name with the naming pattern.
         /// </summary>
         /// <param name="alreadyExistingCreature">If the creature already exists in the library, null if the creature is new.</param>
-        public static string GenerateCreatureName(Creature creature, Creature alreadyExistingCreature, Creature[] sameSpecies, int[] speciesTopLevels, int[] speciesLowestLevels, Dictionary<string, string> customReplacings,
-            bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true, Dictionary<string, string> tokenDictionary = null,
-            CreatureCollection.ColorExisting[] colorsExisting = null, int libraryCreatureCount = 0)
+        public static string GenerateCreatureName(Creature creature, Creature alreadyExistingCreature, Creature[] sameSpecies, TopLevels topLevels, Dictionary<string, string> customReplacings,
+            bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true, TokenModel tokenModel = null,
+            ColorExisting[] colorsExisting = null, int libraryCreatureCount = 0, Action<string> consoleLog = null)
         {
             if (pattern == null)
             {
@@ -34,9 +52,11 @@ namespace ARKBreedingStats.NamePatterns
                     pattern = Properties.Settings.Default.NamingPatterns?[namingPatternIndex] ?? string.Empty;
             }
 
+            var levelsWildHighest = topLevels?.WildLevelsHighest;
+
             if (creature.topness == 0)
             {
-                if (speciesTopLevels == null)
+                if (levelsWildHighest == null)
                 {
                     creature.topness = 1000;
                 }
@@ -52,7 +72,7 @@ namespace ARKBreedingStats.NamePatterns
                             )
                         {
                             int creatureLevel = Math.Max(0, creature.levelsWild[s]);
-                            topLevelSum += Math.Max(creatureLevel, speciesTopLevels[s]);
+                            topLevelSum += Math.Max(creatureLevel, levelsWildHighest[s]);
                             creatureLevelSum += creatureLevel;
                         }
                     }
@@ -61,21 +81,59 @@ namespace ARKBreedingStats.NamePatterns
                     else creature.topness = 1000;
                 }
 
-                if (tokenDictionary != null)
-                    tokenDictionary["topPercent"] = (creature.topness / 10f).ToString();
+                if (tokenModel != null)
+                    tokenModel.toppercent = creature.topness / 10f;
             }
 
-            if (tokenDictionary == null)
-                tokenDictionary = CreateTokenDictionary(creature, alreadyExistingCreature, sameSpecies, speciesTopLevels, speciesLowestLevels, libraryCreatureCount);
+            if (tokenModel == null)
+                tokenModel = CreateTokenModel(creature, alreadyExistingCreature, sameSpecies, colorsExisting, topLevels, libraryCreatureCount);
+
+            string name;
+
+            string[] creatureNames = null;
+
+            var shebangMatch = JavaScriptNamePattern.JavaScriptShebang.Match(pattern);
+
+            if (showDuplicateNameWarning || pattern.Contains("{n}") || shebangMatch.Success)
+                creatureNames = sameSpecies?.Where(c => c.guid != creature.guid).Select(x => x.name).ToArray() ?? Array.Empty<string>();
+
+            if (shebangMatch.Success)
+            {
+                try
+                {
+                    name = JavaScriptNamePattern.ResolveJavaScript(pattern.Substring(shebangMatch.Length), creature,
+                        tokenModel, customReplacings, colorsExisting, creatureNames, displayError, consoleLog);
+                }
+                catch (FileNotFoundException ex)
+                {
+                    // Jint.dll not installed
+                    MessageBoxes.ExceptionMessageBox(ex, "Probably a needed module is not installed for using the javascript pattern. You can install it via the menu Settings - Extra data.");
+                    return null;
+                }
+            }
+            else
+            {
+                name = ResolveTemplate(pattern, creature, tokenModel, customReplacings, colorsExisting, creatureNames, displayError);
+            }
+            if (showDuplicateNameWarning && creatureNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                MessageBox.Show($"The generated name for the creature\n{name}\nalready exists in the library.\n\nConsider adding {{n}} or {{sn}} in the pattern to generate unique names.", "Name already exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else if (showTooLongWarning && name.Length > Ark.MaxCreatureNameLength)
+            {
+                MessageBox.Show($"The generated name is longer than {Ark.MaxCreatureNameLength} characters, the name will look like this in game:\n" + name.Substring(0, Ark.MaxCreatureNameLength), "Name too long for game", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            return name;
+        }
+
+        private static string ResolveTemplate(string pattern, Creature creature, TokenModel tokenModel, Dictionary<string, string> customReplacings, ColorExisting[] colorsExisting, string[] creatureNames, bool displayError)
+        {
+            var tokenDictionary = CreateTokenDictionary(tokenModel);
             // first resolve keys, then functions
             string name = ResolveFunctions(
                 ResolveKeysToValues(tokenDictionary, pattern.Replace("\r", string.Empty).Replace("\n", string.Empty)),
                 creature, customReplacings, displayError, false, colorsExisting);
-
-            string[] creatureNames = null;
-            if (showDuplicateNameWarning || name.Contains("{n}"))
-                creatureNames = sameSpecies?.Where(c => c.guid != creature.guid).Select(x => x.name).ToArray() ?? Array.Empty<string>();
-
             if (name.Contains("{n}"))
             {
                 // replace the unique number key with the lowest possible positive number >= 1 to get a unique name.
@@ -98,17 +156,7 @@ namespace ARKBreedingStats.NamePatterns
             }
 
             // evaluate escaped characters
-            name = NamePatternFunctions.UnEscapeSpecialCharacters(name.Replace(PipeEscapeSequence, "|"));
-
-            if (showDuplicateNameWarning && creatureNames.Contains(name, StringComparer.OrdinalIgnoreCase))
-            {
-                MessageBox.Show($"The generated name for the creature\n{name}\nalready exists in the library.\n\nConsider adding {{n}} or {{sn}} in the pattern to generate unique names.", "Name already exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            else if (showTooLongWarning && name.Length > Ark.MaxCreatureNameLength)
-            {
-                MessageBox.Show($"The generated name is longer than {Ark.MaxCreatureNameLength} characters, the name will look like this in game:\n" + name.Substring(0, Ark.MaxCreatureNameLength), "Name too long for game", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
+            name = name != null ? NamePatternFunctions.UnEscapeSpecialCharacters(name.Replace(PipeEscapeSequence, "|")) : string.Empty;
             return name;
         }
 
@@ -173,7 +221,7 @@ namespace ARKBreedingStats.NamePatterns
             return string.Empty;
         }
 
-        private static readonly string[] StatAbbreviationFromIndex = {
+        internal static readonly string[] StatAbbreviationFromIndex = {
             "hp", // StatNames.Health;
             "st", // StatNames.Stamina;
             "to", // StatNames.Torpidity;
@@ -188,43 +236,37 @@ namespace ARKBreedingStats.NamePatterns
             "cr"  // StatNames.CraftingSpeedMultiplier;
         };
 
-
         /// <summary>        
-        /// This method creates the token dictionary for the dynamic creature name generation.
+        /// This method creates the token model for the dynamic creature name generation.
         /// </summary>
         /// <param name="creature">Creature with the data</param>
         /// <param name="alreadyExistingCreature">If the creature is already existing in the library, i.e. if the name is created for a creature that is updated</param>
         /// <param name="speciesCreatures">A list of all currently stored creatures of the species</param>
-        /// <param name="speciesTopLevels">top levels of that species</param>
-        /// <param name="speciesLowestLevels">lowest levels of that species</param>
-        /// <returns>A dictionary containing all tokens and their replacements</returns>
-        public static Dictionary<string, string> CreateTokenDictionary(Creature creature, Creature alreadyExistingCreature, Creature[] speciesCreatures, int[] speciesTopLevels, int[] speciesLowestLevels, int libraryCreatureCount)
+        /// <param name="topLevels">top levels of that species</param>
+        /// <returns>A strongly typed model containing all tokens and their values</returns>
+        public static TokenModel CreateTokenModel(Creature creature, Creature alreadyExistingCreature, Creature[] speciesCreatures, ColorExisting[] colorExistings, TopLevels topLevels, int libraryCreatureCount)
         {
             string dom = creature.isBred ? "B" : "T";
-
             double imp = creature.imprintingBonus * 100;
             double eff = creature.tamingEff * 100;
 
-            string effImp = "Z";
-            string prefix = string.Empty;
+            int? effImp;
+            string prefix;
             if (creature.isBred)
             {
                 prefix = "I";
-                effImp = Math.Round(imp).ToString();
+                effImp = (int)Math.Round(imp);
             }
             else if (eff > 1)
             {
                 prefix = "E";
-                effImp = Math.Round(eff).ToString();
+                effImp = (int)Math.Round(eff);
             }
-
-            while (effImp.Length < 3 && effImp != "Z")
+            else
             {
-                effImp = "0" + effImp;
+                prefix = "Z";
+                effImp = null;
             }
-
-            string effImpShort = effImp;
-            effImp = prefix + effImp;
 
             int generation = creature.generation;
             if (generation <= 0)
@@ -235,10 +277,12 @@ namespace ARKBreedingStats.NamePatterns
 
             string oldName = creature.name;
 
+            speciesCreatures = speciesCreatures?.Where(c => !c.flags.HasFlag(CreatureFlags.Placeholder)).ToArray();
+
             string firstWordOfOldest = string.Empty;
             if (speciesCreatures?.Any() ?? false)
             {
-                firstWordOfOldest = speciesCreatures.Where(c => c.addedToLibrary != null && !c.flags.HasFlag(CreatureFlags.Placeholder)).OrderBy(c => c.addedToLibrary).FirstOrDefault()?.name;
+                firstWordOfOldest = speciesCreatures.Where(c => c.addedToLibrary != null).OrderBy(c => c.addedToLibrary).FirstOrDefault()?.name;
                 if (!string.IsNullOrEmpty(firstWordOfOldest) && firstWordOfOldest.Contains(" "))
                 {
                     firstWordOfOldest = firstWordOfOldest.Substring(0, firstWordOfOldest.IndexOf(" "));
@@ -257,7 +301,7 @@ namespace ARKBreedingStats.NamePatterns
             oldName = oldName.Replace("|", PipeEscapeSequence);
 
             string spcsNm = creature.Species.name;
-            char[] vowels = new char[] { 'a', 'e', 'i', 'o', 'u' };
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u' };
             while (spcsNm.LastIndexOfAny(vowels) > 0)
                 spcsNm = spcsNm.Remove(spcsNm.LastIndexOfAny(vowels), 1); // remove last vowel (not the first letter)
 
@@ -283,14 +327,14 @@ namespace ARKBreedingStats.NamePatterns
                 }
             }
 
-            string indexStr = string.Empty;
+            int index = 0;
             if (creature.guid != Guid.Empty && (speciesCreatures?.Any() ?? false))
             {
                 for (int i = 0; i < speciesCreatures.Length; i++)
                 {
                     if (creature.guid == speciesCreatures[i].guid)
                     {
-                        indexStr = (i + 1).ToString();
+                        index = i + 1;
                         break;
                     }
                 }
@@ -298,79 +342,189 @@ namespace ARKBreedingStats.NamePatterns
 
             // replace tokens in user configured pattern string
             // keys have to be all lower case
-            var dict = new Dictionary<string, string>
+
+            var model = new TokenModel
             {
-                { "species", creature.Species.name },
-                { "spcsnm", spcsNm },
-                { "firstwordofoldest", firstWordOfOldest },
+                species = creature.Species.name,
+                spcsnm = spcsNm,
+                firstwordofoldest = firstWordOfOldest,
 
-                { "owner", creature.owner },
-                { "tribe", creature.tribe },
-                { "server", creature.server },
+                owner = creature.owner,
+                tribe = creature.tribe,
+                server = creature.server,
 
-                { "sex", creature.sex.ToString() },
-                { "sex_short", creature.sex.ToString().Substring(0, 1) },
+                sex = creature.sex,
+                sex_short = creature.sex.ToString().Substring(0, 1),
 
-                { "effimp_short", effImpShort},
-                { "index", indexStr},
-                { "oldname", oldName },
-                { "sex_lang",   Loc.S(creature.sex.ToString()) },
-                { "sex_lang_short", Loc.S(creature.sex.ToString()).Substring(0, 1) },
-                { "sex_lang_gen",   Loc.S(creature.sex.ToString() + "_gen") },
-                { "sex_lang_short_gen", Loc.S(creature.sex.ToString() + "_gen").Substring(0, 1) },
+                effimp_short = effImp.HasValue ? effImp.ToString() : prefix,
+                index = index,
+                oldname = oldName,
+                sex_lang = Loc.S(creature.sex.ToString()),
+                sex_lang_short = Loc.S(creature.sex.ToString()).Substring(0, 1),
+                sex_lang_gen = Loc.S(creature.sex.ToString() + "_gen"),
+                sex_lang_short_gen = Loc.S(creature.sex.ToString() + "_gen").Substring(0, 1),
 
-                { "toppercent" , (creature.topness / 10f).ToString() },
-                { "baselvl" , creature.LevelHatched.ToString() },
-                { "levelpretamed" , creature.levelFound.ToString() },
-                { "effimp" , effImp },
-                { "muta", creature.Mutations.ToString()},
-                { "mutam", creature.mutationsMaternal.ToString()},
-                { "mutap", creature.mutationsPaternal.ToString()},
-                { "gen", generation.ToString()},
-                { "gena", Dec2Hexvig(generation)},
-                { "genn", (speciesCreatures?.Count(c=>c.generation==generation) ?? 0 + 1).ToString()},
-                { "nr_in_gen", nrInGeneration.ToString()},
-                { "nr_in_gen_sex", nrInGenerationAndSameSex.ToString()},
-                { "rnd", Random.Next(0, 999999).ToString("000000")},
-                { "ln", libraryCreatureCount.ToString()},
-                { "tn", speciesCount.ToString()},
-                { "sn", speciesSexCount.ToString()},
-                { "dom", dom},
-                { "arkid", arkid },
-                { "alreadyexists", speciesCreatures.Contains(creature) ? "1" : string.Empty },
-                { "isflyer", creature.Species.isFlyer ? "1" : string.Empty },
-                { "status", creature.Status.ToString() }
+                toppercent = (creature.topness / 10f),
+                baselvl = creature.LevelHatched,
+                levelpretamed = creature.levelFound,
+                effimp = $"{prefix}{effImp}",
+                effimp_value = effImp,
+                muta = creature.Mutations,
+                mutam = creature.mutationsMaternal,
+                mutap = creature.mutationsPaternal,
+                gen = generation,
+                gena = Dec2Hexvig(generation),
+                genn = (speciesCreatures?.Count(c => c.generation == generation) ?? 0 + 1),
+                nr_in_gen = nrInGeneration,
+                nr_in_gen_sex = nrInGenerationAndSameSex,
+                rnd = Random.Next(0, 999999),
+                ln = libraryCreatureCount,
+                tn = speciesCount,
+                sn = speciesSexCount,
+                dom = dom,
+                arkid = arkid,
+                alreadyexists = speciesCreatures?.Contains(creature) ?? false,
+                isflyer = creature.Species.isFlyer,
+                status = creature.Status,
             };
 
-            // stat index and according level
-            var levelOrder = new List<(int, int)>(Stats.StatsCount);
+            // stat index and according wild and mutation level
+            var levelOrderWild = new List<(int, int)>(7);
+            var levelOrderMutated = new List<(int, int)>(7);
             for (int si = 0; si < Stats.StatsCount; si++)
             {
-                if (si != Stats.Torpidity && creature.Species.UsesStat(si))
-                    levelOrder.Add((si, creature.levelsWild[si]));
+                if (si == Stats.Torpidity || !creature.Species.UsesStat(si)) continue;
+                levelOrderWild.Add((si, creature.levelsWild[si]));
+                levelOrderMutated.Add((si, creature.levelsMutated?[si] ?? 0));
             }
-            levelOrder = levelOrder.OrderByDescending(l => l.Item2).ToList();
-            var usedStatsCount = levelOrder.Count;
+            levelOrderWild = levelOrderWild.OrderByDescending(l => l.Item2).ToList();
+            levelOrderMutated = levelOrderMutated.OrderByDescending(l => l.Item2).ToList();
+            var usedStatsCount = levelOrderWild.Count;
+
+            if (topLevels == null) topLevels = new TopLevels();
+            var wildLevelsHighest = topLevels.WildLevelsHighest;
+            var wildLevelsLowest = topLevels.WildLevelsLowest;
+            var mutationLevelsHighest = topLevels.MutationLevelsHighest;
+            var mutationLevelsLowest = topLevels.MutationLevelsLowest;
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                dict.Add(StatAbbreviationFromIndex[s], creature.levelsWild[s].ToString());
-                dict.Add($"{StatAbbreviationFromIndex[s]}_vb", (creature.valuesBreeding[s] * (Stats.IsPercentage(s) ? 100 : 1)).ToString());
-                dict.Add($"istop{StatAbbreviationFromIndex[s]}", speciesTopLevels == null ? (creature.levelsWild[s] > 0 ? "1" : string.Empty) :
-                    creature.levelsWild[s] >= speciesTopLevels[s] ? "1" : string.Empty);
-                dict.Add($"isnewtop{StatAbbreviationFromIndex[s]}", speciesTopLevels == null ? (creature.levelsWild[s] > 0 ? "1" : string.Empty) :
-                    creature.levelsWild[s] > speciesTopLevels[s] ? "1" : string.Empty);
-                dict.Add($"islowest{StatAbbreviationFromIndex[s]}", speciesLowestLevels == null ? (creature.levelsWild[s] == 0 ? "1" : string.Empty) :
-                    speciesLowestLevels[s] != -1 && creature.levelsWild[s] != -1 && creature.levelsWild[s] <= speciesLowestLevels[s] ? "1" : string.Empty);
-                dict.Add($"isnewlowest{StatAbbreviationFromIndex[s]}", speciesLowestLevels == null ? (creature.levelsWild[s] == 0 ? "1" : string.Empty) :
-                    speciesLowestLevels[s] != -1 && creature.levelsWild[s] != -1 && creature.levelsWild[s] < speciesLowestLevels[s] ? "1" : string.Empty);
+                var statSet = StatAccessors[s](model);
+                statSet.level = creature.levelsWild[s];
+                statSet.level_m = creature.levelsMutated?[s] ?? 0;
+                statSet.level_vb = creature.valuesBreeding[s] * (Stats.IsPercentage(s) ? 100 : 1);
+                statSet.istop = creature.levelsWild[s] != -1 && creature.levelsWild[s] >= wildLevelsHighest[s];
+                statSet.isnewtop = creature.levelsWild[s] != -1 && creature.levelsWild[s] > wildLevelsHighest[s];
+                statSet.islowest = creature.levelsWild[s] != -1 && creature.levelsWild[s] <= wildLevelsLowest[s];
+                statSet.isnewlowest = creature.levelsWild[s] != -1 && creature.levelsWild[s] < wildLevelsLowest[s];
+                statSet.istop_m = creature.levelsMutated[s] >= mutationLevelsHighest[s];
+                statSet.isnewtop_m = creature.levelsMutated[s] > mutationLevelsHighest[s];
+                statSet.islowest_m = creature.levelsMutated[s] <= mutationLevelsLowest[s];
+                statSet.isnewlowest_m = creature.levelsMutated[s] < mutationLevelsLowest[s];
 
                 // highest stats and according levels
-                dict.Add("highest" + (s + 1) + "l", usedStatsCount > s ? levelOrder[s].Item2.ToString() : string.Empty);
-                dict.Add("highest" + (s + 1) + "s", usedStatsCount > s ? Utils.StatName(levelOrder[s].Item1, true, creature.Species.statNames) : string.Empty);
+                model.highest_l[s] = s < usedStatsCount ? levelOrderWild[s].Item2.ToString() : string.Empty;
+                model.highest_s[s] = s < usedStatsCount ? Utils.StatName(levelOrderWild[s].Item1, true, creature.Species.statNames) : string.Empty;
+                model.highest_l_m[s] = s < usedStatsCount ? levelOrderMutated[s].Item2.ToString() : string.Empty;
+                model.highest_s_m[s] = s < usedStatsCount ? Utils.StatName(levelOrderMutated[s].Item1, true, creature.Species.statNames) : string.Empty;
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                var colorId = creature.colors[i];
+                ColorExisting colorExisting = colorExistings != null ? colorExistings[i] : ColorExisting.Unknown;
+
+                model.colors[i] = new ColorModel
+                {
+                    id = colorId,
+                    name = CreatureColors.CreatureColorName(colorId),
+                    used = creature.Species.EnabledColorRegions[i],
+                    @new = colorExisting == ColorExisting.ColorExistingInOtherRegion ? "newInRegion"
+                     : colorExisting == ColorExisting.ColorIsNew ? "newInSpecies"
+                     : string.Empty
+                };
+            }
+
+            return model;
+        }
+
+        /// <summary>        
+        /// This method creates the token dictionary for the dynamic creature name generation.
+        /// </summary>
+        /// <param name="model">TokenModel containing the data for the token dictionary</param>
+        /// <returns>A dictionary containing all tokens and their replacements</returns>
+        public static Dictionary<string, string> CreateTokenDictionary(TokenModel model)
+        {
+            // replace tokens in user configured pattern string
+            // keys have to be all lower case
+            var dict = new Dictionary<string, string>
+            {
+                { "species", model.species },
+                { "spcsnm", model.spcsnm },
+                { "firstwordofoldest", model.firstwordofoldest },
+
+                { "owner", model.owner },
+                { "tribe", model.tribe },
+                { "server", model.server },
+
+                { "sex", model.sex.ToString() },
+                { "sex_short", model.sex_short },
+
+                { "effimp_short", model.effimp_short },
+                { "index", model.index.ToString() },
+                { "oldname", model.oldname },
+                { "sex_lang", model.sex_lang },
+                { "sex_lang_short", model.sex_lang_short },
+                { "sex_lang_gen", model.sex_lang_gen },
+                { "sex_lang_short_gen", model.sex_lang_short_gen },
+
+                { "toppercent", model.toppercent.ToString() },
+                { "baselvl", model.baselvl.ToString() },
+                { "levelpretamed", model.levelpretamed.ToString() },
+                { "effimp", model.effimp },
+                { "muta", model.muta.ToString() },
+                { "mutam", model.mutam.ToString() },
+                { "mutap", model.mutap.ToString() },
+                { "gen", model.gen.ToString() },
+                { "gena", model.gena },
+                { "genn", model.genn.ToString() },
+                { "nr_in_gen", model.nr_in_gen.ToString() },
+                { "nr_in_gen_sex", model.nr_in_gen_sex.ToString() },
+                { "rnd", model.rnd.ToString("000000") },
+                { "ln", model.ln.ToString() },
+                { "tn", model.tn.ToString() },
+                { "sn", model.sn.ToString() },
+                { "dom", model.dom },
+                { "arkid", model.arkid },
+                { "alreadyexists", model.alreadyexists ? "1" : string.Empty },
+                { "isflyer", model.isflyer ? "1" : string.Empty },
+                { "status", model.status.ToString() },
+            };
+
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                var stat = StatAccessors[s](model);
+                var abbreviation = StatAbbreviationFromIndex[s];
+
+                dict.Add(abbreviation, stat.level.ToString());
+                dict.Add($"{abbreviation}_vb", stat.level_vb.ToString());
+                dict.Add($"istop{abbreviation}", stat.istop ? "1" : string.Empty);
+                dict.Add($"isnewtop{abbreviation}", stat.isnewtop ? "1" : string.Empty);
+                dict.Add($"islowest{abbreviation}", stat.islowest ? "1" : string.Empty);
+                dict.Add($"isnewlowest{abbreviation}", stat.isnewlowest ? "1" : string.Empty);
+                dict.Add($"istop{abbreviation}_m", stat.istop_m ? "1" : string.Empty);
+                dict.Add($"isnewtop{abbreviation}_m", stat.isnewtop_m ? "1" : string.Empty);
+                dict.Add($"islowest{abbreviation}_m", stat.islowest_m ? "1" : string.Empty);
+                dict.Add($"isnewlowest{abbreviation}_m", stat.isnewlowest_m ? "1" : string.Empty);
+
+                // highest stats and according levels
+                dict.Add("highest" + (s + 1) + "l", model.highest_l[s]);
+                dict.Add("highest" + (s + 1) + "s", model.highest_s[s]);
+                dict.Add("highest" + (s + 1) + "l_m", model.highest_l_m[s]);
+                dict.Add("highest" + (s + 1) + "s_m", model.highest_s_m[s]);
 
                 // mutated levels
-                dict.Add(StatAbbreviationFromIndex[s] + "_m", (creature.levelsMutated?[s] ?? 0).ToString());
+                dict.Add(abbreviation + "_m", stat.level_m.ToString());
             }
 
             return dict;

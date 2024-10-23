@@ -174,7 +174,7 @@ namespace ARKBreedingStats
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    LoadCollectionFile(dlg.FileName, add);
+                    LoadCollectionFile(dlg.FileName, add, ignoreDeletionList: true);
                 }
             }
         }
@@ -377,7 +377,7 @@ namespace ARKBreedingStats
         /// <param name="keepCurrentCreatures">add the creatures of the loaded file to the current ones</param>
         /// <param name="keepCurrentSelections">don't change the species selection or tab, use if a synchronized library is loaded</param>
         /// <returns></returns>
-        private bool LoadCollectionFile(string filePath, bool keepCurrentCreatures = false, bool keepCurrentSelections = false, bool triggeredByFileWatcher = false)
+        private bool LoadCollectionFile(string filePath, bool keepCurrentCreatures = false, bool keepCurrentSelections = false, bool triggeredByFileWatcher = false, bool ignoreDeletionList = false)
         {
             Species selectedSpecies = speciesSelector1.SelectedSpecies;
             Species selectedLibrarySpecies = listBoxSpeciesLib.SelectedItem as Species;
@@ -551,7 +551,7 @@ namespace ARKBreedingStats
 
             if (keepCurrentCreatures)
             {
-                creatureWasAdded = previouslyLoadedCreatureCollection.MergeCreatureList(_creatureCollection.creatures, removeCreatures: _creatureCollection.DeletedCreatureGuids);
+                creatureWasAdded = previouslyLoadedCreatureCollection.MergeCreatureList(_creatureCollection.creatures, removeCreatures: ignoreDeletionList ? null : _creatureCollection.DeletedCreatureGuids);
                 _creatureCollection = previouslyLoadedCreatureCollection;
             }
             else
@@ -1001,13 +1001,10 @@ namespace ARKBreedingStats
         private void DetermineLevelStatusAndSoundFeedback(Creature c, bool playImportSound)
         {
             var species = c.Species;
-            _highestSpeciesLevels.TryGetValue(species, out int[] highSpeciesLevels);
-            _lowestSpeciesLevels.TryGetValue(species, out int[] lowSpeciesLevels);
-            _highestSpeciesMutationLevels.TryGetValue(species, out int[] highSpeciesMutationLevels);
+            _topLevels.TryGetValue(species, out var topLevels);
             var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
-            LevelStatusFlags.DetermineLevelStatus(species, highSpeciesLevels, lowSpeciesLevels, highSpeciesMutationLevels,
-                statWeights, c.levelsWild, c.levelsMutated, c.valuesBreeding,
-                out _, out _);
+            LevelStatusFlags.DetermineLevelStatus(species, topLevels, statWeights,
+                c.levelsWild, c.levelsMutated, c.valuesBreeding, out _, out _);
 
             if (playImportSound)
             {

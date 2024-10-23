@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.library;
+using ARKBreedingStats.StatsOptions;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
@@ -50,11 +51,15 @@ namespace ARKBreedingStats.settings
             // Wine doesn't support the Process.ProcessName getter and OCR doesn't work there currently
             try
             {
-                cbbOCRApp.DataSource = System.Diagnostics.Process.GetProcesses().Select(p => new ProcessSelector
-                { ProcessName = p.ProcessName, MainWindowTitle = p.MainWindowTitle })
-                    .Distinct().Where(pn =>
-                        !string.IsNullOrEmpty(pn.MainWindowTitle) && pn.ProcessName != "System" &&
-                        pn.ProcessName != "idle").OrderBy(pn => pn.ProcessName).ToArray();
+                cbbOCRApp.DataSource = System.Diagnostics.Process.GetProcesses()
+                    .Select(p => new ProcessSelector { ProcessName = p.ProcessName, MainWindowTitle = p.MainWindowTitle })
+                    .Distinct()
+                    .Where(pn =>
+                        !string.IsNullOrEmpty(pn.MainWindowTitle)
+                        && pn.ProcessName != "System"
+                        && pn.ProcessName != "idle")
+                    .OrderBy(pn => pn.ProcessName)
+                    .ToArray();
             }
             catch (InvalidOperationException)
             {
@@ -340,11 +345,6 @@ namespace ARKBreedingStats.settings
             cbInventoryCheck.Checked = Properties.Settings.Default.inventoryCheckTimer;
             cbAllowMoreThanHundredImprinting.Checked = cc.allowMoreThanHundredImprinting;
             CbHighlightLevel255.Checked = Properties.Settings.Default.Highlight255Level;
-            CbHighlightLevelEvenOdd.Checked = Properties.Settings.Default.HighlightEvenOdd;
-            nudChartLevelEvenMin.ValueSave = Properties.Settings.Default.ChartHueEvenMin;
-            nudChartLevelEvenMax.ValueSave = Properties.Settings.Default.ChartHueEvenMax;
-            nudChartLevelOddMin.ValueSave = Properties.Settings.Default.ChartHueOddMin;
-            nudChartLevelOddMax.ValueSave = Properties.Settings.Default.ChartHueOddMax;
 
             #region InfoGraphic
 
@@ -381,6 +381,7 @@ namespace ARKBreedingStats.settings
             CbNaturalSortIgnoreSpaces.Checked = Properties.Settings.Default.NaturalSortIgnoreSpaces;
             CbDisplayLibraryCreatureIndex.Checked = Properties.Settings.Default.DisplayLibraryCreatureIndex;
             CbLibraryDisplayZeroMutationLevels.Checked = Properties.Settings.Default.LibraryDisplayZeroMutationLevels;
+            CbLibraryGenerateNameWarnTooLongName.Checked = Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated;
 
             #endregion
 
@@ -615,11 +616,6 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.inventoryCheckTimer = cbInventoryCheck.Checked;
             _cc.allowMoreThanHundredImprinting = cbAllowMoreThanHundredImprinting.Checked;
             Properties.Settings.Default.Highlight255Level = CbHighlightLevel255.Checked;
-            Properties.Settings.Default.HighlightEvenOdd = CbHighlightLevelEvenOdd.Checked;
-            Properties.Settings.Default.ChartHueEvenMin = (int)nudChartLevelEvenMin.Value;
-            Properties.Settings.Default.ChartHueEvenMax = (int)nudChartLevelEvenMax.Value;
-            Properties.Settings.Default.ChartHueOddMin = (int)nudChartLevelOddMin.Value;
-            Properties.Settings.Default.ChartHueOddMax = (int)nudChartLevelOddMax.Value;
 
             #region InfoGraphic
 
@@ -652,6 +648,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.NaturalSortIgnoreSpaces = CbNaturalSortIgnoreSpaces.Checked;
             Properties.Settings.Default.DisplayLibraryCreatureIndex = CbDisplayLibraryCreatureIndex.Checked;
             Properties.Settings.Default.LibraryDisplayZeroMutationLevels = CbLibraryDisplayZeroMutationLevels.Checked;
+            Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated = CbLibraryGenerateNameWarnTooLongName.Checked;
 
             #endregion
 
@@ -1634,44 +1631,6 @@ namespace ARKBreedingStats.settings
             }
         }
 
-        private void nudChartLevelEvenMin_ValueChanged(object sender, EventArgs e)
-        {
-            UpdateChartLevelColors(pbChartEvenRange, (int)nudChartLevelEvenMin.Value, (int)nudChartLevelEvenMax.Value);
-        }
-
-        private void nudChartLevelEvenMax_ValueChanged(object sender, EventArgs e)
-        {
-            UpdateChartLevelColors(pbChartEvenRange, (int)nudChartLevelEvenMin.Value, (int)nudChartLevelEvenMax.Value);
-        }
-
-        private void nudChartLevelOddMin_ValueChanged(object sender, EventArgs e)
-        {
-            UpdateChartLevelColors(pbChartOddRange, (int)nudChartLevelOddMin.Value, (int)nudChartLevelOddMax.Value);
-        }
-
-        private void nudChartLevelOddMax_ValueChanged(object sender, EventArgs e)
-        {
-            UpdateChartLevelColors(pbChartOddRange, (int)nudChartLevelOddMin.Value, (int)nudChartLevelOddMax.Value);
-        }
-
-        private void UpdateChartLevelColors(PictureBox pb, int minHue, int maxHue)
-        {
-            var img = new Bitmap(pb.Width, pb.Height);
-            using (var g = Graphics.FromImage(img))
-            using (var brush = new SolidBrush(Color.Black))
-            {
-                var hueRange = maxHue - minHue;
-                const int segments = 10;
-                var segmentWidth = img.Width / segments;
-                for (int i = 0; i < segments; i++)
-                {
-                    brush.Color = Utils.ColorFromHue(minHue + hueRange * i / segments);
-                    g.FillRectangle(brush, i * segmentWidth, 0, segmentWidth, img.Height);
-                }
-            }
-            pb.SetImageAndDisposeOld(img);
-        }
-
         #region InfoGraphic Preview
 
         private Creature _infoGraphicPreviewCreature;
@@ -1916,6 +1875,11 @@ namespace ARKBreedingStats.settings
             {
                 MessageBoxes.ExceptionMessageBox(ex, "Server settings file couldn't be loaded.");
             }
+        }
+
+        private void BtOpenLevelColorOptions_Click(object sender, EventArgs e)
+        {
+            StatsOptionsForm.ShowWindow(this, Form1.StatsOptionsLevelColors, Form1.StatsOptionsConsiderTopStats);
         }
     }
 }
