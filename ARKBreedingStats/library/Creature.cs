@@ -284,6 +284,11 @@ namespace ARKBreedingStats.Library
         }
 
         /// <summary>
+        /// Returns the species name dependent on the sex if available.
+        /// </summary>
+        public string SpeciesName => Species?.Name(sex);
+
+        /// <summary>
         /// Creates a placeholder creature with the given ArkId, which have to be imported
         /// </summary>
         /// <param name="arkId">ArkId from an imported source (no user input)</param>
@@ -366,7 +371,12 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// The total current level inclusive domesticate levels.
         /// </summary>
-        public int Level => LevelHatched + levelsDom.Sum();
+        public int Level => (levelsWild?[Stats.Torpidity] ?? 0) + 1 + levelsDom.Sum();
+
+        /// <summary>
+        /// Max possible level when applying all possible domestic levels according to the server settings (ignoring global server level cap)
+        /// </summary>
+        public int MaxPossibleLevel => (levelsWild?[Stats.Torpidity] ?? 0) + 1 + (CreatureCollection.CurrentCreatureCollection?.maxDomLevel ?? 0);
 
         /// <summary>
         /// Force ancestor recalculation.
@@ -501,7 +511,7 @@ namespace ARKBreedingStats.Library
 
         public int Mutations => mutationsMaternal + mutationsPaternal;
 
-        public override string ToString() => $"{name} ({_species.name})";
+        public override string ToString() => $"{name} ({SpeciesName})";
 
         /// <summary>
         /// Starts the timer for maturation.
@@ -567,7 +577,7 @@ namespace ARKBreedingStats.Library
                     ? 1
                     : 1 - growingUntil.Value.Subtract(DateTime.Now).TotalSeconds /
                     Species.breeding.maturationTimeAdjusted;
-            set => growingUntil = Species?.breeding == null
+            set => growingUntil = Species?.breeding == null || value >= 1
                 ? default(DateTime?)
                 : DateTime.Now.AddSeconds(Species.breeding.maturationTimeAdjusted * (1 - value));
         }
@@ -612,6 +622,8 @@ namespace ARKBreedingStats.Library
                 Traits = new List<CreatureTrait> { trait };
             else Traits.Add(trait);
         }
+
+        public string TraitsString => Traits == null ? string.Empty : string.Join(", ", Traits);
 
         /// <summary>
         /// Calculates the pretame wild level. This value can be off due to wrong inputs due to ingame rounding.

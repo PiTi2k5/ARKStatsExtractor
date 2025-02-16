@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -7,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms.VisualStyles;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.Library;
 using Newtonsoft.Json.Linq;
@@ -141,7 +141,8 @@ namespace ARKBreedingStats.AsbServer
             }
         }
 
-        private static readonly Regex ServerEventRegex = new Regex(@"^event: (welcome|ping|replaced|export|server|closing)(?: (\-?\d+))?(?:\ndata:\s(.+))?$");
+        private static readonly Regex RgServerHash = new Regex(@"^event: server (\-?\d+)$");
+        private static readonly Regex RgEventData = new Regex(@"^(data|id):\s*(.+)$");
 
         private static async Task<ProgressReportAsbServer> ReadServerSentEvents(StreamReader reader, IProgress<ProgressReportAsbServer> progressDataSent, string serverToken, CancellationToken cancellationToken)
         {
@@ -186,46 +187,100 @@ namespace ARKBreedingStats.AsbServer
                             Message = "ASB Server listening stopped. Connection closed by the server, trying to reconnect",
                             IsError = true
                         };
-                }
+                    case "event: export":
+                        var report = new ProgressReportAsbServer { ServerToken = serverToken };
+                        while (true)
+                        {
+                            var data = await ReadEventData(reader, cancellationToken, report);
+                            if (data.cancelled) return null;
+                            if (!data.endOfEvent) continue;
 
-                if (received != "event: export" && !received.StartsWith("event: server"))
-                {
-                    Console.WriteLine($"{DateTime.Now}: unknown server event: {received}");
-                    continue;
-                }
-
-                received += "\n" + await reader.ReadLineAsync();
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-                var m = ServerEventRegex.Match(received);
-                if (m.Success)
-                {
-                    switch (m.Groups[1].Value)
-                    {
-                        case "export":
-                            var report = new ProgressReportAsbServer
-                            {
-                                JsonText = m.Groups[3].Value,
-                                TaskNameGenerated = new TaskCompletionSource<string>()
-                            };
+                            report.TaskNameGenerated = new TaskCompletionSource<ServerSendName>();
                             progressDataSent.Report(report);
                             var nameGeneratedTask = report.TaskNameGenerated.Task;
-                            string creatureName = null;
                             if (nameGeneratedTask.Wait(TimeSpan.FromSeconds(5))
                                 && nameGeneratedTask.Status == TaskStatus.RanToCompletion)
                             {
-                                creatureName = nameGeneratedTask.Result;
-                                // TODO send creatureName as response
+                                var serverSendName = nameGeneratedTask.Result;
+                                if (!string.IsNullOrEmpty(serverSendName.CreatureName)
+                                    && !string.IsNullOrEmpty(serverSendName.ConnectionToken)
+                                    && !string.IsNullOrEmpty(serverSendName.ExportId)
+                                    )
+                                {
+                                    // send creatureName as response
+#if DEBUG
+                                    Console.WriteLine($"{DateTime.Now}: sending creature name {serverSendName.CreatureName} to: {ApiUri}respond/{serverSendName.ConnectionToken}/{serverSendName.ExportId}");
+#endif
+                                    var jsonString = Newtonsoft.Json.JsonConvert.SerializeObject(new { generatedName = serverSendName.CreatureName });
+                                    var msg = new HttpRequestMessage(HttpMethod.Post,
+                                        $"{ApiUri}respond/{serverSendName.ConnectionToken}/{serverSendName.ExportId}");
+                                    msg.Content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+                                    msg.Content.Headers.Add("Content-Length", jsonString.Length.ToString());
+
+                                    var sendResponse = await FileService.GetHttpClient.SendAsync(msg, cancellationToken);
+#if DEBUG
+                                    Console.WriteLine($"{DateTime.Now}: received send response: {await sendResponse.Content.ReadAsStringAsync()})");
+#endif
+                                }
                             }
                             break;
-                        case "server":
-                            progressDataSent.Report(new ProgressReportAsbServer { JsonText = m.Groups[3].Value, ServerHash = m.Groups[2].Value });
+                        }
+                        break;
+                    default:
+                        var matchServerHash = RgServerHash.Match(received);
+                        if (matchServerHash.Success)
+                        {
+                            report = new ProgressReportAsbServer { ServerHash = matchServerHash.Groups[2].Value };
+
+                            while (true)
+                            {
+                                var data = await ReadEventData(reader, cancellationToken, report);
+                                if (data.cancelled) return null;
+                                if (!data.endOfEvent) continue;
+
+                                progressDataSent.Report(report);
+                                break;
+                            }
+
                             break;
-                    }
+                        }
+                        Console.WriteLine($"{DateTime.Now}: unknown server event: {received}");
+                        break;
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Reads a server event line.
+        /// </summary>
+        private static async Task<(bool cancelled, bool endOfEvent)> ReadEventData(StreamReader reader, CancellationToken cancellationToken, ProgressReportAsbServer report)
+        {
+            var data = await reader.ReadLineAsync();
+            if (cancellationToken.IsCancellationRequested)
+                return (true, false);
+
+            if (string.IsNullOrEmpty(data))
+                return (false, true);
+
+            var match = RgEventData.Match(data);
+            if (match.Success)
+            {
+                switch (match.Groups[1].Value)
+                {
+                    case "data":
+                        report.JsonText = match.Groups[2].Value;
+                        break;
+                    case "id":
+                        report.SendId = match.Groups[2].Value;
+                        break;
+                }
+
+                return (false, false);
+            }
+            Console.WriteLine($"{DateTime.Now}: unknown event data: {data}");
+            return (false, false);
         }
 
         /// <summary>
@@ -248,22 +303,31 @@ namespace ARKBreedingStats.AsbServer
 
         /// <summary>
         /// Sends creature data to the server, this is done for testing, usually other tools like the export gun mod do this.
+        /// <param name="waitForResponse">If &gt; 0 a response is awaited for that many seconds. Else no waiting for a response.</param>
         /// </summary>
-        public static async void SendCreatureData(Creature creature, string token)
+        public static async void SendCreatureData(Creature creature, string token, int waitForResponse = 5)
         {
             if (creature == null || string.IsNullOrEmpty(token)) return;
 
-            var client = FileService.GetHttpClient;
-
-            var contentString = Newtonsoft.Json.JsonConvert.SerializeObject(ImportExportGun.ConvertCreatureToExportGunFile(creature, out _));
-            var msg = new HttpRequestMessage(HttpMethod.Put, ApiUri + "export/" + token);
-            msg.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
-            msg.Content.Headers.Add("Content-Length", contentString.Length.ToString());
-            Console.WriteLine($"{DateTime.Now}: Sending creature data of {creature} using token: {token}"); //\nContent:\n{contentString}");
-            using (var response = await client.SendAsync(msg))
+            // don't use the static FileService.GetHttpClient here, it will block the other sending connection
+            using (var client = new HttpClient())
             {
-                //Console.WriteLine(msg.ToString());
-                Console.WriteLine($"{DateTime.Now}: Response: StatusCode {(int)response.StatusCode}, ReasonPhrase: {response.ReasonPhrase}");
+                var contentString =
+                    Newtonsoft.Json.JsonConvert.SerializeObject(
+                        ImportExportGun.ConvertCreatureToExportGunFile(creature, out _));
+                var msg = new HttpRequestMessage(HttpMethod.Put,
+                    ApiUri + "export/" + token + (waitForResponse > 0 ? $"?wait={waitForResponse}" : ""));
+                msg.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+                msg.Content.Headers.Add("Content-Length", contentString.Length.ToString());
+                Console.WriteLine(
+                    $"{DateTime.Now}: [simulating Export gun] Sending creature data of {creature} to {msg.RequestUri}");
+                using (var response = await client.SendAsync(msg))
+                {
+                    //Console.WriteLine(msg.ToString());
+                    Console.WriteLine(
+                        $"{DateTime.Now}: [simulating Export gun] Response of sending creature: StatusCode {(int)response.StatusCode}, ReasonPhrase: {response.ReasonPhrase}, Content: ");
+                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                }
             }
         }
 

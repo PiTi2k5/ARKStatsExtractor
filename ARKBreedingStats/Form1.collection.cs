@@ -9,13 +9,13 @@ using System.Collections.Specialized;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
-using ARKBreedingStats.AsbServer;
 using ARKBreedingStats.library;
 
 namespace ARKBreedingStats
@@ -92,8 +92,8 @@ namespace ARKBreedingStats
                 serverMultipliersEvents = oldEventMultipliers,
                 ModList = new List<Mod>()
             };
-            _currentFileName = null;
-            _fileSync?.ChangeFile(_currentFileName);
+            _currentFilePath = null;
+            _fileSync?.ChangeFile(_currentFilePath);
 
             if (asaMode)
             {
@@ -132,7 +132,7 @@ namespace ARKBreedingStats
             }
             else
             {
-                LoadCollectionFile(_currentFileName, true, true, true);
+                LoadCollectionFile(_currentFilePath, true, true, true);
             }
         }
 
@@ -192,8 +192,8 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns the directory of the currently used file or the last used directory when loading a file.
         /// </summary>
-        private string InitialDirectoryForLoadSave => !string.IsNullOrEmpty(_currentFileName)
-            ? Path.GetDirectoryName(_currentFileName)
+        private string InitialDirectoryForLoadSave => !string.IsNullOrEmpty(_currentFilePath)
+            ? Path.GetDirectoryName(_currentFilePath)
             : !string.IsNullOrEmpty(Properties.Settings.Default.LastUsedCollectionFolder)
               && Directory.Exists(Properties.Settings.Default.LastUsedCollectionFolder)
                 ? Properties.Settings.Default.LastUsedCollectionFolder
@@ -205,15 +205,15 @@ namespace ARKBreedingStats
         /// </summary>
         private void SaveCollection()
         {
-            if (string.IsNullOrEmpty(_currentFileName))
+            if (string.IsNullOrEmpty(_currentFilePath))
             {
                 SaveNewCollection();
-                if (!string.IsNullOrEmpty(_currentFileName))
-                    Properties.Settings.Default.LastUsedCollectionFolder = Path.GetDirectoryName(_currentFileName);
+                if (!string.IsNullOrEmpty(_currentFilePath))
+                    Properties.Settings.Default.LastUsedCollectionFolder = Path.GetDirectoryName(_currentFilePath);
             }
             else
             {
-                SaveCollectionToFileName(_currentFileName);
+                SaveCollectionToFileName(_currentFilePath);
             }
         }
 
@@ -227,10 +227,10 @@ namespace ARKBreedingStats
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    _currentFileName = dlg.FileName;
-                    SaveCollectionToFileName(_currentFileName);
-                    AddPathToRecentlyUsed(_currentFileName);
-                    _fileSync?.ChangeFile(_currentFileName);
+                    _currentFilePath = dlg.FileName;
+                    SaveCollectionToFileName(_currentFilePath);
+                    AddPathToRecentlyUsed(_currentFilePath);
+                    _fileSync?.ChangeFile(_currentFilePath);
                 }
             }
         }
@@ -556,8 +556,8 @@ namespace ARKBreedingStats
             }
             else
             {
-                _currentFileName = filePath;
-                _fileSync?.ChangeFile(_currentFileName);
+                _currentFilePath = filePath;
+                _fileSync?.ChangeFile(_currentFilePath);
                 creatureBoxListView.Clear();
             }
 
@@ -595,13 +595,25 @@ namespace ARKBreedingStats
             // set global species that was set before loading
             selectedSpecies = Values.V.SpeciesByBlueprint(selectedSpecies?.blueprintPath);
             if (selectedSpecies != null
-                && _creatureCollection.creatures.Any(c => c.Species != null && c.Species.Equals(selectedSpecies))
+                && _creatureCollection.creatures.Any(c => c.Species != null && !c.flags.HasFlag(CreatureFlags.Placeholder) && c.Species.Equals(selectedSpecies))
                 )
             {
                 speciesSelector1.SetSpecies(selectedSpecies);
             }
-            else if (_creatureCollection.creatures.Any())
-                speciesSelector1.SetSpecies(_creatureCollection.creatures[0].Species);
+            else
+            {
+                selectedSpecies = _creatureCollection.creatures.FirstOrDefault(c => !c.flags.HasFlag(CreatureFlags.Placeholder))?.Species;
+                if (selectedSpecies != null)
+                {
+                    speciesSelector1.SetSpecies(selectedSpecies);
+                }
+            }
+
+            if (selectedSpecies == null)
+            {
+                // set to last set species if no creatures in library
+                speciesSelector1.SetToLastSetSpecies();
+            }
 
             // set library species to what it was before loading
             selectedLibrarySpecies = Values.V.SpeciesByBlueprint(selectedLibrarySpecies?.blueprintPath);
@@ -662,9 +674,9 @@ namespace ARKBreedingStats
                 return;
             }
 
-            var currentFileNotEmpty = !string.IsNullOrEmpty(_currentFileName);
+            var currentFileNotEmpty = !string.IsNullOrEmpty(_currentFilePath);
             _collectionDirty = changed;
-            string fileName = currentFileNotEmpty ? Path.GetFileName(_currentFileName) : null;
+            string fileName = currentFileNotEmpty ? Path.GetFileName(_currentFilePath) : null;
             Text = $"{Utils.ApplicationNameVersion}{(currentFileNotEmpty ? " - " + fileName : string.Empty)}{(changed ? " *" : string.Empty)}";
             openFolderOfCurrentFileToolStripMenuItem.Enabled = currentFileNotEmpty;
         }
@@ -741,7 +753,7 @@ namespace ARKBreedingStats
                 FileService.TryDeleteDirectory(tempFolder);
 
                 Properties.Settings.Default.LastSaveFile = null;
-                _currentFileName = null;
+                _currentFilePath = null;
 
                 // select last creature values
                 var tempCreatureCount = toolStripCBTempCreatures.Items.Count;
@@ -1010,6 +1022,50 @@ namespace ARKBreedingStats
             {
                 SoundFeedback.BeepSignalCurrentLevelFlags(IsCreatureAlreadyInLibrary(c.guid, c.ArkId, out _));
             }
+        }
+
+        /// <summary>
+        /// Copy top stats for each species to clipboard in table format.
+        /// </summary>
+        private void CopyTopCreatureStatsToClipboard(object sender, EventArgs e)
+        {
+            var columns = new List<List<string>>(Stats.StatsCount + 1) { new List<string> { Loc.S("Species") } };
+            columns.AddRange(Stats.DisplayOrder.Select(s => new List<string> { Utils.StatName(s) }));
+            columns.Add(new List<string> { "MaxLevel" });
+
+            foreach (var sp in _topLevels)
+            {
+                var maxLevel = 1; // base level
+                columns[0].Add(sp.Key.name);
+                var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(sp.Key);
+                for (var s = 0; s < Stats.StatsCount; s++)
+                {
+                    var si = Stats.DisplayOrder[s];
+                    if (si == Stats.Torpidity) continue;
+                    var level = sp.Key.UsesStat(si)
+                        ? (statWeights.Item1[si] < 0 ? sp.Value.WildLevelsLowest[si] : sp.Value.WildLevelsHighest[si]) : -1;
+                    if (level < 0) continue;
+                    maxLevel += level;
+                    columns[s + 1].Add(level.ToString());
+                }
+                columns[Stats.StatsCount + 1].Add(maxLevel.ToString());
+            }
+
+            if (columns[0].Count == 1) return;
+
+            // remove unused stat columns
+            columns = columns.Where(col => col.Count(c => !string.IsNullOrEmpty(c)) > 1).ToList();
+
+            var sb = new StringBuilder();
+            var rowCount = columns[0].Count;
+            var columnCount = columns.Count;
+            for (int row = 0; row < rowCount; row++)
+                for (int col = 0; col < columnCount; col++)
+                    sb.Append(columns[col][row] + (col == columnCount - 1 ? Environment.NewLine : "\t"));
+
+            if (sb.Length == 0) return;
+            Clipboard.SetText(sb.ToString());
+            SetMessageLabelText($"Top stats of this library for all {rowCount - 1} species copied to clipboard");
         }
     }
 }

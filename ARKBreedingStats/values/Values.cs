@@ -95,6 +95,8 @@ namespace ARKBreedingStats.values
                 return this;
             }
 
+            CanHaveWildLevelExceptions.LoadDefinitions();
+
             _V = LoadBaseValuesFile(FileService.GetJsonPath(FileService.ValuesFolder, FileService.ValuesJson));
             InitializeBaseValues();
 
@@ -175,6 +177,7 @@ namespace ARKBreedingStats.values
 
             InitializeArkColors(undefinedColorAsa);
             _speciesAndColorsInitialized = true;
+            Species.ClearIgnoreVariantsInName();
         }
 
         /// <summary>
@@ -694,18 +697,26 @@ namespace ARKBreedingStats.values
                 {
                     _blueprintToSpecies[s.blueprintPath.ToLowerInvariant()] = s;
 
-                    string speciesName = s.name;
-                    if (_nameToSpecies.TryGetValue(speciesName, out var existingSpecies))
+                    AddSpeciesNameToDict(s.name);
+                    AddSpeciesNameToDict(s.nameFemale);
+                    AddSpeciesNameToDict(s.nameMale);
+
+                    void AddSpeciesNameToDict(string speciesName)
                     {
-                        if (
-                            (!existingSpecies.IsDomesticable && s.IsDomesticable) // prefer species that are domesticable
-                            || (existingSpecies.Mod == null && s.Mod != null) // prefer species from mods with the same name
-                            || ((existingSpecies.variants?.Length ?? 0) > (s.variants?.Length ?? 0)) // prefer species that are not variants
-                        )
-                            _nameToSpecies[speciesName] = s;
+                        if (string.IsNullOrEmpty(speciesName)) return;
+
+                        if (_nameToSpecies.TryGetValue(speciesName, out var existingSpecies))
+                        {
+                            if (
+                                (!existingSpecies.IsDomesticable && s.IsDomesticable) // prefer species that are domesticable
+                                || (existingSpecies.Mod == null && s.Mod != null) // prefer species from mods with the same name
+                                || ((existingSpecies.variants?.Length ?? 0) > (s.variants?.Length ?? 0)) // prefer species that are not variants
+                            )
+                                _nameToSpecies[speciesName] = s;
+                        }
+                        else
+                            _nameToSpecies.Add(speciesName, s);
                     }
-                    else
-                        _nameToSpecies.Add(speciesName, s);
 
                     Match classNameMatch = rClassName.Match(s.blueprintPath);
                     if (classNameMatch.Success)
@@ -860,15 +871,17 @@ namespace ARKBreedingStats.values
 
         /// <summary>
         /// Returns the taming food data for a species.
-        /// Returns null if no data is found.
+        /// Returns null if no data is found or the species doesn't eat the food.
         /// </summary>
         internal TamingFood GetTamingFood(Species species, string foodName)
         {
-            if (species?.taming?.specialFoodValues != null
-                && species.taming.specialFoodValues.TryGetValue(foodName, out var food))
+            if (species?.taming == null) return null;
+
+            if (species.taming.specialFoodValues?.TryGetValue(foodName, out var food) == true)
                 return food;
 
             if (defaultFoodData != null
+                && species.taming.eats?.Contains(foodName) == true
                 && defaultFoodData.TryGetValue(foodName, out food))
                 return food;
             return null;

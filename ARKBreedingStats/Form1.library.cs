@@ -185,7 +185,7 @@ namespace ARKBreedingStats
                     // creature is not a placeholder, warn about id-conflict and don't add creature.
                     // TODO offer merging of the two creatures if they are similar (e.g. same species). merge automatically if only the dom-levels are different?
                     MessageBox.Show("The entered ARK-ID is already existing in this library " +
-                            $"({guidCreature.Species.name} (lvl {guidCreature.Level}): {guidCreature.name}).\n" +
+                            $"({guidCreature.SpeciesName} (lvl {guidCreature.Level}): {guidCreature.name}).\n" +
                             "You have to choose a different ARK-ID or delete the other creature first.",
                             "ARK-ID already existing",
                             MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -259,6 +259,26 @@ namespace ARKBreedingStats
 
             UpdateTempCreatureDropDown();
 
+            // if collection is loaded, set export folder to default if there's a match
+            if (!keepCurrentSelection && !string.IsNullOrEmpty(_currentFilePath))
+            {
+                var exportFoldersString = Properties.Settings.Default.ExportCreatureFolders;
+                if (exportFoldersString?.Any() == true)
+                {
+                    var currentDefault = ATImportExportedFolderLocation.CreateFromString(exportFoldersString[0]);
+                    var exportFolders = exportFoldersString.Select(ATImportExportedFolderLocation.CreateFromString).ToArray();
+                    var setToDefault = exportFolders.FirstOrDefault(f => f.IsDefaultForLibraryFile(_currentFilePath));
+                    if (setToDefault != null && setToDefault.FolderPath != null &&
+                        currentDefault.FolderPath != setToDefault.FolderPath)
+                    {
+                        Properties.Settings.Default.ExportCreatureFolders = exportFolders
+                            .OrderByDescending(f => f == setToDefault)
+                            .Select(location => location.ToString()).ToArray();
+                        SetupExportFileWatcher();
+                    }
+                }
+            }
+
             return duplicatesWereRemoved;
         }
 
@@ -304,17 +324,18 @@ namespace ARKBreedingStats
                 var species = g.Key;
                 if (species == null)
                     continue;
-                var speciesCreatures = g.ToArray();
+                var speciesCreatures = g.Where(c => !c.flags.HasFlag(CreatureFlags.Placeholder)).ToArray();
+                if (!speciesCreatures.Any()) continue;
 
-                List<int> usedStatIndices = new List<int>(8);
-                List<int> usedAndConsideredStatIndices = new List<int>();
+                var usedStatIndices = new List<int>(8);
+                var usedAndConsideredStatIndices = new List<int>();
                 var highestLevels = new int[Stats.StatsCount];
                 var lowestLevels = new int[Stats.StatsCount];
                 var highestMutationLevels = new int[Stats.StatsCount];
                 var lowestMutationLevels = new int[Stats.StatsCount];
                 var considerAsTopStat = StatsOptionsConsiderTopStats.GetStatsOptions(species).StatOptions;
                 var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
-                for (int s = 0; s < Stats.StatsCount; s++)
+                for (var s = 0; s < Stats.StatsCount; s++)
                 {
                     highestLevels[s] = -1;
                     lowestLevels[s] = -1;
@@ -325,8 +346,8 @@ namespace ARKBreedingStats
                             usedAndConsideredStatIndices.Add(s);
                     }
                 }
-                List<Creature>[] bestCreaturesWildLevels = new List<Creature>[Stats.StatsCount];
-                List<Creature>[] bestCreaturesMutatedLevels = new List<Creature>[Stats.StatsCount];
+                var bestCreaturesWildLevels = new List<Creature>[Stats.StatsCount];
+                var bestCreaturesMutatedLevels = new List<Creature>[Stats.StatsCount];
                 var statPreferences = new StatWeighting.StatValuePreference[Stats.StatsCount];
                 for (int s = 0; s < Stats.StatsCount; s++)
                 {
@@ -346,7 +367,7 @@ namespace ARKBreedingStats
                     c.topBreedingCreature = false;
 
                     if (
-                        //if not in the filtered collection (using library filter settings), continue
+                        // if not in the filtered collection (using library filter settings), continue
                         (filteredCreaturesHash != null && !filteredCreaturesHash.Contains(c))
                         // only consider creature if it's available for breeding
                         || !(c.Status == CreatureStatus.Available
@@ -457,12 +478,15 @@ namespace ARKBreedingStats
                         case StatWeighting.StatValuePreference.Indifferent:
                             continue;
                         case StatWeighting.StatValuePreference.Low:
-                            if (highestLevels[s] > 0 && lowestLevels[s] != 0)
+                            if (highestLevels[s] > 0 && lowestLevels[s] >= 0)
                                 sumTopLevels += highestLevels[s] - lowestLevels[s];
+                            if (lowestMutationLevels[s] >= 0)
+                                sumTopLevels += highestMutationLevels[s] - lowestMutationLevels[s];
                             break;
                         case StatWeighting.StatValuePreference.High:
                             if (highestLevels[s] > 0)
                                 sumTopLevels += highestLevels[s];
+                            sumTopLevels += highestMutationLevels[s];
                             break;
                     }
                 }
@@ -478,10 +502,11 @@ namespace ARKBreedingStats
                             {
                                 case StatWeighting.StatValuePreference.Low:
                                     if (c.levelsWild[s] >= 0)
-                                        sumCreatureLevels += highestLevels[s] - c.levelsWild[s];
+                                        sumCreatureLevels += highestLevels[s] - c.levelsWild[s] + highestMutationLevels[s] - (c.levelsMutated?[s] ?? 0);
                                     break;
                                 case StatWeighting.StatValuePreference.High:
-                                    sumCreatureLevels += c.levelsWild[s] > 0 ? c.levelsWild[s] : 0;
+                                    sumCreatureLevels += (c.levelsWild[s] > 0 ? c.levelsWild[s] : 0)
+                                        + (c.levelsMutated?[s] ?? 0);
                                     break;
                             }
                         }
@@ -518,7 +543,9 @@ namespace ARKBreedingStats
                         int maxval = 0;
                         for (int cs = 0; cs < Stats.StatsCount; cs++)
                         {
-                            if (currentCreature.levelsWild[cs] == highestLevels[cs])
+                            if ((statPreferences[s] == StatWeighting.StatValuePreference.High && currentCreature.levelsWild[cs] == highestLevels[cs])
+                                || (statPreferences[s] == StatWeighting.StatValuePreference.Low && currentCreature.levelsWild[cs] == lowestLevels[cs])
+                                )
                                 maxval++;
                         }
 
@@ -534,8 +561,12 @@ namespace ARKBreedingStats
                                 int othermaxval = 0;
                                 for (int ocs = 0; ocs < Stats.StatsCount; ocs++)
                                 {
-                                    if (otherMale.levelsWild[ocs] == highestLevels[ocs])
+                                    if ((statPreferences[s] == StatWeighting.StatValuePreference.High && otherMale.levelsWild[ocs] == highestLevels[ocs])
+                                        || (statPreferences[s] == StatWeighting.StatValuePreference.Low && otherMale.levelsWild[ocs] == lowestLevels[ocs])
+                                        )
+                                    {
                                         othermaxval++;
+                                    }
                                     if (otherMale.IsTopMutationStat(ocs))
                                     {
                                         // if this creature has top mutation levels, don't remove it from breeding pool
@@ -701,7 +732,7 @@ namespace ARKBreedingStats
 
                     text.AppendLine();
                     text.AppendLine("If you click on Yes, the first listed creature will be kept, all the other creatures will be removed. A backup file of the following library file will be created:");
-                    text.AppendLine(_currentFileName);
+                    text.AppendLine(_currentFilePath);
                     text.AppendLine("If you click on No, the application will quit.");
                     text.AppendLine("Remove duplicates?");
 
@@ -719,10 +750,10 @@ namespace ARKBreedingStats
 
                 creatureGuids = _creatureCollection.creatures.ToDictionary(c => c.guid);
                 // create backup file of file before duplicates were removed
-                if (!string.IsNullOrEmpty(_currentFileName)
-                    && File.Exists(_currentFileName))
+                if (!string.IsNullOrEmpty(_currentFilePath)
+                    && File.Exists(_currentFilePath))
                 {
-                    File.Copy(_currentFileName, Path.Combine(Path.GetDirectoryName(_currentFileName), $"{Path.GetFileNameWithoutExtension(_currentFileName)}_BackupBeforeRemovingDuplicates_{DateTime.Now:yyyy-MM-dd_HH-mm-ss-ffff}.asb"));
+                    File.Copy(_currentFilePath, Path.Combine(Path.GetDirectoryName(_currentFilePath), $"{Path.GetFileNameWithoutExtension(_currentFilePath)}_BackupBeforeRemovingDuplicates_{DateTime.Now:yyyy-MM-dd_HH-mm-ss-ffff}.asb"));
                 }
 
                 duplicatesWereRemoved = true;
@@ -1114,7 +1145,13 @@ namespace ARKBreedingStats
                         cr.Status.ToString(),
                         cr.tribe,
                         Utils.StatusSymbol(cr.Status, string.Empty),
-                        (cr.flags & CreatureFlags.MutagenApplied) != 0 ? "M" : string.Empty
+                        (cr.flags & CreatureFlags.MutagenApplied) != 0 ? "M" : string.Empty,
+                        cr.Level.ToString(),
+                        (CreatureCollection.CurrentCreatureCollection.maxServerLevel>0
+                            ? Math.Min (cr.LevelHatched + CreatureCollection.CurrentCreatureCollection.maxDomLevel, CreatureCollection.CurrentCreatureCollection.maxServerLevel)
+                            : cr.LevelHatched + CreatureCollection.CurrentCreatureCollection.maxDomLevel
+                        ).ToString(),
+                        cr.TraitsString
                     })
                     .ToArray();
 
@@ -1885,7 +1922,7 @@ namespace ARKBreedingStats
             {
                 var c = _creaturesDisplayed[i];
 
-                var fileName = $"{c.Species.name}_{(string.IsNullOrEmpty(c.name) ? c.guid.ToString() : c.name)}";
+                var fileName = $"{c.SpeciesName}_{(string.IsNullOrEmpty(c.name) ? c.guid.ToString() : c.name)}";
                 foreach (var invalidChar in invalidCharacters)
                     fileName = fileName.Replace(invalidChar, '_');
 
@@ -1963,15 +2000,15 @@ namespace ARKBreedingStats
                     true);
         }
 
-        private void SetMatureBreedingStateOfSelectedCreatures(bool setMature = false, bool clearMatingCooldown = false,
+        private void SetMatureBreedingStateOfSelectedCreatures(bool setMaturity = false, double maturity = 1, bool clearMatingCooldown = false,
             bool justMated = false)
         {
             listViewLibrary.BeginUpdate();
             foreach (int i in listViewLibrary.SelectedIndices)
             {
                 var c = _creaturesDisplayed[i];
-                if (setMature && c.growingUntil > DateTime.Now)
-                    c.growingUntil = null;
+                if (setMaturity)
+                    c.Maturation = maturity;
 
                 if (clearMatingCooldown && c.cooldownUntil > DateTime.Now)
                     c.cooldownUntil = null;
@@ -1986,9 +2023,9 @@ namespace ARKBreedingStats
             listViewLibrary.EndUpdate();
         }
 
-        private void setToMatureToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SetMaturityToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetMatureBreedingStateOfSelectedCreatures(setMature: true);
+            SetMatureBreedingStateOfSelectedCreatures(setMaturity: true, maturity: ((ToolStripMenuItem)sender).Tag is double d ? d : 1);
         }
 
         private void clearMatingCooldownToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2003,6 +2040,11 @@ namespace ARKBreedingStats
 
         private void applyMutagenToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (listViewLibrary.SelectedIndices.Count == 0
+               || MessageBox.Show("Set the mutagen flag on the selected creatures and increase their levels accordingly?",
+                   "Apply mutagen?", MessageBoxButtons.YesNo, MessageBoxIcon.Information) != DialogResult.Yes
+               ) return;
+
             // a tamed creature receives 5 level in hp, st, we, dm (i.e. a total of 20 levels)
             // a bred creature receives 1 level in hp, st, we, dm (i.e. a total of 4 levels)
 
@@ -2126,21 +2168,21 @@ namespace ARKBreedingStats
         private void CreateExactSpawnCommand(Creature cr)
         {
             CreatureSpawnCommand.InstableCommandToClipboard(cr);
-            SetMessageLabelText($"The SpawnExactDino admin console command for the creature {cr.name} ({cr.Species?.name}) was copied to the clipboard. The command doesn't include the XP and the imprinterName, thus the imprinting is probably not set."
+            SetMessageLabelText($"The SpawnExactDino admin console command for the creature {cr.name} ({cr.SpeciesName}) was copied to the clipboard. The command doesn't include the XP and the imprinterName, thus the imprinting is probably not set."
                                 + "WARNING: this console command is unstable and can crash your game. Use with caution! The colors and stats will only be correct after putting the creature in a cryopod.", MessageBoxIcon.Warning);
         }
 
         private void CreateExactSpawnDS2Command(Creature cr)
         {
             CreatureSpawnCommand.DinoStorageV2CommandToClipboard(cr);
-            SetMessageLabelText($"The SpawnExactDino admin console command for the creature {cr.name} ({cr.Species?.name}) was copied to the clipboard. The command needs the mod DinoStorage V2 installed on the server to work."
+            SetMessageLabelText($"The SpawnExactDino admin console command for the creature {cr.name} ({cr.SpeciesName}) was copied to the clipboard. The command needs the mod DinoStorage V2 installed on the server to work."
                                 , MessageBoxIcon.Warning);
         }
 
         private void CreateExactMutationLevelCommand(Creature cr)
         {
             CreatureSpawnCommand.MutationLevelCommandToClipboard(cr);
-            SetMessageLabelText($"The admin console command for adding the mutation levels to the creature {cr.name} ({cr.Species?.name}) was copied to the clipboard.");
+            SetMessageLabelText($"The admin console command for adding the mutation levels to the creature {cr.name} ({cr.SpeciesName}) was copied to the clipboard.");
         }
 
         #endregion

@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.11.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.12.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -368,7 +368,7 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool inventoryCheckTimer {
             get {
                 return ((bool)(this["inventoryCheckTimer"]));
@@ -2359,6 +2359,42 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["LevelColorWindowRectangle"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OverlayImportPattern {
+            get {
+                return ((string)(this["OverlayImportPattern"]));
+            }
+            set {
+                this["OverlayImportPattern"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ExtractorConvertWildTorporTotalLevel {
+            get {
+                return ((bool)(this["ExtractorConvertWildTorporTotalLevel"]));
+            }
+            set {
+                this["ExtractorConvertWildTorporTotalLevel"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ColorSelectorShowAllColors {
+            get {
+                return ((bool)(this["ColorSelectorShowAllColors"]));
+            }
+            set {
+                this["ColorSelectorShowAllColors"] = value;
             }
         }
     }

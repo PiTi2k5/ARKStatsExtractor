@@ -18,7 +18,6 @@ using System.Windows.Forms;
 using ARKBreedingStats.mods;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.StatsOptions;
-using ARKBreedingStats.StatsOptions.LevelColorSettings;
 using ARKBreedingStats.StatsOptions.TopStatsSettings;
 using ARKBreedingStats.utils;
 using static ARKBreedingStats.settings.Settings;
@@ -30,7 +29,7 @@ namespace ARKBreedingStats
     public partial class Form1 : Form
     {
         private CreatureCollection _creatureCollection = new CreatureCollection();
-        private string _currentFileName;
+        private string _currentFilePath;
         private bool _collectionDirty;
 
         /// <summary>
@@ -82,6 +81,12 @@ namespace ARKBreedingStats
         /// Custom replacings for species names used in naming patterns.
         /// </summary>
         private Dictionary<string, string> _customReplacingNamingPattern;
+
+        /// <summary>
+        /// Some species can have specific issues when extracting.
+        /// </summary>
+        private readonly Dictionary<string, string> _speciesSpecificExtractionFails
+            = FileService.LoadJsonFileIfAvailable<Dictionary<string, string>>(FileService.GetJsonPath("speciesSpecificExtractionFails.json"));
 
         // OCR stuff
         private ARKOverlay _overlay;
@@ -235,8 +240,22 @@ namespace ARKBreedingStats
 
             libraryContextMenuItems[0].ShortcutKeys = Keys.Control | Keys.G;
 
+            var libraryContextMenuMaturitySettings = new[] { 0, 0.05, 0.1, 0.25, 0.5, 0.75, 1 };
+            foreach (var m in libraryContextMenuMaturitySettings)
+            {
+                var suffix = m < 0.1 ? "baby" : m < 1 ? "juvenile" : "mature";
+                var tsmi = new ToolStripMenuItem($"Set maturity to {m:p0} ({suffix})", null, SetMaturityToolStripMenuItem_Click);
+                tsmi.Tag = m;
+                SetMaturityCooldownToolStripMenuItem.DropDownItems.Add(tsmi);
+            }
+
             nameGeneratorToolStripMenuItem.DropDownItems.AddRange(namePatternMenuItems);
             toolStripMenuItemGenerateCreatureName.DropDownItems.AddRange(libraryContextMenuItems);
+
+            var copyTopCreatureStatsToClipboardMenuItem = new ToolStripMenuItem("Copy library top stats to clipboard");
+            copyTopCreatureStatsToClipboardMenuItem.Click += CopyTopCreatureStatsToClipboard;
+            editToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            editToolStripMenuItem.DropDownItems.Add(copyTopCreatureStatsToClipboardMenuItem);
 
             _reactOnCreatureSelectionChange = true;
         }
@@ -335,7 +354,6 @@ namespace ARKBreedingStats
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
             // check for updates
-            MoveSpeciesImagesToNewFolder();
             if (DateTime.Now.AddHours(-20) > Properties.Settings.Default.lastUpdateCheck)
             {
                 bool selectDefaultImagesIfNotYet = false;
@@ -1538,7 +1556,7 @@ namespace ARKBreedingStats
         {
             if (!string.IsNullOrEmpty(_messageLabelClipboardContent))
                 Clipboard.SetText(_messageLabelClipboardContent);
-            OpenFolderInExplorer(_messageLabelPath);
+            FileService.OpenFolderInExplorer(_messageLabelPath);
         }
 
         private void listBoxSpeciesLib_SelectedIndexChanged(object sender, EventArgs e)
@@ -2187,7 +2205,7 @@ namespace ARKBreedingStats
             if (Properties.Settings.Default.syncCollection)
             {
                 if (_fileSync == null)
-                    _fileSync = new FileSync(_currentFileName, CollectionChanged);
+                    _fileSync = new FileSync(_currentFilePath, CollectionChanged);
             }
             else if (_fileSync != null)
             {
@@ -2229,13 +2247,18 @@ namespace ARKBreedingStats
         {
             _clearExtractionCreatureData =
                 true; // as soon as the user changes stat-values, it's assumed it's not an exported creature anymore
-            if (sIo.statIndex == Stats.Torpidity && rbWildExtractor.Checked)
+
+            if (sIo.statIndex == Stats.Torpidity
+                && rbWildExtractor.Checked
+                && Properties.Settings.Default.ExtractorConvertWildTorporTotalLevel
+                && speciesSelector1.SelectedSpecies?.stats is SpeciesStat[] speciesStats)
             {
-                if (!(speciesSelector1.SelectedSpecies?.stats is SpeciesStat[] speciesStats)) return;
-                var trp = speciesStats[Stats.Torpidity];
-                if (trp == null || trp.BaseValue == 0 || trp.IncPerWildLevel == 0) return;
-                numericUpDownLevel.ValueSaveDouble = (sIo.Input / trp.BaseValue - 1) / trp.IncPerWildLevel;
-                return;
+                var torpidity = speciesStats[Stats.Torpidity];
+                if (torpidity != null && torpidity.BaseValue != 0 && torpidity.IncPerWildLevel != 0)
+                {
+                    numericUpDownLevel.ValueSaveDouble =
+                        Math.Round((sIo.Input / torpidity.BaseValue - 1) / torpidity.IncPerWildLevel + 1);
+                }
             }
 
             if (!cbQuickWildCheck.Checked) return;
@@ -3165,7 +3188,7 @@ namespace ARKBreedingStats
         {
             toolStripCBTempCreatures.Items.Clear();
             foreach (CreatureValues cv in _creatureCollection.creaturesValues)
-                toolStripCBTempCreatures.Items.Add($"{cv.name} ({cv.Species?.name ?? "unknown species"}, Lv {cv.level})");
+                toolStripCBTempCreatures.Items.Add($"{cv.name} ({cv.Species?.Name(cv.sex) ?? "unknown species"}, Lv {cv.level})");
         }
 
         /// <summary>
@@ -3431,24 +3454,7 @@ namespace ARKBreedingStats
 
         private void openFolderOfCurrentFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFolderInExplorer(_currentFileName);
-        }
-
-        /// <summary>
-        /// Opens the folder in the explorer. If it's a file, it will be selected.
-        /// </summary>
-        private static void OpenFolderInExplorer(string path)
-        {
-            if (string.IsNullOrEmpty(path)) return;
-            bool isFile = false;
-
-            if (File.Exists(path))
-                isFile = true;
-            else if (!Directory.Exists(path))
-                return;
-
-            Process.Start("explorer.exe",
-                $"{(isFile ? "/select, " : string.Empty)}\"{path}\"");
+            FileService.OpenFolderInExplorer(_currentFilePath);
         }
 
         private void customStatOverridesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3734,7 +3740,7 @@ namespace ARKBreedingStats
             {
                 if (!modules.UpdateAvailable && !selectDefaultImagesIfNotYet && onlyShowDialogIfUpdatesAreAvailable)
                 {
-                    if (initializeImages) InitializeImages();
+                    InitializeImages(!initializeImages);
                     return;
                 }
 
@@ -3742,8 +3748,11 @@ namespace ARKBreedingStats
                     modules.SelectDefaultImages();
 
                 modules.ShowDialog();
-                if (modules.DialogResult != DialogResult.OK)
-                    return;
+                var dialogResult = modules.DialogResult;
+
+                InitializeImages(true);
+
+                if (dialogResult != DialogResult.OK) return;
 
                 var result = await modules.DownloadRequestedModulesAsync();
 
@@ -3758,52 +3767,17 @@ namespace ARKBreedingStats
                     InitializeImages();
                 }
 
-                void InitializeImages()
+                void InitializeImages(bool onlyIfNotYetSet = false)
                 {
+                    if (onlyIfNotYetSet && !string.IsNullOrEmpty(Properties.Settings.Default.SpeciesImagesFolder))
+                        return;
+
                     Properties.Settings.Default.SpeciesImagesFolder = modules.GetSpeciesImagesFolder();
                     CreatureColored.InitializeSpeciesImageLocation();
 
-                    if (Properties.Settings.Default.SpeciesImagesFolder != null)
+                    if (!string.IsNullOrEmpty(Properties.Settings.Default.SpeciesImagesFolder))
                         speciesSelector1.InitializeSpeciesImages(Values.V.species);
                 }
-            }
-        }
-
-        /// <summary>
-        /// If the user has downloaded the species images already but not in the new folder, move them.
-        /// This method can probably be removed at 08-2021.
-        /// </summary>
-        private void MoveSpeciesImagesToNewFolder()
-        {
-            const string relativeImageFolder = "images/speciesImages";
-            var oldImagesFolder = FileService.GetPath("img");
-            var newImagesFolder = FileService.GetPath(relativeImageFolder);
-
-            if (Directory.Exists(newImagesFolder))
-            {
-                // images are already moved
-                // check if the images folder is set correctly (currently there's only one option)
-                if (Properties.Settings.Default.SpeciesImagesFolder == relativeImageFolder) return;
-
-                Properties.Settings.Default.SpeciesImagesFolder = relativeImageFolder;
-                CreatureColored.InitializeSpeciesImageLocation();
-                speciesSelector1.InitializeSpeciesImages(Values.V.species);
-                return;
-            }
-
-            if (!Directory.Exists(oldImagesFolder)) return;
-
-            try
-            {
-                Directory.Move(oldImagesFolder, newImagesFolder);
-
-                Properties.Settings.Default.SpeciesImagesFolder = relativeImageFolder;
-                CreatureColored.InitializeSpeciesImageLocation();
-                speciesSelector1.InitializeSpeciesImages(Values.V.species);
-            }
-            catch
-            {
-                // ignore
             }
         }
 
@@ -4038,7 +4012,7 @@ namespace ARKBreedingStats
 
         private void showSettingsFileInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFolderInExplorer(System.Configuration.ConfigurationManager
+            FileService.OpenFolderInExplorer(System.Configuration.ConfigurationManager
                 .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
         }
 
@@ -4054,7 +4028,18 @@ namespace ARKBreedingStats
 
         private void showStatsOptionsFileInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFolderInExplorer(StatsOptionsLevelColors.SettingsFilePath);
+            FileService.OpenFolderInExplorer(StatsOptionsLevelColors.SettingsFilePath);
+        }
+
+        private void editVariantTagsToHideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filePath = FileService.GetJsonPath(FileService.HideVariantsInSpeciesNameFile);
+
+            if (!File.Exists(filePath))
+                File.WriteAllText(filePath, string.Empty);
+            if (File.Exists(filePath))
+                Process.Start(filePath);
+            else MessageBoxes.ShowMessageBox($"Couldn't create file {filePath} automatically. Maybe you can create that file manually.");
         }
     }
 }

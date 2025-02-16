@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Settings));
             System.Windows.Forms.Button BtOpenLevelColorOptions;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Settings));
             this.groupBoxMultiplier = new System.Windows.Forms.GroupBox();
             this.CbHighlightAdjustedMultipliers = new System.Windows.Forms.CheckBox();
             this.flowLayoutPanelStatMultipliers = new System.Windows.Forms.FlowLayoutPanel();
@@ -263,6 +263,8 @@
             this.label20 = new System.Windows.Forms.Label();
             this.tabPageOverlay = new System.Windows.Forms.TabPage();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.label56 = new System.Windows.Forms.Label();
+            this.BtOverlayPatternEdit = new System.Windows.Forms.Button();
             this.label70 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label65 = new System.Windows.Forms.Label();
@@ -303,6 +305,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.CbExtractorConvertWildTorporTotalLevel = new System.Windows.Forms.CheckBox();
             this.nudWildLevelStep = new ARKBreedingStats.uiControls.Nud();
             this.nudTamedDinoCharacterFoodDrain = new ARKBreedingStats.uiControls.Nud();
             this.nudTamedDinoCharacterFoodDrainEvent = new ARKBreedingStats.uiControls.Nud();
@@ -476,6 +479,16 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudWaitBeforeScreenCapture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWhiteThreshold)).BeginInit();
             this.SuspendLayout();
+            // 
+            // BtOpenLevelColorOptions
+            // 
+            BtOpenLevelColorOptions.Location = new System.Drawing.Point(6, 114);
+            BtOpenLevelColorOptions.Name = "BtOpenLevelColorOptions";
+            BtOpenLevelColorOptions.Size = new System.Drawing.Size(189, 23);
+            BtOpenLevelColorOptions.TabIndex = 16;
+            BtOpenLevelColorOptions.Text = "Open level color options";
+            BtOpenLevelColorOptions.UseVisualStyleBackColor = true;
+            BtOpenLevelColorOptions.Click += new System.EventHandler(this.BtOpenLevelColorOptions_Click);
             // 
             // groupBoxMultiplier
             // 
@@ -1031,11 +1044,12 @@
             // 
             // groupBox7
             // 
+            this.groupBox7.Controls.Add(this.CbExtractorConvertWildTorporTotalLevel);
             this.groupBox7.Controls.Add(this.CbSetMutationLevelsExtractor);
             this.groupBox7.Controls.Add(this.checkBoxDisplayHiddenStats);
             this.groupBox7.Location = new System.Drawing.Point(6, 383);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(317, 73);
+            this.groupBox7.Size = new System.Drawing.Size(317, 88);
             this.groupBox7.TabIndex = 2;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Extractor";
@@ -1824,7 +1838,7 @@
             this.groupBox9.Controls.Add(this.cbLibraryHighlightTopCreatures);
             this.groupBox9.Controls.Add(this.cbApplyGlobalSpeciesToLibrary);
             this.groupBox9.Controls.Add(this.cbCreatureColorsLibrary);
-            this.groupBox9.Location = new System.Drawing.Point(6, 462);
+            this.groupBox9.Location = new System.Drawing.Point(6, 477);
             this.groupBox9.Name = "groupBox9";
             this.groupBox9.Size = new System.Drawing.Size(317, 248);
             this.groupBox9.TabIndex = 4;
@@ -3018,6 +3032,8 @@
             // 
             // groupBox10
             // 
+            this.groupBox10.Controls.Add(this.label56);
+            this.groupBox10.Controls.Add(this.BtOverlayPatternEdit);
             this.groupBox10.Controls.Add(this.label70);
             this.groupBox10.Controls.Add(this.label15);
             this.groupBox10.Controls.Add(this.nudOverlayInfoHeight);
@@ -3045,10 +3061,29 @@
             this.groupBox10.Controls.Add(this.label66);
             this.groupBox10.Location = new System.Drawing.Point(8, 6);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(734, 307);
+            this.groupBox10.Size = new System.Drawing.Size(734, 341);
             this.groupBox10.TabIndex = 0;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Overlay";
+            // 
+            // label56
+            // 
+            this.label56.AutoSize = true;
+            this.label56.Location = new System.Drawing.Point(216, 312);
+            this.label56.Name = "label56";
+            this.label56.Size = new System.Drawing.Size(352, 13);
+            this.label56.TabIndex = 25;
+            this.label56.Text = "This pattern will be shown on creature import when the overlay is enabled";
+            // 
+            // BtOverlayPatternEdit
+            // 
+            this.BtOverlayPatternEdit.Location = new System.Drawing.Point(6, 307);
+            this.BtOverlayPatternEdit.Name = "BtOverlayPatternEdit";
+            this.BtOverlayPatternEdit.Size = new System.Drawing.Size(201, 23);
+            this.BtOverlayPatternEdit.TabIndex = 24;
+            this.BtOverlayPatternEdit.Text = "Edit overlay pattern";
+            this.BtOverlayPatternEdit.UseVisualStyleBackColor = true;
+            this.BtOverlayPatternEdit.Click += new System.EventHandler(this.BtOverlayPatternEdit_Click);
             // 
             // label70
             // 
@@ -3430,15 +3465,15 @@
             this.panel1.Size = new System.Drawing.Size(758, 30);
             this.panel1.TabIndex = 12;
             // 
-            // BtOpenLevelColorOptions
+            // CbExtractorConvertWildTorporTotalLevel
             // 
-            BtOpenLevelColorOptions.Location = new System.Drawing.Point(6, 114);
-            BtOpenLevelColorOptions.Name = "BtOpenLevelColorOptions";
-            BtOpenLevelColorOptions.Size = new System.Drawing.Size(189, 23);
-            BtOpenLevelColorOptions.TabIndex = 16;
-            BtOpenLevelColorOptions.Text = "Open level color options";
-            BtOpenLevelColorOptions.UseVisualStyleBackColor = true;
-            BtOpenLevelColorOptions.Click += new System.EventHandler(this.BtOpenLevelColorOptions_Click);
+            this.CbExtractorConvertWildTorporTotalLevel.AutoSize = true;
+            this.CbExtractorConvertWildTorporTotalLevel.Location = new System.Drawing.Point(13, 65);
+            this.CbExtractorConvertWildTorporTotalLevel.Name = "CbExtractorConvertWildTorporTotalLevel";
+            this.CbExtractorConvertWildTorporTotalLevel.Size = new System.Drawing.Size(227, 17);
+            this.CbExtractorConvertWildTorporTotalLevel.TabIndex = 2;
+            this.CbExtractorConvertWildTorporTotalLevel.Text = "Auto convert total and torpor levels for wild";
+            this.CbExtractorConvertWildTorporTotalLevel.UseVisualStyleBackColor = true;
             // 
             // nudWildLevelStep
             // 
@@ -4266,7 +4301,7 @@
             this.customSCCustom.Location = new System.Drawing.Point(6, 139);
             this.customSCCustom.Name = "customSCCustom";
             this.customSCCustom.Size = new System.Drawing.Size(401, 23);
-            this.customSCCustom.SoundFile = null;
+            this.customSCCustom.SoundFile = "";
             this.customSCCustom.TabIndex = 4;
             // 
             // customSCWakeup
@@ -4274,7 +4309,7 @@
             this.customSCWakeup.Location = new System.Drawing.Point(6, 81);
             this.customSCWakeup.Name = "customSCWakeup";
             this.customSCWakeup.Size = new System.Drawing.Size(401, 23);
-            this.customSCWakeup.SoundFile = "";
+            this.customSCWakeup.SoundFile = null;
             this.customSCWakeup.TabIndex = 2;
             // 
             // customSCBirth
@@ -4282,7 +4317,7 @@
             this.customSCBirth.Location = new System.Drawing.Point(6, 110);
             this.customSCBirth.Name = "customSCBirth";
             this.customSCBirth.Size = new System.Drawing.Size(401, 23);
-            this.customSCBirth.SoundFile = "";
+            this.customSCBirth.SoundFile = null;
             this.customSCBirth.TabIndex = 3;
             // 
             // customSCStarving
@@ -4290,7 +4325,7 @@
             this.customSCStarving.Location = new System.Drawing.Point(6, 52);
             this.customSCStarving.Name = "customSCStarving";
             this.customSCStarving.Size = new System.Drawing.Size(401, 23);
-            this.customSCStarving.SoundFile = null;
+            this.customSCStarving.SoundFile = "";
             this.customSCStarving.TabIndex = 1;
             // 
             // nudOverlayInfoHeight
@@ -5178,5 +5213,8 @@
         private System.Windows.Forms.CheckBox CbCopyNameToClipboardOnImport;
         private System.Windows.Forms.CheckBox CbSetMutationLevelsExtractor;
         private System.Windows.Forms.CheckBox CbLibraryGenerateNameWarnTooLongName;
+        private System.Windows.Forms.Label label56;
+        private System.Windows.Forms.Button BtOverlayPatternEdit;
+        private System.Windows.Forms.CheckBox CbExtractorConvertWildTorporTotalLevel;
     }
 }

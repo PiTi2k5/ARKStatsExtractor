@@ -90,7 +90,7 @@
       <Value Profile="(Default)">60,0</Value>
     </Setting>
     <Setting Name="inventoryCheckTimer" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="showColorsInLibrary" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -592,6 +592,15 @@
     </Setting>
     <Setting Name="LevelColorWindowRectangle" Type="System.Drawing.Rectangle" Scope="User">
       <Value Profile="(Default)">200, 200, 1000, 650</Value>
+    </Setting>
+    <Setting Name="OverlayImportPattern" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ExtractorConvertWildTorporTotalLevel" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ColorSelectorShowAllColors" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

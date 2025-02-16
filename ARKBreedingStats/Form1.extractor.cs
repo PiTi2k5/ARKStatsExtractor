@@ -13,7 +13,6 @@ using ARKBreedingStats.library;
 using ARKBreedingStats.utils;
 using ARKBreedingStats.ocr;
 using ARKBreedingStats.uiControls;
-using System.Reflection;
 
 namespace ARKBreedingStats
 {
@@ -443,6 +442,11 @@ namespace ARKBreedingStats
                     {
                         possibleExtractionIssues |= IssueNotes.Issue.SinglePlayer;
                     }
+                    // if the stat is speed, the allowSpeedLeveling could be set incorrectly. For bred creatures that setting affects if speed is changed by imprinting.
+                    if (s == Stats.SpeedMultiplier && rbBredExtractor.Checked && numericUpDownImprintingBonusExtractor.Value > 0)
+                    {
+                        possibleExtractionIssues |= IssueNotes.Issue.SpeedLevelingSetting;
+                    }
                 }
             }
             if (!_extractor.ValidResults)
@@ -470,19 +474,48 @@ namespace ARKBreedingStats
             {
                 // sum of dom levels is not correct. Try to find another combination
                 domLevelsChosenSum -= _extractor.Results[Stats.MeleeDamageMultiplier][_extractor.ChosenResults[Stats.MeleeDamageMultiplier]].levelDom;
-                bool changeChosenResult = false;
-                int cR = 0;
                 for (int r = 0; r < _extractor.Results[Stats.MeleeDamageMultiplier].Count; r++)
                 {
                     if (domLevelsChosenSum + _extractor.Results[Stats.MeleeDamageMultiplier][r].levelDom == _extractor.LevelDomSum)
                     {
-                        cR = r;
-                        changeChosenResult = true;
+                        SetLevelCombination(Stats.MeleeDamageMultiplier, r);
                         break;
                     }
                 }
-                if (changeChosenResult)
-                    SetLevelCombination(Stats.MeleeDamageMultiplier, cR);
+            }
+
+            // if all stats have at least one (not unknown) result and only one stat has more than 1 result, loop these and select a valid one
+            if (_extractor.Results.All(r => r.Count >= 1 && r[0].levelWild != -1))
+            {
+                var statsWithNonUniqueResults = _extractor.Results.Select((results, statIndex) => (results, statIndex))
+                    .Where(r => r.results.Count != 1).ToArray();
+                // if only one stat has multiple options
+                if (statsWithNonUniqueResults.Length == 1)
+                {
+                    var statIndexToLoopResults = statsWithNonUniqueResults[0].statIndex;
+                    var statResults = statsWithNonUniqueResults[0].results;
+                    var wildLevelsToDistribute = _extractor.Results[Stats.Torpidity][0].levelWild;
+                    for (int s = 0; s < Stats.StatsCount; s++)
+                    {
+                        if (s != Stats.Torpidity && s != statIndexToLoopResults)
+                            wildLevelsToDistribute -= _extractor.Results[s][0].levelWild;
+                    }
+
+                    // take first result that gives a valid level combination without changing the dom level distribution
+                    var setDomLevel =
+                        _extractor.Results[statIndexToLoopResults][_extractor.ChosenResults[statIndexToLoopResults]].levelDom;
+                    if (wildLevelsToDistribute >= 0)
+                    {
+                        for (var ri = 0; ri < statResults.Count; ri++)
+                        {
+                            if (statResults[ri].levelWild == wildLevelsToDistribute && statResults[ri].levelDom == setDomLevel)
+                            {
+                                SetLevelCombination(Stats.MeleeDamageMultiplier, ri);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             if (_extractor.PostTamed)
@@ -621,7 +654,12 @@ namespace ARKBreedingStats
             if (_extractor.ResultWasSortedOutBecauseOfImpossibleTe)
                 issues |= IssueNotes.Issue.ImpossibleTe;
 
-            labelErrorHelp.Text = $"{Loc.S("extractionFailedHeader")}:\n\n{IssueNotes.getHelpTexts(issues)}";
+            // some species have specific extraction issues, e.g. due to a unique taming method that results in a bred status but with a TE less than 100 %.
+            var speciesName = speciesSelector1.SelectedSpecies.name;
+            string speciesSpecificExtractionFail = null;
+            _speciesSpecificExtractionFails?.TryGetValue(speciesName, out speciesSpecificExtractionFail);
+
+            labelErrorHelp.Text = $"{Loc.S("extractionFailedHeader")}:\n\n{IssueNotes.GetHelpTexts(issues, speciesSpecificExtractionFail)}";
             labelErrorHelp.Visible = true;
             llOnlineHelpExtractionIssues.Visible = true;
             groupBoxPossibilities.Visible = false;
@@ -781,6 +819,7 @@ namespace ARKBreedingStats
         private void SetLevelCombination(int s, int i, bool validateCombination = false)
         {
             _statIOs[s].LevelWild = _extractor.Results[s][i].levelWild;
+            _statIOs[s].LevelMut = 0;
             _statIOs[s].LevelDom = _extractor.Results[s][i].levelDom;
             _statIOs[s].BreedingValue = StatValueCalculation.CalculateValue(speciesSelector1.SelectedSpecies, s, _extractor.Results[s][i].levelWild, 0, 0, true, 1, 0);
             _extractor.ChosenResults[s] = i;
@@ -845,61 +884,64 @@ namespace ARKBreedingStats
             bool header = true;
             bool table = MessageBox.Show("Results can be copied as own table or as a long table-row. Should it be copied as own table?",
                     "Copy as own table?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
-            if (_extractor.ValidResults && speciesSelector1.SelectedSpecies != null)
+            if (!_extractor.ValidResults || speciesSelector1.SelectedSpecies == null)
             {
-                List<string> tsv = new List<string>();
-                string rowLevel = speciesSelector1.SelectedSpecies.name + "\t\t";
-                string rowValues = string.Empty;
-                // if taming effectiveness is unique, display it, too
-                string effString = string.Empty;
-                double eff = _extractor.UniqueTamingEffectiveness();
-                if (eff >= 0)
+                SetMessageLabelText("Extraction not successful or no species selected.", MessageBoxIcon.Error);
+                return;
+            }
+
+            List<string> tsv = new List<string>();
+            string rowLevel = speciesSelector1.SelectedSpecies.name + "\t\t";
+            string rowValues = string.Empty;
+            // if taming effectiveness is unique, display it, too
+            string effString = string.Empty;
+            double eff = _extractor.UniqueTamingEffectiveness();
+            if (eff >= 0)
+            {
+                effString = "\tTamingEff:\t" + (100 * eff) + "%";
+            }
+            // header row
+            if (table || header)
+            {
+                if (table)
                 {
-                    effString = "\tTamingEff:\t" + (100 * eff) + "%";
+                    tsv.Add(speciesSelector1.SelectedSpecies.name + "\tLevel " + numericUpDownLevel.Value + effString);
+                    tsv.Add("Stat\tWildLevel\tDomLevel\tBreedingValue");
                 }
-                // headerrow
-                if (table || header)
+                else
                 {
+                    tsv.Add("Species\tName\tSex\tHP-Level\tSt-Level\tOx-Level\tFo-Level\tWe-Level\tDm-Level\tSp-Level\tTo-Level\tHP-Value\tSt-Value\tOx-Value\tFo-Value\tWe-Value\tDm-Value\tSp-Value\tTo-Value");
+                }
+            }
+            for (int s = 0; s < Stats.StatsCount; s++)
+            {
+                if (_extractor.ChosenResults[s] < _extractor.Results[s].Count)
+                {
+                    string breedingV = string.Empty;
+                    if (_activeStats[s])
+                    {
+                        breedingV = _statIOs[s].BreedingValue.ToString();
+                    }
                     if (table)
                     {
-                        tsv.Add(speciesSelector1.SelectedSpecies.name + "\tLevel " + numericUpDownLevel.Value + effString);
-                        tsv.Add("Stat\tWildLevel\tDomLevel\tBreedingValue");
+                        tsv.Add(Utils.StatName(s) + "\t" + (_statIOs[s].LevelWild >= 0 ? _statIOs[s].LevelWild.ToString() : string.Empty) + "\t" + (_statIOs[s].LevelWild >= 0 ? _statIOs[s].LevelWild.ToString() : string.Empty) + "\t" + breedingV);
                     }
                     else
                     {
-                        tsv.Add("Species\tName\tSex\tHP-Level\tSt-Level\tOx-Level\tFo-Level\tWe-Level\tDm-Level\tSp-Level\tTo-Level\tHP-Value\tSt-Value\tOx-Value\tFo-Value\tWe-Value\tDm-Value\tSp-Value\tTo-Value");
+                        rowLevel += "\t" + (_activeStats[s] ? _statIOs[s].LevelWild.ToString() : string.Empty);
+                        rowValues += "\t" + breedingV;
                     }
                 }
-                for (int s = 0; s < Stats.StatsCount; s++)
+                else
                 {
-                    if (_extractor.ChosenResults[s] < _extractor.Results[s].Count)
-                    {
-                        string breedingV = string.Empty;
-                        if (_activeStats[s])
-                        {
-                            breedingV = _statIOs[s].BreedingValue.ToString();
-                        }
-                        if (table)
-                        {
-                            tsv.Add(Utils.StatName(s) + "\t" + (_statIOs[s].LevelWild >= 0 ? _statIOs[s].LevelWild.ToString() : string.Empty) + "\t" + (_statIOs[s].LevelWild >= 0 ? _statIOs[s].LevelWild.ToString() : string.Empty) + "\t" + breedingV);
-                        }
-                        else
-                        {
-                            rowLevel += "\t" + (_activeStats[s] ? _statIOs[s].LevelWild.ToString() : string.Empty);
-                            rowValues += "\t" + breedingV;
-                        }
-                    }
-                    else
-                    {
-                        return;
-                    }
+                    return;
                 }
-                if (!table)
-                {
-                    tsv.Add(rowLevel + rowValues);
-                }
-                Clipboard.SetText(string.Join("\n", tsv));
             }
+            if (!table)
+            {
+                tsv.Add(rowLevel + rowValues);
+            }
+            Clipboard.SetText(string.Join("\n", tsv));
         }
 
         /// <summary>
@@ -1089,7 +1131,7 @@ namespace ARKBreedingStats
         /// <returns>True if mutation levels where adjusted, false if no levels were moved.</returns>
         private bool UpdateMutationLevels(CreatureValues cv, Creature alreadyExistingCreature)
         {
-            if (!Properties.Settings.Default.MoveMutationLevelsOnExtractionIfUnique) return false;
+            if (!Properties.Settings.Default.MoveMutationLevelsOnExtractionIfUnique || CreatureCollection.CurrentCreatureCollection?.Game == Ark.Ase) return false;
             bool mutationLevelsAdjusted = false;
             // Do we have enough information to assume the mutation counts are accurate
             bool AreMutationCountsAccurate(Creature creature)
@@ -1154,7 +1196,7 @@ namespace ARKBreedingStats
                 //   |   12 |         6 |             2 |
                 //
 
-                var possibileLevelsByStat = new List<(int wild, int mutated, int change)>[Stats.StatsCount];
+                var possibleLevelsByStat = new List<(int wild, int mutated, int change)>[Stats.StatsCount];
 
                 for (int s = 0; s < Stats.StatsCount; s++)
                 {
@@ -1200,17 +1242,17 @@ namespace ARKBreedingStats
                         }
                     }
 
-                    possibileLevelsByStat[s] = possibleLevels;
+                    possibleLevelsByStat[s] = possibleLevels;
                 }
 
                 // It's possible for more than one combination of parent levels and new mutations to account for the
                 // child's levels. If there is only 1 set, use that
-                if (possibileLevelsByStat.All(x => x.Count == 1))
+                if (possibleLevelsByStat.All(x => x.Count == 1))
                 {
                     for (int s = 0; s < Stats.StatsCount; s++)
                     {
                         var statIo = _statIOs[s];
-                        var levels = possibileLevelsByStat[s][0];
+                        var levels = possibleLevelsByStat[s][0];
 
                         statIo.LevelWild = levels.wild;
                         statIo.LevelMut = levels.mutated;
@@ -1227,7 +1269,7 @@ namespace ARKBreedingStats
                     var newMutationsPaternal = Math.Max(cv.mutationCounterFather - cv.Father.Mutations, 0);
                     var totalNewMutations = newMutationsMaternal + newMutationsPaternal;
 
-                    var validLevelCombinations = possibileLevelsByStat
+                    var validLevelCombinations = possibleLevelsByStat
                         .CartesianProduct()
                         .Where(x => x.Sum(y => y.change) == totalNewMutations * Ark.LevelsAddedPerMutation)
                         .ToArray();
@@ -1507,6 +1549,7 @@ namespace ARKBreedingStats
         {
             var cr = CreateCreatureFromExtractorOrTester(creatureInfoInputExtractor);
             radarChartExtractor.SetLevels(cr.levelsWild, cr.levelsMutated, cr.Species);
+            UpdateStatusInfoOfExtractorCreature();
             creatureInfoInputExtractor.UpdateParentInheritances(cr);
         }
 
@@ -1551,10 +1594,13 @@ namespace ARKBreedingStats
 
         private void numericUpDownLevel_ValueChanged(object sender, EventArgs e)
         {
-            if (!(rbWildExtractor.Checked && speciesSelector1.SelectedSpecies is Species species)) return;
+            if (!(Properties.Settings.Default.ExtractorConvertWildTorporTotalLevel
+                  && rbWildExtractor.Checked
+                  && speciesSelector1.SelectedSpecies is Species species
+                    )) return;
 
             _statIOs[Stats.Torpidity].Input = StatValueCalculation.CalculateValue(species,
-                Stats.Torpidity, (int)numericUpDownLevel.Value, 0, 0, false);
+                Stats.Torpidity, (int)numericUpDownLevel.Value - 1, 0, 0, false);
         }
     }
 }

@@ -130,7 +130,8 @@ namespace ARKBreedingStats.NamePatterns
             textBox.Select(start, end - start);
         }
 
-        public PatternEditor(Creature creature, Creature[] creaturesOfSameSpecies, TopLevels topLevels, CreatureCollection.ColorExisting[] colorExistings, Dictionary<string, string> customReplacings, int namingPatternIndex, Action<PatternEditor> reloadCallback, int libraryCreatureCount) : this()
+        public PatternEditor(Creature creature, Creature[] creaturesOfSameSpecies, TopLevels topLevels, CreatureCollection.ColorExisting[] colorExistings,
+            Dictionary<string, string> customReplacings, string namingPatternName, string patternString, Action<PatternEditor> reloadCallback, int libraryCreatureCount) : this()
         {
             Utils.SetWindowRectangle(this, Properties.Settings.Default.PatternEditorFormRectangle);
             if (Properties.Settings.Default.PatternEditorSplitterDistance > 0)
@@ -145,11 +146,11 @@ namespace ARKBreedingStats.NamePatterns
             _customReplacings = customReplacings;
             _reloadCallback = reloadCallback;
             _libraryCreatureCount = libraryCreatureCount;
-            txtboxPattern.Text = Properties.Settings.Default.NamingPatterns?[namingPatternIndex] ?? string.Empty;
+            txtboxPattern.Text = patternString ?? string.Empty;
             CbPatternNameToClipboardAfterManualApplication.Checked = Properties.Settings.Default.PatternNameToClipboardAfterManualApplication;
             txtboxPattern.SelectionStart = txtboxPattern.Text.Length;
 
-            Text = $"Naming Pattern Editor: pattern {namingPatternIndex + 1}";
+            Text = $"Naming Pattern Editor: {namingPatternName}";
 
             _alreadyExistingCreature = _creaturesOfSameSpecies?.FirstOrDefault(c => c.guid == creature.guid);
             _tokenModel = NamePatterns.NamePattern.CreateTokenModel(creature, _alreadyExistingCreature, _creaturesOfSameSpecies, _colorExistings, _topLevels, _libraryCreatureCount);
@@ -507,9 +508,21 @@ namespace ARKBreedingStats.NamePatterns
             }
         }
 
+        private static readonly Regex SimpleKeyword = new Regex(@"^\{([^\}]+)\}$");
+
         private void Btn_Click(object sender, EventArgs e)
         {
-            InsertText((string)((Button)sender).Tag);
+            var text = (string)((Button)sender).Tag;
+            // if javascript: remove curly brackets and make lowercase
+            if (JavaScriptNamePattern.JavaScriptShebang.IsMatch(txtboxPattern.Text))
+            {
+                var m = SimpleKeyword.Match(text);
+                if (m.Success)
+                {
+                    text = m.Groups[1].Value.ToLowerInvariant();
+                }
+            }
+            InsertText(text);
         }
 
         private void InsertText(string text)
@@ -601,6 +614,7 @@ namespace ARKBreedingStats.NamePatterns
                 { "arkid", "the Ark-Id (as entered or seen in-game)"},
                 { "alreadyExists", "returns 1 if the creature is already in the library, can be used with {{#if: }}"},
                 { "isFlyer", "returns 1 if the creature's species is a flyer"},
+                { "noGender", "returns 1 if the creature's species has no gender"},
                 { "status", "returns the status of the creature, e.g. Available, Obelisk, Dead"},
                 { "highest1l", "the highest stat-level of this creature (excluding torpidity)" },
                 { "highest2l", "the second highest stat-level of this creature (excluding torpidity)" },

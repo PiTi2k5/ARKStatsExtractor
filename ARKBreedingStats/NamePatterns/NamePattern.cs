@@ -41,7 +41,7 @@ namespace ARKBreedingStats.NamePatterns
         /// </summary>
         /// <param name="alreadyExistingCreature">If the creature already exists in the library, null if the creature is new.</param>
         public static string GenerateCreatureName(Creature creature, Creature alreadyExistingCreature, Creature[] sameSpecies, TopLevels topLevels, Dictionary<string, string> customReplacings,
-            bool showDuplicateNameWarning, int namingPatternIndex, bool showTooLongWarning = true, string pattern = null, bool displayError = true, TokenModel tokenModel = null,
+            bool showDuplicateNameWarning = false, int namingPatternIndex = -1, bool showTooLongWarning = true, string pattern = null, bool displayError = true, TokenModel tokenModel = null,
             ColorExisting[] colorsExisting = null, int libraryCreatureCount = 0, Action<string> consoleLog = null)
         {
             if (pattern == null)
@@ -300,7 +300,8 @@ namespace ARKBreedingStats.NamePatterns
             // escape special characters
             oldName = oldName.Replace("|", PipeEscapeSequence);
 
-            string spcsNm = creature.Species.name;
+            var speciesName = creature.SpeciesName;
+            string spcsNm = speciesName;
             char[] vowels = { 'a', 'e', 'i', 'o', 'u' };
             while (spcsNm.LastIndexOfAny(vowels) > 0)
                 spcsNm = spcsNm.Remove(spcsNm.LastIndexOfAny(vowels), 1); // remove last vowel (not the first letter)
@@ -345,7 +346,7 @@ namespace ARKBreedingStats.NamePatterns
 
             var model = new TokenModel
             {
-                species = creature.Species.name,
+                species = speciesName,
                 spcsnm = spcsNm,
                 firstwordofoldest = firstWordOfOldest,
 
@@ -385,7 +386,8 @@ namespace ARKBreedingStats.NamePatterns
                 arkid = arkid,
                 alreadyexists = speciesCreatures?.Contains(creature) ?? false,
                 isflyer = creature.Species.isFlyer,
-                status = creature.Status,
+                noGender = creature.Species.noGender,
+                status = creature.Status
             };
 
             // stat index and according wild and mutation level
@@ -498,6 +500,7 @@ namespace ARKBreedingStats.NamePatterns
                 { "arkid", model.arkid },
                 { "alreadyexists", model.alreadyexists ? "1" : string.Empty },
                 { "isflyer", model.isflyer ? "1" : string.Empty },
+                { "nogender", model.noGender ? "1" : string.Empty },
                 { "status", model.status.ToString() },
             };
 

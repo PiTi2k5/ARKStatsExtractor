@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using ARKBreedingStats.Library;
 using ARKBreedingStats.mods;
+using System.IO;
 
 namespace ARKBreedingStats.species
 {
@@ -16,6 +18,16 @@ namespace ARKBreedingStats.species
         /// </summary>
         [JsonProperty]
         public string name;
+        /// <summary>
+        /// Optional name for females if different from name.
+        /// </summary>
+        [JsonProperty]
+        public string nameFemale;
+        /// <summary>
+        /// Optional name for males if different from name.
+        /// </summary>
+        [JsonProperty]
+        public string nameMale;
         /// <summary>
         /// The name used for sorting in lists.
         /// </summary>
@@ -159,6 +171,8 @@ namespace ARKBreedingStats.species
         [OnDeserialized]
         private void Initialize(StreamingContext _) => Initialize();
 
+        private static string[] _ignoreVariantInName;
+
         public void Initialize()
         {
             // TODO: Base species are maybe not used in game and may only lead to confusion (e.g. Giganotosaurus).
@@ -174,7 +188,7 @@ namespace ARKBreedingStats.species
 
             var fullStatsRawLength = fullStatsRaw?.Length ?? 0;
 
-            _skipWildLevelStatsWithServerSettings = skipWildLevelStats;
+            _skipWildLevelStatsWithServerSettings = skipWildLevelStats & ~CanHaveWildLevelExceptions.GetWildLevelExceptions(name);
             usedStats = 0;
 
             if (statImprintMult == null)
@@ -203,7 +217,7 @@ namespace ARKBreedingStats.species
                         if (fullStatsRaw[s].Length > i)
                         {
                             completeRaws[s][i] = fullStatsRaw[s]?[i] ?? 0;
-                            if (i == 0 && fullStatsRaw[s][StatsRawIndexBase] > 0)
+                            if (i == StatsRawIndexBase && fullStatsRaw[s][StatsRawIndexBase] > 0)
                             {
                                 usesStat = true;
                             }
@@ -236,14 +250,17 @@ namespace ARKBreedingStats.species
             {
                 // cleanup boneDamageMultipliers. Remove duplicates. Improve names.
                 var boneDamageAdjustersCleanedUp = new Dictionary<string, double>();
-                Regex rCleanBoneDamage = new Regex(@"(^r_|^l_|^c_|Cnt_|JNT|\d+|SKL)");
+                Regex rCleanBoneDamage = new Regex(@"(^r_|^l_|^c_|Cnt_|JNT|Jnt|\d+|SKL|_L$|_R$|_M$)");
+                Regex rBoneDamageHyphen = new Regex(@"(?<=[A-Za-z])_+(?=[A-Za-z])");
                 foreach (KeyValuePair<string, double> bd in boneDamageAdjusters)
                 {
-                    string boneName = rCleanBoneDamage.Replace(bd.Key, "").Replace("_", "");
-                    if (boneName.Length < 2) continue;
-                    boneName = boneName.Substring(0, 1).ToUpper() + boneName.Substring(1);
-                    if (!boneDamageAdjustersCleanedUp.ContainsKey(boneName))
-                        boneDamageAdjustersCleanedUp.Add(boneName, Math.Round(bd.Value, 2));
+                    string boneName = rBoneDamageHyphen.Replace(
+                            rCleanBoneDamage.Replace(bd.Key, ""),
+                            "-")
+                        .Replace("_", "");
+                    if (boneName.Length > 1)
+                        boneName = boneName.Substring(0, 1).ToUpper() + boneName.Substring(1);
+                    boneDamageAdjustersCleanedUp[boneName] = Math.Round(bd.Value, 2);
                 }
                 boneDamageAdjusters = boneDamageAdjustersCleanedUp;
             }
@@ -270,8 +287,10 @@ namespace ARKBreedingStats.species
             string variantInfoForName = null;
             if (variants != null && variants.Any())
             {
+                var ignoreVariants = _getIgnoreVariantInName();
                 VariantInfo = string.Join(", ", variants);
-                variantInfoForName = string.Join(", ", variants.Where(v => !name.Contains(v)));
+                var gaun = variants.Any(v => ignoreVariants.Contains(v));
+                variantInfoForName = string.Join(", ", string.IsNullOrEmpty(name) ? variants : variants.Where(v => !name.Contains(v) && !ignoreVariants.Contains(v)));
             }
 
             DescriptiveName = name + (string.IsNullOrEmpty(variantInfoForName) ? string.Empty : " (" + variantInfoForName + ")");
@@ -386,6 +405,7 @@ namespace ARKBreedingStats.species
 
         /// <summary>
         /// Returns if a spawned creature can have wild or mutated levels in a stat.
+        /// If Ark.IgnoreSkipWildLevelFlags is true, this method will always return true.
         /// </summary>
         public bool CanLevelUpWildOrHaveMutations(int statIndex) => (_skipWildLevelStatsWithServerSettings & (1 << statIndex)) == 0;
 
@@ -455,6 +475,8 @@ namespace ARKBreedingStats.species
         public void LoadOverrides(Species overrides)
         {
             if (overrides.name != null) name = overrides.name;
+            if (overrides.nameFemale != null) name = overrides.nameFemale;
+            if (overrides.nameMale != null) name = overrides.nameMale;
             if (overrides.variants != null) variants = overrides.variants;
             if (overrides.fullStatsRaw != null) fullStatsRaw = overrides.fullStatsRaw;
             if (overrides.altBaseStatsRaw != null) altBaseStatsRaw = overrides.altBaseStatsRaw;
@@ -497,5 +519,34 @@ namespace ARKBreedingStats.species
         /// Index of the multiplicative bonus value in fullStatsRaw.
         /// </summary>
         public const int StatsRawIndexMultiplicativeBonus = 4;
+
+        /// <summary>
+        /// Returns species name depending on sex if available.
+        /// </summary>
+        /// <param name="creatureSex"></param>
+        /// <returns></returns>
+        public string Name(Sex creatureSex)
+        {
+            switch (creatureSex)
+            {
+                case Sex.Female:
+                    return nameMale ?? name;
+                case Sex.Male:
+                    return nameFemale ?? name;
+                default:
+                    return name;
+            }
+        }
+
+        private static string[] _getIgnoreVariantInName()
+        {
+            if (_ignoreVariantInName != null) return _ignoreVariantInName;
+
+            var filePath = FileService.GetJsonPath(FileService.HideVariantsInSpeciesNameFile);
+            _ignoreVariantInName = !File.Exists(filePath) ? Array.Empty<string>() : File.ReadAllLines(filePath).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+            return _ignoreVariantInName;
+        }
+
+        public static void ClearIgnoreVariantsInName() => _ignoreVariantInName = null;
     }
 }

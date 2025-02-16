@@ -45,6 +45,7 @@ namespace ARKBreedingStats
 
         public void SetCreature(Creature creature)
         {
+            this.SuspendDrawing();
             Clear();
             _creature = creature;
             regionColorChooser1.SetSpecies(creature.Species, creature.colors);
@@ -52,6 +53,7 @@ namespace ARKBreedingStats
             _colorRegionUseds = regionColorChooser1.ColorRegionsUseds;
 
             UpdateLabel();
+            this.ResumeDrawing();
         }
 
         public CreatureCollection CreatureCollection
@@ -148,7 +150,7 @@ namespace ARKBreedingStats
                 statsDisplay1.SetCreatureValues(_creature);
                 labelNotes.Text = _creature.note;
                 _tt.SetToolTip(labelNotes, _creature.note);
-                labelSpecies.Text = _creature.Species.name;
+                labelSpecies.Text = _creature.SpeciesName;
                 pictureBox1.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(_creature.colors, _creature.Species, _colorRegionUseds, creatureSex: _creature.sex));
                 _tt.SetToolTip(pictureBox1, CreatureColored.RegionColorInfo(_creature.Species, _creature.colors)
                     + "\n\nClick to copy creature infos as image to the clipboard");
