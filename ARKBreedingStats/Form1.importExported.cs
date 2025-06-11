@@ -2,7 +2,6 @@
 using ARKBreedingStats.settings;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,7 +11,6 @@ using ARKBreedingStats.library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.species;
 using ARKBreedingStats.utils;
-using ARKBreedingStats.uiControls;
 
 namespace ARKBreedingStats
 {
@@ -290,7 +288,7 @@ namespace ARKBreedingStats
             else if (!uniqueExtraction && copiedNameToClipboard)
             {
                 // extraction failed, user might expect the name of the new creature in the clipboard
-                Clipboard.SetText("Automatic extraction was not possible");
+                utils.ClipboardHandler.SetText("Automatic extraction was not possible");
             }
 
             if (Properties.Settings.Default.PlaySoundOnAutoImport)
@@ -361,10 +359,11 @@ namespace ARKBreedingStats
             if (Properties.Settings.Default.CopyNameToClipboardOnImport
                 || (nameWasJustApplied && Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied))
             {
-                Clipboard.SetText(string.IsNullOrEmpty(creatureName)
-                    ? "<no name>"
-                    : creatureName);
-                return true;
+                if (utils.ClipboardHandler.SetText(string.IsNullOrEmpty(creatureName)
+                       ? "<no name>"
+                       : creatureName, out var error))
+                    return true;
+                SetMessageLabelText($"Error while trying to copy name to clipboard: {error}", MessageBoxIcon.Error);
             }
 
             AsbServer.Connection.ClearTokenFromClipboard();

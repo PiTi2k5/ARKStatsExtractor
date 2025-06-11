@@ -100,6 +100,11 @@ namespace ARKBreedingStats.species
         private int _skipWildLevelStatsWithServerSettings;
 
         /// <summary>
+        /// Info about multiple color region patterns.
+        /// </summary>
+        public ColorPattern patterns;
+
+        /// <summary>
         /// Indicates if the species is affected by the setting AllowFlyerSpeedLeveling
         /// </summary>
         [JsonProperty] public bool isFlyer;
@@ -172,6 +177,11 @@ namespace ARKBreedingStats.species
         private void Initialize(StreamingContext _) => Initialize();
 
         private static string[] _ignoreVariantInName;
+
+        /// <summary>
+        /// Used as prefix for the sort name if marked as favorite.
+        /// </summary>
+        public const string FavoritePrefix = "!fav_";
 
         public void Initialize()
         {

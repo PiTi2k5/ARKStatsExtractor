@@ -168,7 +168,7 @@ namespace ARKBreedingStats.values
                     }
                     //if (sp.IsDomesticable && !specialFoodData.ContainsKey(sp.name)) speciesWoFoodData.Add(sp.name);
                 }
-                //System.Windows.Forms.Clipboard.SetText(speciesWoFoodData.Any() ? string.Join("\n", speciesWoFoodData) : string.Empty);
+                //utils.ClipboardHandler.SetText(speciesWoFoodData.Any() ? string.Join("\n", speciesWoFoodData) : string.Empty);
             }
 
             OrderSpeciesAndApplyCustomVariants();
@@ -392,12 +392,38 @@ namespace ARKBreedingStats.values
                 lines = new List<string>();
             else lines = File.ReadAllLines(filePath).ToList();
 
-            const string favoritePrefix = "!fav_";
             // check if species is already a favorite
-            var favoriteOrderEntry = species.name + "@" + favoritePrefix + species.name;
+            var favoriteOrderEntry = species.name + "@" + Species.FavoritePrefix + species.name;
             var i = lines.IndexOf(favoriteOrderEntry);
             if (i != -1) lines.RemoveAt(i);
-            else lines.Add(favoriteOrderEntry);
+            else
+            {
+                // check if species has already a manual sort name
+                var lineIndex = lines.FindIndex(l => l.StartsWith(species.name + '@'));
+                if (lineIndex >= 0)
+                {
+                    var m = Regex.Match(lines[lineIndex], @"([^@]+)@(" + Regex.Escape(Species.FavoritePrefix) + @")?(.*)");
+                    if (m.Success)
+                    {
+                        if (m.Groups[2].Value == Species.FavoritePrefix)
+                        {
+                            // remove fav prefix
+                            lines[lineIndex] = m.Groups[1].Value + "@" + m.Groups[3].Value;
+                        }
+                        else
+                        {
+                            // add fav prefix
+                            lines[lineIndex] = m.Groups[1].Value + "@" + Species.FavoritePrefix + m.Groups[3].Value;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"unknown format for sort entry: {lines[lineIndex]}");
+                    }
+                }
+                else
+                    lines.Add(favoriteOrderEntry);
+            }
             File.WriteAllLines(filePath, lines);
             ApplySpeciesOrdering();
         }

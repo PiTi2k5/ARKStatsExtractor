@@ -152,7 +152,10 @@ namespace ARKBreedingStats
             this.currentTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listenWithNewTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendExampleCreatureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sendServerCreatureStatusNeuterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sendServerCreatureStatusDeadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTokenPopupOnListeningToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.openModPageInBrowserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -279,6 +282,7 @@ namespace ARKBreedingStats
             this.editAllSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemGenerateCreatureName = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemCopyGeneratedCreatureName = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemCopyCreatureName = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.copyValuesToExtractorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1480,10 +1484,13 @@ namespace ARKBreedingStats
             this.listenToolStripMenuItem,
             this.currentTokenToolStripMenuItem,
             this.listenWithNewTokenToolStripMenuItem,
-            this.sendExampleCreatureToolStripMenuItem,
             this.showTokenPopupOnListeningToolStripMenuItem,
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem,
             this.toolStripSeparator28,
-            this.openModPageInBrowserToolStripMenuItem});
+            this.openModPageInBrowserToolStripMenuItem,
+            this.sendExampleCreatureToolStripMenuItem,
+            this.sendServerCreatureStatusNeuterToolStripMenuItem,
+            this.sendServerCreatureStatusDeadToolStripMenuItem});
             this.serverToolStripMenuItem.Name = "serverToolStripMenuItem";
             this.serverToolStripMenuItem.Size = new System.Drawing.Size(77, 20);
             this.serverToolStripMenuItem.Text = "Export gun";
@@ -1517,6 +1524,20 @@ namespace ARKBreedingStats
             this.sendExampleCreatureToolStripMenuItem.Text = "Send example creature";
             this.sendExampleCreatureToolStripMenuItem.Click += new System.EventHandler(this.sendExampleCreatureToolStripMenuItem_Click);
             // 
+            // sendServerCreatureStatusNeuterToolStripMenuItem
+            // 
+            this.sendServerCreatureStatusNeuterToolStripMenuItem.Name = "sendServerCreatureStatusNeuterToolStripMenuItem";
+            this.sendServerCreatureStatusNeuterToolStripMenuItem.Size = new System.Drawing.Size(239, 22);
+            this.sendServerCreatureStatusNeuterToolStripMenuItem.Text = "Send neuter status";
+            this.sendServerCreatureStatusNeuterToolStripMenuItem.Click += new System.EventHandler(this.sendServerCreatureStatusNeuterToolStripMenuItem_Click);
+            // 
+            // sendServerCreatureStatusDeadToolStripMenuItem
+            // 
+            this.sendServerCreatureStatusDeadToolStripMenuItem.Name = "sendServerCreatureStatusNeuterToolStripMenuItem";
+            this.sendServerCreatureStatusDeadToolStripMenuItem.Size = new System.Drawing.Size(239, 22);
+            this.sendServerCreatureStatusDeadToolStripMenuItem.Text = "Send dead status";
+            this.sendServerCreatureStatusDeadToolStripMenuItem.Click += new System.EventHandler(this.sendServerCreatureStatusDeadToolStripMenuItem_Click);
+            // 
             // showTokenPopupOnListeningToolStripMenuItem
             // 
             this.showTokenPopupOnListeningToolStripMenuItem.CheckOnClick = true;
@@ -1524,6 +1545,14 @@ namespace ARKBreedingStats
             this.showTokenPopupOnListeningToolStripMenuItem.Size = new System.Drawing.Size(239, 22);
             this.showTokenPopupOnListeningToolStripMenuItem.Text = "Show token popup on listening";
             this.showTokenPopupOnListeningToolStripMenuItem.Click += new System.EventHandler(this.showTokenPopupOnListeningToolStripMenuItem_Click);
+            // 
+            // startListeningToExportGunOnLaunchToolStripMenuItem
+            // 
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem.CheckOnClick = true;
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem.Name = "beginListeningToExportGunOnLaunchToolStripMenuItem";
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem.Size = new System.Drawing.Size(239, 22);
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem.Text = "Start listening on app launch";
+            this.beginListeningToExportGunOnLaunchToolStripMenuItem.Click += new System.EventHandler(this.startListeningToExportGunOnLaunchToolStripMenuItem_Click);
             // 
             // toolStripSeparator28
             // 
@@ -2736,6 +2765,7 @@ namespace ARKBreedingStats
             this.editAllSelectedToolStripMenuItem,
             this.toolStripSeparator17,
             this.toolStripMenuItemGenerateCreatureName,
+            this.toolStripMenuItemCopyGeneratedCreatureName,
             this.toolStripMenuItemCopyCreatureName,
             this.toolStripSeparator9,
             this.copyValuesToExtractorToolStripMenuItem,
@@ -2789,6 +2819,13 @@ namespace ARKBreedingStats
             this.toolStripMenuItemGenerateCreatureName.Size = new System.Drawing.Size(302, 22);
             this.toolStripMenuItemGenerateCreatureName.Text = "Apply Name Pattern";
             this.toolStripMenuItemGenerateCreatureName.ToolTipText = "Applies the naming pattern on the selected creatures";
+            // 
+            // toolStripMenuItemCopyGeneratedCreatureName
+            // 
+            this.toolStripMenuItemCopyGeneratedCreatureName.Name = "toolStripMenuItemCopyGeneratedCreatureName";
+            this.toolStripMenuItemCopyGeneratedCreatureName.Size = new System.Drawing.Size(302, 22);
+            this.toolStripMenuItemCopyGeneratedCreatureName.Text = "Copy generated name to clipboard";
+            this.toolStripMenuItemCopyGeneratedCreatureName.ToolTipText = "Generates a name and copies it to the clipboard";
             // 
             // toolStripMenuItemCopyCreatureName
             // 
@@ -4364,6 +4401,7 @@ namespace ARKBreedingStats
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemCopyCreatureName;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemGenerateCreatureName;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemCopyGeneratedCreatureName;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
         private System.Windows.Forms.ToolStripMenuItem adminCommandToSetColorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fixColorsToolStripMenuItem;
@@ -4461,6 +4499,8 @@ namespace ARKBreedingStats
         private System.Windows.Forms.ToolStripMenuItem serverToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sendExampleCreatureToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sendServerCreatureStatusNeuterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sendServerCreatureStatusDeadToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listenWithNewTokenToolStripMenuItem;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
@@ -4474,6 +4514,7 @@ namespace ARKBreedingStats
         private System.Windows.Forms.ToolStripMenuItem nameGeneratorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectSavegameFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTokenPopupOnListeningToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem beginListeningToExportGunOnLaunchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem adminCommandSetMutationLevelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commandMutationLevelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statsOptionsToolStripMenuItem;

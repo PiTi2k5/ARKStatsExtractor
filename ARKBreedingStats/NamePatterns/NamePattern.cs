@@ -246,7 +246,7 @@ namespace ARKBreedingStats.NamePatterns
         /// <returns>A strongly typed model containing all tokens and their values</returns>
         public static TokenModel CreateTokenModel(Creature creature, Creature alreadyExistingCreature, Creature[] speciesCreatures, ColorExisting[] colorExistings, TopLevels topLevels, int libraryCreatureCount)
         {
-            string dom = creature.isBred ? "B" : "T";
+            string dom = creature.isBred ? "B" : creature.isDomesticated ? "T" : "W";
             double imp = creature.imprintingBonus * 100;
             double eff = creature.tamingEff * 100;
 
@@ -431,20 +431,23 @@ namespace ARKBreedingStats.NamePatterns
                 model.highest_s_m[s] = s < usedStatsCount ? Utils.StatName(levelOrderMutated[s].Item1, true, creature.Species.statNames) : string.Empty;
             }
 
-            for (int i = 0; i < 6; i++)
+            if (creature.colors != null)
             {
-                var colorId = creature.colors[i];
-                ColorExisting colorExisting = colorExistings != null ? colorExistings[i] : ColorExisting.Unknown;
-
-                model.colors[i] = new ColorModel
+                for (int i = 0; i < 6; i++)
                 {
-                    id = colorId,
-                    name = CreatureColors.CreatureColorName(colorId),
-                    used = creature.Species.EnabledColorRegions[i],
-                    @new = colorExisting == ColorExisting.ColorExistingInOtherRegion ? "newInRegion"
-                     : colorExisting == ColorExisting.ColorIsNew ? "newInSpecies"
-                     : string.Empty
-                };
+                    var colorId = creature.colors[i];
+                    ColorExisting colorExisting = colorExistings != null ? colorExistings[i] : ColorExisting.Unknown;
+
+                    model.colors[i] = new ColorModel
+                    {
+                        id = colorId,
+                        name = CreatureColors.CreatureColorName(colorId),
+                        used = creature.Species.EnabledColorRegions[i],
+                        @new = colorExisting == ColorExisting.ColorExistingInOtherRegion ? "newInRegion"
+                            : colorExisting == ColorExisting.ColorIsNew ? "newInSpecies"
+                            : string.Empty
+                    };
+                }
             }
 
             return model;

@@ -123,7 +123,9 @@ namespace ARKBreedingStats
         {
             ParentInheritance?.UpdateColors(RegionColors);
             ColorsChanged?.Invoke(this);
-            PbColorRegion?.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(RegionColors, _selectedSpecies, regionColorChooser1.ColorRegionsUseds, 256, onlyImage: true, creatureSex: CreatureSex));
+            PbColorRegion?.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(RegionColors, _selectedSpecies,
+                regionColorChooser1.ColorRegionsUseds, 256, onlyImage: true, creatureSex: CreatureSex
+                , game: CreatureCollection.CurrentCreatureCollection?.Game));
         }
 
         /// <summary>
@@ -735,7 +737,7 @@ namespace ARKBreedingStats
         private void lblName_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(textBoxName.Text))
-                Clipboard.SetText(textBoxName.Text);
+                utils.ClipboardHandler.SetText(textBoxName.Text);
         }
 
         private void btClearColors_Click(object sender, EventArgs e)

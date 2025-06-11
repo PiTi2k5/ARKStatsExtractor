@@ -157,8 +157,9 @@ namespace ARKBreedingStats
             _topLevels.TryGetValue(species, out var topLevels);
 
             var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
+            var considerAsTopStat = StatsOptionsConsiderTopStats.GetStatsOptions(species).StatOptions;
 
-            LevelStatusFlags.DetermineLevelStatus(species, topLevels, statWeights, GetCurrentWildLevels(), GetCurrentMutLevels(),
+            LevelStatusFlags.DetermineLevelStatus(species, topLevels, statWeights, considerAsTopStat, GetCurrentWildLevels(), GetCurrentMutLevels(),
                 GetCurrentBreedingValues(), out var topStatsText, out var newTopStatsText);
 
             for (var s = 0; s < Stats.StatsCount; s++)
@@ -431,6 +432,7 @@ namespace ARKBreedingStats
                 {
                     // no results for this stat
                     _statIOs[s].Status = StatIOStatus.Error;
+                    _statIOs[s].LevelWild = -1;
                     _extractor.ValidResults = false;
                     if (rbTamedExtractor.Checked && _extractor.StatsWithTE.Contains(s))
                     {
@@ -941,7 +943,9 @@ namespace ARKBreedingStats
             {
                 tsv.Add(rowLevel + rowValues);
             }
-            Clipboard.SetText(string.Join("\n", tsv));
+
+            if (!ClipboardHandler.SetText(string.Join("\n", tsv), out var error))
+                SetMessageLabelText($"Error while trying to copy data to the clipboard. You can try again. Error: {error}", MessageBoxIcon.Error);
         }
 
         /// <summary>
@@ -954,6 +958,26 @@ namespace ARKBreedingStats
             CreatureValues cv = null;
             nameCopiedToClipboard = false;
             alreadyExistingCreature = null;
+
+            if (string.IsNullOrEmpty(exportFilePath))
+            {
+                MessageBoxes.ShowMessageBox("Cannot import export-file, no file path given.");
+                return null;
+            }
+
+            var fi = new FileInfo(exportFilePath);
+
+            if (!fi.Exists)
+            {
+                MessageBoxes.ShowMessageBox($"Cannot import export-file, it does not exist.\n{exportFilePath}");
+                return null;
+            }
+
+            if (fi.Length == 0)
+            {
+                MessageBoxes.ShowMessageBox($"Cannot import export-file, it is empty.\nThis might be a bug in ARK where the game does not write anything to the file.\n{exportFilePath}");
+                return null;
+            }
 
             // if the file is blocked, try it again
             const int waitingTimeBase = 200;
@@ -1345,6 +1369,14 @@ namespace ARKBreedingStats
 
             ClearAll();
             speciesSelector1.SetSpecies(Values.V.SpeciesByBlueprint(cv.speciesBlueprint));
+
+            if (cv.isBred)
+                rbBredExtractor.Checked = true;
+            else if (cv.isTamed)
+                rbTamedExtractor.Checked = true;
+            else
+                rbWildExtractor.Checked = true;
+
             for (int s = 0; s < Stats.StatsCount; s++)
                 _statIOs[s].Input = cv.statValues[s];
 
@@ -1354,14 +1386,41 @@ namespace ARKBreedingStats
             numericUpDownLevel.ValueSave = cv.level;
             numericUpDownLowerTEffBound.ValueSave = (decimal)cv.tamingEffMin * 100;
             numericUpDownUpperTEffBound.ValueSave = (decimal)cv.tamingEffMax * 100;
-
-            if (cv.isBred)
-                rbBredExtractor.Checked = true;
-            else if (cv.isTamed)
-                rbTamedExtractor.Checked = true;
-            else
-                rbWildExtractor.Checked = true;
             numericUpDownImprintingBonusExtractor.ValueSave = (decimal)cv.imprintingBonus * 100;
+        }
+
+        /// <summary>
+        /// If a Creature has parent guids, set the parent creature objects from the library.
+        /// If they don't exist yet, create placeholders for later import.
+        /// </summary>
+        private void SetParentsOfCreatureCreatePlaceholderIfNeeded(Creature c)
+        {
+            if (c.Mother == null && c.motherGuid != Guid.Empty)
+            {
+                if (_creatureCollection.CreatureById(c.motherGuid, 0, out var mother))
+                {
+                    c.Mother = mother;
+                }
+                else
+                {
+                    c.Mother = new Creature(c.motherGuid, c.Species, c.Species.noGender ? Sex.Unknown : Sex.Female);
+                    c.Mother.name = (c.Mother.sex == Sex.Female ? "Mother" : "Parent") + " of " + c.name;
+                    _creatureCollection.creatures.Add(c.Mother);
+                }
+            }
+            if (c.Father == null && c.fatherGuid != Guid.Empty)
+            {
+                if (_creatureCollection.CreatureById(c.fatherGuid, 0, out var father))
+                {
+                    c.Father = father;
+                }
+                else
+                {
+                    c.Father = new Creature(c.fatherGuid, c.Species, c.Species.noGender ? Sex.Unknown : Sex.Male);
+                    c.Father.name = (c.Father.sex == Sex.Male ? "Father" : "Parent") + " of " + c.name;
+                    _creatureCollection.creatures.Add(c.Father);
+                }
+            }
         }
 
         /// <summary>
@@ -1541,8 +1600,9 @@ namespace ARKBreedingStats
         {
             // copy blueprint path to clipboard
             if (speciesSelector1.SelectedSpecies?.blueprintPath is string bp
-                && !string.IsNullOrEmpty(bp))
-                Clipboard.SetText(bp);
+                && !string.IsNullOrEmpty(bp)
+                && !utils.ClipboardHandler.SetText(bp, out var error))
+                SetMessageLabelText($"Error while trying to copy blueprint path to the clipboard. You can try again. Error: {error}", MessageBoxIcon.Error);
         }
 
         private void ExtractorStatLevelChanged(StatIO _)

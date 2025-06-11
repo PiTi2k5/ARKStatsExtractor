@@ -12,10 +12,13 @@ using ARKBreedingStats.utils;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Input;
 using ARKBreedingStats.library;
 using ARKBreedingStats.settings;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using ARKBreedingStats.NamePatterns;
+using Brushes = System.Drawing.Brushes;
+using Color = System.Drawing.Color;
 
 namespace ARKBreedingStats
 {
@@ -351,7 +354,7 @@ namespace ARKBreedingStats
                 var statPreferences = new StatWeighting.StatValuePreference[Stats.StatsCount];
                 for (int s = 0; s < Stats.StatsCount; s++)
                 {
-                    var statWeight = statWeights.Item1?[s] ?? 1;
+                    var statWeight = statWeights.Item1[s];
                     statPreferences[s] = statWeight > 0 ? StatWeighting.StatValuePreference.High :
                         statWeight < 0 ? StatWeighting.StatValuePreference.Low :
                         StatWeighting.StatValuePreference.Indifferent;
@@ -406,7 +409,7 @@ namespace ARKBreedingStats
                                 {
                                     // creature has a higher level than the current highest level
                                     // check if highest stats are only counted if odd or even
-                                    if ((statWeights.Item2?[s] ?? StatWeighting.StatValueEvenOdd.Indifferent) == StatWeighting.StatValueEvenOdd.Indifferent // even/odd doesn't matter
+                                    if (statWeights.Item2[s] == StatWeighting.StatValueEvenOdd.Indifferent // even/odd doesn't matter
                                         || (statWeights.Item2[s] == StatWeighting.StatValueEvenOdd.Odd && c.levelsWild[s] % 2 == 1)
                                         || (statWeights.Item2[s] == StatWeighting.StatValueEvenOdd.Even && c.levelsWild[s] % 2 == 0)
                                        )
@@ -802,9 +805,9 @@ namespace ARKBreedingStats
                 return existingCreature;
 
             if (string.IsNullOrEmpty(name))
-                name = (sex == Sex.Female ? "Mother" : "Father") + " of " + tmpl.name;
+                name = (sex == Sex.Female ? "Mother" : sex == Sex.Male ? "Father" : "Parent") + " of " + tmpl.name;
 
-            var creature = new Creature(tmpl.Species, name, tmpl.owner, tmpl.tribe, sex, levelStep: _creatureCollection.getWildLevelStep())
+            var creature = new Creature(tmpl.Species, name, null, null, sex, levelStep: _creatureCollection.getWildLevelStep())
             {
                 guid = guid,
                 Status = CreatureStatus.Unavailable,
@@ -1085,6 +1088,7 @@ namespace ARKBreedingStats
 
         private void UpdateCreatureListViewItem(Creature creature)
         {
+            if (_libraryListViewItemCache == null) return;
             // int listViewLibrary replace old row with new one
             var index = Array.IndexOf(_creaturesDisplayed, creature);
             if (index == -1) return; // not in cache currently
@@ -1638,26 +1642,55 @@ namespace ARKBreedingStats
             if (creatures == null)
                 return Enumerable.Empty<Creature>();
 
+            var anyFilterSet = false;
+
             if (Properties.Settings.Default.FilterHideOwners?.Any() ?? false)
+            {
                 creatures = creatures.Where(c => !Properties.Settings.Default.FilterHideOwners.Contains(c.owner ?? string.Empty));
+                anyFilterSet = true;
+            }
 
             if (Properties.Settings.Default.FilterHideTribes?.Any() ?? false)
+            {
                 creatures = creatures.Where(c => !Properties.Settings.Default.FilterHideTribes.Contains(c.tribe ?? string.Empty));
+                anyFilterSet = true;
+            }
 
             if (Properties.Settings.Default.FilterHideServers?.Any() ?? false)
+            {
                 creatures = creatures.Where(c => !Properties.Settings.Default.FilterHideServers.Contains(c.server ?? string.Empty));
+                anyFilterSet = true;
+            }
 
             if (Properties.Settings.Default.FilterOnlyIfColorId != 0)
+            {
                 creatures = creatures.Where(c => c.colors.Contains(Properties.Settings.Default.FilterOnlyIfColorId));
+                anyFilterSet = true;
+            }
 
             if (Properties.Settings.Default.FilterHideAdults)
+            {
                 creatures = creatures.Where(c => c.Maturation < 1);
+                anyFilterSet = true;
+            }
+
             if (Properties.Settings.Default.FilterHideNonAdults)
+            {
                 creatures = creatures.Where(c => c.Maturation >= 1);
+                anyFilterSet = true;
+            }
+
             if (Properties.Settings.Default.FilterHideCooldowns)
+            {
                 creatures = creatures.Where(c => c.cooldownUntil == null || c.cooldownUntil < DateTime.Now);
+                anyFilterSet = true;
+            }
+
             if (Properties.Settings.Default.FilterHideNonCooldowns)
+            {
                 creatures = creatures.Where(c => c.cooldownUntil != null && c.cooldownUntil > DateTime.Now);
+                anyFilterSet = true;
+            }
 
             // tags filter
             if (Properties.Settings.Default.FilterHideTags?.Any() ?? false)
@@ -1666,23 +1699,29 @@ namespace ARKBreedingStats
                 creatures = creatures.Where(c =>
                     !hideCreaturesWOTags && c.tags.Count == 0 ||
                     c.tags.Except(Properties.Settings.Default.FilterHideTags).Any());
+                anyFilterSet = true;
             }
 
             // hide creatures with the set hide flags
             if (Properties.Settings.Default.FilterFlagsExclude != 0)
             {
                 creatures = creatures.Where(c => ((int)c.flags & Properties.Settings.Default.FilterFlagsExclude) == 0);
+                anyFilterSet = true;
             }
             if (Properties.Settings.Default.FilterFlagsAllNeeded != 0)
             {
                 creatures = creatures.Where(c => ((int)c.flags & Properties.Settings.Default.FilterFlagsAllNeeded) == Properties.Settings.Default.FilterFlagsAllNeeded);
+                anyFilterSet = true;
             }
             if (Properties.Settings.Default.FilterFlagsOneNeeded != 0)
             {
                 int flagsOneNeeded = Properties.Settings.Default.FilterFlagsOneNeeded |
                                      Properties.Settings.Default.FilterFlagsAllNeeded;
                 creatures = creatures.Where(c => ((int)c.flags & flagsOneNeeded) != 0);
+                anyFilterSet = true;
             }
+
+            libraryFilterToolStripMenuItem.BackColor = anyFilterSet ? Color.LightGoldenrodYellow : SystemColors.Control;
 
             return creatures;
         }
@@ -1697,28 +1736,33 @@ namespace ARKBreedingStats
 
         private void listViewLibrary_KeyDown(object sender, KeyEventArgs e)
         {
+            int index;
             switch (e.KeyCode)
             {
                 case Keys.NumPad1:
-                    GenerateCreatureNames(0);
+                    index = 0;
                     break;
                 case Keys.NumPad2:
-                    GenerateCreatureNames(1);
+                    index = 1;
                     break;
                 case Keys.NumPad3:
-                    GenerateCreatureNames(2);
+                    index = 2;
                     break;
                 case Keys.NumPad4:
-                    GenerateCreatureNames(3);
+                    index = 3;
                     break;
                 case Keys.NumPad5:
-                    GenerateCreatureNames(4);
+                    index = 4;
                     break;
                 case Keys.NumPad6:
-                    GenerateCreatureNames(5);
+                    index = 5;
                     break;
                 default: return;
             }
+
+            if (Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control))
+                CopyCreatureNamePatternToClipboard(index);
+            else GenerateCreatureNames(index);
 
             e.Handled = true;
             e.SuppressKeyPress = true;
@@ -2115,7 +2159,8 @@ namespace ARKBreedingStats
                 var cheatPrefix = Properties.Settings.Default.AdminConsoleCommandWithCheat
                     ? "cheat "
                     : string.Empty;
-                Clipboard.SetText(cheatPrefix + string.Join(" | " + cheatPrefix, colorCommands));
+                if (!utils.ClipboardHandler.SetText(cheatPrefix + string.Join(" | " + cheatPrefix, colorCommands), out var error))
+                    SetMessageLabelText($"Error while trying to copy command to clipboard. You can try again. Error: {error}", MessageBoxIcon.Error);
             }
         }
 
@@ -2167,7 +2212,7 @@ namespace ARKBreedingStats
 
         private void CreateExactSpawnCommand(Creature cr)
         {
-            CreatureSpawnCommand.InstableCommandToClipboard(cr);
+            CreatureSpawnCommand.UnstableCommandToClipboard(cr);
             SetMessageLabelText($"The SpawnExactDino admin console command for the creature {cr.name} ({cr.SpeciesName}) was copied to the clipboard. The command doesn't include the XP and the imprinterName, thus the imprinting is probably not set."
                                 + "WARNING: this console command is unstable and can crash your game. Use with caution! The colors and stats will only be correct after putting the creature in a cryopod.", MessageBoxIcon.Warning);
         }
@@ -2313,6 +2358,40 @@ namespace ARKBreedingStats
                 UpdateDisplayedCreatureValues(cr, false, false);
 
             listViewLibrary.EndUpdate();
+        }
+        private void CopyGeneratedNamePatternToClipboard(object sender, EventArgs e) => CopyCreatureNamePatternToClipboard((int)((ToolStripMenuItem)sender).Tag);
+
+        private void CopyCreatureNamePatternToClipboard(int namePatternIndex)
+        {
+            if (listViewLibrary.SelectedIndices.Count == 0) return;
+            var creature = _creaturesDisplayed[listViewLibrary.SelectedIndices[0]];
+            CopyCreatureNamePatternToClipboard(creature, namePatternIndex);
+        }
+
+        internal void CopyCreatureNamePatternToClipboard(Creature creature, int namePatternIndex)
+        {
+            if (creature == null) return;
+            var generatedName = GenerateSingleCreatureNamePattern(creature, namePatternIndex);
+            if (string.IsNullOrEmpty(generatedName))
+            {
+                SetMessageLabelText($"Generated name for creature {creature} using pattern {namePatternIndex + 1} resulted in an empty name, nothing was copied to the clipboard.", MessageBoxIcon.Error);
+                return;
+            }
+            if (utils.ClipboardHandler.SetText(generatedName, out var error))
+                SetMessageLabelText($"Copied generated name of creature {creature} using pattern {namePatternIndex + 1} to the clipboard.{Environment.NewLine}The generated name is: {generatedName}");
+            else SetMessageLabelText($"Error while trying to copy name to clipboard. Error: {error}", MessageBoxIcon.Error);
+        }
+
+        private string GenerateSingleCreatureNamePattern(Creature creature, int namePatternIndex)
+        {
+            var libraryCreatureCount = _creatureCollection.GetTotalCreatureCount();
+
+            if (creature.Species == null) return null;
+            var sameSpecies = _creatureCollection.creatures.Where(c => !c.flags.HasFlag(CreatureFlags.Placeholder) && c.Species == creature.Species).ToArray();
+
+            return NamePattern.GenerateCreatureName(creature, creature, sameSpecies, _topLevels.TryGetValue(creature.Species, out var tl) ? tl : null,
+                _customReplacingNamingPattern, false, namePatternIndex,
+                false, libraryCreatureCount: libraryCreatureCount);
         }
 
         #region library list view columns
