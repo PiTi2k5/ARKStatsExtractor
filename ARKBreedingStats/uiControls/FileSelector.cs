@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
+using System.ComponentModel;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -59,6 +61,7 @@ namespace ARKBreedingStats.uiControls
                 Link = "";
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Link
         {
             get => _linkPath;
@@ -74,6 +77,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsFile
         {
             // file or folder
@@ -84,10 +88,6 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
-        private void OnDisposed(object sender, EventArgs e)
-        {
-            _tt.RemoveAll();
-            _tt.Dispose();
-        }
+        private void OnDisposed(object sender, EventArgs e) => _tt.RemoveAllAndDispose();
     }
 }

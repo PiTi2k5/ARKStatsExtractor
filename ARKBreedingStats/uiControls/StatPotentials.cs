@@ -1,5 +1,7 @@
 ﻿using ARKBreedingStats.species;
+using System.ComponentModel;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -27,49 +29,56 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Species Species
         {
             set
             {
-                if (value == null || value == _selectedSpecies) return;
+                if (value == null) return;
                 _selectedSpecies = value;
+                this.SuspendDrawingAndLayout();
                 for (int s = 0; s < Stats.StatsCount; s++)
-                {
                     _stats[s].Visible = _selectedSpecies.UsesStat(s);
-                }
+                this.ResumeDrawingAndLayout();
             }
         }
 
         public void SetLevels(int[] levelsWild, int[] levelsMutations, bool forceUpdate)
         {
-            SuspendLayout();
+            this.SuspendDrawingAndLayout();
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                if (forceUpdate || _currentLevelsWild[s] != levelsWild[s] || _currentLevelsMutations[s] != levelsMutations[s])
-                {
-                    _currentLevelsWild[s] = levelsWild[s];
-                    _currentLevelsMutations[s] = levelsMutations[s];
-                    _stats[s].SetLevel(_selectedSpecies, levelsWild[s], levelsMutations[s]);
-                }
+                if (!_stats[s].Visible
+                    || (
+                        !forceUpdate
+                        && _currentLevelsWild[s] == levelsWild[s]
+                        && _currentLevelsMutations[s] == levelsMutations[s]
+                    ))
+                    continue;
+                _currentLevelsWild[s] = levelsWild[s];
+                _currentLevelsMutations[s] = levelsMutations[s];
+                _stats[s].SetLevel(_selectedSpecies, levelsWild[s], levelsMutations[s]);
             }
-            ResumeLayout();
+            this.ResumeDrawingAndLayout();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LevelDomMax
         {
             set
             {
                 for (int s = 0; s < Stats.StatsCount; s++)
-                    _stats[s].maxDomLevel = value;
+                    _stats[s].MaxDomLevel = value;
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LevelGraphMax
         {
             set
             {
                 for (int s = 0; s < Stats.StatsCount; s++)
-                    _stats[s].levelGraphMax = value;
+                    _stats[s].LevelGraphMax = value;
             }
         }
 

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ARKBreedingStats.species;
+using ARKBreedingStats.utils;
 using Color = System.Drawing.Color;
 using Pen = System.Drawing.Pen;
 
@@ -74,44 +75,50 @@ namespace ARKBreedingStats
             _grBrushMutations?.Dispose();
 
             float[] relativePositions = { 0, 0.45f, 1 };
-            GraphicsPath path = new GraphicsPath();
-            path.AddEllipse(_xm - _maxR, _ym - _maxR, 2 * _maxR + 1, 2 * _maxR + 1);
-            _grBrushBg = new PathGradientBrush(path)
+            using (var path = new GraphicsPath())
             {
-                InterpolationColors = new ColorBlend
+                path.AddEllipse(_xm - _maxR, _ym - _maxR, 2 * _maxR + 1, 2 * _maxR + 1);
+                _grBrushBg = new PathGradientBrush(path)
                 {
-                    Colors = new[] {
-                        Color.FromArgb(0, 90, 0),
-                        Color.FromArgb(90, 90, 0),
-                        Color.FromArgb(90, 0, 0)
-                    },
-                    Positions = relativePositions
-                }
-            };
-            _grBrushFg = new PathGradientBrush(path)
-            {
-                InterpolationColors = new ColorBlend
+                    InterpolationColors = new ColorBlend
+                    {
+                        Colors = new[]
+                        {
+                            Color.FromArgb(0, 90, 0),
+                            Color.FromArgb(90, 90, 0),
+                            Color.FromArgb(90, 0, 0)
+                        },
+                        Positions = relativePositions
+                    }
+                };
+                _grBrushFg = new PathGradientBrush(path)
                 {
-                    Colors = new[] {
-                        Color.FromArgb(0, 180, 0),
-                        Color.FromArgb(180, 180, 0),
-                        Color.FromArgb(180, 0, 0)
-                    },
-                    Positions = relativePositions
-                }
-            };
-            _grBrushMutations = new PathGradientBrush(path)
-            {
-                InterpolationColors = new ColorBlend
+                    InterpolationColors = new ColorBlend
+                    {
+                        Colors = new[]
+                        {
+                            Color.FromArgb(0, 180, 0),
+                            Color.FromArgb(180, 180, 0),
+                            Color.FromArgb(180, 0, 0)
+                        },
+                        Positions = relativePositions
+                    }
+                };
+                _grBrushMutations = new PathGradientBrush(path)
                 {
-                    Colors = new[] {
-                        Color.FromArgb(0, 180, 180),
-                        Color.FromArgb(90, 90, 180),
-                        Color.FromArgb(180, 0, 180)
-                    },
-                    Positions = relativePositions
-                }
-            };
+                    InterpolationColors = new ColorBlend
+                    {
+                        Colors = new[]
+                        {
+                            Color.FromArgb(0, 180, 180),
+                            Color.FromArgb(90, 90, 180),
+                            Color.FromArgb(180, 0, 180)
+                        },
+                        Positions = relativePositions
+                    }
+                };
+            }
+
             return true;
         }
 
@@ -324,8 +331,7 @@ namespace ARKBreedingStats
                 }
             }
 
-            Image?.Dispose();
-            Image = bmp;
+            this.SetImageAndDisposeOld(bmp);
         }
     }
 }

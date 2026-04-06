@@ -2,6 +2,7 @@
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.library;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -82,9 +83,9 @@ namespace ARKBreedingStats
         private void SendServerCreatureStatusForSelectedCreature(string status)
         {
             // debug function, sends a status change of the selected creature to the server
-            Creature cr = null;
-            if (listViewLibrary.SelectedIndices.Count > 0)
-                cr = (Creature)listViewLibrary.Items[listViewLibrary.SelectedIndices[0]].Tag;
+            var focusedIndex = listViewLibrary.FocusedItem?.Index ?? -1;
+            if (focusedIndex < 0) return;
+            var cr = (Creature)listViewLibrary.Items[focusedIndex].Tag;
             if (cr == null) return;
 
             // debug function, sends a status change of the selected creature to the server
@@ -168,11 +169,13 @@ namespace ARKBreedingStats
                 }
 
                 creature.domesticatedAt = DateTime.Now;
+                SetLockedCreatureProperties(creature);
 
                 var addCreature = Properties.Settings.Default.OnAutoImportAddToLibrary;
                 var gotoLibraryTab = addCreature && Properties.Settings.Default.AutoImportGotoLibraryAfterSuccess;
 
-                DetermineLevelStatusAndSoundFeedback(creature, Properties.Settings.Default.PlaySoundOnAutoImport);
+                _creatureCollection.DetermineColorStatus(speciesSelector1.SelectedSpecies, creature.colors, out _, out _, out _);
+                DetermineLevelStatusAndSoundFeedback(creature, Properties.Settings.Default.PlaySoundOnAutoImport, Properties.Settings.Default.PlayColorSoundOnAutoImport);
                 SetNameOfImportedCreature(creature, null, out _,
                         _creatureCollection.creatures.FirstOrDefault(c => c.guid == creature.guid));
 
@@ -209,6 +212,67 @@ namespace ARKBreedingStats
             // import server settings
             var success = ImportExportGun.ImportServerMultipliersFromJson(_creatureCollection, data.JsonText, data.ServerHash, out resultText);
             SetMessageLabelText(resultText, success ? MessageBoxIcon.Information : MessageBoxIcon.Error, resultText);
+        }
+
+        /// <summary>
+        /// Some properties can be locked in the infoInputExtractor, if locked they will be applied to all newly imported creatures.
+        /// </summary>
+        private void SetLockedCreatureProperties(Creature creature)
+        {
+            if (creatureInfoInputExtractor.LockOwner)
+                creature.owner = creatureInfoInputExtractor.CreatureOwner;
+            if (creatureInfoInputExtractor.LockTribe)
+                creature.tribe = creatureInfoInputExtractor.CreatureTribe;
+            if (creatureInfoInputExtractor.LockServer)
+                creature.server = creatureInfoInputExtractor.CreatureServer;
+        }
+
+        /// <summary>
+        /// Saving export gun files created by using existing creatures.
+        /// </summary>
+        private void saveExportFileLocallyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listViewLibrary.SelectedIndices.Count == 0) return;
+
+            using (var folderBrowserDialog = new FolderBrowserDialog())
+            {
+                folderBrowserDialog.Description = "Save Export File Locally";
+
+                if (folderBrowserDialog.ShowDialog() != DialogResult.OK
+                    || string.IsNullOrEmpty(folderBrowserDialog.SelectedPath))
+                    return;
+
+                var savedCount = 0;
+                var path = folderBrowserDialog.SelectedPath;
+
+                try
+                {
+                    foreach (int i in listViewLibrary.SelectedIndices)
+                    {
+                        var creature = _creaturesDisplayed[i];
+
+                        var contentString =
+                            Newtonsoft.Json.JsonConvert.SerializeObject(
+                                ImportExportGun.ConvertCreatureToExportGunFile(creature, out _));
+
+                        var fileName = $"{creature.SpeciesName}_{creature.ArkId}";
+                        var filePath = Path.Combine(path, fileName + ".json");
+                        var suffix = 1;
+                        while (File.Exists(filePath))
+                            filePath = Path.Combine(path, fileName + "_" + (++suffix) + ".json");
+
+                        System.IO.File.WriteAllText(filePath, contentString);
+                        savedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SetMessageLabelText($"Error saving file: {ex.Message}", MessageBoxIcon.Error);
+                    return;
+                }
+
+                SetMessageLabelText($"Saved {savedCount} files successfully.", MessageBoxIcon.Information, path);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -69,7 +70,7 @@ namespace ARKBreedingStats.raising
                 return;
             }
 
-            SuspendLayout();
+            this.SuspendDrawingAndLayout();
 
             if (Raising.GetRaisingTimes(_selectedSpecies, out TimeSpan matingTime, out string incubationMode,
                 out TimeSpan incubationTime, out _babyTime, out _maturationTime, out TimeSpan nextMatingMin,
@@ -144,7 +145,7 @@ namespace ARKBreedingStats.raising
                     CbGrowingFood_SelectedIndexChanged(CbGrowingFood, null);
             }
 
-            ResumeLayout();
+            this.ResumeDrawingAndLayout();
         }
 
         private void FoodAmountNeeded()
@@ -162,6 +163,8 @@ namespace ARKBreedingStats.raising
                     Values.V.currentServerMultipliers.DinoCharacterFoodDrainMultiplier,
                     Values.V.currentServerMultipliers.TamedDinoCharacterFoodDrainMultiplier,
                     0, .1, out double babyPhaseFood);
+
+                var unconfirmedFoods = new List<string>();
 
                 if (!string.IsNullOrEmpty(_lastSelectedFood))
                     foodAmount = FoodAmountString(_lastSelectedFood);
@@ -185,16 +188,19 @@ namespace ARKBreedingStats.raising
                     var foodValue = food.foodValue;
                     if (foodValue == 0) return null;
 
-                    return (babyPhaseFoodValid ? $"\n\nFood for Baby-Phase: ~{Math.Ceiling(babyPhaseFood / foodValue)} {foodName}" : string.Empty)
-                           + $"\nTotal Food for maturation: ~{Math.Ceiling(totalFood / foodValue)} {foodName}";
-                }
 
-                foodAmount += "\n- Loss by spoiling is not considered!";
+
+                    return (babyPhaseFoodValid ? $"\n\nFood for Baby-Phase: ~{Math.Ceiling(babyPhaseFood / foodValue)} {foodName}" : string.Empty)
+                           + $"\nTotal Food for maturation: ~{Math.Ceiling(totalFood / foodValue)} {foodName}"
+                           + "\n- Loss by spoiling is not considered!"
+                           + (food.Unconfirmed ? "\n⚠ The data for this food is not tested for all species and may be incorrect." : string.Empty);
+                }
             }
 
             LbFoodInfoGeneral.Text = foodAmount;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CreatureCollection CreatureCollection
         {
             set

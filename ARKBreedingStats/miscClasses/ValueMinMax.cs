@@ -35,46 +35,41 @@ namespace ARKBreedingStats.miscClasses
             }
         }
 
-        public bool Includes(MinMaxDouble range)
-        {
-            return Max >= range.Max && Min <= range.Min;
-        }
+        public bool Includes(MinMaxDouble range) => Max >= range.Max && Min <= range.Min;
 
-        public bool Overlaps(MinMaxDouble range)
-        {
-            return Max >= range.Min && Min <= range.Max;
-        }
+        public bool Overlaps(MinMaxDouble range) => Max >= range.Min && Min <= range.Max;
 
+        public static bool Overlaps(MinMaxDouble range1, MinMaxDouble range2) => range1.Overlaps(range2);
+
+        /// <summary>
+        /// Changes the range if there is an overlap with the passed range, else does nothing and returns false.
+        /// </summary>
         public bool SetToIntersectionWith(MinMaxDouble range)
         {
-            if (Overlaps(range))
-            {
-                Min = Math.Max(Min, range.Min);
-                Max = Math.Min(Max, range.Max);
-                return true;
-            }
-            return false;
+            if (!Overlaps(range)) return false;
+            Min = Math.Max(Min, range.Min);
+            Max = Math.Min(Max, range.Max);
+            return true;
         }
 
-        public bool SetToIntersectionWith(double min, double max)
-        {
-            return SetToIntersectionWith(new MinMaxDouble(min, max));
-        }
+        /// <summary>
+        /// Changes the range if there is an overlap with the passed range, else does nothing and returns false.
+        /// </summary>
+        public bool SetToIntersectionWith(double min, double max) => SetToIntersectionWith(new MinMaxDouble(min, max));
 
-        public bool Includes(double value)
-        {
-            return Max >= value && Min <= value;
-        }
+        public bool Includes(double value) => Max >= value && Min <= value;
 
-        public MinMaxDouble Clone()
-        {
-            return new MinMaxDouble(Min, Max);
-        }
+        /// <summary>
+        /// Returns true if Min &lt;= Max.
+        /// </summary>
+        public bool ValidRange => Min <= Max;
 
-        public static bool Overlaps(MinMaxDouble range1, MinMaxDouble range2)
-        {
-            return range1.Overlaps(range2);
-        }
+        public MinMaxDouble Clone() => new MinMaxDouble(Min, Max);
+
+        public static MinMaxDouble operator +(MinMaxDouble a, double b) => new MinMaxDouble(a.Min + b, a.Max + b);
+        public static MinMaxDouble operator -(MinMaxDouble a, double b) => new MinMaxDouble(a.Min - b, a.Max - b);
+        public static MinMaxDouble operator *(MinMaxDouble a, double b) => new MinMaxDouble(a.Min * b, a.Max * b);
+        public static MinMaxDouble operator /(MinMaxDouble a, double b) => new MinMaxDouble(a.Min / b, a.Max / b);
 
         public override string ToString() => $"{Min}, {Mean}, {Max}";
     }
@@ -89,6 +84,15 @@ namespace ARKBreedingStats.miscClasses
             Max = max;
         }
 
+        /// <summary>
+        /// Sets Min to Ceil(min) and Max to floor(max)
+        /// </summary>
+        public MinMaxInt(double min, double max)
+        {
+            Min = (int)Math.Ceiling(min);
+            Max = (int)Math.Floor(max);
+        }
+
         public int MinMax
         {
             set
@@ -98,10 +102,32 @@ namespace ARKBreedingStats.miscClasses
             }
         }
 
-        public bool Includes(int value)
+        public double Mean => (Min + Max) / 2d;
+
+        /// <summary>
+        /// Returns true if Min &lt;= Max.
+        /// </summary>
+        public bool ValidRange => Min <= Max;
+
+        public bool Includes(int value) => Max >= value && Min <= value;
+
+        public bool Overlaps(MinMaxDouble range) => Max >= range.Min && Min <= range.Max;
+
+        /// <summary>
+        /// Changes the range if there is an overlap with the passed range, else does nothing and returns false.
+        /// </summary>
+        public bool SetToIntersectionWith(MinMaxDouble range)
         {
-            return Max >= value && Min <= value;
+            if (!Overlaps(range)) return false;
+            Min = (int)Math.Max(Min, range.Min);
+            Max = (int)Math.Min(Max, range.Max);
+            return true;
         }
+
+        /// <summary>
+        /// Changes the range if there is an overlap with the passed range, else does nothing and returns false.
+        /// </summary>
+        public bool SetToIntersectionWith(double min, double max) => SetToIntersectionWith(new MinMaxDouble(min, max));
 
         public override string ToString() => $"{Min}, {Max}";
     }

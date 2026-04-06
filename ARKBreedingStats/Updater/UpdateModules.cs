@@ -1,31 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.Updater
 {
     public partial class UpdateModules : Form
     {
+        /// <summary>
+        /// Task for downloading non optional modules.
+        /// </summary>
+        public Task TaskDownloadingUpdates;
+
         public UpdateModules()
         {
-            InitializeComponent();
-            Loc.ControlText(BtOk, "OK");
-            Loc.ControlText(BtCancel, "Cancel");
-
             var manifestFilePath = FileService.GetPath(FileService.ManifestFileName);
             if (!File.Exists(manifestFilePath))
                 return;
 
             _asbManifest = AsbManifest.FromJsonFile(manifestFilePath);
-            if (_asbManifest?.modules == null) return;
+            if (_asbManifest?.Modules == null) return;
+
+            InitializeComponent();
+            Loc.ControlText(BtOk, "OK");
+            Loc.ControlText(BtCancel, "Cancel");
+
+            TaskDownloadingUpdates = DownloadModulesAsync(_asbManifest.Modules.Select(kv => kv.Value).Where(m => !m.Optional && m.UpdateAvailable).ToArray(), true);
 
             // Display installed and available modules
-            var moduleGroups = _asbManifest.modules.Where(kv => kv.Value.Category != "main").Select(kv => kv.Value)
+            var moduleGroups = _asbManifest.Modules.Where(kv => kv.Value.Optional).Select(kv => kv.Value)
                 .GroupBy(m => m.Category);
 
             _checkboxesUpdateModule = new List<CheckBox>();
@@ -47,8 +55,6 @@ namespace ARKBreedingStats.Updater
                     FlpModules.Controls.Add(moduleDisplay);
                 }
             }
-
-            _initiallySelectedSpeciesImageCollectionIdAndVersion = GetCurrentImageModuleIdAndVersion();
         }
 
         private Control CreateModuleControl(AsbModule module, bool onlyOneEntry)
@@ -71,9 +77,13 @@ namespace ARKBreedingStats.Updater
             c.Controls.Add(header);
             c.SetColumnSpan(header, 2);
 
+            var localPath = module.LocallyAvailable
+                ? $"{Environment.NewLine}{Environment.NewLine}Used local path: {Path.GetFullPath(FileService.GetPath(module.LocalPath))}"
+                : string.Empty;
+
             var desc = new Label
             {
-                Text = (string.IsNullOrEmpty(module.Author) ? string.Empty : $"Author: {module.Author}\n") + $"{module.Description}",
+                Text = (string.IsNullOrEmpty(module.Author) ? string.Empty : $"Author: {module.Author}\n") + $"{module.Description}{localPath}",
                 AutoSize = true,
                 MaximumSize = new Size(300, 0),
                 Margin = new Padding(3)
@@ -92,7 +102,7 @@ namespace ARKBreedingStats.Updater
             else if (module.UpdateAvailable)
             {
                 checkBoxDownloadText = "Update";
-                UpdateAvailable = true;
+                OptionalUpdateAvailable = true;
             }
 
             if (checkBoxDownloadText != null)
@@ -139,68 +149,49 @@ namespace ARKBreedingStats.Updater
 
         private void ClickCheckBox(CheckBox cb) => cb.Checked = !cb.Checked;
 
-        internal void SelectDefaultImages()
-        {
-            var cbImages = _checkboxesUpdateModule.FirstOrDefault(cb => cb.Tag is AsbModule mod && mod.Category == "Species Images");
-            if (cbImages == null) return;
-            if (!(cbImages.Tag is AsbModule moduleImages)) return;
-            if (!moduleImages.LocallyAvailable)
-                cbImages.Checked = true;
-        }
-
         /// <summary>
-        /// Is only true if for an already downloaded module an update is available.
+        /// Is only true if for an already downloaded optional module an update is available.
         /// </summary>
-        internal bool UpdateAvailable { get; private set; }
-
-        private readonly string _initiallySelectedSpeciesImageCollectionIdAndVersion;
-
-        /// <summary>
-        /// The species images were changed and need to be initialized again.
-        /// </summary>
-        public bool ImagesWereChanged => _initiallySelectedSpeciesImageCollectionIdAndVersion != GetCurrentImageModuleIdAndVersion();
-
-        private string GetCurrentImageModuleIdAndVersion()
-        {
-            var moduleImages = _checkboxesSelectModule
-                .Where(cb => cb.Checked).Select(cb => cb.Tag as AsbModule)
-                .FirstOrDefault(m => m?.Category == "Species Images");
-
-            return moduleImages == null ? null : $"{moduleImages.Id}_{moduleImages.VersionLocal}";
-        }
+        internal bool OptionalUpdateAvailable { get; private set; }
 
         private readonly AsbManifest _asbManifest;
         private readonly List<CheckBox> _checkboxesUpdateModule;
         private readonly List<CheckBox> _checkboxesSelectModule;
 
-        internal async Task<string> DownloadRequestedModulesAsync()
+        internal async Task<(string, List<string> idsSuccessfullyDownloaded)> DownloadRequestedModulesAsync()
         {
-            if (_asbManifest == null) return null;
+            if (_asbManifest == null) return (null, null);
             var downloadModules = _checkboxesUpdateModule.Where(cb => cb.Checked).Select(cb => cb.Tag as AsbModule).ToArray();
-            if (!downloadModules.Any()) return null;
+            if (!downloadModules.Any()) return (null, null);
+            var (_, resultMessage, idsSuccessfullyDownloaded) = await DownloadModulesAsync(downloadModules);
 
+            return (resultMessage, idsSuccessfullyDownloaded);
+        }
+
+        private static async Task<(bool success, string errorMessage, List<string> idsSuccessfullyDownloaded)> DownloadModulesAsync(AsbModule[] modules, bool displayErrorMessage = false)
+        {
             var sb = new StringBuilder();
-            foreach (var module in downloadModules)
+            var success = true;
+            var idsSuccessfullyDownloaded = new List<string>();
+            foreach (var module in modules)
             {
-                var (success, message) = await module.DownloadAsync(true);
+                var (successModule, message) = await module.DownloadAsync(true);
+                success = success && successModule;
                 sb.AppendLine();
-                sb.AppendLine((success ? "Success: " : "Failed: ") + message);
+                sb.AppendLine((successModule ? "Success: " : "Failed: ") + message);
 
-                // if downloaded successfully, also select the module
-                if (success)
+                if (successModule)
                 {
-                    module.SetVersion(new StreamingContext());
-                    var checkBox = _checkboxesSelectModule.FirstOrDefault(cb => (cb.Tag as AsbModule) == module);
-                    if (checkBox != null)
-                        checkBox.Checked = true;
+                    module.Initialize();
+                    idsSuccessfullyDownloaded.Add(module.Id);
                 }
             }
 
-            return sb.ToString();
-        }
+            var resultMessage = sb.ToString();
+            if (!success && displayErrorMessage)
+                MessageBoxes.ShowMessageBox("Error while downloading ASB modules:\n\n" + resultMessage);
 
-        public string GetSpeciesImagesFolder() =>
-            _checkboxesSelectModule?.Where(cb => cb.Checked).Select(cb => cb.Tag as AsbModule)
-                .FirstOrDefault(m => m?.Category == "Species Images")?.LocalPath;
+            return (success, resultMessage, idsSuccessfullyDownloaded);
+        }
     }
 }

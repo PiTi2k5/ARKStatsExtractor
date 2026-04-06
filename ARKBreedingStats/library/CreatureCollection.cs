@@ -1,11 +1,15 @@
-﻿using ARKBreedingStats.species;
+﻿using ARKBreedingStats.BreedingPlanning;
+using ARKBreedingStats.library;
+using ARKBreedingStats.mods;
+using ARKBreedingStats.species;
 using ARKBreedingStats.values;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using ARKBreedingStats.mods;
+using System.Text;
+using static ARKBreedingStats.library.LevelColorStatusFlags;
 
 namespace ARKBreedingStats.Library
 {
@@ -35,17 +39,17 @@ namespace ARKBreedingStats.Library
         [JsonProperty]
         public int maxDomLevel = MaxDomLevelDefault;
         [JsonProperty]
-        public int maxWildLevel = 150;
+        public int maxWildLevel = Ark.MaxWildLevelDefault;
         [JsonProperty]
         public int minChartLevel;
         [JsonProperty]
-        public int maxChartLevel = 50;
+        public int maxChartLevel = Ark.MaxWildLevelDefault / 3;
         [JsonProperty]
         public int maxBreedingSuggestions = 10;
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool considerWildLevelSteps;
         [JsonProperty]
-        public int wildLevelStep = 5;
+        public int wildLevelStep = Ark.WildLevelStepDefault;
         /// <summary>
         /// On official servers a creature with more than 450 total levels will be deleted
         /// </summary>
@@ -54,7 +58,7 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// Contains a list of creature's guids that are deleted. This is needed for synced libraries.
         /// </summary>
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<Guid> DeletedCreatureGuids;
 
         [JsonProperty]
@@ -63,7 +67,7 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// Only the taming and breeding multipliers of this are used.
         /// </summary>
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public ServerMultipliers serverMultipliersEvents;
 
         /// <summary>
@@ -73,16 +77,10 @@ namespace ARKBreedingStats.Library
         public bool singlePlayerSettings;
 
         /// <summary>
-        /// Deprecated setting, remove on 2025-01-01
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool AtlasSettings;
-
-        /// <summary>
         /// Indicates the game the library is used for. Possible values are "ASE" (default) for ARK: Survival Evolved or "ASA" for ARK: Survival Ascended.
         /// </summary>
         [JsonProperty("Game")]
-        private string _game = Ark.Ase;
+        private string _game = Properties.Settings.Default.NewLibraryGame == Ark.Game.Ase ? Ark.Ase : Ark.Asa;
 
         /// <summary>
         /// Used for the exportGun mod.
@@ -94,7 +92,7 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// Allow more than 100% imprinting, can happen with mods, e.g. S+ Nanny
         /// </summary>
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool allowMoreThanHundredImprinting;
 
         [JsonProperty]
@@ -137,16 +135,17 @@ namespace ARKBreedingStats.Library
         /// </summary>
         public string[] serverList;
         /// <summary>
-        /// All existing color ids for each species (by blueprint path). Each species has an array of 7 int[].
-        /// Index 0-5 is an array of the colors of the according region, index 6 is an array of all colors in all regions.
+        /// Count of creatures that have a specific color in a specific region, dictionary key is species blueprint path.
+        /// The value is an int[][]. First index is the color region, second index is the color id, the value is the count of the creature with that color in that region.
+        /// The index 6 is all color regions combined, i.e. counts color ids in all regions (i.e. a[6][i] = a[0][i] + ... + a[5][i])
         /// </summary>
-        private readonly Dictionary<string, List<int>[]> _existingColors = new Dictionary<string, List<int>[]>();
+        private readonly Dictionary<string, int[][]> _existingColors = new Dictionary<string, int[][]>();
 
         /// <summary>
         /// Some mods allow to change stat values of species in an extra ini file. These overrides are stored here.
         /// The last item (i.e. index StatNames.StatsCount) is an array of possible imprintingMultiplier overrides.
         /// </summary>
-        [JsonProperty]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public Dictionary<string, double?[][]> CustomSpeciesStats;
 
         private Dictionary<string, int> _creatureCountBySpecies;
@@ -159,13 +158,24 @@ namespace ARKBreedingStats.Library
         public string ServerSettingsUriSource;
 
         /// <summary>
+        /// List of pairs currently breeding.
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public CurrentBreedingPair[] CurrentBreedingPairs;
+
+        /// <summary>
+        /// List of all top stats per species.
+        /// </summary>
+        public readonly Dictionary<Species, TopLevels> TopLevels = new Dictionary<Species, TopLevels>();
+
+        /// <summary>
         /// Calculates a hashcode for a list of mods and their order. Can be used to check for changes.
         /// </summary>
         public static int CalculateModListHash(IEnumerable<Mod> modList)
         {
             if (modList == null) { return 0; }
 
-            return CalculateModListHash(modList.Select(m => m.id));
+            return CalculateModListHash(modList.Select(m => m.Id));
         }
 
         /// <summary>
@@ -183,7 +193,7 @@ namespace ARKBreedingStats.Library
         /// </summary>
         public void UpdateModList()
         {
-            modIDs = ModList?.Select(m => m.id).ToList() ?? new List<string>();
+            modIDs = ModList?.Select(m => m.Id).ToList() ?? new List<string>();
             modListHash = CalculateModListHash(ModList);
         }
 
@@ -204,6 +214,8 @@ namespace ARKBreedingStats.Library
         /// Returns true if the currently loaded modValues differ from the listed modValues of the library-file.
         /// </summary>
         public bool ModValueReloadNeeded => modListHash == 0 || modListHash != Values.V.loadedModsHash;
+
+        private Dictionary<string, Creature[]> _creaturesByBlueprint;
 
         /// <summary>
         /// Adds creatures to the current library.
@@ -290,6 +302,7 @@ namespace ARKBreedingStats.Library
                 creatureExisting.isBred = creatureNew.isBred;
                 if (!string.IsNullOrEmpty(creatureNew.note))
                     creatureExisting.note = creatureNew.note;
+                creatureExisting.Traits = creatureNew.Traits;
 
                 UpdateString(ref creatureExisting.name, ref creatureNew.name);
                 UpdateString(ref creatureExisting.owner, ref creatureNew.owner);
@@ -311,11 +324,13 @@ namespace ARKBreedingStats.Library
                     (creatureExisting.Status == CreatureStatus.Unavailable && creatureNew.Status == CreatureStatus.Available))
                 {
                     creatureExisting.levelFound = creatureNew.levelFound;
-                    creatureExisting.levelsDom = creatureNew.levelsDom;
                     creatureExisting.levelsWild = creatureNew.levelsWild;
+                    creatureExisting.levelsMutated = creatureNew.levelsMutated;
+                    creatureExisting.levelsDom = creatureNew.levelsDom;
                     creatureExisting.mutationsMaternal = creatureNew.mutationsMaternal;
                     creatureExisting.mutationsPaternal = creatureNew.mutationsPaternal;
                     creatureExisting.tamingEff = creatureNew.tamingEff;
+                    creatureExisting.Traits = creatureNew.Traits;
                     creaturesWereAddedOrUpdated = true;
                     recalculate = true;
                 }
@@ -374,6 +389,7 @@ namespace ARKBreedingStats.Library
                 ResetExistingColors(onlyOneSpeciesAdded ? onlyThisSpeciesBlueprintAdded : null);
                 _creatureCountBySpecies = null;
                 _totalCreatureCount = -1;
+                _creaturesByBlueprint = null;
             }
 
             return creaturesWereAddedOrUpdated;
@@ -392,6 +408,7 @@ namespace ARKBreedingStats.Library
             ResetExistingColors(c.Species.blueprintPath);
             _creatureCountBySpecies = null;
             _totalCreatureCount = -1;
+            _creaturesByBlueprint = null;
         }
 
         public int? getWildLevelStep()
@@ -491,11 +508,6 @@ namespace ARKBreedingStats.Library
                 serverMultipliers.SinglePlayerSettings = singlePlayerSettings;
                 singlePlayerSettings = false;
             }
-            if (AtlasSettings && serverMultipliers != null)
-            {
-                serverMultipliers.AtlasSettings = AtlasSettings;
-                AtlasSettings = false;
-            }
 
             // convert DateTimes to local times
             foreach (var tle in timerListEntries)
@@ -510,6 +522,18 @@ namespace ARKBreedingStats.Library
                 c.growingUntil = c.growingUntil?.ToLocalTime();
                 c.domesticatedAt = c.domesticatedAt?.ToLocalTime();
                 c.addedToLibrary = c.addedToLibrary?.ToLocalTime();
+            }
+
+            if (CurrentBreedingPairs != null)
+            {
+                var guids = creatures.ToDictionary(c => c.guid);
+                foreach (var pair in CurrentBreedingPairs)
+                {
+                    if (guids.TryGetValue(pair.GuidMother, out var m))
+                        pair.Mother = m;
+                    if (guids.TryGetValue(pair.GuidFather, out var f))
+                        pair.Father = f;
+                }
             }
         }
 
@@ -529,102 +553,109 @@ namespace ARKBreedingStats.Library
         /// Returns a tuple that indicates if a color id is already available in that species
         /// (inTheRegion, inAnyRegion).
         /// </summary>
-        /// <returns></returns>
-        internal ColorExisting[] ColorAlreadyAvailable(Species species, byte[] colorIds, out string infoText)
+        /// <param name="creaturesWithColorsInRegion">For each region an array with creature count with this color, i.e. int[regionId][colorId]</param>
+        internal ColorStatus[] DetermineColorStatus(Species species, byte[] colorIds, out string infoText, out int[][] creaturesWithColorsInRegion, out bool[] desiredColors)
         {
             infoText = null;
+            creaturesWithColorsInRegion = null;
+            desiredColors = null;
             if (string.IsNullOrEmpty(species?.blueprintPath) || colorIds == null) return null;
 
-            var usedColorIndices = Enumerable.Range(0, Ark.ColorRegionCount).Where(i => species.EnabledColorRegions[i]).ToArray();
-            var usedColorCount = usedColorIndices.Length;
+            var usedColorRegionIndices = Enumerable.Range(0, Ark.ColorRegionCount).Where(i => species.EnabledColorRegions[i]).ToArray();
+            var usedColorRegionsCount = usedColorRegionIndices.Length;
 
             // create data if not available in the cache
-            if (!_existingColors.TryGetValue(species.blueprintPath, out var speciesExistingColors) || speciesExistingColors.Length != usedColorCount + 1)
+            if (!_existingColors.TryGetValue(species.blueprintPath, out creaturesWithColorsInRegion))
             {
-                // list of color ids in each region. The last index contains the ids of all regions
-                speciesExistingColors = new List<int>[usedColorCount + 1];
-                for (int i = 0; i < usedColorCount + 1; i++) speciesExistingColors[i] = new List<int>();
-                foreach (Creature c in creatures)
+                // count of each color id in each region. The last index contains the count of color ids of all regions
+                creaturesWithColorsInRegion = new int[Ark.ColorRegionCount + 1][];
+                foreach (var ri in usedColorRegionIndices)
+                    creaturesWithColorsInRegion[ri] = new int[byte.MaxValue + 1];
+                creaturesWithColorsInRegion[Ark.ColorRegionCount] = new int[byte.MaxValue + 1];
+
+                foreach (var c in creatures)
                 {
                     if (c.flags.HasFlag(CreatureFlags.Placeholder)
                         || c.flags.HasFlag(CreatureFlags.Dead)
-                        || c.Species == null
-                        || c.speciesBlueprint != species.blueprintPath)
+                        || c.speciesBlueprint != species.blueprintPath
+                        || c.Species == null)
                         continue;
 
-                    for (int i = 0; i < usedColorCount; i++)
+                    foreach (var ri in usedColorRegionIndices)
                     {
-                        var colorRegionId = usedColorIndices[i];
-                        var cColorId = c.colors[colorRegionId];
-                        if (!speciesExistingColors[i].Contains(cColorId))
-                            speciesExistingColors[i].Add(cColorId);
-                        if (!speciesExistingColors[usedColorCount].Contains(cColorId))
-                            speciesExistingColors[usedColorCount].Add(cColorId);
+                        var cColorId = c.colors[ri];
+                        creaturesWithColorsInRegion[ri][cColorId]++;
+                        creaturesWithColorsInRegion[Ark.ColorRegionCount][cColorId]++;
                     }
                 }
 
-                _existingColors[species.blueprintPath] = speciesExistingColors;
+                _existingColors[species.blueprintPath] = creaturesWithColorsInRegion;
             }
 
-            var newSpeciesColors = new List<string>(usedColorCount);
-            var newRegionColors = new List<string>(usedColorCount);
+            var newSpeciesColorsString = new List<string>(usedColorRegionsCount);
+            var newRegionColorsStrings = new List<string>(usedColorRegionsCount);
 
-            var results = new ColorExisting[Ark.ColorRegionCount];
-            for (int i = 0; i < usedColorCount; i++)
+            var regionsColorStatus = new ColorStatus[Ark.ColorRegionCount];
+            var anyColorNewInRegion = false;
+            var anyColorNew = false;
+            foreach (var ri in usedColorRegionIndices)
             {
-                var colorRegionId = usedColorIndices[i];
-                var colorStatus = speciesExistingColors[i].Contains(colorIds[colorRegionId]) ? ColorExisting.ColorExistingInRegion
-                    : speciesExistingColors[usedColorCount].Contains(colorIds[colorRegionId]) ? ColorExisting.ColorExistingInOtherRegion
-                    : ColorExisting.ColorIsNew;
-                results[colorRegionId] = colorStatus;
+                var colorId = colorIds[ri];
+                var creaturesWithColorIdInRegion = creaturesWithColorsInRegion[ri][colorId];
+                var creaturesWithColorIdInAnyRegion = creaturesWithColorsInRegion[Ark.ColorRegionCount][colorId];
+                var colorStatus = creaturesWithColorIdInRegion > 0 ? ColorStatus.ExistsInRegion
+                               : creaturesWithColorIdInAnyRegion > 0 ? ColorStatus.NewRegionColor
+                               : ColorStatus.NewColor;
+                regionsColorStatus[ri] = colorStatus;
                 switch (colorStatus)
                 {
-                    case ColorExisting.ColorIsNew:
-                        var description = ColorDescription(colorIds[colorRegionId]);
-                        if (!newSpeciesColors.Contains(description))
-                            newSpeciesColors.Add(description);
+                    case ColorStatus.NewColor:
+                        var description = ColorDescription();
+                        if (!newSpeciesColorsString.Contains(description))
+                            newSpeciesColorsString.Add(description);
+                        anyColorNew = true;
                         break;
-                    case ColorExisting.ColorExistingInOtherRegion:
-                        newRegionColors.Add($"{ColorDescription(colorIds[colorRegionId])} in region {colorRegionId}");
+                    case ColorStatus.NewRegionColor:
+                        newRegionColorsStrings.Add($"{ColorDescription()} in region {ri}");
+                        anyColorNewInRegion = true;
                         break;
                 }
 
-                string ColorDescription(byte colorId)
+                string ColorDescription()
                 {
                     var color = CreatureColors.CreatureArkColor(colorId);
                     return $"{color.Name} ({color.Id})";
                 }
             }
 
-            if (newSpeciesColors.Any())
+            //LevelColorStatusFlags.ColorFlags
+
+            // desired colors
+            desiredColors = new bool[Ark.ColorRegionCount];
+            var colorSpeciesOptions = Form1.ColorOptionsWantedRegions.GetOptions(species);
+            for (var ci = 0; ci < Ark.ColorRegionCount; ci++)
+                desiredColors[ci] = colorSpeciesOptions.Options[ci].IsColorWanted(colorIds[ci]);
+
+            LevelColorStatusFlags.ColorFlagsCombined = LevelColorStatusFlags.ColorStatus.None;
+            if (anyColorNew) LevelColorStatusFlags.ColorFlagsCombined |= LevelColorStatusFlags.ColorStatus.NewColor;
+            if (anyColorNewInRegion) LevelColorStatusFlags.ColorFlagsCombined |= LevelColorStatusFlags.ColorStatus.NewRegionColor;
+            if (desiredColors.Any(ci => ci)) LevelColorStatusFlags.ColorFlagsCombined |= LevelColorStatusFlags.ColorStatus.DesiredColor;
+
+            // text output
+            var infoTextSb = new StringBuilder();
+            if (newSpeciesColorsString.Any())
             {
-                infoText = $"These colors are new for the {species.name}: {string.Join(", ", newSpeciesColors)}.";
+                infoTextSb.AppendLine($"These colors are new for the {species.name}: {string.Join(", ", newSpeciesColorsString)}.");
             }
-            if (newRegionColors.Any())
+            if (newRegionColorsStrings.Any())
             {
-                infoText += $"{(infoText == null ? null : "\n")}These colors are new in their region: {string.Join(", ", newRegionColors)}.";
+                infoTextSb.AppendLine($"These colors are new in their region: {string.Join(", ", newRegionColorsStrings)}.");
             }
 
-            infoText = infoText ?? "No new colors";
-
-            return results;
-        }
-
-        public enum ColorExisting
-        {
-            Unknown,
-            /// <summary>
-            /// The color is already available in that region on a creature of that species.
-            /// </summary>
-            ColorExistingInRegion,
-            /// <summary>
-            /// The color is already available in a different region on a creature of that species.
-            /// </summary>
-            ColorExistingInOtherRegion,
-            /// <summary>
-            /// The color does not exist on any region on any creature of that species.
-            /// </summary>
-            ColorIsNew
+            infoTextSb.AppendLine();
+            infoTextSb.AppendLine("Library analysis");
+            infoText = infoTextSb.ToString();
+            return regionsColorStatus;
         }
 
         public string Game
@@ -646,7 +677,7 @@ namespace ARKBreedingStats.Library
                     default:
                         // non ASA
                         if (modIDs == null) return;
-                        ModList.RemoveAll(m => m.id == Ark.Asa);
+                        ModList.RemoveAll(m => m.Id == Ark.Asa);
                         if (modIDs.Remove(Ark.Asa))
                             modListHash = 0;
                         break;
@@ -674,6 +705,37 @@ namespace ARKBreedingStats.Library
             if (_totalCreatureCount == -1)
                 _totalCreatureCount = creatures.Count(c => !c.flags.HasFlag(CreatureFlags.Placeholder));
             return _totalCreatureCount;
+        }
+
+        /// <summary>
+        /// Returns all creatures of a species and if available all creatures of mating compatible species. Ignores placeholder creatures.
+        /// </summary>
+        public List<Creature> GetSpeciesCompatibleCreatures(Species species)
+        {
+            if (species == null) return null;
+            if (_creaturesByBlueprint == null) ReGroupCreaturesByBp();
+
+            var creaturesResult = new List<Creature>();
+            var bpList = new List<string> { species.blueprintPath };
+
+            if (species.matesWith?.Any() == true)
+                bpList.AddRange(species.matesWith);
+
+            foreach (var bp in bpList)
+            {
+                _creaturesByBlueprint.TryGetValue(bp, out var creatures);
+                if (creatures != null) creaturesResult.AddRange(creatures);
+            }
+
+            return creaturesResult;
+        }
+
+        private void ReGroupCreaturesByBp()
+        {
+            _creaturesByBlueprint = creatures
+                 .Where(c => !c.flags.HasFlag(CreatureFlags.Placeholder))
+                 .GroupBy(c => c.speciesBlueprint)
+                 .ToDictionary(g => g.Key, g => g.ToArray());
         }
     }
 }

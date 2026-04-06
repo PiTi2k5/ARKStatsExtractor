@@ -43,6 +43,16 @@ namespace ARKBreedingStats.utils
         }
 
         /// <summary>
+        /// Sets the Image property of the Button to the passed Bitmap and disposes the previous Bitmap.
+        /// </summary>
+        public static void SetImageAndDisposeOld(this Button bt, Bitmap bmp)
+        {
+            var oldBmp = bt.Image as Bitmap;
+            bt.Image = bmp;
+            oldBmp?.Dispose();
+        }
+
+        /// <summary>
         /// Returns the value part of this color (HSV model).
         /// </summary>
         public static float GetValue(this Color c) => (float)Math.Max(c.R, Math.Max(c.G, c.B)) / byte.MaxValue;
@@ -51,5 +61,21 @@ namespace ARKBreedingStats.utils
         /// Returns the hsv values of this color.
         /// </summary>
         public static (float h, float s, float v) GetHsv(this Color c) => (c.GetHue(), c.GetSaturation(), c.GetValue());
+
+        /// <summary>
+        /// Call when parent of tooltip is closed to avoid memory leak.
+        /// </summary>
+        /// <param name="tt"></param>
+        public static void RemoveAllAndDispose(this ToolTip tt)
+        {
+            tt.RemoveAll();
+            tt.Dispose();
+        }
+
+        /// <summary>
+        /// Returns the area of the Bitmap object in a RectangleF.
+        /// </summary>
+        public static RectangleF GetBounds(this Bitmap bmp)
+            => bmp == null ? RectangleF.Empty : new RectangleF(0, 0, bmp.Width, bmp.Height);
     }
 }

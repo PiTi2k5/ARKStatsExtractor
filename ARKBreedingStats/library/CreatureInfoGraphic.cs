@@ -2,9 +2,18 @@
 using ARKBreedingStats.species;
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.IO;
 using System.Linq;
-using System.Windows.Forms;
+using System.Threading.Tasks;
+using ARKBreedingStats.SpeciesImages;
+using ARKBreedingStats.utils;
+using Brush = System.Drawing.Brush;
+using Brushes = System.Drawing.Brushes;
+using Color = System.Drawing.Color;
+using Pen = System.Drawing.Pen;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace ARKBreedingStats.library
 {
@@ -14,14 +23,19 @@ namespace ARKBreedingStats.library
         /// Creates an image with infos about the creature, using the user settings.
         /// </summary>
         /// <param name="cc">CreatureCollection for server settings.</param>
-        public static Bitmap InfoGraphic(this Creature creature, CreatureCollection cc)
-        {
-            return InfoGraphic(creature, cc,
+        public static Task<Bitmap> InfoGraphicAsync(this Creature creature, CreatureCollection cc) =>
+            InfoGraphicAsync(creature, cc,
                 Properties.Settings.Default.InfoGraphicHeight,
                 GetUserFont(),
                 Properties.Settings.Default.InfoGraphicForeColor,
                 Properties.Settings.Default.InfoGraphicBackColor,
                 Properties.Settings.Default.InfoGraphicBorderColor,
+                Properties.Settings.Default.InfoGraphicBorderWidth,
+                Properties.Settings.Default.InfoGraphicBorderRadius,
+                Properties.Settings.Default.InfoGraphicPaddingX,
+                Properties.Settings.Default.InfoGraphicPaddingY,
+                Properties.Settings.Default.InfoGraphicTextOutlineColor,
+                Properties.Settings.Default.InfoGraphicTextOutlineWidth,
                 Properties.Settings.Default.InfoGraphicDisplayName,
                 Properties.Settings.Default.InfoGraphicWithDomLevels,
                 Properties.Settings.Default.InfoGraphicDisplaySumWildMut,
@@ -30,8 +44,13 @@ namespace ARKBreedingStats.library
                 Properties.Settings.Default.InfoGraphicShowStatValues,
                 Properties.Settings.Default.InfoGraphicShowMaxWildLevel,
                 Properties.Settings.Default.InfoGraphicExtraRegionNames,
-                Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage);
-        }
+                Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage,
+                Properties.Settings.Default.InfoGraphicCreatureOutlineColor,
+                Properties.Settings.Default.InfoGraphicBackgroundImagePath,
+                Properties.Settings.Default.InfoGraphicCreatureOutlineWidth,
+                Properties.Settings.Default.InfoGraphicCreatureOutlineBlurring,
+                Properties.Settings.Default.InfoGraphicCreatureScaling
+                );
 
         /// <summary>
         /// Gets user set font. If not font is set, Arial is set.
@@ -52,71 +71,100 @@ namespace ARKBreedingStats.library
         /// Creates an image with infos about the creature.
         /// </summary>
         /// <param name="cc">CreatureCollection for server settings.</param>
-        public static Bitmap InfoGraphic(this Creature creature, CreatureCollection cc,
-            int infoGraphicHeight, string fontName, Color foreColor, Color backColor, Color borderColor,
+        public static async Task<Bitmap> InfoGraphicAsync(this Creature creature, CreatureCollection cc,
+            int infoGraphicHeight, string fontName, Color foreColor, Color backColor, Color borderColor, int borderWidth, float borderRadius, int paddingX, int paddingY, Color colorOutlineText, float widthOutlineText,
             bool displayCreatureName, bool displayWithDomLevels, bool displaySumWildMutLevels, bool displayMutations, bool displayGenerations, bool displayStatValues, bool displayMaxWildLevel,
-            bool displayExtraRegionNames, bool displayRegionNamesIfNoImage)
+            bool displayExtraRegionNames, bool displayRegionNamesIfNoImage, Color colorOutlineCreature, string backgroundImagePath = null, int widthOutlineCreature = 0, float creatureOutlineBlurring = 1, float creatureScaling = 1)
         {
             if (creature?.Species == null) return null;
             var secondaryCulture = Loc.UseSecondaryCulture;
             var maxGraphLevel = cc?.maxChartLevel ?? 0;
             if (maxGraphLevel < 1) maxGraphLevel = 50;
 
-            var height = infoGraphicHeight < 5 ? 180 : infoGraphicHeight; // 180
-            var width = height * 12 / 6; // 330
+            var borderAndPaddingX = borderWidth + paddingX;
+            var borderAndPaddingY = borderWidth + paddingY;
+            var heightBox = infoGraphicHeight < 5 ? 180 : infoGraphicHeight; // 180
+            var contentHeight = heightBox - 2 * borderAndPaddingY;
+            var contentWidth = contentHeight * 2;
+            var widthBox = contentWidth + 2 * borderAndPaddingX + 8; // 360
             if (displayExtraRegionNames)
-                width += height / 2;
+                widthBox += contentHeight / 2;
 
-            var fontSize = Math.Max(5, height / 18); // 10
-            var fontSizeSmall = Math.Max(5, height * 2 / 45); // 8
-            var fontSizeHeader = Math.Max(5, height / 15); // 12
-            var frameThickness = Math.Max(1, height / 180);
+            var fontSize = Math.Max(5, contentHeight / 18); // 10
+            var fontSizeSmall = Math.Max(5, contentHeight * 2 / 45); // 8
+            var fontSizeHeader = Math.Max(5, contentHeight / 15); // 12
 
-            var statLineHeight = height * 5 / 59; // 15
+            var statLineHeight = contentHeight * 5 / 59; // 15
 
-            var bmp = new Bitmap(width, height);
+            var widthImage = widthBox;
+            var heightImage = heightBox;
+            var yOffsetBox = 0;
+            if (creatureScaling > 1)
+            {
+                widthImage = (int)(widthImage * 0.5 * (1 + creatureScaling));
+                var enlargedBy = widthImage - widthBox;
+                heightImage += enlargedBy;
+                yOffsetBox = (int)(0.8 * enlargedBy);
+            }
+
+            var bmp = new Bitmap(widthImage, heightImage);
             using (var g = Graphics.FromImage(bmp))
             using (var font = new Font(fontName, fontSize))
             using (var fontSmall = new Font(fontName, fontSizeSmall))
             using (var fontHeader = new Font(fontName, fontSizeHeader, FontStyle.Bold))
             using (var fontBrush = new SolidBrush(foreColor))
+            using (var penOutline = new Pen(colorOutlineText, widthOutlineText * 2 + 1) { LineJoin = LineJoin.Round })
             using (var borderAroundColors = new Pen(Utils.ForeColor(backColor), 1))
             using (var stringFormatRight = new StringFormat { Alignment = StringAlignment.Far })
-            using (var stringFormatRightUp = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Far })
+            using (var stringFormatRightUp = new StringFormat
+            { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Far })
             {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = TextRenderingHint.AntiAlias;
-                var currentYPosition = frameThickness * 3;
 
+                if (backColor.A != 255)
+                    DrawBackgroundImage(g, backgroundImagePath, 0, yOffsetBox, widthBox, heightBox);
+
+                var currentYPosition = borderAndPaddingY + yOffsetBox;
                 using (var backgroundBrush = new SolidBrush(backColor))
-                    g.FillRectangle(backgroundBrush, 0, 0, width, height);
+                    g.FillRectangle(backgroundBrush, 0, yOffsetBox, widthBox, heightBox);
 
-                var headerText = creature.Species.DescriptiveNameAndMod + (displayCreatureName ? $" - {creature.name}" : string.Empty);
+                var headerText = creature.Species.DescriptiveNameAndMod +
+                                 (displayCreatureName ? $" - {creature.name}" : string.Empty);
 
-                var fontSizeHeaderCalculated = CalculateFontSize(g, headerText, fontHeader, width);
+                var fontSizeHeaderCalculated = CalculateFontSize(g, headerText, fontHeader, contentWidth);
+
+                // offset considering the rounded border
+                var xRadius = Math.Max(0, Math.Min(widthBox / 2f, borderRadius));
+                var yRadius = Math.Max(0, Math.Min(heightBox / 2f, borderRadius));
+                var xOffset = borderAndPaddingX + OffsetArc(xRadius, yRadius, currentYPosition - yOffsetBox);
+
                 if (fontSizeHeaderCalculated < fontSizeHeader)
                 {
                     using (var fontHeaderScaled = new Font(fontName, (int)fontSizeHeaderCalculated, FontStyle.Bold))
-                        g.DrawString(headerText, fontHeaderScaled, fontBrush, 3 * frameThickness, currentYPosition);
-
+                        DrawTextWithOutline(g, headerText, fontHeaderScaled, fontBrush, penOutline, xOffset, currentYPosition);
                 }
                 else
-                    g.DrawString(headerText, fontHeader, fontBrush, 3 * frameThickness, currentYPosition);
+                    DrawTextWithOutline(g, headerText, fontHeader, fontBrush, penOutline, xOffset, currentYPosition);
 
-                currentYPosition += height * 19 / 180; //19
+                currentYPosition += contentHeight * 19 / 180; //19
                 string creatureLevel;
                 if (displayWithDomLevels)
                     creatureLevel = $"{creature.Level}/{creature.LevelHatched + cc?.maxDomLevel ?? 0}";
                 else
                     creatureLevel = creature.LevelHatched.ToString();
 
-                var creatureInfos = $"{Loc.S("Level", secondaryCulture: secondaryCulture)} {creatureLevel} | {Utils.SexSymbol(creature.sex) + (creature.flags.HasFlag(CreatureFlags.Neutered) ? $" ({Loc.S(creature.sex == Sex.Female ? "Spayed" : "Neutered", secondaryCulture: secondaryCulture)})" : string.Empty)}";
+                var creatureInfos =
+                    $"{Loc.S("Level", secondaryCulture: secondaryCulture)} {creatureLevel} | {Utils.SexSymbol(creature.sex) + (creature.flags.HasFlag(CreatureFlags.Neutered) ? $" ({Loc.S(creature.sex == Sex.Female ? "Spayed" : "Neutered", secondaryCulture: secondaryCulture)})" : string.Empty)}";
                 if (displayMutations)
-                    creatureInfos += $" | {Loc.S("mutation counter", secondaryCulture: secondaryCulture)} {creature.Mutations}";
+                    creatureInfos +=
+                        $" | {Loc.S("mutation counter", secondaryCulture: secondaryCulture)} {creature.Mutations}";
                 if (displayGenerations)
-                    creatureInfos += $" | {Loc.S("generation", secondaryCulture: secondaryCulture)} {creature.generation}";
+                    creatureInfos +=
+                        $" | {Loc.S("generation", secondaryCulture: secondaryCulture)} {creature.generation}";
 
-                var availableWidth = width - 9 * frameThickness;
+                xOffset = borderAndPaddingX + OffsetArc(xRadius, yRadius, currentYPosition - yOffsetBox);
+                var availableWidth = widthBox - 2 * xOffset;
                 var textWidth = g.MeasureString(creatureInfos, font).Width;
                 Font resizedFont = null;
                 if (textWidth > availableWidth)
@@ -125,40 +173,66 @@ namespace ARKBreedingStats.library
                     resizedFont = new Font(font.FontFamily, adjustedSize);
                 }
 
-                g.DrawString(creatureInfos, resizedFont ?? font, fontBrush, 5 * frameThickness, currentYPosition);
+                DrawTextWithOutline(g, creatureInfos, resizedFont ?? font, fontBrush, penOutline, xOffset, currentYPosition);
                 resizedFont?.Dispose();
-                currentYPosition += height * 17 / 180; //17
+                currentYPosition += contentHeight * 17 / 180; //17
 
-                using (var p = new Pen(Color.FromArgb(50, foreColor), 1))
-                    g.DrawLine(p, 0, currentYPosition, width, currentYPosition);
-                currentYPosition += 2;
+                var lineWidth = Math.Max(1, heightBox / 180);
+                if (widthOutlineText > 0)
+                {
+                    using (var outlineBrush = new SolidBrush(colorOutlineText))
+                        g.FillRectangle(outlineBrush, 0, currentYPosition - lineWidth / 2 - widthOutlineText, widthBox, lineWidth + widthOutlineText * 2);
+                }
+                using (var p = new Pen(Color.FromArgb(50, foreColor), lineWidth))
+                    g.DrawLine(p, 0, currentYPosition - lineWidth / 2, widthBox, currentYPosition - lineWidth / 2);
+                currentYPosition += lineWidth;
 
                 // levels
                 var meanLetterWidth = fontSize * 7d / 10;
-                var xStatName = (int)meanLetterWidth;
-                var displayMutatedLevels = !displaySumWildMutLevels && creature.levelsMutated != null && cc?.Game == Ark.Asa;
+
+                var yBox = currentYPosition - yOffsetBox;
+                var yOfLastStat = yBox + (contentHeight / 9) + Enumerable.Range(0, Stats.StatsCount).Count(s => s != Stats.Torpidity && creature.Species.UsesStat(s)) * statLineHeight;
+                xOffset = borderAndPaddingX + Math.Max(OffsetArc(xRadius, yRadius, yBox), OffsetArc(xRadius, yRadius, heightBox - yOfLastStat));
+                var xStatName = xOffset;
+                var displayMutatedLevels =
+                    !displaySumWildMutLevels && creature.levelsMutated != null && cc?.Game == Ark.Asa;
                 // x position of level number. torpor is the largest level number.
-                var xRightLevelValue = (int)(xStatName + (6 + creature.levelsWild[Stats.Torpidity].ToString().Length) * meanLetterWidth);
-                var xRightLevelMutValue = xRightLevelValue + (!displayMutatedLevels ? 0 : (int)((creature.levelsMutated.Max().ToString().Length + 2) * meanLetterWidth));
-                var xRightLevelDomValue = xRightLevelMutValue + (!displayWithDomLevels ? 0 : (int)((creature.levelsDom.Max().ToString().Length + 1) * meanLetterWidth));
-                var xRightBrValue = (int)(xRightLevelDomValue + (2 + MaxCharLength(creature.valuesBreeding)) * meanLetterWidth);
+                var xRightLevelValue = (int)(xStatName +
+                                             (6 + creature.levelsWild[Stats.Torpidity].ToString().Length) *
+                                             meanLetterWidth);
+                var xRightLevelMutValue = xRightLevelValue + (!displayMutatedLevels
+                    ? 0
+                    : (int)((creature.levelsMutated.Max().ToString().Length + 2) * meanLetterWidth));
+                var xRightLevelDomValue = xRightLevelMutValue + (!displayWithDomLevels
+                    ? 0
+                    : (int)((creature.levelsDom.Max().ToString().Length + 1) * meanLetterWidth));
+                var xRightBrValue =
+                    (int)(xRightLevelDomValue + (2 + MaxCharLength(creature.valuesBreeding)) * meanLetterWidth);
                 var maxBoxLength = xRightBrValue - xStatName;
-                var statBoxHeight = Math.Max(2, height / 90);
-                g.DrawString(Loc.S("W", secondaryCulture: secondaryCulture) + (displaySumWildMutLevels ? "+" + Loc.S("M", secondaryCulture: secondaryCulture) : string.Empty)
-                    , font, fontBrush, xRightLevelValue - (displayMutatedLevels || displayWithDomLevels ? (int)meanLetterWidth : 0), currentYPosition, stringFormatRight);
+                var statBoxHeight = Math.Max(2, contentHeight / 90);
+                DrawTextWithOutline(g, Loc.S("W", secondaryCulture: secondaryCulture) + (displaySumWildMutLevels
+                        ? "+" + Loc.S("M", secondaryCulture: secondaryCulture)
+                        : string.Empty)
+                    , font, fontBrush, penOutline,
+                    xRightLevelValue - (displayMutatedLevels || displayWithDomLevels ? (int)meanLetterWidth : 0),
+                    currentYPosition, stringFormatRight);
                 if (displayMutatedLevels)
-                    g.DrawString(Loc.S("M", secondaryCulture: secondaryCulture), font, fontBrush, xRightLevelMutValue - (displayWithDomLevels ? (int)meanLetterWidth : 0), currentYPosition, stringFormatRight);
+                    DrawTextWithOutline(g, Loc.S("M", secondaryCulture: secondaryCulture), font, fontBrush, penOutline,
+                        xRightLevelMutValue - (displayWithDomLevels ? (int)meanLetterWidth : 0), currentYPosition,
+                        stringFormatRight);
                 if (displayWithDomLevels)
-                    g.DrawString(Loc.S("D", secondaryCulture: secondaryCulture), font, fontBrush, xRightLevelDomValue, currentYPosition, stringFormatRight);
+                    DrawTextWithOutline(g, Loc.S("D", secondaryCulture: secondaryCulture), font, fontBrush, penOutline, xRightLevelDomValue,
+                        currentYPosition, stringFormatRight);
                 if (displayStatValues)
-                    g.DrawString(Loc.S("Values", secondaryCulture: secondaryCulture), font, fontBrush, xRightBrValue, currentYPosition, stringFormatRight);
+                    DrawTextWithOutline(g, Loc.S("Values", secondaryCulture: secondaryCulture), font, fontBrush, penOutline, xRightBrValue,
+                        currentYPosition, stringFormatRight);
                 var statDisplayIndex = 0;
                 foreach (var si in Stats.DisplayOrder)
                 {
                     if (si == Stats.Torpidity || !creature.Species.UsesStat(si))
                         continue;
 
-                    var y = currentYPosition + (height / 9) + (statDisplayIndex++) * statLineHeight;
+                    var y = currentYPosition + (contentHeight / 9) + (statDisplayIndex++) * statLineHeight;
 
                     // box
                     // empty box to show the max possible length
@@ -174,30 +248,38 @@ namespace ARKBreedingStats.library
                     using (var b = new SolidBrush(Color.FromArgb(10, statColor)))
                     {
                         for (var r = 4; r > 0; r--)
-                            g.FillRectangle(b, xStatName - r, y + statLineHeight - 2 - r, statBoxLength + 2 * r, statBoxHeight + 2 * r);
+                            g.FillRectangle(b, xStatName - r, y + statLineHeight - 2 - r, statBoxLength + 2 * r,
+                                statBoxHeight + 2 * r);
                     }
+
                     using (var p = new Pen(Utils.GetColorFromPercent(levelPercentageOfMax, -0.5), 1))
                         g.DrawRectangle(p, xStatName, y + statLineHeight - 1, statBoxLength, statBoxHeight);
 
                     // stat name
-                    g.DrawString($"{Utils.StatName(si, true, creature.Species.statNames, secondaryCulture)}",
-                        font, fontBrush, xStatName, y);
+                    DrawTextWithOutline(g, $"{Utils.StatName(si, true, creature.Species.statNames, secondaryCulture)}",
+                        font, fontBrush, penOutline, xStatName, y);
                     // stat level number
-                    var displayedLevel = creature.levelsWild[si] + (displaySumWildMutLevels && creature.levelsMutated != null && creature.levelsMutated[si] > 0 ? creature.levelsMutated[si] : 0);
-                    g.DrawString($"{(creature.levelsWild[si] < 0 ? "?" : displayedLevel.ToString())}{(displayMutatedLevels || displayWithDomLevels ? " |" : string.Empty)}",
-                        font, fontBrush, xRightLevelValue, y, stringFormatRight);
+                    var displayedLevel = creature.levelsWild[si] +
+                                         (displaySumWildMutLevels && creature.levelsMutated != null &&
+                                          creature.levelsMutated[si] > 0
+                                             ? creature.levelsMutated[si]
+                                             : 0);
+                    DrawTextWithOutline(g,
+                        $"{(creature.levelsWild[si] < 0 ? "?" : displayedLevel.ToString())}{(displayMutatedLevels || displayWithDomLevels ? " |" : string.Empty)}",
+                        font, fontBrush, penOutline, xRightLevelValue, y, stringFormatRight);
                     if (displayMutatedLevels)
-                        g.DrawString($"{(creature.levelsMutated[si] < 0 ? string.Empty : creature.levelsMutated[si].ToString())}{(displayWithDomLevels ? " |" : string.Empty)}",
-                            font, fontBrush, xRightLevelMutValue, y, stringFormatRight);
+                        DrawTextWithOutline(g,
+                            $"{(creature.levelsMutated[si] < 0 ? string.Empty : creature.levelsMutated[si].ToString())}{(displayWithDomLevels ? " |" : string.Empty)}",
+                            font, fontBrush, penOutline, xRightLevelMutValue, y, stringFormatRight);
                     // dom level number
                     if (displayWithDomLevels)
-                        g.DrawString($"{creature.levelsDom[si]}",
-                            font, fontBrush, xRightLevelDomValue, y, stringFormatRight);
+                        DrawTextWithOutline(g, $"{creature.levelsDom[si]}",
+                            font, fontBrush, penOutline, xRightLevelDomValue, y, stringFormatRight);
                     // stat breeding value
                     if (displayStatValues && creature.valuesBreeding != null)
                     {
                         var displayedValue =
-                            displayWithDomLevels ? creature.valuesDom[si] : creature.valuesBreeding[si];
+                            displayWithDomLevels ? creature.valuesCurrent[si] : creature.valuesBreeding[si];
                         string statValueRepresentation;
                         if (displayedValue < 0)
                         {
@@ -208,82 +290,218 @@ namespace ARKBreedingStats.library
                             if (Stats.IsPercentage(si))
                             {
                                 statValueRepresentation = (100 * displayedValue).ToString("0.0");
-                                g.DrawString("%", font, fontBrush, xRightBrValue, y);
+                                DrawTextWithOutline(g, "%", font, fontBrush, penOutline, xRightBrValue, y);
                             }
                             else
                                 statValueRepresentation = displayedValue.ToString("0.0");
                         }
 
-                        g.DrawString(statValueRepresentation, font, fontBrush, xRightBrValue, y, stringFormatRight);
+                        DrawTextWithOutline(g, statValueRepresentation, font, fontBrush, penOutline, xRightBrValue, y, stringFormatRight);
                     }
                 }
 
                 // colors
                 var xColor = (int)(xRightBrValue + meanLetterWidth * 3.5);
-                var circleDiameter = height * 4 / 45;
+                var circleDiameter = contentHeight * 4 / 45;
                 var colorRowHeight = circleDiameter + 2;
 
-                var creatureImageShown = false;
                 var extraMarginBottom = displayMaxWildLevel ? fontSizeSmall : 0;
-                var imageSize = (int)Math.Min(width - xColor - circleDiameter - 8 * meanLetterWidth - frameThickness * 4,
-                                              height - currentYPosition - frameThickness * 4 - extraMarginBottom);
-                if (imageSize > 5)
-                {
-                    using (var crBmp =
-                        CreatureColored.GetColoredCreature(creature.colors, creature.Species, creature.Species.EnabledColorRegions,
-                            imageSize, onlyImage: true, creatureSex: creature.sex, game: cc.Game))
-                    {
-                        if (crBmp != null)
-                        {
-                            g.DrawImage(crBmp, width - imageSize - frameThickness * 4,
-                                height - imageSize - frameThickness * 4 - extraMarginBottom, imageSize, imageSize);
-                            creatureImageShown = true;
-                        }
-                    }
-                }
 
-                var maxColorNameLength = (int)((width - xColor - circleDiameter - (creatureImageShown ? imageSize : 0)) * 1.5 / meanLetterWidth); // max char length for the color region name
+                var (bmpCreature, bmpCreatureOutline, rectCreature, rectCreatureOutline, imageSizeInBox) =
+                    await GetImage(widthImage, heightImage, widthBox,
+                        (int)(xColor + borderAndPaddingX + circleDiameter + 8 * meanLetterWidth),
+                        currentYPosition + borderAndPaddingY + extraMarginBottom - heightImage + heightBox,
+                        borderAndPaddingX, borderAndPaddingY, creatureScaling, creature, cc.Game, widthOutlineCreature, creatureOutlineBlurring, colorOutlineCreature);
+
+                var creatureImageShown = bmpCreature != null;
+                var maxColorNameLength =
+                    (int)((widthBox - 2 * borderWidth - xColor - circleDiameter - (creatureImageShown ? imageSizeInBox : 0)) * 1.5 /
+                          meanLetterWidth); // max char length for the color region name
                 if (maxColorNameLength < 0) maxColorNameLength = 0;
 
                 if (creature.colors != null)
                 {
-                    g.DrawString(Loc.S("Colors", secondaryCulture: secondaryCulture), font, fontBrush, xColor, currentYPosition);
-                    DrawColors(creature.Species, creature.colors, displayExtraRegionNames, displayRegionNamesIfNoImage, currentYPosition, height, colorRowHeight,
-                        g, xColor, circleDiameter, borderAroundColors, creatureImageShown, maxColorNameLength, fontSmall, fontBrush);
+                    DrawTextWithOutline(g, Loc.S("Colors", secondaryCulture: secondaryCulture), font, fontBrush, penOutline, xColor, currentYPosition);
+                    DrawColors(creature.Species, creature.colors, displayExtraRegionNames, displayRegionNamesIfNoImage,
+                        currentYPosition, contentHeight, colorRowHeight,
+                        g, xColor, circleDiameter, borderAroundColors, creatureImageShown, maxColorNameLength,
+                        fontSmall, fontBrush, penOutline);
                 }
 
                 // mutagen
                 if (creature.flags.HasFlag(CreatureFlags.MutagenApplied))
-                    g.DrawString("Mutagen applied",
-                        fontSmall, fontBrush, xColor, height - fontSizeSmall - 5 * frameThickness);
+                    DrawTextWithOutline(g, "Mutagen applied",
+                        fontSmall, fontBrush, penOutline, xColor, heightBox - fontSizeSmall - borderAndPaddingY);
 
                 // imprinting
                 if (displayWithDomLevels)
                 {
                     if (creature.isBred || creature.imprintingBonus > 0)
-                        g.DrawString($"Imp: {creature.imprintingBonus * 100:0.0} %", font, fontBrush, xColor + (int)((Loc.S("Colors", secondaryCulture: secondaryCulture).Length + 3) * meanLetterWidth), currentYPosition);
+                        DrawTextWithOutline(g, $"Imp: {creature.imprintingBonus * 100:0.0} %", font, fontBrush, penOutline,
+                            xColor + (int)((Loc.S("Colors", secondaryCulture: secondaryCulture).Length + 3) *
+                                           meanLetterWidth), currentYPosition);
                     else if (creature.tamingEff >= 0)
-                        g.DrawString($"TE: {creature.tamingEff * 100:0.0} %", font, fontBrush, xColor + (int)((Loc.S("Colors", secondaryCulture: secondaryCulture).Length + 3) * meanLetterWidth), currentYPosition);
+                        DrawTextWithOutline(g, $"TE: {creature.tamingEff * 100:0.0} %", font, fontBrush, penOutline,
+                            xColor + (int)((Loc.S("Colors", secondaryCulture: secondaryCulture).Length + 3) *
+                                           meanLetterWidth), currentYPosition);
                 }
 
                 // max wild level on server
                 if (cc != null && displayMaxWildLevel)
                 {
-                    g.DrawString($"{Loc.S("max wild level", secondaryCulture: secondaryCulture)}: {cc.maxWildLevel}",
-                        fontSmall, fontBrush, width - 2 * frameThickness, height - frameThickness, stringFormatRightUp);
+                    DrawTextWithOutline(g, $"{Loc.S("max wild level", secondaryCulture: secondaryCulture)}: {cc.maxWildLevel}",
+                        fontSmall, fontBrush, penOutline, widthBox - borderAndPaddingX, heightBox - borderAndPaddingY, stringFormatRightUp);
                 }
 
-                // frame
-                using (var p = new Pen(borderColor, frameThickness))
-                    g.DrawRectangle(p, 0, 0, width - frameThickness, height - frameThickness);
+                var drawBorder = borderWidth > 0 || borderRadius > 0;
+                if (creatureScaling > 1)
+                {
+                    if (drawBorder)
+                        DrawBorder(borderColor, borderWidth, borderRadius, widthBox, heightBox, g, yOffsetBox, widthImage, heightImage);
+                    DrawCreature(g, bmpCreature, rectCreature, bmpCreatureOutline, rectCreatureOutline);
+                }
+                else
+                {
+                    DrawCreature(g, bmpCreature, rectCreature, bmpCreatureOutline, rectCreatureOutline);
+                    if (drawBorder)
+                        DrawBorder(borderColor, borderWidth, borderRadius, widthBox, heightBox, g, yOffsetBox, widthImage, heightImage);
+                }
+
+                bmpCreature?.Dispose();
+                bmpCreatureOutline?.Dispose();
+            }
+            if (creatureScaling > 1)
+                bmp = ImageTools.TrimTransparency(bmp);
+            return bmp;
+        }
+
+        private static void DrawCreature(Graphics g, Bitmap bmpCreature, Rectangle rectCreature, Bitmap bmpCreatureOutline,
+            Rectangle rectCreatureOutline)
+        {
+            if (bmpCreature == null) return;
+            if (bmpCreatureOutline != null)
+                g.DrawImage(bmpCreatureOutline, rectCreatureOutline);
+            g.DrawImage(bmpCreature, rectCreature);
+        }
+
+        /// <summary>
+        /// Draws a border. Clears the content outside the border.
+        /// </summary>
+        private static void DrawBorder(Color borderColor, int borderWidth, float borderRadius, int widthBox, int heightBox,
+            Graphics g, int yOffset, int widthImage, int heightImage)
+        {
+            var bxy = borderWidth / 2f;
+            var bWidth = widthBox - borderWidth;
+            var bHeight = heightBox - borderWidth;
+            if (borderRadius == 0)
+            {
+                g.SmoothingMode = SmoothingMode.None;
+                using (var p = new Pen(borderColor, borderWidth))
+                    g.DrawRectangle(p, bxy, bxy + yOffset, bWidth, bHeight);
+            }
+            else
+            {
+                using (var pRoundedRectangle = PathRoundedRectangle(bxy, bxy + yOffset, bWidth - 1, bHeight - 1, borderRadius))
+                using (var pRoundedRectangleInverted = new GraphicsPath())
+                {
+                    pRoundedRectangleInverted.AddRectangle(new RectangleF(0, 0, widthImage, heightImage));
+                    pRoundedRectangleInverted.AddPath(pRoundedRectangle, false);
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.CompositingMode = CompositingMode.SourceCopy;
+                    g.FillPath(Brushes.Transparent, pRoundedRectangleInverted);
+                    g.CompositingMode = CompositingMode.SourceOver;
+                    if (borderWidth > 0)
+                        using (var p = new Pen(borderColor, borderWidth))
+                            g.DrawPath(p, pRoundedRectangle);
+                }
+            }
+        }
+
+        private static void DrawTextWithOutline(Graphics g, string text, Font font, Brush fontBrush, Pen outlinePen, int x, int y, StringFormat stringFormat = null)
+        {
+            if (stringFormat == null)
+                stringFormat = StringFormat.GenericDefault;
+            if (outlinePen.Width > 1)
+                using (var path = new GraphicsPath())
+                {
+                    path.AddString(text, font.FontFamily, (int)font.Style, g.DpiY * font.Size / 72, new PointF(x - .5f, y - .5f), stringFormat);
+                    // outline
+                    g.DrawPath(outlinePen, path);
+                }
+            g.DrawString(text, font, fontBrush, x, y, stringFormat);
+        }
+
+        /// <summary>
+        /// Get Bitmap of creature (this has to be disposed after use) and Bitmap of creature outline (do not dispose) and the according drawing rectangles.
+        /// </summary>
+        private static async Task<(Bitmap bmpCreature, Bitmap bmpCreatureOutline, Rectangle rectCreature, Rectangle rectCreatureOutline, int imageSizeInBox)>
+            GetImage(int widthImage, int heightImage, int widthBox, int widthOfNonImage, int heightOfNonImage, int borderAndPaddingX, int borderAndPaddingY, float creatureScaling, Creature creature, string game,
+            int widthOutlineCreature, float creatureOutlineBlurring, Color colorOutlineCreature)
+        {
+            Rectangle rectCreature = Rectangle.Empty;
+            Rectangle rectCreatureOutline = Rectangle.Empty;
+            var imageSizeInBox = 0;
+            var imageSize = Math.Min(
+                    widthImage - widthOfNonImage,
+                    heightImage - heightOfNonImage);
+            if (imageSize <= 5) return (null, null, rectCreature, rectCreatureOutline, imageSizeInBox);
+
+            var bmpCreature = (await CreatureColored.GetColoredCreatureAsync(creature.colors, creature.Species, creature.Species.EnabledColorRegions,
+                imageSize, onlyImage: true, creatureSex: creature.sex, game: game).ConfigureAwait(false)).Bmp;
+
+            if (bmpCreature == null) return (null, null, rectCreature, rectCreatureOutline, imageSizeInBox);
+
+            var moveImageDown = creatureScaling > 1 ? (int)(Math.Min(1, creatureScaling - 1) * borderAndPaddingY) : 0;
+            imageSizeInBox = imageSize - widthImage + widthBox;
+            Bitmap bmpCreatureOutline = null;
+            const int blurRadius = 1; // seems to result in good enough smoothing of the outline brush
+
+            if (widthOutlineCreature > 0 && colorOutlineCreature.A != 0)
+            {
+                bmpCreatureOutline = ImageTools.BlurImageAlpha(
+                        ImageTools.OutlineOpacities(bmpCreature, colorOutlineCreature, widthOutlineCreature, creatureOutlineBlurring), blurRadius);
+
+                var outlinePadding = widthOutlineCreature + blurRadius;
+                rectCreatureOutline = new Rectangle(
+                    widthImage - imageSize - borderAndPaddingX - outlinePadding,
+                    heightImage - imageSize - borderAndPaddingY - outlinePadding + moveImageDown,
+                    imageSize + 2 * outlinePadding, imageSize + 2 * outlinePadding);
             }
 
-            return bmp;
+            rectCreature = new Rectangle(widthImage - imageSize - borderAndPaddingX,
+                heightImage - imageSize - borderAndPaddingY + moveImageDown, imageSize, imageSize);
+
+            return (bmpCreature, bmpCreatureOutline, rectCreature, rectCreatureOutline, imageSizeInBox);
+        }
+
+        private static void DrawBackgroundImage(Graphics g, string imagePath, int x, int y, int width, int height)
+        {
+            if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath)) return;
+            try
+            {
+                using (var bgImg = new Bitmap(imagePath))
+                {
+                    var widthRatio = (float)width / bgImg.Width;
+                    var heightRatio = (float)height / bgImg.Height;
+                    var scaleFactor = Math.Max(widthRatio, heightRatio);
+                    var widthScaled = (int)Math.Round(bgImg.Width * scaleFactor);
+                    var heightScaled = (int)Math.Round(bgImg.Height * scaleFactor);
+                    var xSource = widthScaled > width ? (int)((widthScaled - width) / (2 * scaleFactor)) : 0;
+                    var ySource = heightScaled > height ? (int)((heightScaled - height) / (2 * scaleFactor)) : 0;
+                    var widthSourceArea = (int)Math.Round(width / scaleFactor);
+                    var heightSourceArea = (int)Math.Round(height / scaleFactor);
+                    g.DrawImage(bgImg, new Rectangle(x, y, width, height), new Rectangle(xSource, ySource, widthSourceArea, heightSourceArea), GraphicsUnit.Pixel);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, "Error when trying to draw the background image of the infographic with the path\n" + imagePath);
+            }
         }
 
         private static void DrawColors(Species species, byte[] creatureColors, bool displayExtraRegionNames, bool displayRegionNamesIfNoImage,
             int currentYPosition, int height, int colorRowHeight, Graphics g, int xColor, int circleDiameter,
-            Pen borderAroundColors, bool creatureImageShown, int maxColorNameLength, Font fontSmall, SolidBrush fontBrush)
+            Pen borderAroundColors, bool creatureImageShown, int maxColorNameLength, Font fontSmall, SolidBrush fontBrush, Pen penOutline)
         {
             var colorRow = 0;
             for (var ci = 0; ci < Ark.ColorRegionCount; ci++)
@@ -324,8 +542,8 @@ namespace ARKBreedingStats.library
                     }
                 }
 
-                g.DrawString($"[{ci}] {creatureColors[ci]}{colorRegionName}",
-                    fontSmall, fontBrush, xColor + circleDiameter + 4, y);
+                DrawTextWithOutline(g, $"[{ci}] {creatureColors[ci]}{colorRegionName}",
+                    fontSmall, fontBrush, penOutline, xColor + circleDiameter + 4, y);
             }
         }
 
@@ -359,15 +577,10 @@ namespace ARKBreedingStats.library
         /// </summary>
         /// <param name="creature"></param>
         /// <param name="cc">CreatureCollection for server settings.</param>
-        public static void ExportInfoGraphicToClipboard(this Creature creature, CreatureCollection cc)
+        public static async Task ExportInfoGraphicToClipboard(this Creature creature, CreatureCollection cc)
         {
             if (creature == null) return;
-
-            using (var bmp = creature.InfoGraphic(cc))
-            {
-                if (bmp != null)
-                    Clipboard.SetImage(bmp);
-            }
+            ClipboardHandler.SetImageWithAlphaToClipboard(await creature.InfoGraphicAsync(cc).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -380,6 +593,8 @@ namespace ARKBreedingStats.library
                 GetUserFont(),
                 Properties.Settings.Default.InfoGraphicForeColor,
                 Properties.Settings.Default.InfoGraphicBackColor,
+                Properties.Settings.Default.InfoGraphicTextOutlineColor,
+                Properties.Settings.Default.InfoGraphicTextOutlineWidth,
                 Properties.Settings.Default.InfoGraphicExtraRegionNames,
                 Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage);
         }
@@ -388,7 +603,7 @@ namespace ARKBreedingStats.library
         /// Returns the coloredCreature Image with additional info about the colors.
         /// </summary>
         private static Image CreateImageWithColors(Image coloredCreature, byte[] creatureColors, Species species,
-            int infoGraphicHeight, string fontName, Color foreColor, Color backColor,
+            int infoGraphicHeight, string fontName, Color foreColor, Color backColor, Color outlineColor, float outlineWidth,
             bool displayExtraRegionNames, bool displayRegionNamesIfNoImage)
         {
             const int margin = 10;
@@ -404,24 +619,81 @@ namespace ARKBreedingStats.library
             var maxColorNameLength = (int)((widthForColors - circleDiameter) * 1.5 / meanLetterWidth); // max char length for the color region name
             if (maxColorNameLength < 0) maxColorNameLength = 0;
 
-            var bmp = new Bitmap(width, height);
+            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             using (var g = Graphics.FromImage(bmp))
             using (var font = new Font(fontName, fontSize))
             using (var fontBrush = new SolidBrush(foreColor))
             using (var borderAroundColors = new Pen(Utils.ForeColor(backColor), 1))
+            using (var penOutline = new Pen(outlineColor, outlineWidth * 2 + 1))
             {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
-                g.DrawString(species.DescriptiveNameAndMod, font, fontBrush, margin, margin);
+                DrawTextWithOutline(g, species.DescriptiveNameAndMod, font, fontBrush, penOutline, margin, margin);
 
-                g.DrawImage(coloredCreature, 0, 0);
+                g.DrawImage(coloredCreature, margin, margin + fontSize);
                 DrawColors(species, creatureColors, displayExtraRegionNames, displayRegionNamesIfNoImage, fontSize,
                     heightWithoutHeader, (heightWithoutHeader - 4 * margin) / Ark.ColorRegionCount, g, coloredCreature.Width + margin,
-                    circleDiameter, borderAroundColors, true, maxColorNameLength, font, fontBrush);
+                    circleDiameter, borderAroundColors, true, maxColorNameLength, font, fontBrush, penOutline);
+                if (infoGraphicHeight != height)
+                {
+                    var scaleFactor = (float)infoGraphicHeight / height;
+                    var scaledHeight = (int)(scaleFactor * height);
+                    var scaledWidth = (int)(scaleFactor * width);
+
+                    var bmpScaled = new Bitmap(scaledWidth, scaledHeight);
+                    using (var gs = Graphics.FromImage(bmpScaled))
+                    {
+                        gs.CompositingMode = CompositingMode.SourceCopy;
+                        gs.CompositingQuality = CompositingQuality.HighQuality;
+                        gs.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        gs.SmoothingMode = SmoothingMode.HighQuality;
+                        gs.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        gs.DrawImage(bmp, 0, 0, scaledWidth, scaledHeight);
+                    }
+                    bmp.Dispose();
+                    bmp = bmpScaled;
+                }
             }
 
             return bmp;
+        }
+
+        /// <summary>
+        /// Returns a path around a rounded rectangle. Dispose after use.
+        /// </summary>
+        private static GraphicsPath PathRoundedRectangle(float x, float y, float width, float height, float radius)
+        {
+            var path = new GraphicsPath();
+
+            var diameterX = Math.Min(width, radius * 2);
+            var diameterY = Math.Min(height, radius * 2);
+            var arc = new RectangleF(x, y, diameterX, diameterY);
+
+            path.AddArc(arc, 180, 90); // top left
+
+            arc.X = x + width - diameterX;
+            path.AddArc(arc, 270, 90); // top right
+
+            arc.Y = y + height - diameterY;
+            path.AddArc(arc, 0, 90); // bottom right
+
+            arc.X = x;
+            path.AddArc(arc, 90, 90); // bottom left
+
+            path.CloseFigure();
+            return path;
+        }
+
+        /// <summary>
+        /// Returns the x coordinate from the left of an arc defined by the xRadius and yRadius.
+        /// </summary>
+        private static int OffsetArc(float xRadius, float yRadius, int y)
+        {
+            if (yRadius <= 0 || y >= yRadius) return 0;
+            if (y < 0) return (int)yRadius;
+            var yMirrored = yRadius - y;
+            return (int)Math.Round(xRadius - Math.Sqrt(xRadius * xRadius * (1 - yMirrored * yMirrored / (yRadius * yRadius))));
         }
     }
 }

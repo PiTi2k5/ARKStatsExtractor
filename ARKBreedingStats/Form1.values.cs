@@ -36,7 +36,7 @@ namespace ARKBreedingStats
 
             if (modFilesLoaded)
             {
-                speciesSelector1.SetSpeciesLists(Values.V.species, Values.V.aliases, _creatureCollection.Game);
+                speciesSelector1.SetSpeciesLists(Values.V.Species, Values.V.aliases);
                 if (applySettings)
                     ApplySettingsToValues();
             }
@@ -53,7 +53,8 @@ namespace ARKBreedingStats
         /// </summary>
         private static void CheckForMissingModFiles(CreatureCollection creatureCollection, List<string> unknownSpeciesBlueprints, string exportFilePath = null, string creatureName = null)
         {
-            var (locallyAvailableModFiles, onlineAvailableModFiles, unavailableModFiles, alreadyLoadedModFilesWithoutNeededClass) = HandleUnknownMods.CheckForMissingModFiles(unknownSpeciesBlueprints, creatureCollection.ModList);
+            var (locallyAvailableModFiles, onlineAvailableModFiles, unavailableModFiles, alreadyLoadedModFilesWithoutNeededClass)
+                = HandleUnknownMods.CheckForMissingModFiles(unknownSpeciesBlueprints, creatureCollection.ModList, creatureCollection.Game);
 
             bool locallyAvailableModsExist = locallyAvailableModFiles != null && locallyAvailableModFiles.Any();
             bool onlineAvailableModsExist = onlineAvailableModFiles != null && onlineAvailableModFiles.Any();
@@ -153,7 +154,7 @@ namespace ARKBreedingStats
                 {
                     modsManifest = await ModsManifest.TryLoadModManifestFile(forceUpdate);
                     // assume all officially supported mods are online available
-                    foreach (var m in modsManifest.modsByFiles) m.Value.OnlineAvailable = true;
+                    foreach (var m in modsManifest.ModsByFiles) m.Value.OnlineAvailable = true;
                 }
                 catch (FileNotFoundException ex)
                 {
@@ -167,8 +168,9 @@ namespace ARKBreedingStats
                     return false;
                 }
 
-                // load custom manifest file for manually created mod value files
-                if (ModsManifest.TryLoadCustomModManifestFile(out var customModsManifest))
+                // load manually created mod value files
+                if (ModsManifest.LoadManualValueFiles(modsManifest, out var customModsManifest)
+                    && customModsManifest?.ModsByFiles.Any() == true)
                 {
                     modsManifest = ModsManifest.MergeModsManifest(modsManifest, customModsManifest);
                 }
@@ -208,7 +210,7 @@ namespace ARKBreedingStats
                         "ARK Smart Breeding will not work properly without that file.\n\n" +
                         "Do you want to visit the releases page to redownload it?",
                         $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
-                    System.Diagnostics.Process.Start(Updater.Updater.ReleasesUrl);
+                    Utils.OpenUri(Updater.Updater.ReleasesUrl);
             }
             catch (FileNotFoundException)
             {
@@ -216,7 +218,7 @@ namespace ARKBreedingStats
                         "ARK Smart Breeding will not work properly without that file.\n\n" +
                         "Do you want to visit the releases page to redownload it?",
                         $"{Loc.S("error")} - {Utils.ApplicationNameVersion}", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
-                    System.Diagnostics.Process.Start(Updater.Updater.ReleasesUrl);
+                    Utils.OpenUri(Updater.Updater.ReleasesUrl);
             }
             catch (FormatException ex)
             {

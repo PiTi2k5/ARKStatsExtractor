@@ -3,14 +3,18 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ARKBreedingStats.Library;
+using ARKBreedingStats.library;
 using ARKBreedingStats.utils;
+using System.ComponentModel;
 
 namespace ARKBreedingStats.uiControls
 {
     public partial class RegionColorChooser : UserControl
     {
-        public event Action RegionColorChosen;
+        /// <summary>
+        /// Parameter indicates if colors were changed.
+        /// </summary>
+        public event Action<bool> RegionColorChosen;
         private readonly NoPaddingButton[] _buttonColors;
         private byte[] _selectedRegionColorIds;
         private byte[] _selectedColorIdsAlternative;
@@ -18,6 +22,7 @@ namespace ARKBreedingStats.uiControls
         private readonly ColorPickerWindow _colorPicker;
         private ColorRegion[] _colorRegions;
         private readonly ToolTip _tt = new ToolTip();
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true, the button text will display the region and color id.
         /// </summary>
@@ -28,7 +33,7 @@ namespace ARKBreedingStats.uiControls
             InitializeComponent();
 
             _buttonColors = new NoPaddingButton[Ark.ColorRegionCount];
-            for (int i = 0; i < Ark.ColorRegionCount; i++)
+            for (var i = 0; i < Ark.ColorRegionCount; i++)
             {
                 var b = new NoPaddingButton { Width = 27, Height = 27, Margin = new Padding(1), Text = i.ToString() };
                 var ii = i;
@@ -73,7 +78,7 @@ namespace ARKBreedingStats.uiControls
                 }
             }
 
-            for (int r = 0; r < _buttonColors.Length; r++)
+            for (int r = 0; r < Ark.ColorRegionCount; r++)
             {
                 _buttonColors[r].Visible = ColorRegionsUseds[r];
 
@@ -86,6 +91,7 @@ namespace ARKBreedingStats.uiControls
         }
 
         public byte[] ColorIds => _selectedRegionColorIds.ToArray();
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] ColorIdsAlsoPossible
         {
             get => _selectedColorIdsAlternative?.ToArray();
@@ -99,7 +105,7 @@ namespace ARKBreedingStats.uiControls
 
                     return;
                 }
-                for (int i = 0; i < _buttonColors.Length; i++)
+                for (int i = 0; i < Ark.ColorRegionCount; i++)
                     _buttonColors[i].AlternativeColorPossible = _selectedColorIdsAlternative.Length > i && _selectedColorIdsAlternative[i] != 0;
             }
         }
@@ -107,7 +113,7 @@ namespace ARKBreedingStats.uiControls
         public void Clear()
         {
             _selectedColorIdsAlternative = null;
-            SetColorIds(new byte[_buttonColors.Length]);
+            SetColorIds(new byte[Ark.ColorRegionCount]);
         }
 
         /// <summary>
@@ -136,41 +142,50 @@ namespace ARKBreedingStats.uiControls
                 return;
             }
 
-            for (int r = 0; r < _buttonColors.Length; r++)
+            for (var r = 0; r < Ark.ColorRegionCount; r++)
             {
                 _selectedRegionColorIds[r] = colorIds.Length > r ? colorIds[r] : (byte)0;
                 _buttonColors[r].AlternativeColorPossible = false;
                 SetColorButton(_buttonColors[r], r);
             }
-            RegionColorChosen?.Invoke();
+            RegionColorChosen?.Invoke(true);
         }
 
         private void ChooseColor(int region, Button sender)
         {
-            if (!_colorPicker.isShown && _colorRegions != null && region < Ark.ColorRegionCount)
+            if (_colorPicker.isShown || _colorRegions == null || region >= Ark.ColorRegionCount) return;
+
+            _colorPicker.Cp.PickColor(_selectedRegionColorIds[region], _colorRegions[region]?.name + " (region " + region + ")", _colorRegions[region]?.naturalColors, _selectedColorIdsAlternative?[region] ?? 0);
+            if (_colorPicker.ShowDialog() != DialogResult.OK) return;
+
+            // color was chosen
+            _selectedRegionColorIds[region] = _colorPicker.Cp.SelectedColorId;
+            if (_colorPicker.Cp.SelectedColorIdAlternative != 0)
             {
-                _colorPicker.Cp.PickColor(_selectedRegionColorIds[region], _colorRegions[region]?.name + " (region " + region + ")", _colorRegions[region]?.naturalColors, _selectedColorIdsAlternative?[region] ?? 0);
-                if (_colorPicker.ShowDialog() == DialogResult.OK)
-                {
-                    // color was chosen
-                    _selectedRegionColorIds[region] = _colorPicker.Cp.SelectedColorId;
-                    if (_colorPicker.Cp.SelectedColorIdAlternative != 0)
-                    {
-                        if (_selectedColorIdsAlternative == null)
-                            _selectedColorIdsAlternative = new byte[Ark.ColorRegionCount];
-                        _selectedColorIdsAlternative[region] = _colorPicker.Cp.SelectedColorIdAlternative;
-                        _buttonColors[region].AlternativeColorPossible = true;
-                    }
-                    else
-                    {
-                        _buttonColors[region].AlternativeColorPossible = false;
-                        if (_selectedColorIdsAlternative != null)
-                            _selectedColorIdsAlternative[region] = 0;
-                    }
-                    SetColorButton(sender, region);
-                    RegionColorChosen?.Invoke();
-                }
+                if (_selectedColorIdsAlternative == null)
+                    _selectedColorIdsAlternative = new byte[Ark.ColorRegionCount];
+                _selectedColorIdsAlternative[region] = _colorPicker.Cp.SelectedColorIdAlternative;
+                _buttonColors[region].AlternativeColorPossible = true;
             }
+            else
+            {
+                _buttonColors[region].AlternativeColorPossible = false;
+                if (_selectedColorIdsAlternative != null)
+                    _selectedColorIdsAlternative[region] = 0;
+            }
+            SetColorButton(sender, region);
+            RegionColorChosen?.Invoke(true);
+        }
+
+        /// <summary>
+        /// Select color that is set for all regions.
+        /// </summary>
+        internal void ChooseAllColors()
+        {
+            if (_colorPicker.isShown || _colorRegions == null) return;
+            _colorPicker.Cp.PickColor(_selectedRegionColorIds[0], "all regions");
+            if (_colorPicker.ShowDialog() != DialogResult.OK) return;
+            SetColorIds(Enumerable.Repeat(_colorPicker.Cp.SelectedColorId, Ark.ColorRegionCount).ToArray());
         }
 
         private void SetColorButton(Button bt, int region)
@@ -186,11 +201,7 @@ namespace ARKBreedingStats.uiControls
             _tt.SetToolTip(bt, $"[{region}] {_colorRegions?[region]?.name}:\n{colorId}: {CreatureColors.CreatureColorName(colorId)}");
         }
 
-        private void RegionColorChooser_Disposed(object sender, EventArgs e)
-        {
-            _tt.RemoveAll();
-            _tt.Dispose();
-        }
+        private void RegionColorChooser_Disposed(object sender, EventArgs e) => _tt.RemoveAllAndDispose();
 
         /// <summary>
         /// True if a color is new in this species.
@@ -201,28 +212,28 @@ namespace ARKBreedingStats.uiControls
         /// </summary>
         internal bool ColorNewInRegion;
 
-        internal void SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable)
+        internal void SetRegionColorsExisting(LevelColorStatusFlags.ColorStatus[] colorAlreadyAvailable)
         {
             ColorNewInRegion = false;
             ColorNewInSpecies = false;
 
-            var parameter = CreatureCollection.ColorExisting.Unknown;
+            var parameter = LevelColorStatusFlags.ColorStatus.None;
             for (int ci = 0; ci < Ark.ColorRegionCount; ci++)
             {
                 if (colorAlreadyAvailable != null)
                     parameter = colorAlreadyAvailable[ci];
                 switch (parameter)
                 {
-                    case CreatureCollection.ColorExisting.ColorIsNew:
-                        _buttonColors[ci].ColorStatus = CreatureCollection.ColorExisting.ColorIsNew;
+                    case LevelColorStatusFlags.ColorStatus.NewColor:
+                        _buttonColors[ci].ColorStatus = LevelColorStatusFlags.ColorStatus.NewColor;
                         ColorNewInSpecies = true;
                         break;
-                    case CreatureCollection.ColorExisting.ColorExistingInOtherRegion:
-                        _buttonColors[ci].ColorStatus = CreatureCollection.ColorExisting.ColorExistingInOtherRegion;
+                    case LevelColorStatusFlags.ColorStatus.NewRegionColor:
+                        _buttonColors[ci].ColorStatus = LevelColorStatusFlags.ColorStatus.NewRegionColor;
                         ColorNewInRegion = true;
                         break;
                     default:
-                        _buttonColors[ci].ColorStatus = CreatureCollection.ColorExisting.ColorExistingInRegion;
+                        _buttonColors[ci].ColorStatus = LevelColorStatusFlags.ColorStatus.ExistsInRegion;
                         break;
                 }
                 _buttonColors[ci].Invalidate();
@@ -231,7 +242,9 @@ namespace ARKBreedingStats.uiControls
 
         private class NoPaddingButton : Button
         {
-            public CreatureCollection.ColorExisting ColorStatus { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public LevelColorStatusFlags.ColorStatus ColorStatus { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public bool AlternativeColorPossible { get; set; }
 
             protected override void OnPaint(PaintEventArgs pe)
@@ -239,10 +252,10 @@ namespace ARKBreedingStats.uiControls
                 Color statusColor;
                 switch (ColorStatus)
                 {
-                    case CreatureCollection.ColorExisting.ColorIsNew:
+                    case LevelColorStatusFlags.ColorStatus.NewColor:
                         statusColor = Color.Gold;
                         break;
-                    case CreatureCollection.ColorExisting.ColorExistingInOtherRegion:
+                    case LevelColorStatusFlags.ColorStatus.NewRegionColor:
                         statusColor = Color.DarkGreen;
                         break;
                     default:

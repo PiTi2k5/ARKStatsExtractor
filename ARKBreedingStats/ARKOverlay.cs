@@ -1,6 +1,7 @@
 ﻿using ARKBreedingStats.ocr;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -58,7 +59,8 @@ namespace ARKBreedingStats
             _initialFontSizes[labelInfo] = labelInfo.Font.Size;
 
 
-            Size = ArkOcr.Ocr.GetScreenshotOfProcess()?.Size ?? default;
+            using (var bmpScreenshot = ArkOcr.Ocr.GetScreenshotOfProcess())
+                Size = bmpScreenshot?.Size ?? default;
             if (Size == default)
                 Size = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
 
@@ -100,6 +102,7 @@ namespace ARKBreedingStats
         /// <summary>
         /// Sets the overlay timer to enabled or disabled.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool EnableOverlayTimer
         {
             set => _timerUpdateTimer.Enabled = value;

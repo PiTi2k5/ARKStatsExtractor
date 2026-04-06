@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using ARKBreedingStats.library;
+using ARKBreedingStats.Traits;
 
 namespace ARKBreedingStats.Library
 {
@@ -42,7 +42,7 @@ namespace ARKBreedingStats.Library
         public double imprintingBonus;
 
         public double[] valuesBreeding;
-        public double[] valuesDom;
+        public double[] valuesCurrent;
 
         /// <summary>
         /// Set a stat index to a top stat or not for that species in the creatureCollection.
@@ -61,7 +61,7 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// Number of top stats that are considered in the library.
         /// </summary>
-        public byte topStatsConsideredCount;
+        public byte TopStatsConsideredCount;
 
         /// <summary>
         /// Set a stat index to a top mutation stat or not for that species in the creatureCollection.
@@ -160,6 +160,9 @@ namespace ARKBreedingStats.Library
         /// Only the parent-guid is saved in the file, not the parent-object.
         /// </summary>
         private Creature mother;
+        /// <summary>
+        /// Level when creature was found, i.e. for tamed it is the wild level before taming, for bred it is the hatching level.
+        /// </summary>
         public int levelFound;
         /// <summary>
         /// Number of generations from the oldest wild creature.
@@ -235,8 +238,38 @@ namespace ARKBreedingStats.Library
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<string> tags = new List<string>();
 
+        private CreatureTrait[] _traits;
+
         [JsonProperty("traits", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<CreatureTrait> Traits;
+        public CreatureTrait[] Traits
+        {
+            get => _traits;
+            set
+            {
+                _traits = value;
+                if (_traits?.Any() != true)
+                {
+                    _probabilityOffsetInheritingHigherLevel = null;
+                    return;
+                }
+                var probabilityOffsetInheritingHigherLevel = new double[Stats.StatsCount];
+                var anyNonZero = false;
+                for (var s = 0; s < Stats.StatsCount; s++)
+                {
+                    var probabilityOffset = 0d;
+                    foreach (var t in _traits)
+                    {
+                        if (t.TraitDefinition == null) continue;
+                        probabilityOffset += t.TraitDefinition.StatIndex == s ? t.InheritHigherProbability : 0;
+                        if (probabilityOffset == 0) continue;
+                        probabilityOffsetInheritingHigherLevel[s] = probabilityOffset;
+                        anyNonZero = true;
+                    }
+                }
+
+                _probabilityOffsetInheritingHigherLevel = anyNonZero ? probabilityOffsetInheritingHigherLevel : null;
+            }
+        }
 
         /// <summary>
         /// Used to display the creature's position in a list.
@@ -476,7 +509,7 @@ namespace ARKBreedingStats.Library
             onlyTopConsideredStats = true;
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                if (IsTopStat(s))
+                if (IsTopStat(s) || IsTopMutationStat(s))
                 {
                     if (s != Stats.Torpidity)
                         cBP++;
@@ -488,7 +521,7 @@ namespace ARKBreedingStats.Library
                     onlyTopConsideredStats = false;
                 }
             }
-            topStatsConsideredCount = c;
+            TopStatsConsideredCount = c;
             topStatsCountBP = cBP;
         }
 
@@ -504,7 +537,7 @@ namespace ARKBreedingStats.Library
             for (int s = 0; s < Stats.StatsCount; s++)
             {
                 valuesBreeding[s] = StatValueCalculation.CalculateValue(Species, s, levelsWild[s], levelsMutated?[s] ?? 0, 0, true, 1, 0);
-                valuesDom[s] = StatValueCalculation.CalculateValue(Species, s, levelsWild[s], levelsMutated?[s] ?? 0, levelsDom[s], true, tamingEff, imprintingBonus);
+                valuesCurrent[s] = StatValueCalculation.CalculateValue(Species, s, levelsWild[s], levelsMutated?[s] ?? 0, levelsDom[s], isDomesticated, tamingEff, imprintingBonus);
             }
         }
 
@@ -599,7 +632,7 @@ namespace ARKBreedingStats.Library
         }
 
         [OnDeserialized]
-        private void Initialize(StreamingContext ct)
+        private void Initialize(StreamingContext _)
         {
             InitializeArkIdInGame();
             if (flags.HasFlag(CreatureFlags.Placeholder)) return;
@@ -615,7 +648,7 @@ namespace ARKBreedingStats.Library
         {
             if (levelsDom == null) levelsDom = new int[Stats.StatsCount];
             if (valuesBreeding == null) valuesBreeding = new double[Stats.StatsCount];
-            if (valuesDom == null) valuesDom = new double[Stats.StatsCount];
+            if (valuesCurrent == null) valuesCurrent = new double[Stats.StatsCount];
         }
 
         /// <summary>
@@ -632,14 +665,18 @@ namespace ARKBreedingStats.Library
             flags = (flags & ~CreatureFlags.Mutated) | (Mutations > 0 ? CreatureFlags.Mutated : CreatureFlags.None);
         }
 
-        public void AddTrait(CreatureTrait trait)
-        {
-            if (Traits == null)
-                Traits = new List<CreatureTrait> { trait };
-            else Traits.Add(trait);
-        }
+        /// <summary>
+        /// Humanly readable list of traits of this creature.
+        /// </summary>
+        public string TraitsString => CreatureTrait.StringList(Traits);
 
-        public string TraitsString => Traits == null ? string.Empty : string.Join(", ", Traits);
+
+        private double[] _probabilityOffsetInheritingHigherLevel;
+
+        /// <summary>
+        /// Additive bonus or malus for the offspring of this creature to inherit the higher level of its parents.
+        /// </summary>
+        public double ProbabilityOffsetInheritingHigherLevel(int stat) => _probabilityOffsetInheritingHigherLevel?[stat] ?? 0;
 
         /// <summary>
         /// Calculates the pretame wild level. This value can be off due to wrong inputs due to ingame rounding.
@@ -654,7 +691,8 @@ namespace ARKBreedingStats.Library
     {
         Unknown = 0,
         Male = 1,
-        Female = 2
+        Female = 2,
+        Unspecified = 3
     };
 
     public enum CreatureStatus

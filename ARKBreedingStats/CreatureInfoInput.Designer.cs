@@ -31,6 +31,7 @@ namespace ARKBreedingStats
         private void InitializeComponent()
         {
             this.gbCreatureInfo = new System.Windows.Forms.GroupBox();
+            this.BtTraits = new System.Windows.Forms.Button();
             this.CbMutagen = new System.Windows.Forms.CheckBox();
             this.LbColorNewInRegion = new System.Windows.Forms.Label();
             this.LbColorNewInSpecies = new System.Windows.Forms.Label();
@@ -92,6 +93,7 @@ namespace ARKBreedingStats
             // 
             // gbCreatureInfo
             // 
+            this.gbCreatureInfo.Controls.Add(this.BtTraits);
             this.gbCreatureInfo.Controls.Add(this.CbMutagen);
             this.gbCreatureInfo.Controls.Add(this.LbColorNewInRegion);
             this.gbCreatureInfo.Controls.Add(this.LbColorNewInSpecies);
@@ -153,6 +155,16 @@ namespace ARKBreedingStats
             this.gbCreatureInfo.TabStop = false;
             this.gbCreatureInfo.Text = "Creature-info";
             this.gbCreatureInfo.Enter += new System.EventHandler(this.groupBox1_Enter);
+            // 
+            // BtTraits
+            // 
+            this.BtTraits.Location = new System.Drawing.Point(9, 412);
+            this.BtTraits.Name = "BtTraits";
+            this.BtTraits.Size = new System.Drawing.Size(53, 23);
+            this.BtTraits.TabIndex = 54;
+            this.BtTraits.Text = "Traits";
+            this.BtTraits.UseVisualStyleBackColor = true;
+            this.BtTraits.Click += new System.EventHandler(this.BtTraits_Click);
             // 
             // CbMutagen
             // 
@@ -362,7 +374,7 @@ namespace ARKBreedingStats
             // nudMutationsFather
             // 
             this.nudMutationsFather.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudMutationsFather.Location = new System.Drawing.Point(196, 386);
+            this.nudMutationsFather.Location = new System.Drawing.Point(107, 386);
             this.nudMutationsFather.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -380,13 +392,13 @@ namespace ARKBreedingStats
             0,
             0});
             this.nudMutationsFather.Size = new System.Drawing.Size(60, 20);
-            this.nudMutationsFather.TabIndex = 13;
+            this.nudMutationsFather.TabIndex = 12;
             this.nudMutationsFather.ValueChanged += new System.EventHandler(this.NudMutations_ValueChanged);
             // 
             // nudMutationsMother
             // 
             this.nudMutationsMother.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.nudMutationsMother.Location = new System.Drawing.Point(107, 386);
+            this.nudMutationsMother.Location = new System.Drawing.Point(196, 386);
             this.nudMutationsMother.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -404,25 +416,25 @@ namespace ARKBreedingStats
             0,
             0});
             this.nudMutationsMother.Size = new System.Drawing.Size(60, 20);
-            this.nudMutationsMother.TabIndex = 12;
+            this.nudMutationsMother.TabIndex = 13;
             this.nudMutationsMother.ValueChanged += new System.EventHandler(this.NudMutations_ValueChanged);
             // 
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(173, 388);
+            this.label12.Location = new System.Drawing.Point(85, 388);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(19, 13);
-            this.label12.TabIndex = 34;
+            this.label12.TabIndex = 33;
             this.label12.Text = "♂";
             // 
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(85, 388);
+            this.label11.Location = new System.Drawing.Point(173, 388);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(19, 13);
-            this.label11.TabIndex = 33;
+            this.label11.TabIndex = 34;
             this.label11.Text = "♀";
             // 
             // dhmsInputGrown
@@ -785,5 +797,6 @@ namespace ARKBreedingStats
         private System.Windows.Forms.Label LbColorNewInRegion;
         private System.Windows.Forms.Label LbColorNewInSpecies;
         private System.Windows.Forms.CheckBox CbMutagen;
+        private System.Windows.Forms.Button BtTraits;
     }
 }

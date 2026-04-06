@@ -1,10 +1,10 @@
-﻿using System;
+﻿using ARKBreedingStats.utils;
+using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace ARKBreedingStats.Updater
 {
@@ -27,8 +27,8 @@ namespace ARKBreedingStats.Updater
         public string Description;
         [JsonProperty]
         public string Author;
-        [JsonProperty]
-        public string version;
+        [JsonProperty("version")]
+        public string Version;
         /// <summary>
         /// The version of the online available module.
         /// </summary>
@@ -37,6 +37,13 @@ namespace ARKBreedingStats.Updater
         /// The version of the locally available module.
         /// </summary>
         public Version VersionLocal;
+
+        /// <summary>
+        /// If true the module is displayed in the update window and can be selected/unselected by the user.
+        /// If false the module is updated automatically and not shown in the updater window.
+        /// </summary>
+        [JsonProperty("optional")]
+        public bool Optional;
 
         public bool UpdateAvailable;
         /// <summary>
@@ -71,9 +78,11 @@ namespace ARKBreedingStats.Updater
         public bool LocallyAvailable;
 
         [OnDeserialized]
-        internal void SetVersion(StreamingContext context)
+        internal void Initialize(StreamingContext _) => Initialize();
+
+        internal void Initialize()
         {
-            Version.TryParse(version, out VersionOnline);
+            VersionOnline = Utils.TryParseVersionAlsoWithOnlyMajor(Version);
 
             // local version
             if (string.IsNullOrEmpty(LocalPath)) return;
@@ -81,89 +90,91 @@ namespace ARKBreedingStats.Updater
             if (IsFolder)
             {
                 var filePath = FileService.GetPath(LocalPath, "_ver.txt");
-                if (File.Exists(filePath) &&
-                    Version.TryParse(File.ReadAllText(filePath), out VersionLocal))
+                if (File.Exists(filePath))
                 {
+                    VersionLocal = Utils.TryParseVersionAlsoWithOnlyMajor(File.ReadAllText(filePath));
                     LocallyAvailable = true;
                     UpdateAvailable = VersionOnline > VersionLocal;
                 }
             }
             else
             {
-                var filePath = FileService.GetPath(LocalPath);
-                if (File.Exists(filePath))
+                if (JsonUtils.ReadJsonNode(FileService.GetPath(LocalPath), "version", out string versionLocalString))
                 {
-                    try
-                    {
-                        var json = JObject.Parse(File.ReadAllText(filePath));
-                        var ver = json.Value<string>("Version");
-                        if (!string.IsNullOrEmpty(ver) && Version.TryParse(ver, out VersionLocal))
-                        {
-                            LocallyAvailable = true;
-                            UpdateAvailable = VersionOnline > VersionLocal;
-                        }
-                    }
-                    catch (JsonReaderException ex)
-                    {
-                        Description = $"ERROR: Couldn't load json file of this module\n{ex.Message}"
-                                      + (string.IsNullOrEmpty(Description) ? string.Empty : "\n\n" + Description);
-                    }
+                    VersionLocal = Utils.TryParseVersionAlsoWithOnlyMajor(versionLocalString);
+                    LocallyAvailable = true;
+                    UpdateAvailable = VersionOnline > VersionLocal;
                 }
             }
         }
 
         /// <summary>
-        /// Downloads the module. Assuming it's a zip file.
+        /// Downloads the module. Assuming it's a zip file if the module is a folder.
         /// </summary>
         /// <returns>Bool if successful, string with error message.</returns>
         public async Task<(bool, string)> DownloadAsync(bool overwrite)
         {
             if (string.IsNullOrEmpty(LocalPath))
-                return (false, "LocalPath is empty, aborted.");
+                return (false, $"LocalPath of {Name} is not specified, aborted.");
             if (string.IsNullOrEmpty(Url))
-                return (false, "Url is empty, couldn't download anything.");
+                return (false, $"Url of {Name} is not specified, couldn't download anything.");
 
-            string moduleFolderPath = FileService.GetPath(LocalPath);
-            string tempFilePath = Path.GetTempFileName();
-            var (success, _) = await Updater.DownloadAsync(Url, tempFilePath);
+            var moduleFolderPath = FileService.GetPath(LocalPath);
+            var tempFilePath = Path.GetTempFileName();
+            var (success, _) = await WebService.DownloadAsync(Url, tempFilePath);
             if (!success)
                 return (false, $"File\n{Url}\ncouldn't be downloaded");
 
-            int fileCountExtracted = 0;
-            int fileCountSkipped = 0;
+            if (IsFolder)
+            {
+                var fileCountExtracted = 0;
+                var fileCountSkipped = 0;
+                try
+                {
+                    Directory.CreateDirectory(moduleFolderPath);
+                    using (var archive = ZipFile.OpenRead(tempFilePath))
+                    {
+                        foreach (ZipArchiveEntry file in archive.Entries)
+                        {
+                            if (string.IsNullOrEmpty(file.Name)) continue;
+
+                            var filePathUnzipped = Path.Combine(moduleFolderPath, file.Name);
+                            if (File.Exists(filePathUnzipped) &&
+                                (!overwrite || !FileService.TryDeleteFile(filePathUnzipped)))
+                            {
+                                fileCountSkipped++;
+                                continue;
+                            }
+
+                            file.ExtractToFile(filePathUnzipped);
+                            fileCountExtracted++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Error while extracting the files in {moduleFolderPath}\n\n{ex.Message}");
+                }
+                finally
+                {
+                    FileService.TryDeleteFile(tempFilePath);
+                }
+                return (true, $"Files of {Name} were downloaded successfully.\n{fileCountExtracted} files extracted{(fileCountSkipped != 0 ? $"\n{fileCountSkipped} already existing files skipped" : string.Empty)}.");
+            }
 
             try
             {
-                Directory.CreateDirectory(moduleFolderPath);
-                using (var archive = ZipFile.OpenRead(tempFilePath))
-                {
-                    foreach (ZipArchiveEntry file in archive.Entries)
-                    {
-                        if (string.IsNullOrEmpty(file.Name)) continue;
-
-                        var filePathUnzipped = Path.Combine(moduleFolderPath, file.Name);
-                        if (File.Exists(filePathUnzipped) &&
-                            (!overwrite || !FileService.TryDeleteFile(filePathUnzipped)))
-                        {
-                            fileCountSkipped++;
-                            continue;
-                        }
-
-                        file.ExtractToFile(filePathUnzipped);
-                        fileCountExtracted++;
-                    }
-                }
+                File.Copy(tempFilePath, moduleFolderPath, true);
             }
             catch (Exception ex)
             {
-                return (false, $"Error while extracting the files in {moduleFolderPath}\n\n{ex.Message}");
+                return (false, $"Error while copying the file {moduleFolderPath}\n\n{ex.Message}");
             }
             finally
             {
                 FileService.TryDeleteFile(tempFilePath);
             }
-
-            return (true, $"Files of {Name} were downloaded successfully.\n{fileCountExtracted} files extracted{(fileCountSkipped != 0 ? $"\n{fileCountSkipped} already existing files skipped" : string.Empty)}.");
+            return (true, $"The file of {Name} was downloaded successfully.");
         }
     }
 }

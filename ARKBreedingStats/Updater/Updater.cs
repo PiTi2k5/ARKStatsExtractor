@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -223,7 +222,7 @@ namespace ARKBreedingStats.Updater
             string releaseFeed;
             try
             {
-                (_, releaseFeed) = await DownloadAsync(ReleasesFeedUrl);
+                (_, releaseFeed) = await WebService.DownloadAsync(ReleasesFeedUrl);
             }
             catch (Exception e)
             {
@@ -250,8 +249,8 @@ namespace ARKBreedingStats.Updater
         {
             var manifest = AsbManifest.FromJsonFile(manifestFilePath);
 
-            if (manifest.modules.TryGetValue("ARK Smart Breeding", out var app))
-                return app.version;
+            if (manifest.Modules.TryGetValue("ARK Smart Breeding", out var app))
+                return app.Version;
 
             throw new FormatException("version of main app not found in manifest");
         }
@@ -274,85 +273,6 @@ namespace ARKBreedingStats.Updater
 
         #endregion
 
-        /// <summary>
-        /// Downloads a file from the given URL, returns as string or writes it to the given destination
-        /// </summary>
-        /// <param name="url">The URL to download from</param>
-        /// <param name="outFileName">File to output contents to</param>
-        /// <returns>content or null</returns>
-        internal static async Task<(bool, string)> DownloadAsync(string url, string outFileName = null, bool showExceptionMessageBox = true)
-        {
-            using (WebClient client = new WebClient())
-            {
-                bool successfulDownloaded = true;
-                client.Headers.Add("User-Agent", "ASB");
-
-                Debug.WriteLine("URL: " + url);
-                Debug.WriteLine("Out File: " + outFileName);
-
-                if (string.IsNullOrEmpty(outFileName))
-                {
-                    return (successfulDownloaded, await client.DownloadStringTaskAsync(url));
-                }
-
-                try
-                {
-                    string directory = Path.GetDirectoryName(outFileName);
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-                    await client.DownloadFileTaskAsync(url, outFileName);
-                }
-                catch (Exception ex)
-                {
-                    successfulDownloaded = false;
-                    if (showExceptionMessageBox)
-                        MessageBoxes.ExceptionMessageBox(ex, $"Error while trying to download the file\n{url}", "Download error");
-                }
-
-                if (!File.Exists(outFileName))
-                    throw new FileNotFoundException($"Downloading file from {url} failed", outFileName);
-
-                return (successfulDownloaded, null);
-            }
-        }
-
-        /// <summary>
-        /// Downloads a file from the given URL and writes it to the given destination
-        /// </summary>
-        /// <param name="url">The URL to download from</param>
-        /// <param name="outFileName">File to output contents to</param>
-        private static bool Download(string url, string outFileName)
-        {
-            using (WebClient client = new WebClient())
-            {
-                client.Headers.Add("User-Agent", "ASB");
-
-                Debug.WriteLine("URL: " + url);
-                Debug.WriteLine("Out File: " + outFileName);
-
-                if (string.IsNullOrEmpty(outFileName))
-                {
-                    return false;
-                }
-
-                try
-                {
-                    string directory = Path.GetDirectoryName(outFileName);
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-                    client.DownloadFile(url, outFileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBoxes.ExceptionMessageBox(ex, $"Error while trying to download the file\n{url}", "Download error");
-                }
-
-                if (!File.Exists(outFileName))
-                    throw new FileNotFoundException($"Downloading file from {url} failed", outFileName);
-
-                return true;
-            }
-        }
 
         #region mod values
 
@@ -371,7 +291,7 @@ namespace ARKBreedingStats.Updater
 
             try
             {
-                if ((await DownloadAsync(url, tempFilePath, showDownloadExceptionMessageBox)).Item1)
+                if ((await WebService.DownloadAsync(url, tempFilePath, showDownloadExceptionMessageBox)).Item1)
                 {
                     // if successful downloaded, move tempFile
                     try
@@ -392,52 +312,24 @@ namespace ARKBreedingStats.Updater
             }
             finally
             {
-                TryDeleteFile(tempFilePath);
+                FileService.TryDeleteFile(tempFilePath);
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Tries to delete the given file without throwing an error on failing
-        /// </summary>
-        /// <param name="filePath"></param>
-        private static bool TryDeleteFile(string filePath)
+        internal static async Task<bool> DownloadModValuesFileAsync(string modValuesFileName)
         {
-            try
-            {
-                if (File.Exists(filePath))
-                    File.Delete(filePath);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var (success, _) = await WebService.DownloadAsync(ObeliskUrl + modValuesFileName,
+                FileService.GetJsonPath(Path.Combine(FileService.ValuesFolder, modValuesFileName)));
+            return success;
         }
-
-        //internal static async Task<bool> DownloadModValuesFileAsync(string modValuesFileName)
-        //{
-        //    try
-        //    {
-        //        await DownloadAsync(ObeliskUrl + modValuesFileName,
-        //            FileService.GetJsonPath(Path.Combine(FileService.ValuesFolder, modValuesFileName)));
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBoxes.ExceptionMessageBox(ex, "Error while downloading values file");
-        //    }
-        //    return false;
-        //}
 
         internal static bool DownloadModValuesFile(string modValuesFileName)
         {
             try
             {
-                Download(ObeliskUrl + modValuesFileName,
-                    FileService.GetJsonPath(Path.Combine(FileService.ValuesFolder, modValuesFileName)));
-                return true;
+                return Task.Run(() => DownloadModValuesFileAsync(modValuesFileName)).GetAwaiter().GetResult();
             }
             catch
             {

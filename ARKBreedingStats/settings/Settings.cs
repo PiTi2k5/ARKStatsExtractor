@@ -13,7 +13,7 @@ using System.Windows.Threading;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.library;
 using ARKBreedingStats.NamePatterns;
-using ARKBreedingStats.StatsOptions;
+using ARKBreedingStats.SpeciesOptions;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 
@@ -377,12 +377,28 @@ namespace ARKBreedingStats.settings
             CbInfoGraphicMutationCounter.Checked = Properties.Settings.Default.InfoGraphicDisplayMutations;
             CbInfoGraphicGenerations.Checked = Properties.Settings.Default.InfoGraphicDisplayGeneration;
             CbInfoGraphicCreatureName.Checked = Properties.Settings.Default.InfoGraphicDisplayName;
-            BtInfoGraphicBackColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicBackColor);
-            BtInfoGraphicForeColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicForeColor);
-            BtInfoGraphicBorderColor.SetBackColorAndAccordingForeColor(Properties.Settings.Default.InfoGraphicBorderColor);
+            BtInfoGraphicBackColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicBackColor));
+            BtInfoGraphicForeColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicForeColor));
+            BtInfoGraphicBorderColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicBorderColor));
+            BtInfoGraphicTextOutlineColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicTextOutlineColor));
+            BtInfoGraphicCreatureOutlineColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicCreatureOutlineColor));
+            NudInfoGraphicBorderWidth.ValueSave = Properties.Settings.Default.InfoGraphicBorderWidth;
+            NudInfoGraphicBorderRadius.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicBorderRadius;
+            NudInfoGraphicTextOutlineWidth.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicTextOutlineWidth;
+            NudInfoGraphicBgAlpha.ValueSave = Properties.Settings.Default.InfoGraphicBackColor.A;
+            NudInfoGraphicFgAlpha.ValueSave = Properties.Settings.Default.InfoGraphicForeColor.A;
+            NudInfoGraphicBorderAlpha.ValueSave = Properties.Settings.Default.InfoGraphicBorderColor.A;
+            NudInfoGraphicTextOutlineAlpha.ValueSave = Properties.Settings.Default.InfoGraphicTextOutlineColor.A;
+            NudInfoGraphicCreatureOutlineAlpha.ValueSave = Properties.Settings.Default.InfoGraphicCreatureOutlineColor.A;
+            NudInfoGraphicCreatureOutlineWidth.ValueSave = Properties.Settings.Default.InfoGraphicCreatureOutlineWidth;
+            NudInfoGraphicCreatureOutlineBlurring.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicCreatureOutlineBlurring;
+            NudInfoGraphicCreatureScaling.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicCreatureScaling;
+            NudInfoGraphicPaddingX.ValueSave = Properties.Settings.Default.InfoGraphicPaddingX;
+            NudInfoGraphicPaddingY.ValueSave = Properties.Settings.Default.InfoGraphicPaddingY;
             CbInfoGraphicAddRegionNames.Checked = Properties.Settings.Default.InfoGraphicExtraRegionNames;
             CbInfoGraphicColorRegionNamesIfNoImage.Checked = Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage;
             CbInfoGraphicStatValues.Checked = Properties.Settings.Default.InfoGraphicShowStatValues;
+            InfoGraphicBackgroundImagePath = Properties.Settings.Default.InfoGraphicBackgroundImagePath;
 
             #endregion
 
@@ -399,6 +415,7 @@ namespace ARKBreedingStats.settings
             CbNaturalSortIgnoreSpaces.Checked = Properties.Settings.Default.NaturalSortIgnoreSpaces;
             CbDisplayLibraryCreatureIndex.Checked = Properties.Settings.Default.DisplayLibraryCreatureIndex;
             CbLibraryDisplayZeroMutationLevels.Checked = Properties.Settings.Default.LibraryDisplayZeroMutationLevels;
+            CbLibraryShowStatLevelsThatCannotLevelup.Checked = Properties.Settings.Default.LibraryShowStatLevelsThatCannotLevelup;
             CbLibraryGenerateNameWarnTooLongName.Checked = Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated;
 
             #endregion
@@ -423,6 +440,7 @@ namespace ARKBreedingStats.settings
             cbAutoImportExported.Checked = Properties.Settings.Default.AutoImportExportedCreatures;
             CbAutoExtractAddToLibrary.Checked = Properties.Settings.Default.OnAutoImportAddToLibrary;
             cbPlaySoundOnAutomaticImport.Checked = Properties.Settings.Default.PlaySoundOnAutoImport;
+            CbImportPlaySoundColorFeedback.Checked = Properties.Settings.Default.PlayColorSoundOnAutoImport;
             cbMoveImportedFileToSubFolder.Checked = Properties.Settings.Default.MoveAutoImportedFileToSubFolder;
             SetFolderSelectionButton(BtImportArchiveFolder, Properties.Settings.Default.ImportExportedArchiveFolder);
             cbDeleteAutoImportedFile.Checked = Properties.Settings.Default.DeleteAutoImportedFile;
@@ -650,12 +668,24 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.InfoGraphicDisplayMutations = CbInfoGraphicMutationCounter.Checked;
             Properties.Settings.Default.InfoGraphicDisplayGeneration = CbInfoGraphicGenerations.Checked;
             Properties.Settings.Default.InfoGraphicDisplayName = CbInfoGraphicCreatureName.Checked;
-            Properties.Settings.Default.InfoGraphicBackColor = BtInfoGraphicBackColor.BackColor;
-            Properties.Settings.Default.InfoGraphicForeColor = BtInfoGraphicForeColor.BackColor;
-            Properties.Settings.Default.InfoGraphicBorderColor = BtInfoGraphicBorderColor.BackColor;
+            Properties.Settings.Default.InfoGraphicBackColor = Color.FromArgb((int)NudInfoGraphicBgAlpha.Value, BtInfoGraphicBackColor.BackColor);
+            Properties.Settings.Default.InfoGraphicForeColor = Color.FromArgb((int)NudInfoGraphicFgAlpha.Value, BtInfoGraphicForeColor.BackColor);
+            Properties.Settings.Default.InfoGraphicBorderColor = Color.FromArgb((int)NudInfoGraphicBorderAlpha.Value, BtInfoGraphicBorderColor.BackColor);
+            Properties.Settings.Default.InfoGraphicTextOutlineColor = Color.FromArgb((int)NudInfoGraphicTextOutlineAlpha.Value, BtInfoGraphicTextOutlineColor.BackColor);
+            Properties.Settings.Default.InfoGraphicCreatureOutlineColor = Color.FromArgb((int)NudInfoGraphicCreatureOutlineAlpha.Value, BtInfoGraphicCreatureOutlineColor.BackColor);
+            Properties.Settings.Default.InfoGraphicBorderWidth = (int)NudInfoGraphicBorderWidth.Value;
+            Properties.Settings.Default.InfoGraphicBorderRadius = (float)NudInfoGraphicBorderRadius.Value;
+            Properties.Settings.Default.InfoGraphicTextOutlineWidth = (float)NudInfoGraphicTextOutlineWidth.Value;
+            NudInfoGraphicCreatureOutlineAlpha.ValueSave = Properties.Settings.Default.InfoGraphicCreatureOutlineColor.A;
+            Properties.Settings.Default.InfoGraphicCreatureOutlineWidth = (int)NudInfoGraphicCreatureOutlineWidth.Value;
+            Properties.Settings.Default.InfoGraphicCreatureOutlineBlurring = (float)NudInfoGraphicCreatureOutlineBlurring.Value;
+            Properties.Settings.Default.InfoGraphicCreatureScaling = (float)NudInfoGraphicCreatureScaling.Value;
+            Properties.Settings.Default.InfoGraphicPaddingX = (int)NudInfoGraphicPaddingX.Value;
+            Properties.Settings.Default.InfoGraphicPaddingY = (int)NudInfoGraphicPaddingY.Value;
             Properties.Settings.Default.InfoGraphicExtraRegionNames = CbInfoGraphicAddRegionNames.Checked;
             Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked;
             Properties.Settings.Default.InfoGraphicShowStatValues = CbInfoGraphicStatValues.Checked;
+            Properties.Settings.Default.InfoGraphicBackgroundImagePath = InfoGraphicBackgroundImagePath;
 
             #endregion
 
@@ -671,6 +701,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.NaturalSortIgnoreSpaces = CbNaturalSortIgnoreSpaces.Checked;
             Properties.Settings.Default.DisplayLibraryCreatureIndex = CbDisplayLibraryCreatureIndex.Checked;
             Properties.Settings.Default.LibraryDisplayZeroMutationLevels = CbLibraryDisplayZeroMutationLevels.Checked;
+            Properties.Settings.Default.LibraryShowStatLevelsThatCannotLevelup = CbLibraryShowStatLevelsThatCannotLevelup.Checked;
             Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated = CbLibraryGenerateNameWarnTooLongName.Checked;
 
             #endregion
@@ -689,6 +720,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.AutoImportExportedCreatures = cbAutoImportExported.Checked;
             Properties.Settings.Default.OnAutoImportAddToLibrary = CbAutoExtractAddToLibrary.Checked;
             Properties.Settings.Default.PlaySoundOnAutoImport = cbPlaySoundOnAutomaticImport.Checked;
+            Properties.Settings.Default.PlayColorSoundOnAutoImport = CbImportPlaySoundColorFeedback.Checked;
             Properties.Settings.Default.MoveAutoImportedFileToSubFolder = cbMoveImportedFileToSubFolder.Checked;
             Properties.Settings.Default.ImportExportedArchiveFolder = BtImportArchiveFolder.Tag as string;
             Properties.Settings.Default.DeleteAutoImportedFile = cbDeleteAutoImportedFile.Checked;
@@ -916,12 +948,11 @@ namespace ARKBreedingStats.settings
             ParseAndSetValue(NudWildDinoCharacterFoodDrainMultiplier, @"WildDinoCharacterFoodDrainMultiplier ?= ?(\d*\.?\d+)");
             // Game.ini
             ParseAndSetValue(NudWildDinoTorporDrainMultiplier, @"WildDinoTorporDrainMultiplier ?= ?(\d*\.?\d+)");
-            ParseAndSetCheckbox(CbAllowSpeedLeveling, @"bAllowSpeedLeveling ?= ?(true|false)");
             ParseAndSetCheckbox(CbAllowFlyerSpeedLeveling, @"bAllowFlyerSpeedLeveling ?= ?(true|false)");
+            ParseAndSetCheckbox(CbAllowSpeedLeveling, @"bAllowSpeedLeveling ?= ?(true|false)");
 
             //// the settings below don't appear in ARK server config files directly or not at all and are used only in ASB
             // max levels
-            ParseAndSetValue(nudMaxWildLevels, @"ASBMaxWildLevels_Dinos ?= ?(\d+)");
             ParseAndSetValue(nudMaxDomLevels, @"ASBMaxDomLevels_Dinos ?= ?(\d+)");
             ParseAndSetValue(nudMaxGraphLevel, @"ASBMaxGraphLevels ?= ?(\d+)");
             // extractor
@@ -970,30 +1001,33 @@ namespace ARKBreedingStats.settings
                 nudMaxDomLevels.ValueSave = Regex.Matches(m.Groups[1].Value, "ExperiencePointsForLevel").Count + 1;
 
             // parse max wild dino levels
-            if (text.Contains("DifficultyOffset") || text.Contains("OverrideOfficialDifficulty"))
+            var difficultyValue = -1d;
+            if (Regex.IsMatch(text, @"MaxDifficulty ?= ?True", RegexOptions.IgnoreCase))
             {
-                // default values
-                var difficultyOffset = 0.2;
-                var officialDifficulty = 5d;
-
-                m = Regex.Match(text, @"DifficultyOffset ?= ?(\d*\.?\d+)");
-                if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint,
-                    cultureForStrings, out d))
-                    difficultyOffset = d;
-
+                difficultyValue = 5;
+            }
+            else
+            {
                 m = Regex.Match(text, @"OverrideOfficialDifficulty ?= ?(\d*\.?\d+)");
                 if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint,
-                    cultureForStrings, out d))
-                    officialDifficulty = d;
-
-                var difficultyValue = 1d;
-                if (difficultyOffset > 0)
-                {
-                    difficultyValue = difficultyOffset * (officialDifficulty - 0.5) + 0.5;
-                }
-
-                nudMaxWildLevels.ValueSave = (int)(difficultyValue * 30);
+                    cultureForStrings, out d) && d > 0)
+                    difficultyValue = d;
             }
+
+            if (difficultyValue < 0)
+            {
+                const int officialDifficulty = 5; // base map difficulty value. probably default value for most maps. Some maps (only ASE?) may have 4.
+                m = Regex.Match(text, @"DifficultyOffset ?= ?(\d*\.?\d+)");
+                if (m.Success && double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.AllowDecimalPoint,
+                        cultureForStrings, out var difficultyOffset)
+                    && difficultyOffset > 0)
+                    difficultyValue = difficultyOffset * (officialDifficulty - 0.5) + 0.5;
+            }
+
+            if (difficultyValue > 0)
+                nudMaxWildLevels.ValueSave = (int)(difficultyValue * 30);
+            else
+                ParseAndSetValue(nudMaxWildLevels, @"ASBMaxWildLevels_Dinos ?= ?(\d+)");
         }
 
         /// <summary>
@@ -1078,8 +1112,7 @@ namespace ARKBreedingStats.settings
 
         private void Settings_Disposed(object sender, EventArgs e)
         {
-            _tt.RemoveAll();
-            _tt.Dispose();
+            _tt.RemoveAllAndDispose();
         }
 
         private void buttonEventToDefault_Click(object sender, EventArgs e)
@@ -1405,6 +1438,9 @@ namespace ARKBreedingStats.settings
             Loc.ControlText(BtBeepTop, _tt);
             Loc.ControlText(BtBeepNewTop, _tt);
             Loc.ControlText(BtBeepUpdated, _tt);
+            Loc.ControlText(BtBeepNewColor, _tt);
+            Loc.ControlText(BtBeepNewRegionColor, _tt);
+            Loc.ControlText(BtBeepDesiredColor, _tt);
             Loc.ControlText(BtGetExportFolderAutomatically);
         }
 
@@ -1424,30 +1460,21 @@ namespace ARKBreedingStats.settings
             }
         }
 
-        private void BtBeepFailure_Click(object sender, EventArgs e)
-        {
-            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Failure);
-        }
+        private void BtBeepFailure_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Failure);
 
-        private void BtBeepSuccess_Click(object sender, EventArgs e)
-        {
-            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Success);
-        }
+        private void BtBeepSuccess_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Success);
 
-        private void BtBeepTop_Click(object sender, EventArgs e)
-        {
-            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Good);
-        }
+        private void BtBeepTop_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Good);
 
-        private void BtBeepNewTop_Click(object sender, EventArgs e)
-        {
-            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Great);
-        }
+        private void BtBeepNewTop_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Great);
 
-        private void BtBeepUpdated_Click(object sender, EventArgs e)
-        {
-            SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Updated);
-        }
+        private void BtBeepUpdated_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.Updated);
+
+        private void BtBeepNewColor_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.NewColor);
+
+        private void BtBeepNewRegionColor_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.NewRegionColor);
+
+        private void BtBeepDesiredColor_Click(object sender, EventArgs e) => SoundFeedback.BeepSignal(SoundFeedback.FeedbackSounds.NewDesiredColor);
 
         private void BtImportArchiveFolder_Click(object sender, EventArgs e)
         {
@@ -1660,38 +1687,56 @@ namespace ARKBreedingStats.settings
         private Creature _infoGraphicPreviewCreature;
         private readonly Debouncer _infoGraphicPreviewDebouncer = new Debouncer();
 
-        private void CbInfoGraphicCheckBoxRadioButtonChanged(object sender, EventArgs e)
-        {
-            _infoGraphicPreviewDebouncer.Debounce(300, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
-        }
+        private void CbInfoGraphicCheckBoxRadioButtonChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
 
-        private void ShowInfoGraphicPreview()
+        private void ShowInfoGraphicPreviewDebounced(int debounceMs = 300) =>
+            _infoGraphicPreviewDebouncer.Debounce(debounceMs, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+        private async Task ShowInfoGraphicPreview()
         {
             if (_infoGraphicPreviewCreature == null)
                 CreateInfoGraphicCreature();
+            if (_infoGraphicPreviewCreature == null) return;
 
-            var speciesImage = _infoGraphicPreviewCreature?.InfoGraphic(_cc,
-                (int)nudInfoGraphicHeight.Value,
-                CbbInfoGraphicFontName.Text,
-                BtInfoGraphicForeColor.BackColor,
-                BtInfoGraphicBackColor.BackColor,
-                BtInfoGraphicBorderColor.BackColor,
-                CbInfoGraphicCreatureName.Checked,
-                RbInfoGraphicDomValues.Checked,
-                CbInfoGraphicSumWildMut.Checked,
-                CbInfoGraphicMutationCounter.Checked,
-                CbInfoGraphicGenerations.Checked,
-                CbInfoGraphicStatValues.Checked,
-                CbInfoGraphicDisplayMaxWildLevel.Checked,
-                CbInfoGraphicAddRegionNames.Checked,
-                CbInfoGraphicColorRegionNamesIfNoImage.Checked
-            );
+            var height = (int)nudInfoGraphicHeight.Value;
+            var fontName = CbbInfoGraphicFontName.Text;
+            var foreColor = Color.FromArgb((int)NudInfoGraphicFgAlpha.Value, BtInfoGraphicForeColor.BackColor);
+            var backColor = Color.FromArgb((int)NudInfoGraphicBgAlpha.Value, BtInfoGraphicBackColor.BackColor);
+            var borderColor = Color.FromArgb((int)NudInfoGraphicBorderAlpha.Value, BtInfoGraphicBorderColor.BackColor);
+            var borderWidth = (int)NudInfoGraphicBorderWidth.Value;
+            var borderRadius = (float)NudInfoGraphicBorderRadius.Value;
+            var paddingX = (int)NudInfoGraphicPaddingX.Value;
+            var paddingY = (int)NudInfoGraphicPaddingY.Value;
+            var textOutlineColor = Color.FromArgb((int)NudInfoGraphicTextOutlineAlpha.Value, BtInfoGraphicTextOutlineColor.BackColor);
+            var creatureOutlineColor = Color.FromArgb((int)NudInfoGraphicCreatureOutlineAlpha.Value, BtInfoGraphicCreatureOutlineColor.BackColor);
+            var creatureOutlineWidth = (int)NudInfoGraphicCreatureOutlineWidth.Value;
+            var creatureOutlineBlurring = (float)NudInfoGraphicCreatureOutlineBlurring.Value;
+            var creatureScaling = (float)NudInfoGraphicCreatureScaling.Value;
+            var textOutlineWidth = (float)NudInfoGraphicTextOutlineWidth.Value;
+            var displayCreatureName = CbInfoGraphicCreatureName.Checked;
+            var displayDomValues = RbInfoGraphicDomValues.Checked;
+            var sumWildMut = CbInfoGraphicSumWildMut.Checked;
+            var displayMutationCounter = CbInfoGraphicMutationCounter.Checked;
+            var displayGenerations = CbInfoGraphicGenerations.Checked;
+            var displayStatValues = CbInfoGraphicStatValues.Checked;
+            var displayMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked;
+            var addRegionNames = CbInfoGraphicAddRegionNames.Checked;
+            var colorRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked;
+            var backgroundImagePath = InfoGraphicBackgroundImagePath;
 
-            if (speciesImage == null) return;
+            var bmp = await _infoGraphicPreviewCreature
+                    .InfoGraphicAsync(_cc,
+                        height, fontName, foreColor, backColor, borderColor, borderWidth, borderRadius, paddingX, paddingY, textOutlineColor,
+                        textOutlineWidth, displayCreatureName, displayDomValues,
+                        sumWildMut, displayMutationCounter, displayGenerations,
+                        displayStatValues, displayMaxWildLevel, addRegionNames, colorRegionNamesIfNoImage,
+                        creatureOutlineColor, backgroundImagePath, creatureOutlineWidth, creatureOutlineBlurring, creatureScaling);
 
-            PbInfoGraphicPreview.Size = speciesImage.Size;
-            PbInfoGraphicPreview.SetImageAndDisposeOld(speciesImage);
+            if (bmp == null) return;
+            PbInfoGraphicPreview.Size = bmp.Size;
+            PbInfoGraphicPreview.SetImageAndDisposeOld(bmp);
+            HighlightBackgroundOpacityIssue();
         }
+
         private void BtNewRandomInfoGraphicCreature_Click(object sender, EventArgs e)
         {
             _infoGraphicPreviewCreature = null;
@@ -1720,14 +1765,47 @@ namespace ARKBreedingStats.settings
             _infoGraphicPreviewCreature.RecalculateCreatureValues(_cc.wildLevelStep);
         }
 
-        private void nudInfoGraphicHeight_ValueChanged(object sender, EventArgs e)
+        private void CbbInfoGraphicFontName_SelectedIndexChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
+
+        private void NudInfoGraphicValueChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
+
+        private void BtInfoGraphicBackgroundImagePath_Click(object sender, EventArgs e)
         {
-            _infoGraphicPreviewDebouncer.Debounce(500, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+            using (var openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*";
+                openFileDialog.Title = "Select Background Image for InfoGraphic";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    InfoGraphicBackgroundImagePath = openFileDialog.FileName;
+                }
+            }
         }
 
-        private void CbbInfoGraphicFontName_SelectedIndexChanged(object sender, EventArgs e)
+        private void BtInfoGraphicClearBgImg_Click(object sender, EventArgs e) => InfoGraphicBackgroundImagePath = null;
+
+        private string _infoGraphicBackgroundImagePath;
+
+        private string InfoGraphicBackgroundImagePath
         {
-            _infoGraphicPreviewDebouncer.Debounce(300, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+            get => _infoGraphicBackgroundImagePath;
+            set
+            {
+                _infoGraphicBackgroundImagePath = value;
+                BtInfoGraphicBackgroundImagePath.Text = $"Background image{Environment.NewLine}{(string.IsNullOrEmpty(value) ? "<none>" : Path.GetFileName(value))}";
+                ShowInfoGraphicPreviewDebounced(50);
+            }
+        }
+
+        /// <summary>
+        /// If an infographic background image is selected and the background color opacity is set to 255, highlight the info that this will hide the image.
+        /// </summary>
+        private void HighlightBackgroundOpacityIssue()
+        {
+            var highlight = NudInfoGraphicBgAlpha.Value > 254 && !string.IsNullOrEmpty(InfoGraphicBackgroundImagePath);
+            label57.BackColor = highlight ? Color.LightSalmon : Color.Transparent;
+            NudInfoGraphicBgAlpha.BackColor = highlight ? Color.LightSalmon : SystemColors.Window;
         }
 
         #endregion
@@ -1787,8 +1865,9 @@ namespace ARKBreedingStats.settings
             if (importIndex == -1) return;
 
             CbAtlasSettings.Checked = false;
-            ExtractSettingsFromFile(Path.Combine(localConfigPaths[importIndex].Item1, "game.ini"), true);
+            // first import gameUserSettings.ini, then game.ini since gameUserSettings can contain wrong allowSpeedLeveling settings
             ExtractSettingsFromFile(Path.Combine(localConfigPaths[importIndex].Item1, "gameUserSettings.ini"), true);
+            ExtractSettingsFromFile(Path.Combine(localConfigPaths[importIndex].Item1, "game.ini"), true);
 
             if (localConfigPaths[importIndex].Item2 == Ark.Game.Asa) RbGameAsa.Checked = true;
             else RbGameAse.Checked = true;
@@ -1811,7 +1890,7 @@ namespace ARKBreedingStats.settings
 
             try
             {
-                var httpClient = FileService.GetHttpClient;
+                var httpClient = WebService.GetHttpClient;
                 _cancellationTokenSource = new CancellationTokenSource();
                 BtRemoteServerSettingsUri.Text = "Cancel loading";
                 string settingsText = null;
@@ -1890,7 +1969,7 @@ namespace ARKBreedingStats.settings
                   : gameType == "ASA Official" ? "https://cdn2.arkdedicated.com/asa/dynamicconfig.ini"
                   : throw new Exception($"Unexpected official multipliers option {gameType}");
 
-                var httpClient = FileService.GetHttpClient;
+                var httpClient = WebService.GetHttpClient;
 
                 var settingsText = httpClient.GetStringAsync(url).Result;
                 ExtractEventSettingsFromText(settingsText);
@@ -1903,7 +1982,7 @@ namespace ARKBreedingStats.settings
 
         private void BtOpenLevelColorOptions_Click(object sender, EventArgs e)
         {
-            StatsOptionsForm.ShowWindow(this, Form1.StatsOptionsLevelColors, Form1.StatsOptionsConsiderTopStats);
+            StatsOptionsForm.ShowWindow(this, Form1.StatsOptionsLevelColors, Form1.StatsOptionsConsiderTopStats, Form1.ColorOptionsWantedRegions);
         }
 
         private void BtOverlayPatternEdit_Click(object sender, EventArgs e)

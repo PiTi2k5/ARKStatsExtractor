@@ -9,8 +9,11 @@ using ARKBreedingStats.Library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.Properties;
 using ARKBreedingStats.species;
+using ARKBreedingStats.SpeciesImages;
+using ARKBreedingStats.Traits;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
+using System.ComponentModel;
 
 namespace ARKBreedingStats
 {
@@ -42,12 +45,51 @@ namespace ARKBreedingStats
         private string[] _ownersTribes;
         private byte[] _regionColorIDs;
         private byte[] _colorIdsAlsoPossible;
-        private bool _tribeLock, _ownerLock;
+        private bool _lockOwner, _lockTribe, _lockServer;
         public long MotherArkId, FatherArkId; // is only used when importing creatures with set parents. these ids are set externally after the creature data is set in the info input
+
+        private CreatureTrait[] _traits;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public CreatureTrait[] Traits
+        {
+            get => _traits;
+            set
+            {
+                _traits = value;
+                BtTraits.BackColor = _traits == null ? SystemColors.Control : Color.Aquamarine;
+                _tt.SetToolTip(BtTraits, _traits == null ? null : CreatureTrait.StringList(_traits, Environment.NewLine));
+            }
+
+        }
         /// <summary>
         /// Creature if it's already existing in the library.
         /// </summary>
         private Creature _alreadyExistingCreature;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        /// <summary>
+        /// If true, it's the tester input. This affects the behaviour of the saveToLibrary button.
+        /// In the extractor it will change colour and text if a creature is reimported, in the tester it will always display add to library.
+        /// </summary>
+        public bool IsTester
+        {
+            get => _isTester;
+            set
+            {
+                _isTester = value;
+                if (!_isTester) return;
+                // remove underline and tooltips
+                var font = new Font(lbOwner.Font, FontStyle.Regular);
+                lbOwner.Font = font;
+                lbTribe.Font = font;
+                lbServer.Font = font;
+                _tt.SetToolTip(lbOwner, null);
+                _tt.SetToolTip(lbTribe, null);
+                _tt.SetToolTip(lbServer, null);
+            }
+        }
+
+        private bool _isTester;
 
         private readonly Debouncer _parentsChangedDebouncer = new Debouncer();
         private readonly Debouncer _nameChangedDebouncer = new Debouncer();
@@ -55,19 +97,19 @@ namespace ARKBreedingStats
         /// <summary>
         /// The pictureBox that displays the colored species dependent on the selected region colors.
         /// </summary>
-        public PictureBox PbColorRegion;
+        public ColoredCreatureImageWithPose ColoredCreatureDisplay;
 
         /// <summary>
         /// If false, the visualization of the colors and the image are not updated.
         /// </summary>
-        public bool DontUpdateVisuals;
+        public bool DoNotUpdateVisuals;
 
         /// <summary>
         /// Displays the parents and inherited stats.
         /// </summary>
         public ParentInheritance ParentInheritance;
 
-        internal CreatureCollection.ColorExisting[] ColorAlreadyExistingInformation;
+        internal LevelColorStatusFlags.ColorStatus[] ColorAlreadyExistingInformation;
 
         private Button[] ButtonsNamingPattern => new[] { btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6 };
 
@@ -119,13 +161,15 @@ namespace ARKBreedingStats
         /// <summary>
         /// Updates the displayed colors of the creature.
         /// </summary>
-        private void UpdateRegionColorImage()
+        public void UpdateRegionColorImage(bool colorsChanged = true)
         {
-            ParentInheritance?.UpdateColors(RegionColors);
-            ColorsChanged?.Invoke(this);
-            PbColorRegion?.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(RegionColors, _selectedSpecies,
-                regionColorChooser1.ColorRegionsUseds, 256, onlyImage: true, creatureSex: CreatureSex
-                , game: CreatureCollection.CurrentCreatureCollection?.Game));
+            if (colorsChanged)
+            {
+                ParentInheritance?.UpdateColors(RegionColors);
+                ColorsChanged?.Invoke(this);
+            }
+            if (ColoredCreatureDisplay == null) return;
+            ColoredCreatureDisplay.SetCreatureImage(_selectedSpecies, RegionColors, CreatureSex, CreatureCollection.CurrentCreatureCollection?.Game);
         }
 
         /// <summary>
@@ -153,6 +197,7 @@ namespace ARKBreedingStats
             Save2LibraryClicked?.Invoke(this);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CreatureName
         {
             get => textBoxName.Text;
@@ -163,18 +208,21 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CreatureOwner
         {
             get => textBoxOwner.Text;
             set => textBoxOwner.Text = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CreatureTribe
         {
             get => textBoxTribe.Text;
             set => textBoxTribe.Text = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Sex CreatureSex
         {
             get => _sex;
@@ -198,6 +246,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CreatureStatus CreatureStatus
         {
             get => _creatureStatus;
@@ -209,12 +258,14 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CreatureServer
         {
             get => cbServer.Text;
             set => cbServer.Text = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Creature Mother
         {
             get => parentComboBoxMother.SelectedParent;
@@ -225,6 +276,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Creature Father
         {
             get => parentComboBoxFather.SelectedParent;
@@ -234,6 +286,7 @@ namespace ARKBreedingStats
                 FatherArkId = 0;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CreatureNote
         {
             get => textBoxNote.Text;
@@ -250,11 +303,13 @@ namespace ARKBreedingStats
             CreatureStatus = Utils.NextStatus(_creatureStatus);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Creature[] CreaturesOfSameSpecies
         {
             set => _sameSpecies = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// Possible parents of the current creature. Index 0: possible mothers, index 1: possible fathers. If species has no sex all parents are in index 0.
         /// </summary>
@@ -268,6 +323,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<int>[] ParentsSimilarities
         {
             set
@@ -278,6 +334,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ButtonEnabled
         {
             set
@@ -287,6 +344,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowSaveButton
         {
             set
@@ -338,6 +396,7 @@ namespace ARKBreedingStats
             _updateMaturation = true;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the cooldown of the creature is finished.
         /// </summary>
@@ -353,6 +412,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the creature is mature.
         /// </summary>
@@ -376,6 +436,7 @@ namespace ARKBreedingStats
             dhmsInputGrown.changed = true;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] AutocompleteOwnerList
         {
             set
@@ -386,6 +447,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] AutocompleteTribeList
         {
             set
@@ -396,6 +458,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// List of tribes of owners.
         /// </summary>
@@ -404,6 +467,7 @@ namespace ARKBreedingStats
             set => _ownersTribes = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] ServersList
         {
             set
@@ -417,6 +481,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the creature was domesticated.
         /// </summary>
@@ -432,6 +497,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// Flags of the creature, e.g. if the creature is neutered.
         /// </summary>
@@ -459,12 +525,14 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MutationCounterMother
         {
             get => (int)nudMutationsMother.Value;
             set => nudMutationsMother.ValueSave = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MutationCounterFather
         {
             get => (int)nudMutationsFather.Value;
@@ -499,24 +567,26 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] RegionColors
         {
-            get => DontUpdateVisuals ? _regionColorIDs : regionColorChooser1.ColorIds;
+            get => DoNotUpdateVisuals ? _regionColorIDs : regionColorChooser1.ColorIds;
             set
             {
                 if (_selectedSpecies == null) return;
                 _regionColorIDs = (byte[])value?.Clone() ?? new byte[Ark.ColorRegionCount];
-                if (DontUpdateVisuals) return;
+                if (DoNotUpdateVisuals) return;
                 regionColorChooser1.SetSpecies(_selectedSpecies, _regionColorIDs);
                 UpdateRegionColorImage();
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] ColorIdsAlsoPossible
         {
             get
             {
-                var arr = DontUpdateVisuals ? _colorIdsAlsoPossible : regionColorChooser1.ColorIdsAlsoPossible;
+                var arr = DoNotUpdateVisuals ? _colorIdsAlsoPossible : regionColorChooser1.ColorIdsAlsoPossible;
                 var isEmpty = arr?.All(c => c == 0) ?? true;
 
                 return isEmpty ? null : arr;
@@ -525,17 +595,18 @@ namespace ARKBreedingStats
             {
                 if (_selectedSpecies == null) return;
                 _colorIdsAlsoPossible = (byte[])value?.Clone() ?? new byte[Ark.ColorRegionCount];
-                if (DontUpdateVisuals) return;
+                if (DoNotUpdateVisuals) return;
                 regionColorChooser1.ColorIdsAlsoPossible = _colorIdsAlsoPossible;
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Species SelectedSpecies
         {
             set
             {
                 _selectedSpecies = value;
-                if (DontUpdateVisuals) return;
+                if (DoNotUpdateVisuals) return;
                 bool breedingPossible = _selectedSpecies.breeding != null;
 
                 dhmsInputCooldown.Visible = breedingPossible;
@@ -645,6 +716,7 @@ namespace ARKBreedingStats
             cr.domesticatedAt = DomesticatedAt;
             cr.ArkId = ArkId;
             cr.InitializeArkIdInGame();
+            cr.Traits = Traits?.ToArray();
         }
 
         private void textBoxOwner_Leave(object sender, EventArgs e)
@@ -660,20 +732,35 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true the OCR and import exported methods will not change the owner field.
         /// </summary>
-        public bool OwnerLock
+        public bool LockOwner
         {
-            get => _ownerLock;
+            get => _lockOwner;
             set
             {
-                _ownerLock = value;
+                _lockOwner = value;
                 textBoxOwner.BackColor = value ? Color.LightGray : SystemColors.Window;
             }
         }
 
-        private bool _lockServer;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        /// <summary>
+        /// If true the OCR and import exported methods will not change the tribe field.
+        /// </summary>
+        public bool LockTribe
+        {
+            get => _lockTribe;
+            set
+            {
+                _lockTribe = value;
+                textBoxTribe.BackColor = value ? Color.LightGray : SystemColors.Window;
+            }
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true the importing will not change the server field.
         /// </summary>
@@ -687,19 +774,7 @@ namespace ARKBreedingStats
             }
         }
 
-        /// <summary>
-        /// If true the OCR and import exported methods will not change the tribe field.
-        /// </summary>
-        public bool TribeLock
-        {
-            get => _tribeLock;
-            set
-            {
-                _tribeLock = value;
-                textBoxTribe.BackColor = value ? Color.LightGray : SystemColors.Window;
-            }
-        }
-
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If not null it's assumed the creature is already existing in the library.
         /// </summary>
@@ -707,9 +782,9 @@ namespace ARKBreedingStats
         {
             set
             {
-                btAdd2Library.Text = value != null ?
-                                     Loc.S("btUpdateLibraryCreature") :
-                                     Loc.S("btAdd2Library");
+                btAdd2Library.Text = value == null || IsTester
+                    ? Loc.S("btAdd2Library")
+                    : Loc.S("btUpdateLibraryCreature");
 
                 _alreadyExistingCreature = value;
                 SetAdd2LibColor(btAdd2Library.Enabled);
@@ -720,19 +795,22 @@ namespace ARKBreedingStats
         /// <summary>
         /// Timestamp when the creature was added to the library. Only relevant when creatures are already have been added and are edited.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime? AddedToLibraryAt { get; internal set; }
 
         private void SetAdd2LibColor(bool buttonEnabled)
         {
             btAdd2Library.BackColor = !buttonEnabled
                 ? SystemColors.Control
-                : _alreadyExistingCreature == null ? Color.LightGreen
+                : IsTester || _alreadyExistingCreature == null ? Color.LightGreen
                 : Color.LightSkyBlue;
         }
 
-        private void lblOwner_Click(object sender, EventArgs e) => OwnerLock = !OwnerLock;
+        private void lblOwner_Click(object sender, EventArgs e) => LockOwner = !IsTester && !LockOwner;
 
-        private void lbServer_Click(object sender, EventArgs e) => LockServer = !LockServer;
+        private void lblTribe_Click(object sender, EventArgs e) => LockTribe = !IsTester && !LockTribe;
+
+        private void lbServer_Click(object sender, EventArgs e) => LockServer = !IsTester && !LockServer;
 
         private void lblName_Click(object sender, EventArgs e)
         {
@@ -746,6 +824,8 @@ namespace ARKBreedingStats
                 regionColorChooser1.RandomColors();
             else if ((ModifierKeys & Keys.Control) != 0)
                 regionColorChooser1.RandomNaturalColors(_selectedSpecies);
+            else if ((ModifierKeys & Keys.Shift) != 0)
+                regionColorChooser1.ChooseAllColors();
             else
                 ClearColors();
         }
@@ -753,11 +833,6 @@ namespace ARKBreedingStats
         private void ClearColors()
         {
             regionColorChooser1.Clear();
-        }
-
-        private void lblTribe_Click(object sender, EventArgs e)
-        {
-            TribeLock = !TribeLock;
         }
 
         private void textBoxName_TextChanged(object sender, EventArgs e)
@@ -865,6 +940,14 @@ namespace ARKBreedingStats
                 textBoxTribe.Clear();
                 cbServer.Text = string.Empty;
             }
+
+            Traits = null;
+        }
+
+        private void BtTraits_Click(object sender, EventArgs e)
+        {
+            if (TraitSelection.ShowTraitSelectionWindow(Traits?.ToList(), "Trait Selection", out var traits))
+                Traits = traits?.ToArray();
         }
 
         public void SetLocalizations()
@@ -902,7 +985,7 @@ namespace ARKBreedingStats
                 _tt.SetToolTip(bt, Loc.S("btnGenerateUniqueNameTT", false));
         }
 
-        internal (bool newInRegion, bool newInSpecies) SetRegionColorsExisting(CreatureCollection.ColorExisting[] colorAlreadyAvailable = null)
+        internal (bool newInRegion, bool newInSpecies) SetRegionColorsExisting(LevelColorStatusFlags.ColorStatus[] colorAlreadyAvailable = null)
         {
             regionColorChooser1.SetRegionColorsExisting(colorAlreadyAvailable);
             LbColorNewInRegion.Visible = regionColorChooser1.ColorNewInRegion;

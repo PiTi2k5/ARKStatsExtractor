@@ -177,7 +177,7 @@ namespace ARKBreedingStats
 
             // moving a file to the archived folder can trigger another fileWatcherEvent, first check if the file is still there
             if (File.Exists(filePath))
-                ImportExportedAddIfPossible(filePath);
+                ImportExportedAddIfPossible(filePath, Asb.TriggerSource.FileWatcher);
 
             fwe.Watching = true;
         }
@@ -185,7 +185,7 @@ namespace ARKBreedingStats
         /// <summary>
         /// Import exported file. Used by a fileWatcher. Returns creature if added successfully.
         /// </summary>
-        private Creature ImportExportedAddIfPossible(string filePath)
+        private Creature ImportExportedAddIfPossible(string filePath, Asb.TriggerSource triggerSource = Asb.TriggerSource.User)
         {
             bool alreadyExists;
             bool addedToLibrary = false;
@@ -217,7 +217,7 @@ namespace ARKBreedingStats
                 case ".sav":
                 case ".json":
                     alreadyExistingCreature = ImportExportGunFiles(new[] { filePath }, Properties.Settings.Default.OnAutoImportAddToLibrary, out addedToLibrary,
-                        out creature, out copiedNameToClipboard);
+                        out creature, out copiedNameToClipboard, triggerSource: triggerSource);
                     alreadyExists = alreadyExistingCreature != null;
                     if (creature == null) return null;
                     uniqueExtraction = true;
@@ -231,6 +231,10 @@ namespace ARKBreedingStats
                 var levelStep = _creatureCollection.getWildLevelStep();
                 var species = speciesSelector1.SelectedSpecies;
                 creature = GetCreatureFromInput(true, species, levelStep);
+            }
+            else
+            {
+                _creatureCollection.DetermineColorStatus(speciesSelector1.SelectedSpecies, creature.colors, out _, out _, out _);
             }
 
             OverlayFeedbackForImport(creature, uniqueExtraction, alreadyExistingCreature, addedToLibrary, copiedNameToClipboard);
@@ -264,10 +268,7 @@ namespace ARKBreedingStats
                             _customReplacingNamingPattern, false, -1, false, namePattern, libraryCreatureCount: _creatureCollection.GetTotalCreatureCount())
                         : Path.GetFileName(filePath);
 
-                    // remove invalid characters
-                    var invalidCharacters = Path.GetInvalidFileNameChars();
-                    foreach (var invalidChar in invalidCharacters)
-                        newFileName = newFileName.Replace(invalidChar, '_');
+                    newFileName = FileService.ReplaceInvalidCharacters(newFileName);
 
                     string newFileNameWithoutExtension = Path.GetFileNameWithoutExtension(newFileName);
                     string newFileNameExtension = Path.GetExtension(newFileName);
@@ -293,7 +294,7 @@ namespace ARKBreedingStats
 
             if (Properties.Settings.Default.PlaySoundOnAutoImport)
             {
-                SoundFeedback.BeepSignalCurrentLevelFlags(alreadyExists, uniqueExtraction);
+                SoundFeedback.BeepSignalCurrentLevelFlags(alreadyExists, uniqueExtraction, Properties.Settings.Default.PlayColorSoundOnAutoImport);
             }
 
             if (!uniqueExtraction && Properties.Settings.Default.ImportExportedBringToFrontOnIssue)
@@ -329,7 +330,7 @@ namespace ARKBreedingStats
                         totalCreatureCount = _creatureCollection.GetTotalCreatureCount();
 
                     creature.name = NamePattern.GenerateCreatureName(creature, alreadyExistingCreature, creaturesOfSpecies,
-                        _topLevels.TryGetValue(creature.Species, out var topLevels) ? topLevels : null,
+                        _creatureCollection.TopLevels.TryGetValue(creature.Species, out var topLevels) ? topLevels : null,
                         _customReplacingNamingPattern, false, 0, Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated, libraryCreatureCount: totalCreatureCount);
                     if (alreadyExistingCreature != null)
                         alreadyExistingCreature.name = creature.name; // if alreadyExistingCreature was already updated and creature is not used anymore make sure name is not lost
@@ -348,7 +349,7 @@ namespace ARKBreedingStats
             Properties.Settings.Default.applyNamePatternOnAutoImportAlways
             || (Properties.Settings.Default.applyNamePatternOnImportIfEmptyName
                 && string.IsNullOrEmpty(creature.name))
-            || (alreadyExistingCreature == null
+            || ((alreadyExistingCreature == null || alreadyExistingCreature.flags.HasFlag(CreatureFlags.Placeholder))
                 && Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures);
 
         /// <summary>
@@ -386,7 +387,7 @@ namespace ARKBreedingStats
                 if (addedToLibrary && copiedNameToClipboard)
                     sb.AppendLine("Name copied to clipboard.");
 
-                sb.Append(LevelStatusFlags.LevelInfoText);
+                sb.Append(LevelColorStatusFlags.LevelInfoText);
 
                 if (!string.IsNullOrEmpty(creatureAnalysis1.ColorStatus))
                 {
@@ -401,7 +402,7 @@ namespace ARKBreedingStats
             {
                 infoText = $"Creature \"{creature.name}\" couldn't be extracted uniquely, manual level selection is necessary.";
                 textColor = Color.FromArgb(255, colorSaturation, colorSaturation);
-                LevelStatusFlags.Clear();
+                LevelColorStatusFlags.Clear();
             }
 
             if (_overlay != null)
@@ -411,9 +412,9 @@ namespace ARKBreedingStats
                 {
                     var overlayPatternResult = NamePattern.GenerateCreatureName(creature, alreadyExistingCreature,
                         _creatureCollection.creatures.Where(c => c.Species == creature.Species).ToArray(),
-                        _topLevels.TryGetValue(creature.Species, out var tl) ? tl : null,
+                        _creatureCollection.TopLevels.TryGetValue(creature.Species, out var tl) ? tl : null,
                         _customReplacingNamingPattern, false, -1, false, overlayPattern,
-                        false, colorsExisting: _creatureCollection.ColorAlreadyAvailable(creature.Species, creature.colors, out _),
+                        false, colorsExisting: _creatureCollection.DetermineColorStatus(creature.Species, creature.colors, out _, out _, out _),
                         libraryCreatureCount: _creatureCollection.GetTotalCreatureCount());
 
                     if (!string.IsNullOrEmpty(overlayPatternResult))
@@ -485,14 +486,14 @@ namespace ARKBreedingStats
         {
             if (!updateData)
             {
-                creatureInfoInputExtractor.DontUpdateVisuals = true;
+                creatureInfoInputExtractor.DoNotUpdateVisuals = true;
                 _dontUpdateExtractorVisualData = true;
             }
             else
             {
-                creatureInfoInputExtractor.DontUpdateVisuals = true;
+                creatureInfoInputExtractor.DoNotUpdateVisuals = true;
                 var colors = creatureInfoInputExtractor.RegionColors;
-                creatureInfoInputExtractor.DontUpdateVisuals = false;
+                creatureInfoInputExtractor.DoNotUpdateVisuals = false;
                 _dontUpdateExtractorVisualData = false;
                 creatureInfoInputExtractor.RegionColors = colors;
             }

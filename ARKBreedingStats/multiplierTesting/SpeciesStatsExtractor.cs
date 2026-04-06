@@ -69,8 +69,15 @@ namespace ARKBreedingStats.multiplierTesting
             var creaturesOrderedByTeWithoutDomLevels = domCreatures
                 .Where(ec => ec.DinoImprintingQuality == 0 && ec.Stats.All(s => s.Tamed == 0 && s.Mutated == 0))
                 .OrderBy(ec => ec.TameEffectiveness).ToArray();
+            if (!creaturesOrderedByTeWithoutDomLevels.Any())
+            {
+                resultText = "No tamed creature with no imprinting and only wild levels provided, canceling";
+                isError = true;
+                return false;
+            }
             var crHighTe = creaturesOrderedByTeWithoutDomLevels.Last();
             var crLowTe = creaturesOrderedByTeWithoutDomLevels.First();
+
 
             var creaturesWithImprinting = domCreatures
                 .Where(c => c.DinoImprintingQuality > 0.01)
@@ -125,7 +132,7 @@ namespace ARKBreedingStats.multiplierTesting
 
                 species.fullStatsRaw[s] = new double[5];
                 var spStats = species.fullStatsRaw[s];
-                var baseValue = wildCreatureWithZeroWildLevels.GetStatValue(s);
+                var baseValue = Math.Round(wildCreatureWithZeroWildLevels.GetStatValue(s), roundToDigits);
                 if (baseValue == 0) continue;
 
                 spStats[Species.StatsRawIndexBase] = baseValue;
@@ -164,6 +171,7 @@ namespace ARKBreedingStats.multiplierTesting
 
                     taTmSolver.SetFirstEquation(lowLevelHpCreature.GetStatValue(s), baseValue,
                         lowLevelHpCreature.Stats[s].Wild, incPerWild, svStats[ServerMultipliers.IndexLevelWild],
+                        0, 1,
                         1, lowLevelHpCreature.DinoImprintingQuality, species.StatImprintMultipliers[s],
                         serverMultipliers.BabyImprintingStatScaleMultiplier,
                         lowLevelHpCreature.TameEffectiveness, lowLevelHpCreature.Stats[s].Tamed, 0, 0);
@@ -171,6 +179,7 @@ namespace ARKBreedingStats.multiplierTesting
                     resultText = taTmSolver.CalculateTaTbhm(highLevelHpCreature.GetStatValue(s), baseValue,
                         highLevelHpCreature.Stats[s].Wild, incPerWild,
                         svStats[ServerMultipliers.IndexLevelWild],
+                        0, 1,
                          highLevelHpCreature.DinoImprintingQuality, species.StatImprintMultipliers[s],
                         serverMultipliers.BabyImprintingStatScaleMultiplier,
                         highLevelHpCreature.TameEffectiveness, highLevelHpCreature.Stats[s].Tamed, 0, 0, out var taTaM, out tbhm);
@@ -184,7 +193,9 @@ namespace ARKBreedingStats.multiplierTesting
                     if (taTaM != 0 && svStats[ServerMultipliers.IndexTamingAdd] != 0)
                         spStats[Species.StatsRawIndexAdditiveBonus] =
                             Math.Round(taTaM / svStats[ServerMultipliers.IndexTamingAdd], roundToDigits);
-                    if (tbhm != 0)
+
+                    tbhm = Math.Round(tbhm, roundToDigits);
+                    if (tbhm != 1)
                         species.TamedBaseHealthMultiplier = (float)tbhm;
                 }
                 else
@@ -192,6 +203,7 @@ namespace ARKBreedingStats.multiplierTesting
                     // ta, tm
                     taTmSolver.SetFirstEquation(crHighTe.GetStatValue(s), baseValue,
                         crHighTe.Stats[s].Wild, incPerWild, svStats[ServerMultipliers.IndexLevelWild],
+                        0, 1,
                         1, crHighTe.DinoImprintingQuality, species.StatImprintMultipliers[s],
                         serverMultipliers.BabyImprintingStatScaleMultiplier,
                         crHighTe.TameEffectiveness, crHighTe.Stats[s].Tamed, 0, 0);
@@ -199,6 +211,7 @@ namespace ARKBreedingStats.multiplierTesting
                     resultText = taTmSolver.CalculateTaTm(crLowTe.GetStatValue(s), baseValue,
                         crLowTe.Stats[s].Wild, incPerWild,
                         svStats[ServerMultipliers.IndexLevelWild],
+                        0, 1,
                         1, crLowTe.DinoImprintingQuality, species.StatImprintMultipliers[s],
                         serverMultipliers.BabyImprintingStatScaleMultiplier,
                         crLowTe.TameEffectiveness, crLowTe.Stats[s].Tamed, 0, 0, out var taTaM, out var tmTmM);
@@ -209,9 +222,10 @@ namespace ARKBreedingStats.multiplierTesting
                         isError = true;
                     }
 
+                    var roundToDigitsTa = Stats.Precision(s); // round Ta more due to extraction rounding issues
                     if (taTaM != 0 && svStats[ServerMultipliers.IndexTamingAdd] != 0)
                         spStats[Species.StatsRawIndexAdditiveBonus] =
-                            Math.Round(taTaM / svStats[ServerMultipliers.IndexTamingAdd], roundToDigits);
+                            Math.Round(taTaM / svStats[ServerMultipliers.IndexTamingAdd], roundToDigitsTa);
                     if (tmTmM != 0 && svStats[ServerMultipliers.IndexTamingMult] != 0)
                         spStats[Species.StatsRawIndexMultiplicativeBonus] =
                             Math.Round(tmTmM / svStats[ServerMultipliers.IndexTamingMult], roundToDigits);
@@ -254,7 +268,7 @@ namespace ARKBreedingStats.multiplierTesting
                     {
                         var crStats = creatureWithImprinting.Stats[s];
                         speciesStatImprintingMultipliers[s] = Math.Round(
-                            ((creatureWithNonZeroDomLevels.GetStatValue(s) /
+                            ((creatureWithImprinting.GetStatValue(s) /
                               ((1 + creatureWithImprinting.TameEffectiveness *
                                   spStats[Species.StatsRawIndexMultiplicativeBonus] *
                                   svStats[ServerMultipliers.IndexTamingMult]) * (1 + crStats.Tamed * spStats[Species.StatsRawIndexIncPerDomLevel] * svStats[ServerMultipliers.IndexLevelDom]))
@@ -272,15 +286,17 @@ namespace ARKBreedingStats.multiplierTesting
             }
 
             // if statImprinting is default, no need to save it
-            var defaultStatImprintingMultipliers = Species.StatImprintMultipliersDefaultAse;
+            var statImprintingMultipliersIsDefault = true;
             for (var si = 0; si < Stats.StatsCount; si++)
             {
-                if (speciesStatImprintingMultipliers[si] != defaultStatImprintingMultipliers[si])
+                if (speciesStatImprintingMultipliers[si] != Species.StatImprintMultipliersDefaultAse[si])
                 {
-                    species.StatImprintMultipliersRaw = speciesStatImprintingMultipliers;
+                    statImprintingMultipliersIsDefault = false;
                     break;
                 }
             }
+
+            species.StatImprintMultipliersRaw = statImprintingMultipliersIsDefault ? null : speciesStatImprintingMultipliers;
 
             species.Initialize(); // initialize second time to set used stats
 

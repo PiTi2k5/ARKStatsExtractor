@@ -46,6 +46,10 @@ namespace ARKBreedingStats.library
                         foreach (var si in Stats.DisplayOrder)
                             output.Append(Utils.StatName(si, true, secondaryLanguage: secondaryLanguage) + "_w\t");
                         break;
+                    case TableExportFields.MutationLevels:
+                        foreach (var si in Stats.DisplayOrder)
+                            output.Append(Utils.StatName(si, true, secondaryLanguage: secondaryLanguage) + "_m\t");
+                        break;
                     case TableExportFields.DomLevels:
                         foreach (var si in Stats.DisplayOrder)
                             output.Append(Utils.StatName(si, true, secondaryLanguage: secondaryLanguage) + "_d\t");
@@ -108,6 +112,10 @@ namespace ARKBreedingStats.library
                             foreach (var si in Stats.DisplayOrder)
                                 output.Append($"{c.levelsWild[si]}\t");
                             break;
+                        case TableExportFields.MutationLevels:
+                            foreach (var si in Stats.DisplayOrder)
+                                output.Append($"{c.levelsMutated?[si]}\t");
+                            break;
                         case TableExportFields.DomLevels:
                             foreach (var si in Stats.DisplayOrder)
                                 output.Append($"{c.levelsDom[si]}\t");
@@ -118,7 +126,7 @@ namespace ARKBreedingStats.library
                             break;
                         case TableExportFields.CurrentValues:
                             foreach (var si in Stats.DisplayOrder)
-                                output.Append($"{c.valuesDom[si]}\t");
+                                output.Append($"{c.valuesCurrent[si]}\t");
                             break;
                         case TableExportFields.IdInGame:
                             output.Append(c.ArkIdInGame + "\t");
@@ -173,7 +181,9 @@ namespace ARKBreedingStats.library
         /// </summary>
         public enum TableExportFields
         {
-            Species, SpeciesLongName, Name, Sex, Owner, Tribe, WildLevels, DomLevels, BreedingValues, CurrentValues, IdInGame, ParentIds, ParentNames, MutationCount, Fertility, Notes, ColorIds, ColorNames, ServerName, AddedToLibrary, CreatureStatus
+            Species, SpeciesLongName, Name, Sex, Owner, Tribe, WildLevels, DomLevels, BreedingValues,
+            CurrentValues, IdInGame, ParentIds, ParentNames, MutationCount, Fertility, Notes, ColorIds,
+            ColorNames, ServerName, AddedToLibrary, CreatureStatus, MutationLevels
         }
 
         /// <summary>
@@ -238,13 +248,18 @@ namespace ARKBreedingStats.library
                 if (c.levelsWild[si] >= 0 &&
                     c.valuesBreeding[si] > 0) // ignore unknown levels (e.g. oxygen, speed for some species)
                     sb.Append(Utils.StatName(si, true, secondaryLanguage: secondaryLanguage) + ": " +
-                              (breeding ? c.valuesBreeding[si] : c.valuesDom[si]) * (Stats.IsPercentage(si) ? 100 : 1) +
+                              (breeding ? c.valuesBreeding[si] : c.valuesCurrent[si]) * (Stats.IsPercentage(si) ? 100 : 1) +
                               (Stats.IsPercentage(si) ? " %" : string.Empty) +
                               " (" + (ARKml
                                   ? Utils.GetARKmlFromPercent(c.levelsWild[si].ToString(),
                                       (int)(c.levelsWild[si] *
                                             (si == Stats.Torpidity ? colorFactor / 7 : colorFactor)))
                                   : c.levelsWild[si].ToString()) +
+                              ", " + (ARKml
+                                  ? Utils.GetARKmlFromPercent(c.levelsMutated?[si].ToString() ?? string.Empty,
+                                      (int)((c.levelsMutated?[si] ?? 0) *
+                                            (si == Stats.Torpidity ? colorFactor / 7 : colorFactor)))
+                                  : c.levelsMutated?[si].ToString()) +
                               (ARKml ? breeding || si == Stats.Torpidity ? string.Empty :
                                       ", " + Utils.GetARKmlFromPercent(c.levelsDom[si].ToString(),
                                           (int)(c.levelsDom[si] * colorFactor)) :

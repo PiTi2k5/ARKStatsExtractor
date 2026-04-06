@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.utils;
 using ARKBreedingStats.values;
+using System.ComponentModel;
 
 namespace ARKBreedingStats
 {
@@ -67,8 +68,7 @@ namespace ARKBreedingStats
                 return;
             }
 
-            this.SuspendDrawing();
-            SuspendLayout();
+            this.SuspendDrawingAndLayout();
 
             string speciesName = species.name;
             linkLabelWikiPage.Text = "Wiki: " + speciesName;
@@ -102,8 +102,7 @@ namespace ARKBreedingStats
             if (Properties.Settings.Default.TamingFoodOrderByTime)
                 SetOrderOfTamingFood(true, true);
 
-            ResumeLayout();
-            this.ResumeDrawing();
+            this.ResumeDrawingAndLayout();
         }
 
         private void UpdateBoneDamageControls()
@@ -141,10 +140,7 @@ namespace ARKBreedingStats
         private void SetTamingFoodControls(Species species, bool resetFoodToBest, bool suspendLayout)
         {
             if (suspendLayout)
-            {
-                this.SuspendDrawing();
-                SuspendLayout();
-            }
+                this.SuspendDrawingAndLayout();
 
             var setFoodAmount = resetFoodToBest
                 ? null
@@ -231,10 +227,8 @@ namespace ARKBreedingStats
             }
 
             if (suspendLayout)
-            {
-                ResumeLayout();
-                this.ResumeDrawing();
-            }
+                this.ResumeDrawingAndLayout();
+
             _updateCalculation = true;
 
             UpdateTamingData();
@@ -253,12 +247,12 @@ namespace ARKBreedingStats
             var order = _foodControlsVisible.Where(c => c.FoodName != null)
                 .Select(c => (c, orderByTamingTime ? c.TamingSeconds : c.MaxFood)).OrderBy(ct => ct.Item2).ToArray();
 
-            this.SuspendDrawing();
+            this.SuspendDrawingAndLayout();
             for (int i = 0; i < order.Length; i++)
                 flpTamingFood.Controls.SetChildIndex(order[i].c, i);
 
             SetTamingFoodSortAdorner(orderByTamingTime);
-            this.ResumeDrawing();
+            this.ResumeDrawingAndLayout();
         }
 
         private void SetTamingFoodSortAdorner(bool orderByTamingTime)
@@ -288,6 +282,7 @@ namespace ARKBreedingStats
         /// </summary>
         private void EstimateFoodValue()
         {
+            if (_selectedSpecies?.stats?[Stats.Food] == null) return;
             nudTotalFood.Value = (decimal)(_selectedSpecies.stats[Stats.Food].BaseValue * (1 + _selectedSpecies.stats[Stats.Food].IncPerWildLevel * ((int)nudLevel.Value / 7))); // approximating the food level
             nudCurrentFood.Value = nudTotalFood.Value;
         }
@@ -498,6 +493,7 @@ namespace ARKBreedingStats
                 _koNumbers = string.Empty;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double[] WeaponDamages
         {
             get => new[] { (double)nudWDmLongneck.Value, (double)nudWDmCrossbow.Value, (double)nudWDmBow.Value, (double)nudWDmSlingshot.Value, (double)nudWDmClub.Value, (double)nudWDmProd.Value, (double)nudWDmHarpoon.Value };
@@ -514,6 +510,7 @@ namespace ARKBreedingStats
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int WeaponDamagesEnabled
         {
             set

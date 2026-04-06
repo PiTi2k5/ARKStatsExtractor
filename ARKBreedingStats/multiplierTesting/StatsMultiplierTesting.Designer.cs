@@ -42,13 +42,17 @@
             this.LbSpeciesValuesExtractor = new System.Windows.Forms.Label();
             this.LbBlueprintPath = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.rbBred = new System.Windows.Forms.RadioButton();
-            this.rbTamed = new System.Windows.Forms.RadioButton();
+            this.rbDomesticated = new System.Windows.Forms.RadioButton();
             this.rbWild = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.BtTe0 = new System.Windows.Forms.Button();
+            this.BtTe100 = new System.Windows.Forms.Button();
             this.LbCalculatedWildLevel = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.BtIb0 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.gbFineAdjustment = new System.Windows.Forms.GroupBox();
             this.tbFineAdjustments = new System.Windows.Forms.TrackBar();
@@ -94,6 +98,9 @@
             this.setAllDomLevelsToTheClosestValueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyStatValuesToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openWikiPageOnStatCalculationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.setAllMutLevelsToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.LbMm = new System.Windows.Forms.Label();
+            this.LbLm = new System.Windows.Forms.Label();
             this.nudTE = new ARKBreedingStats.uiControls.Nud();
             this.nudIBM = new ARKBreedingStats.uiControls.Nud();
             this.nudIB = new ARKBreedingStats.uiControls.Nud();
@@ -134,7 +141,7 @@
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1011, 508);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1213, 508);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // groupBox4
@@ -245,7 +252,7 @@
             this.LbSpeciesValuesExtractor.AutoSize = true;
             this.LbSpeciesValuesExtractor.BackColor = System.Drawing.Color.White;
             this.flowLayoutPanel1.SetFlowBreak(this.LbSpeciesValuesExtractor, true);
-            this.LbSpeciesValuesExtractor.Location = new System.Drawing.Point(3, 77);
+            this.LbSpeciesValuesExtractor.Location = new System.Drawing.Point(835, 0);
             this.LbSpeciesValuesExtractor.Name = "LbSpeciesValuesExtractor";
             this.LbSpeciesValuesExtractor.Padding = new System.Windows.Forms.Padding(3, 12, 3, 12);
             this.LbSpeciesValuesExtractor.Size = new System.Drawing.Size(243, 37);
@@ -259,7 +266,7 @@
             // 
             this.flowLayoutPanel1.SetFlowBreak(this.LbBlueprintPath, true);
             this.LbBlueprintPath.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.LbBlueprintPath.Location = new System.Drawing.Point(3, 114);
+            this.LbBlueprintPath.Location = new System.Drawing.Point(3, 77);
             this.LbBlueprintPath.Name = "LbBlueprintPath";
             this.LbBlueprintPath.Size = new System.Drawing.Size(901, 21);
             this.LbBlueprintPath.TabIndex = 14;
@@ -267,37 +274,25 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.rbBred);
-            this.groupBox1.Controls.Add(this.rbTamed);
+            this.groupBox1.Controls.Add(this.rbDomesticated);
             this.groupBox1.Controls.Add(this.rbWild);
-            this.groupBox1.Location = new System.Drawing.Point(3, 138);
+            this.groupBox1.Location = new System.Drawing.Point(3, 135);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(167, 49);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Status";
             // 
-            // rbBred
+            // rbDomesticated
             // 
-            this.rbBred.AutoSize = true;
-            this.rbBred.Location = new System.Drawing.Point(115, 19);
-            this.rbBred.Name = "rbBred";
-            this.rbBred.Size = new System.Drawing.Size(46, 17);
-            this.rbBred.TabIndex = 2;
-            this.rbBred.Text = "bred";
-            this.rbBred.UseVisualStyleBackColor = true;
-            this.rbBred.CheckedChanged += new System.EventHandler(this.rbBred_CheckedChanged);
-            // 
-            // rbTamed
-            // 
-            this.rbTamed.AutoSize = true;
-            this.rbTamed.Location = new System.Drawing.Point(55, 19);
-            this.rbTamed.Name = "rbTamed";
-            this.rbTamed.Size = new System.Drawing.Size(54, 17);
-            this.rbTamed.TabIndex = 1;
-            this.rbTamed.Text = "tamed";
-            this.rbTamed.UseVisualStyleBackColor = true;
-            this.rbTamed.CheckedChanged += new System.EventHandler(this.rbTamed_CheckedChanged);
+            this.rbDomesticated.AutoSize = true;
+            this.rbDomesticated.Location = new System.Drawing.Point(55, 19);
+            this.rbDomesticated.Name = "rbDomesticated";
+            this.rbDomesticated.Size = new System.Drawing.Size(88, 17);
+            this.rbDomesticated.TabIndex = 1;
+            this.rbDomesticated.Text = "domesticated";
+            this.rbDomesticated.UseVisualStyleBackColor = true;
+            this.rbDomesticated.CheckedChanged += new System.EventHandler(this.rbDomesticated_CheckedChanged);
             // 
             // rbWild
             // 
@@ -312,20 +307,44 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.BtTe0);
+            this.groupBox2.Controls.Add(this.BtTe100);
             this.groupBox2.Controls.Add(this.LbCalculatedWildLevel);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Controls.Add(this.nudTE);
-            this.groupBox2.Location = new System.Drawing.Point(176, 138);
+            this.groupBox2.Location = new System.Drawing.Point(176, 135);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(163, 49);
+            this.groupBox2.Size = new System.Drawing.Size(187, 49);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "TamingEffectiveness";
             // 
+            // BtTe0
+            // 
+            this.BtTe0.Font = new System.Drawing.Font("Microsoft Sans Serif", 5.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtTe0.Location = new System.Drawing.Point(98, 13);
+            this.BtTe0.Name = "BtTe0";
+            this.BtTe0.Size = new System.Drawing.Size(24, 15);
+            this.BtTe0.TabIndex = 5;
+            this.BtTe0.Text = "0";
+            this.BtTe0.UseVisualStyleBackColor = true;
+            this.BtTe0.Click += new System.EventHandler(this.BtTe0_Click);
+            // 
+            // BtTe100
+            // 
+            this.BtTe100.Font = new System.Drawing.Font("Microsoft Sans Serif", 5.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtTe100.Location = new System.Drawing.Point(98, 27);
+            this.BtTe100.Name = "BtTe100";
+            this.BtTe100.Size = new System.Drawing.Size(24, 15);
+            this.BtTe100.TabIndex = 4;
+            this.BtTe100.Text = "100";
+            this.BtTe100.UseVisualStyleBackColor = true;
+            this.BtTe100.Click += new System.EventHandler(this.BtTe100_Click);
+            // 
             // LbCalculatedWildLevel
             // 
             this.LbCalculatedWildLevel.AutoSize = true;
-            this.LbCalculatedWildLevel.Location = new System.Drawing.Point(104, 21);
+            this.LbCalculatedWildLevel.Location = new System.Drawing.Point(128, 21);
             this.LbCalculatedWildLevel.Name = "LbCalculatedWildLevel";
             this.LbCalculatedWildLevel.Size = new System.Drawing.Size(13, 13);
             this.LbCalculatedWildLevel.TabIndex = 3;
@@ -342,29 +361,63 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.BtIb0);
+            this.groupBox3.Controls.Add(this.button2);
+            this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Controls.Add(this.nudIBM);
             this.groupBox3.Controls.Add(this.nudIB);
-            this.groupBox3.Location = new System.Drawing.Point(345, 138);
+            this.groupBox3.Location = new System.Drawing.Point(369, 135);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(213, 49);
+            this.groupBox3.Size = new System.Drawing.Size(238, 49);
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Imprinting";
             // 
+            // BtIb0
+            // 
+            this.BtIb0.Font = new System.Drawing.Font("Microsoft Sans Serif", 5.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtIb0.Location = new System.Drawing.Point(107, 13);
+            this.BtIb0.Name = "BtIb0";
+            this.BtIb0.Size = new System.Drawing.Size(24, 15);
+            this.BtIb0.TabIndex = 7;
+            this.BtIb0.Text = "0";
+            this.BtIb0.UseVisualStyleBackColor = true;
+            this.BtIb0.Click += new System.EventHandler(this.BtIb0_Click);
+            // 
+            // button2
+            // 
+            this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 5.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button2.Location = new System.Drawing.Point(107, 27);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(24, 15);
+            this.button2.TabIndex = 6;
+            this.button2.Text = "100";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(92, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(15, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "%";
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(92, 21);
+            this.label2.Location = new System.Drawing.Point(133, 21);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(37, 13);
+            this.label2.Size = new System.Drawing.Size(26, 13);
             this.label2.TabIndex = 3;
-            this.label2.Text = "% IBM";
+            this.label2.Text = "IBM";
             // 
             // gbFineAdjustment
             // 
             this.gbFineAdjustment.Controls.Add(this.tbFineAdjustments);
-            this.gbFineAdjustment.Location = new System.Drawing.Point(564, 138);
+            this.gbFineAdjustment.Location = new System.Drawing.Point(613, 135);
             this.gbFineAdjustment.Name = "gbFineAdjustment";
             this.gbFineAdjustment.Size = new System.Drawing.Size(376, 49);
             this.gbFineAdjustment.TabIndex = 7;
@@ -387,13 +440,15 @@
             // 
             this.lBDummyEmptyFlowBreak.AutoSize = true;
             this.flowLayoutPanel1.SetFlowBreak(this.lBDummyEmptyFlowBreak, true);
-            this.lBDummyEmptyFlowBreak.Location = new System.Drawing.Point(946, 135);
+            this.lBDummyEmptyFlowBreak.Location = new System.Drawing.Point(995, 132);
             this.lBDummyEmptyFlowBreak.Name = "lBDummyEmptyFlowBreak";
             this.lBDummyEmptyFlowBreak.Size = new System.Drawing.Size(0, 13);
             this.lBDummyEmptyFlowBreak.TabIndex = 11;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.LbMm);
+            this.panel1.Controls.Add(this.LbLm);
             this.panel1.Controls.Add(this.LbFinalValue);
             this.panel1.Controls.Add(this.LbIdM);
             this.panel1.Controls.Add(this.LbId);
@@ -408,17 +463,17 @@
             this.panel1.Controls.Add(this.LbLw);
             this.panel1.Controls.Add(this.LbBaseValue);
             this.flowLayoutPanel1.SetFlowBreak(this.panel1, true);
-            this.panel1.Location = new System.Drawing.Point(3, 193);
+            this.panel1.Location = new System.Drawing.Point(3, 190);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1005, 29);
+            this.panel1.Size = new System.Drawing.Size(1139, 29);
             this.panel1.TabIndex = 8;
             // 
             // LbFinalValue
             // 
             this.LbFinalValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbFinalValue.Location = new System.Drawing.Point(864, 5);
+            this.LbFinalValue.Location = new System.Drawing.Point(1059, 5);
             this.LbFinalValue.Name = "LbFinalValue";
-            this.LbFinalValue.Size = new System.Drawing.Size(141, 20);
+            this.LbFinalValue.Size = new System.Drawing.Size(70, 20);
             this.LbFinalValue.TabIndex = 40;
             this.LbFinalValue.Text = "V";
             this.LbFinalValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -426,7 +481,7 @@
             // LbIdM
             // 
             this.LbIdM.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbIdM.Location = new System.Drawing.Point(806, 5);
+            this.LbIdM.Location = new System.Drawing.Point(936, 5);
             this.LbIdM.Name = "LbIdM";
             this.LbIdM.Size = new System.Drawing.Size(58, 20);
             this.LbIdM.TabIndex = 39;
@@ -436,7 +491,7 @@
             // LbId
             // 
             this.LbId.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbId.Location = new System.Drawing.Point(748, 5);
+            this.LbId.Location = new System.Drawing.Point(873, 5);
             this.LbId.Name = "LbId";
             this.LbId.Size = new System.Drawing.Size(58, 20);
             this.LbId.TabIndex = 38;
@@ -446,7 +501,7 @@
             // LbLd
             // 
             this.LbLd.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbLd.Location = new System.Drawing.Point(690, 5);
+            this.LbLd.Location = new System.Drawing.Point(812, 5);
             this.LbLd.Name = "LbLd";
             this.LbLd.Size = new System.Drawing.Size(58, 20);
             this.LbLd.TabIndex = 37;
@@ -456,7 +511,7 @@
             // LbTmM
             // 
             this.LbTmM.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbTmM.Location = new System.Drawing.Point(626, 5);
+            this.LbTmM.Location = new System.Drawing.Point(751, 5);
             this.LbTmM.Name = "LbTmM";
             this.LbTmM.Size = new System.Drawing.Size(58, 20);
             this.LbTmM.TabIndex = 36;
@@ -466,7 +521,7 @@
             // LbTm
             // 
             this.LbTm.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbTm.Location = new System.Drawing.Point(562, 5);
+            this.LbTm.Location = new System.Drawing.Point(687, 5);
             this.LbTm.Name = "LbTm";
             this.LbTm.Size = new System.Drawing.Size(58, 20);
             this.LbTm.TabIndex = 35;
@@ -476,7 +531,7 @@
             // LbTaM
             // 
             this.LbTaM.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbTaM.Location = new System.Drawing.Point(498, 5);
+            this.LbTaM.Location = new System.Drawing.Point(623, 5);
             this.LbTaM.Name = "LbTaM";
             this.LbTaM.Size = new System.Drawing.Size(58, 20);
             this.LbTaM.TabIndex = 34;
@@ -486,7 +541,7 @@
             // LbTa
             // 
             this.LbTa.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbTa.Location = new System.Drawing.Point(434, 5);
+            this.LbTa.Location = new System.Drawing.Point(560, 5);
             this.LbTa.Name = "LbTa";
             this.LbTa.Size = new System.Drawing.Size(58, 20);
             this.LbTa.TabIndex = 33;
@@ -496,7 +551,7 @@
             // LbTBHM
             // 
             this.LbTBHM.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbTBHM.Location = new System.Drawing.Point(370, 5);
+            this.LbTBHM.Location = new System.Drawing.Point(495, 5);
             this.LbTBHM.Name = "LbTBHM";
             this.LbTBHM.Size = new System.Drawing.Size(58, 20);
             this.LbTBHM.TabIndex = 32;
@@ -506,7 +561,7 @@
             // LbIwM
             // 
             this.LbIwM.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbIwM.Location = new System.Drawing.Point(306, 5);
+            this.LbIwM.Location = new System.Drawing.Point(307, 5);
             this.LbIwM.Name = "LbIwM";
             this.LbIwM.Size = new System.Drawing.Size(58, 20);
             this.LbIwM.TabIndex = 31;
@@ -516,7 +571,7 @@
             // LbIw
             // 
             this.LbIw.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbIw.Location = new System.Drawing.Point(242, 5);
+            this.LbIw.Location = new System.Drawing.Point(243, 5);
             this.LbIw.Name = "LbIw";
             this.LbIw.Size = new System.Drawing.Size(58, 20);
             this.LbIw.TabIndex = 30;
@@ -526,7 +581,7 @@
             // LbLw
             // 
             this.LbLw.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbLw.Location = new System.Drawing.Point(184, 5);
+            this.LbLw.Location = new System.Drawing.Point(182, 5);
             this.LbLw.Name = "LbLw";
             this.LbLw.Size = new System.Drawing.Size(58, 20);
             this.LbLw.TabIndex = 29;
@@ -536,7 +591,7 @@
             // LbBaseValue
             // 
             this.LbBaseValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LbBaseValue.Location = new System.Drawing.Point(79, 5);
+            this.LbBaseValue.Location = new System.Drawing.Point(78, 5);
             this.LbBaseValue.Name = "LbBaseValue";
             this.LbBaseValue.Size = new System.Drawing.Size(105, 20);
             this.LbBaseValue.TabIndex = 28;
@@ -549,7 +604,7 @@
             this.gbLevel.Controls.Add(this.lbLevelSumWild);
             this.gbLevel.Controls.Add(this.label16);
             this.gbLevel.Controls.Add(this.nudCreatureLevel);
-            this.gbLevel.Location = new System.Drawing.Point(3, 228);
+            this.gbLevel.Location = new System.Drawing.Point(3, 225);
             this.gbLevel.Name = "gbLevel";
             this.gbLevel.Size = new System.Drawing.Size(200, 81);
             this.gbLevel.TabIndex = 9;
@@ -586,7 +641,7 @@
             // LbAbbreviations
             // 
             this.LbAbbreviations.AutoSize = true;
-            this.LbAbbreviations.Location = new System.Drawing.Point(209, 225);
+            this.LbAbbreviations.Location = new System.Drawing.Point(209, 222);
             this.LbAbbreviations.Name = "LbAbbreviations";
             this.LbAbbreviations.Size = new System.Drawing.Size(780, 39);
             this.LbAbbreviations.TabIndex = 13;
@@ -602,7 +657,7 @@
             this.openWikiPageOnStatCalculationToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1011, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1213, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -660,47 +715,47 @@
             // idMToolStripMenuItem1
             // 
             this.idMToolStripMenuItem1.Name = "idMToolStripMenuItem1";
-            this.idMToolStripMenuItem1.Size = new System.Drawing.Size(116, 22);
+            this.idMToolStripMenuItem1.Size = new System.Drawing.Size(117, 22);
             this.idMToolStripMenuItem1.Text = "all IwM";
             this.idMToolStripMenuItem1.Click += new System.EventHandler(this.iwMToolStripMenuItem_Click);
             // 
             // idMToolStripMenuItem
             // 
             this.idMToolStripMenuItem.Name = "idMToolStripMenuItem";
-            this.idMToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.idMToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.idMToolStripMenuItem.Text = "all IdM";
             this.idMToolStripMenuItem.Click += new System.EventHandler(this.idMToolStripMenuItem_Click);
             // 
             // taMToolStripMenuItem
             // 
             this.taMToolStripMenuItem.Name = "taMToolStripMenuItem";
-            this.taMToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.taMToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.taMToolStripMenuItem.Text = "all TaM";
             this.taMToolStripMenuItem.Click += new System.EventHandler(this.taMToolStripMenuItem_Click);
             // 
             // tmMToolStripMenuItem
             // 
             this.tmMToolStripMenuItem.Name = "tmMToolStripMenuItem";
-            this.tmMToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.tmMToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.tmMToolStripMenuItem.Text = "all TmM";
             this.tmMToolStripMenuItem.Click += new System.EventHandler(this.tmMToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(113, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(114, 6);
             // 
             // allIwToolStripMenuItem
             // 
             this.allIwToolStripMenuItem.Name = "allIwToolStripMenuItem";
-            this.allIwToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.allIwToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.allIwToolStripMenuItem.Text = "all Iw";
             this.allIwToolStripMenuItem.Click += new System.EventHandler(this.allIwToolStripMenuItem_Click);
             // 
             // allIdToolStripMenuItem
             // 
             this.allIdToolStripMenuItem.Name = "allIdToolStripMenuItem";
-            this.allIdToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.allIdToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.allIdToolStripMenuItem.Text = "all Id";
             this.allIdToolStripMenuItem.Click += new System.EventHandler(this.allIdToolStripMenuItem_Click);
             // 
@@ -708,6 +763,7 @@
             // 
             this.setAllLvlToToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.allWildLvlToToolStripMenuItem,
+            this.setAllMutLevelsToToolStripMenuItem,
             this.allDomLvlToToolStripMenuItem,
             this.toolStripSeparator2,
             this.setAllWildLevelsToTheClosestValueToolStripMenuItem,
@@ -763,6 +819,33 @@
             this.openWikiPageOnStatCalculationToolStripMenuItem.Text = "Open wiki page on stat calculation";
             this.openWikiPageOnStatCalculationToolStripMenuItem.Click += new System.EventHandler(this.openWikiPageOnStatCalculationToolStripMenuItem_Click);
             // 
+            // setAllMutLevelsToToolStripMenuItem
+            // 
+            this.setAllMutLevelsToToolStripMenuItem.Name = "setAllMutLevelsToToolStripMenuItem";
+            this.setAllMutLevelsToToolStripMenuItem.Size = new System.Drawing.Size(270, 22);
+            this.setAllMutLevelsToToolStripMenuItem.Text = "Set all Mut levels to…";
+            this.setAllMutLevelsToToolStripMenuItem.Click += new System.EventHandler(this.setAllMutLevelsToToolStripMenuItem_Click);
+            // 
+            // LbMm
+            // 
+            this.LbMm.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbMm.Location = new System.Drawing.Point(430, 5);
+            this.LbMm.Name = "LbMm";
+            this.LbMm.Size = new System.Drawing.Size(58, 20);
+            this.LbMm.TabIndex = 42;
+            this.LbMm.Text = "Mm";
+            this.LbMm.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // LbLm
+            // 
+            this.LbLm.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbLm.Location = new System.Drawing.Point(369, 5);
+            this.LbLm.Name = "LbLm";
+            this.LbLm.Size = new System.Drawing.Size(58, 20);
+            this.LbLm.TabIndex = 41;
+            this.LbLm.Text = "Lm";
+            this.LbLm.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // nudTE
             // 
             this.nudTE.DecimalPlaces = 3;
@@ -787,7 +870,7 @@
             0,
             0,
             65536});
-            this.nudIBM.Location = new System.Drawing.Point(135, 19);
+            this.nudIBM.Location = new System.Drawing.Point(161, 19);
             this.nudIBM.Name = "nudIBM";
             this.nudIBM.NeutralNumber = new decimal(new int[] {
             0,
@@ -850,7 +933,7 @@
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.Name = "StatsMultiplierTesting";
-            this.Size = new System.Drawing.Size(1011, 532);
+            this.Size = new System.Drawing.Size(1213, 532);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.StatsMultiplierTesting_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.StatsMultiplierTesting_DragEnter);
             this.flowLayoutPanel1.ResumeLayout(false);
@@ -909,8 +992,7 @@
         private System.Windows.Forms.Label LbLw;
         private System.Windows.Forms.Label LbBaseValue;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.RadioButton rbBred;
-        private System.Windows.Forms.RadioButton rbTamed;
+        private System.Windows.Forms.RadioButton rbDomesticated;
         private System.Windows.Forms.RadioButton rbWild;
         private System.Windows.Forms.GroupBox gbLevel;
         private System.Windows.Forms.Label lbLevelSumDom;
@@ -952,5 +1034,13 @@
         private System.Windows.Forms.ToolStripMenuItem copyStatValuesToClipboardToolStripMenuItem;
         private System.Windows.Forms.Label LbSpeciesValuesExtractor;
         private System.Windows.Forms.ToolStripMenuItem openWikiPageOnStatCalculationToolStripMenuItem;
+        private System.Windows.Forms.Button BtTe0;
+        private System.Windows.Forms.Button BtTe100;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button BtIb0;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ToolStripMenuItem setAllMutLevelsToToolStripMenuItem;
+        private System.Windows.Forms.Label LbMm;
+        private System.Windows.Forms.Label LbLm;
     }
 }

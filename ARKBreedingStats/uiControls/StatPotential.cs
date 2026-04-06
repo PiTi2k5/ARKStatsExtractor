@@ -1,21 +1,23 @@
-﻿using ARKBreedingStats.species;
+﻿using System;
+using ARKBreedingStats.species;
 using System.Drawing;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
     public partial class StatPotential : UserControl
     {
         private readonly int _statIndex;
-        public int maxDomLevel;
-        public int levelGraphMax;
+        public int MaxDomLevel;
+        public int LevelGraphMax;
         private readonly bool _percent;
         private readonly ToolTip _tt = new ToolTip();
 
         public StatPotential()
         {
             InitializeComponent();
-            Disposed += (s, e) => _tt.RemoveAll();
+            Disposed += (s, e) => _tt.RemoveAllAndDispose();
         }
         public StatPotential(int stat, bool percent)
         {
@@ -27,22 +29,30 @@ namespace ARKBreedingStats.uiControls
 
         public void SetLevel(Species species, int wildLevel, int mutationLevels)
         {
-            if (levelGraphMax > 0)
+            if (LevelGraphMax <= 0) return;
+            const int controlWidth = 60;
+            var wildMutSumLevel = Math.Max(0, wildLevel + mutationLevels);
+            labelWildLevels.Width = controlWidth + controlWidth * (wildMutSumLevel > LevelGraphMax ? LevelGraphMax : wildMutSumLevel) / LevelGraphMax;
+            labelImprinting.Width = controlWidth;
+            labelDomLevels.Width = controlWidth;
+            labelImprinting.Location = new Point(33 + labelWildLevels.Width, 0);
+            labelDomLevels.Location = new Point(35 + labelWildLevels.Width + labelImprinting.Width, 0);
+            if (wildLevel < 0 || mutationLevels < 0)
             {
-                SuspendLayout();
-                labelWildLevels.Width = 60 + 60 * (wildLevel > levelGraphMax ? levelGraphMax : wildLevel) / levelGraphMax;
-                labelImprinting.Width = 60;
-                labelDomLevels.Width = 60;
-                labelImprinting.Location = new Point(33 + labelWildLevels.Width, 0);
-                labelDomLevels.Location = new Point(35 + labelWildLevels.Width + labelImprinting.Width, 0);
-                labelWildLevels.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, 0, true, 1, 0) * (_percent ? 100 : 1) + (_percent ? "%" : "");
-                labelImprinting.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, 0, true, 1, 1) * (_percent ? 100 : 1) + (_percent ? "%" : "");
-                labelDomLevels.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, maxDomLevel, true, 1, 1) * (_percent ? 100 : 1) + (_percent ? "%" : "");
-                _tt.SetToolTip(labelWildLevels, labelWildLevels.Text);
-                _tt.SetToolTip(labelImprinting, labelImprinting.Text);
-                _tt.SetToolTip(labelDomLevels, labelDomLevels.Text);
-                ResumeLayout();
+                labelWildLevels.Text = "?";
+                labelImprinting.Text = "?";
+                labelDomLevels.Text = "?";
             }
+            else
+            {
+                var suffix = _percent ? "%" : string.Empty;
+                labelWildLevels.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, 0, true, 1, 0) * (_percent ? 100 : 1) + suffix;
+                labelImprinting.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, 0, true, 1, 1) * (_percent ? 100 : 1) + suffix;
+                labelDomLevels.Text = StatValueCalculation.CalculateValue(species, _statIndex, wildLevel, mutationLevels, MaxDomLevel, true, 1, 1) * (_percent ? 100 : 1) + suffix;
+            }
+            _tt.SetToolTip(labelWildLevels, labelWildLevels.Text);
+            _tt.SetToolTip(labelImprinting, labelImprinting.Text);
+            _tt.SetToolTip(labelDomLevels, labelDomLevels.Text);
         }
 
         public void SetLocalization()

@@ -10,13 +10,13 @@ namespace ARKBreedingStats.mods
     [JsonObject(MemberSerialization.OptIn)]
     public class ModInfo
     {
-        [JsonProperty]
-        public string version;
+        [JsonProperty("version")]
+        private string _version;
         public Version Version;
-        [JsonProperty]
-        public string format;
-        [JsonProperty]
-        public Mod mod;
+        [JsonProperty("format")]
+        public string Format;
+        [JsonProperty("mod")]
+        public Mod Mod;
         /// <summary>
         /// Indicates if the according json-file is downloaded.
         /// </summary>
@@ -30,18 +30,19 @@ namespace ARKBreedingStats.mods
         /// </summary>
         public bool CurrentlyInLibrary;
 
-        [OnDeserialized]
-        private void SetVersion(StreamingContext context)
-        {
-            Version.TryParse(version, out Version);
-        }
+        /// <summary>
+        /// True if the file is not in the official mods manifest, i.e. a file only available locally, usually custom created.
+        /// If this is true, the mod info can be reloaded. This allows the user to edit the file and have the updated version available in the mod manager.
+        /// </summary>
+        public bool ManuallyLoaded;
 
-        public override string ToString()
-        {
-            return (mod?.title ?? "unknown mod")
-                + (OnlineAvailable
-                    ? (!LocallyAvailable ? " (DL)" : string.Empty)
-                    : string.IsNullOrEmpty(mod?.FileName) ? string.Empty : " (Custom)");
-        }
+        [OnDeserialized]
+        private void SetVersion(StreamingContext _) => Version = Utils.TryParseVersionAlsoWithOnlyMajor(_version);
+
+        public override string ToString() =>
+            (Mod?.Title ?? "unknown mod")
+            + (OnlineAvailable
+                ? (!LocallyAvailable ? " (DL)" : string.Empty)
+                : string.IsNullOrEmpty(Mod?.FileName) ? string.Empty : " (Custom)");
     }
 }

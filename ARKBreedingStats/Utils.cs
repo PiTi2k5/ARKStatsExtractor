@@ -1,13 +1,13 @@
 ﻿using ARKBreedingStats.Library;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ARKBreedingStats.mods;
-using ARKBreedingStats.values;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats
 {
@@ -277,16 +277,14 @@ namespace ARKBreedingStats
         /// <summary>
         /// Returns the next possible sex.
         /// </summary>
-        /// <param name="sex"></param>
-        /// <returns></returns>
-        public static Sex NextSex(Sex sex)
+        public static Sex NextSex(Sex sex, bool includingUnknown = true)
         {
             switch (sex)
             {
                 case Sex.Female:
                     return Sex.Male;
                 case Sex.Male:
-                    return Sex.Unknown;
+                    return includingUnknown ? Sex.Unknown : Sex.Female;
                 default:
                     return Sex.Female;
             }
@@ -541,8 +539,7 @@ namespace ARKBreedingStats
             inputForm.Height = Math.Min(y + 50, 800);
 
             var dialogResult = inputForm.ShowDialog();
-            tt.RemoveAll();
-            tt.Dispose();
+            tt.RemoveAllAndDispose();
 
             return dialogResult != DialogResult.OK ? -1 : result;
         }
@@ -760,6 +757,36 @@ namespace ARKBreedingStats
             return combinations
                 .Select(x => x.ToArray())
                 .ToArray();
+        }
+
+        /// <summary>
+        /// Tries to parse a Version from a string.
+        /// The Version.TryParse cannot parse a string with only a major version, this method will do.
+        /// If there is no valid int, this method will return Version 0.0.
+        /// </summary>
+        public static Version TryParseVersionAlsoWithOnlyMajor(string versionString)
+        {
+            if (Version.TryParse(versionString, out var version))
+                return version;
+
+            return int.TryParse(versionString, out var major)
+                    ? new Version(major, 0)
+                    : new Version(0, 0);
+        }
+
+        /// <summary>
+        /// Compares two colors, only considering their ARGB values (ignoring the color name which is considered by the default Color.Equals()).
+        /// </summary>
+        public static bool ColorsEqual(Color c1, Color c2) => c1.A == c2.A && c1.R == c2.R && c1.G == c2.G && c1.B == c2.B;
+
+        /// <summary>
+        /// Opens a URL or file/folder path using the system default handler.
+        /// Uses UseShellExecute=true, which is required on .NET 5+ for shell-handled targets.
+        /// </summary>
+        public static void OpenUri(string uri)
+        {
+            if (string.IsNullOrEmpty(uri)) return;
+            Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
         }
     }
 }

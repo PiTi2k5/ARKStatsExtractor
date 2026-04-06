@@ -104,10 +104,17 @@ namespace ARKBreedingStats.species
         /// </summary>
         public ColorPattern patterns;
 
+        [JsonProperty] private bool? isFlyer;
         /// <summary>
         /// Indicates if the species is affected by the setting AllowFlyerSpeedLeveling
         /// </summary>
-        [JsonProperty] public bool isFlyer;
+        public bool IsFlyer => isFlyer == true;
+
+        /// <summary>
+        /// Blueprintpaths of species this species can mate with.
+        /// </summary>
+        [JsonProperty]
+        public string[] matesWith;
 
         [JsonProperty]
         public float? TamedBaseHealthMultiplier;
@@ -131,23 +138,27 @@ namespace ARKBreedingStats.species
         /// <summary>
         /// The raw species imprinting stat multipliers. This property should only be used for custom species.
         /// </summary>
-        public double[] StatImprintMultipliersRaw
-        {
-            get => statImprintMult;
-            set => statImprintMult = value;
-        }
+        public double[] StatImprintMultipliersRaw;
 
         [JsonProperty]
         public ColorRegion[] colors;
         [JsonProperty]
+        public double[] regionIntensities;
+        [JsonProperty]
         public TamingData taming;
         [JsonProperty]
         public BreedingData breeding;
+
         /// <summary>
         /// If the species uses no gender, ignore the sex in the breeding planner.
         /// </summary>
         [JsonProperty]
-        public bool noGender;
+        private bool? noGender;
+        /// <summary>
+        /// If the species uses no gender, ignore the sex in the breeding planner.
+        /// </summary>
+        public bool NoGender => noGender == true;
+
         [JsonProperty]
         public Dictionary<string, double> boneDamageAdjusters;
         [JsonProperty]
@@ -169,6 +180,18 @@ namespace ARKBreedingStats.species
         /// True if the species is tameable or domesticable in other ways (e.g. raising from collected eggs).
         /// </summary>
         public bool IsDomesticable;
+
+        /// <summary>
+        /// Value caps of stats. If a stat reaches a value, it cannot be levelled anymore.
+        /// </summary>
+        [JsonProperty("statCaps")]
+        private Dictionary<int, double> _statCaps;
+
+        /// <summary>
+        /// If a stat index is set to true here, the level ups are additive, i.e. independent on the base value for wild levels and independent on the post tame value for domestic levels.
+        /// </summary>
+        [JsonProperty("statLevelUpsAdditive")]
+        private Dictionary<int, bool> _statLevelUpsAdditive;
 
         /// <summary>
         /// creates properties that are not created during deserialization. They are set later with the raw-values with the multipliers applied.
@@ -210,30 +233,37 @@ namespace ARKBreedingStats.species
             double[][] completeRaws = new double[Stats.StatsCount][];
             for (int s = 0; s < Stats.StatsCount; s++)
             {
-                stats[s] = new SpeciesStat();
-                if (altStatsExist)
-                {
-                    if (altBaseStatsRaw.ContainsKey(s))
-                        altStats[s] = new SpeciesStat();
-                    else altStats[s] = stats[s];
-                }
-
                 var usesStat = false;
-                completeRaws[s] = new double[] { 0, 0, 0, 0, 0 };
+
                 if (fullStatsRawLength > s && fullStatsRaw[s] != null)
                 {
+                    usesStat = true;
+                    stats[s] = new SpeciesStat();
+                    if (altStatsExist)
+                    {
+                        if (altBaseStatsRaw.ContainsKey(s))
+                            altStats[s] = new SpeciesStat();
+                        else altStats[s] = stats[s];
+                    }
+
+                    completeRaws[s] = new double[] { 0, 0, 0, 0, 0 };
+
                     for (int i = 0; i < 5; i++)
                     {
                         if (fullStatsRaw[s].Length > i)
                         {
                             completeRaws[s][i] = fullStatsRaw[s]?[i] ?? 0;
-                            if (i == StatsRawIndexBase && fullStatsRaw[s][StatsRawIndexBase] > 0)
-                            {
-                                usesStat = true;
-                            }
                         }
                     }
+
+                    // For the taming multiplicative bonus Ark ignores values <0 and handles them like they're 0.
+                    if (completeRaws[s][StatsRawIndexMultiplicativeBonus] < 0)
+                        completeRaws[s][StatsRawIndexMultiplicativeBonus] = 0;
+
+                    stats[s].IncreaseStatAsPercentage = _statLevelUpsAdditive?.TryGetValue(s, out var useAdditive) != true || !useAdditive;
+                    stats[s].ValueCap = _statCaps?.TryGetValue(s, out var cap) == true ? cap : double.MaxValue;
                 }
+
                 var statBit = (1 << s);
                 if (usesStat)
                     usedStats |= statBit;
@@ -241,11 +271,11 @@ namespace ARKBreedingStats.species
                     _skipWildLevelStatsWithServerSettings |= statBit;
             }
 
-            if (DisplayedStats == -1 && usedStats != 0)
-                DisplayedStats = usedStats;
-
             if (fullStatsRawLength != 0)
                 fullStatsRaw = completeRaws;
+
+            if (DisplayedStats == -1 && usedStats != 0)
+                DisplayedStats = usedStats;
 
             if (colors?.Length == 0)
                 colors = null;
@@ -277,6 +307,8 @@ namespace ARKBreedingStats.species
 
             IsDomesticable = (taming != null && (taming.nonViolent || taming.violent))
                              || (breeding != null && (breeding.incubationTime > 0 || breeding.gestationTime > 0));
+
+            matesWith = matesWith?.Select(bp => bp.EndsWith("_C") ? bp.Substring(0, bp.Length - 2) : bp).ToArray();
         }
 
         /// <summary>
@@ -299,12 +331,11 @@ namespace ARKBreedingStats.species
             {
                 var ignoreVariants = _getIgnoreVariantInName();
                 VariantInfo = string.Join(", ", variants);
-                var gaun = variants.Any(v => ignoreVariants.Contains(v));
                 variantInfoForName = string.Join(", ", string.IsNullOrEmpty(name) ? variants : variants.Where(v => !name.Contains(v) && !ignoreVariants.Contains(v)));
             }
 
             DescriptiveName = name + (string.IsNullOrEmpty(variantInfoForName) ? string.Empty : " (" + variantInfoForName + ")");
-            string modSuffix = _mod?.shortTitle ?? _mod?.title;
+            string modSuffix = _mod?.ShortTitle ?? _mod?.Title;
             DescriptiveNameAndMod = DescriptiveName + (string.IsNullOrEmpty(modSuffix) ? string.Empty : " (" + modSuffix + ")");
             SortName = DescriptiveNameAndMod;
         }
@@ -387,7 +418,7 @@ namespace ARKBreedingStats.species
         {
             var statBit = (1 << Stats.SpeedMultiplier);
 
-            bool speedStatCanBeLeveled = canLevelSpeedStat && (canFlyerLevelSpeedStat || !isFlyer);
+            bool speedStatCanBeLeveled = canLevelSpeedStat && (canFlyerLevelSpeedStat || !IsFlyer);
             if (speedStatCanBeLeveled)
             {
                 DisplayedStats |= statBit;
@@ -501,6 +532,11 @@ namespace ARKBreedingStats.species
             if (overrides.boneDamageAdjusters != null) boneDamageAdjusters = overrides.boneDamageAdjusters;
             if (overrides.immobilizedBy != null) immobilizedBy = overrides.immobilizedBy;
             if (overrides.statNames != null) statNames = overrides.statNames;
+            if (overrides.isFlyer != null) isFlyer = overrides.isFlyer;
+            if (overrides.noGender != null) noGender = overrides.noGender;
+            if (overrides.matesWith != null) matesWith = overrides.matesWith;
+            if (overrides._statLevelUpsAdditive != null) _statLevelUpsAdditive = overrides._statLevelUpsAdditive;
+            if (overrides._statCaps != null) _statCaps = overrides._statCaps;
 
             Initialize(new StreamingContext());
         }

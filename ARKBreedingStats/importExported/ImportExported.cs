@@ -42,12 +42,13 @@ namespace ARKBreedingStats.importExported
                 "Crafting Skill"
             };
 
-            const NumberStyles numberStyle = System.Globalization.NumberStyles.AllowDecimalPoint | System.Globalization.NumberStyles.AllowLeadingSign;
-            var dotSeparatorCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+            const NumberStyles numberStyle = NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent;
+            var dotSeparatorCulture = CultureInfo.GetCultureInfo("en-US");
 
             bool inStatSection = false;
             foreach (string line in iniLines)
             {
+                if (line.TrimStart().StartsWith(";")) continue; // comment
                 if (line.Contains("[Max Character Status Values]"))
                 {
                     inStatSection = true;
@@ -230,6 +231,7 @@ namespace ARKBreedingStats.importExported
             // if file was not recognized, return null
             if (string.IsNullOrEmpty(cv.speciesBlueprint)) return null;
 
+            if (cv.Species?.NoGender == true) cv.sex = Sex.Unknown;
             cv.ColorIdsAlsoPossible = ArkColors.GetAlternativeColorIds(cv.colorIDs);
 
             return cv;

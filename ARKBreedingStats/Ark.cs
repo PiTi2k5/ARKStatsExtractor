@@ -1,5 +1,7 @@
 ﻿using ARKBreedingStats.values;
 using System;
+using System.Collections.Generic;
+using ARKBreedingStats.Traits;
 
 namespace ARKBreedingStats
 {
@@ -51,6 +53,12 @@ namespace ARKBreedingStats
         /// If they differ, the probability for a mutation from the parent with the higher stat is probabilityHigherLevel * probabilityOfMutation etc.
         /// </summary>
         public const double ProbabilityOfOneMutationFromOneParent = 1 - (1 - ProbabilityOfMutation / 2) * (1 - ProbabilityOfMutation / 2) * (1 - ProbabilityOfMutation / 2);
+
+        /// <summary>
+        /// Returns the probability of at least one mutation considering a possible additive mutation probability offset, e.g. by using traits.
+        /// </summary>
+        public static double ProbabilityOfOneMutationWithOffset(double baseMutationProbability, double mutationProbabilityOffset)
+            => 1 - Math.Pow(1 - (baseMutationProbability + mutationProbabilityOffset), 3);
 
         #endregion
 
@@ -172,10 +180,18 @@ namespace ARKBreedingStats
             // this is assumed to be the used formula
             var maxPossibleCuddles = maturationTime / (DefaultCuddleIntervalInSeconds * multipliers.BabyImprintAmountMultiplier);
             var denominator = maxPossibleCuddles - 0.25;
-            if (denominator < 0) return 0;
             if (denominator < multipliers.BabyCuddleIntervalMultiplier) return 1;
             return Math.Min(1, multipliers.BabyCuddleIntervalMultiplier / denominator);
         }
+
+        /// <summary>
+        /// Returns the imprinting bonus applied when taming a creature with a given rank in the talend Bonded Taming.
+        /// </summary>
+        public static double ImprintingPerBondedTamingRank(int rank) => rank * 0.1;
+
+        public const int MaxWildLevelDefault = 150;
+
+        public const int WildLevelStepDefault = 150 / 30;
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace ARKBreedingStats.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.13.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "18.4.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -654,7 +654,7 @@ namespace ARKBreedingStats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool IncludeCooldownsInBreedingPlan {
             get {
                 return ((bool)(this["IncludeCooldownsInBreedingPlan"]));
@@ -1259,18 +1259,6 @@ namespace ARKBreedingStats.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AlreadyAskedToDownloadSpeciesImageFiles {
-            get {
-                return ((bool)(this["AlreadyAskedToDownloadSpeciesImageFiles"]));
-            }
-            set {
-                this["AlreadyAskedToDownloadSpeciesImageFiles"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool LibrarySelectSelectedSpeciesOnLoad {
             get {
                 return ((bool)(this["LibrarySelectSelectedSpeciesOnLoad"]));
@@ -1622,18 +1610,6 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["CreatureTableExportFields"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SpeciesImagesFolder {
-            get {
-                return ((string)(this["SpeciesImagesFolder"]));
-            }
-            set {
-                this["SpeciesImagesFolder"] = value;
             }
         }
         
@@ -2407,6 +2383,226 @@ namespace ARKBreedingStats.Properties {
             }
             set {
                 this["BeginServerListeningOnLaunch"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool BreedingPlanOnlySameSpecies {
+            get {
+                return ((bool)(this["BreedingPlanOnlySameSpecies"]));
+            }
+            set {
+                this["BreedingPlanOnlySameSpecies"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int BondedTamingRank {
+            get {
+                return ((int)(this["BondedTamingRank"]));
+            }
+            set {
+                this["BondedTamingRank"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200, 200, 450, 600")]
+        public global::System.Drawing.Rectangle WindowPositionTraitSelection {
+            get {
+                return ((global::System.Drawing.Rectangle)(this["WindowPositionTraitSelection"]));
+            }
+            set {
+                this["WindowPositionTraitSelection"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string InfoGraphicBackgroundImagePath {
+            get {
+                return ((string)(this["InfoGraphicBackgroundImagePath"]));
+            }
+            set {
+                this["InfoGraphicBackgroundImagePath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int InfoGraphicBorderWidth {
+            get {
+                return ((int)(this["InfoGraphicBorderWidth"]));
+            }
+            set {
+                this["InfoGraphicBorderWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PlayColorSoundOnAutoImport {
+            get {
+                return ((bool)(this["PlayColorSoundOnAutoImport"]));
+            }
+            set {
+                this["PlayColorSoundOnAutoImport"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("White")]
+        public global::System.Drawing.Color InfoGraphicTextOutlineColor {
+            get {
+                return ((global::System.Drawing.Color)(this["InfoGraphicTextOutlineColor"]));
+            }
+            set {
+                this["InfoGraphicTextOutlineColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public float InfoGraphicTextOutlineWidth {
+            get {
+                return ((float)(this["InfoGraphicTextOutlineWidth"]));
+            }
+            set {
+                this["InfoGraphicTextOutlineWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int InfoGraphicCreatureOutlineWidth {
+            get {
+                return ((int)(this["InfoGraphicCreatureOutlineWidth"]));
+            }
+            set {
+                this["InfoGraphicCreatureOutlineWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("White")]
+        public global::System.Drawing.Color InfoGraphicCreatureOutlineColor {
+            get {
+                return ((global::System.Drawing.Color)(this["InfoGraphicCreatureOutlineColor"]));
+            }
+            set {
+                this["InfoGraphicCreatureOutlineColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
+        public float InfoGraphicCreatureOutlineBlurring {
+            get {
+                return ((float)(this["InfoGraphicCreatureOutlineBlurring"]));
+            }
+            set {
+                this["InfoGraphicCreatureOutlineBlurring"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public float InfoGraphicBorderRadius {
+            get {
+                return ((float)(this["InfoGraphicBorderRadius"]));
+            }
+            set {
+                this["InfoGraphicBorderRadius"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public float InfoGraphicCreatureScaling {
+            get {
+                return ((float)(this["InfoGraphicCreatureScaling"]));
+            }
+            set {
+                this["InfoGraphicCreatureScaling"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int InfoGraphicPaddingX {
+            get {
+                return ((int)(this["InfoGraphicPaddingX"]));
+            }
+            set {
+                this["InfoGraphicPaddingX"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int InfoGraphicPaddingY {
+            get {
+                return ((int)(this["InfoGraphicPaddingY"]));
+            }
+            set {
+                this["InfoGraphicPaddingY"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LibraryCombineBreedingCompatibleSpecies {
+            get {
+                return ((bool)(this["LibraryCombineBreedingCompatibleSpecies"]));
+            }
+            set {
+                this["LibraryCombineBreedingCompatibleSpecies"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"
+                    <ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
+                        <string>https://raw.github.com/arkutils/species-images/main/images/</string>
+                    </ArrayOfString>
+                ")]
+        public string[] SpeciesImagesUrls {
+            get {
+                return ((string[])(this["SpeciesImagesUrls"]));
+            }
+            set {
+                this["SpeciesImagesUrls"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LibraryShowStatLevelsThatCannotLevelup {
+            get {
+                return ((bool)(this["LibraryShowStatLevelsThatCannotLevelup"]));
+            }
+            set {
+                this["LibraryShowStatLevelsThatCannotLevelup"] = value;
             }
         }
     }

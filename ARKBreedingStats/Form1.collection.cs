@@ -40,7 +40,7 @@ namespace ARKBreedingStats
                 return;
             }
 
-            if (_creatureCollection.modIDs?.Any() ?? false)
+            if (_creatureCollection?.modIDs?.Any() ?? false)
             {
                 // if old collection had additionalValues, load the original ones to reset all modded values
                 var (statValuesLoaded, _) = LoadStatAndKibbleValues(applySettings: false);
@@ -55,7 +55,7 @@ namespace ARKBreedingStats
             ServerMultipliers oldEventMultipliers = null;
             bool asaMode;
 
-            if (Properties.Settings.Default.KeepMultipliersForNewLibrary)
+            if (Properties.Settings.Default.KeepMultipliersForNewLibrary && _creatureCollection != null)
             {
                 // use previously used multipliers again in the new file
                 oldMultipliers = _creatureCollection.serverMultipliers;
@@ -72,7 +72,7 @@ namespace ARKBreedingStats
                     asaMode = true;
                     break;
                 case Ark.Game.SameAsBefore:
-                    asaMode = _creatureCollection.Game == Ark.Asa;
+                    asaMode = _creatureCollection?.Game != Ark.Ase;
                     break;
                 default:
                     var gameVersionDialog = new ArkVersionDialog(this);
@@ -118,7 +118,7 @@ namespace ARKBreedingStats
             SetCollectionChanged(false);
         }
 
-        delegate void collectionChangedCallback();
+        private delegate void CollectionChangedCallback();
 
         /// <summary>
         /// This method is called when the collection file was changed. This is used when the file is shared via a cloud service.
@@ -127,7 +127,7 @@ namespace ARKBreedingStats
         {
             if (creatureBoxListView.InvokeRequired)
             {
-                collectionChangedCallback d = CollectionChanged;
+                CollectionChangedCallback d = CollectionChanged;
                 Invoke(d);
             }
             else
@@ -242,6 +242,8 @@ namespace ARKBreedingStats
                 timerList1.DeleteAllExpiredTimers(false, false);
 
             notesControl1.CheckForUnsavedChanges();
+
+            _creatureCollection.CurrentBreedingPairs = currentBreeds1.CurrentBreedingPairs;
 
             // Wait until the file is writable
             const int numberOfRetries = 5;
@@ -388,7 +390,7 @@ namespace ARKBreedingStats
                 return false;
             }
 
-            CreatureCollection previouslyLoadedCreatureCollection = _creatureCollection;
+            var previouslyLoadedCreatureCollection = _creatureCollection ?? new CreatureCollection();
 
             // Wait until the file is readable
             const int numberOfRetries = 5;
@@ -424,9 +426,9 @@ namespace ARKBreedingStats
                             {
                                 // usually the old filename is equal to the mod-tag
                                 bool modFound = false;
-                                string modTag = Path.GetFileNameWithoutExtension(creatureCollectionOld.additionalValues)
+                                string modTag = Ark.Ase + Path.GetFileNameWithoutExtension(creatureCollectionOld.additionalValues)
                                     .Replace(" ", "").ToLower().Replace("gaiamod", "gaia");
-                                foreach (KeyValuePair<string, ModInfo> tmi in Values.V.modsManifest.modsByTag)
+                                foreach (KeyValuePair<string, ModInfo> tmi in Values.V.modsManifest.ModsByTag)
                                 {
                                     if (tmi.Key.ToLower() == modTag)
                                     {
@@ -441,7 +443,7 @@ namespace ARKBreedingStats
 
                                         if (Values.V.loadedModsHash != Values.NoModsHash)
                                             LoadStatAndKibbleValues(false); // reset values to default
-                                        LoadModValueFiles(new List<string> { tmi.Value.mod.FileName }, true, true,
+                                        LoadModValueFiles(new List<string> { tmi.Value.Mod.FileName }, true, true,
                                             out mods);
                                         break;
                                     }
@@ -465,15 +467,15 @@ namespace ARKBreedingStats
 
                             if (_creatureCollection == null) throw new Exception("Conversion failed");
 
-                            string fileNameWOExt = Path.Combine(Path.GetDirectoryName(filePath),
+                            string fileNameWoExt = Path.Combine(Path.GetDirectoryName(filePath),
                                 Path.GetFileNameWithoutExtension(filePath));
                             // check if new fileName is not yet existing
-                            filePath = fileNameWOExt + CollectionFileExtension;
+                            filePath = fileNameWoExt + CollectionFileExtension;
                             if (File.Exists(filePath))
                             {
                                 int fi = 2;
-                                while (File.Exists(fileNameWOExt + "_" + fi + CollectionFileExtension)) fi++;
-                                filePath = fileNameWOExt + "_" + fi + CollectionFileExtension;
+                                while (File.Exists(fileNameWoExt + "_" + fi + CollectionFileExtension)) fi++;
+                                filePath = fileNameWoExt + "_" + fi + CollectionFileExtension;
                             }
 
                             // save converted library
@@ -633,11 +635,7 @@ namespace ARKBreedingStats
                 }
             }
 
-            if (selectedSpecies == null)
-            {
-                // set to last set species if no creatures in library
-                speciesSelector1.SetToLastSetSpecies();
-            }
+            speciesSelector1.EnsureSelectedSpecies();
 
             // set library species to what it was before loading
             selectedLibrarySpecies = Values.V.SpeciesByBlueprint(selectedLibrarySpecies?.blueprintPath);
@@ -651,6 +649,8 @@ namespace ARKBreedingStats
 
             // apply last sorting
             SortLibrary();
+
+            currentBreeds1.DisplaySpeciesCurrentBreedingPairs(speciesSelector1.SelectedSpecies, true);
 
             UpdateTempCreatureDropDown();
 
@@ -873,7 +873,9 @@ namespace ARKBreedingStats
         /// Imports creature from file created by the export gun mod.
         /// Returns already existing Creature or null if it's a new creature.
         /// </summary>
-        private Creature ImportExportGunFiles(string[] filePaths, bool addCreatures, out bool creatureAdded, out Creature lastImportedCreature, out bool copiedNameToClipboard, bool playImportSound = false)
+        private Creature ImportExportGunFiles(string[] filePaths, bool addCreatures, out bool creatureAdded,
+            out Creature lastImportedCreature, out bool copiedNameToClipboard, bool playImportSound = false, bool playColorSound = false,
+            Asb.TriggerSource triggerSource = Asb.TriggerSource.User)
         {
             creatureAdded = false;
             copiedNameToClipboard = false;
@@ -895,6 +897,7 @@ namespace ARKBreedingStats
                 if (c != null)
                 {
                     newCreatures.Add(c);
+                    SetLockedCreatureProperties(c);
                     importedCounter++;
                     lastCreatureFilePath = filePath;
                 }
@@ -953,7 +956,8 @@ namespace ARKBreedingStats
                 {
                     creatureAdded = true;
                     // calculate level status of last added creature
-                    DetermineLevelStatusAndSoundFeedback(lastImportedCreature, playImportSound);
+                    _creatureCollection.DetermineColorStatus(speciesSelector1.SelectedSpecies, lastImportedCreature.colors, out _, out _, out _);
+                    DetermineLevelStatusAndSoundFeedback(lastImportedCreature, playImportSound, playColorSound);
 
                     _creatureCollection.MergeCreatureList(newCreatures, true);
                     UpdateCreatureParentLinkingSort(false);
@@ -983,7 +987,7 @@ namespace ARKBreedingStats
                     }
                     else
                     {
-                        EditCreatureInTester(lastImportedCreature);
+                        EditCreatureInTester(lastImportedCreature, false, triggerSource);
                     }
                 }
                 else
@@ -1047,18 +1051,18 @@ namespace ARKBreedingStats
             UpdateTempCreatureDropDown();
         }
 
-        private void DetermineLevelStatusAndSoundFeedback(Creature c, bool playImportSound)
+        private void DetermineLevelStatusAndSoundFeedback(Creature c, bool playImportSound, bool playColorSound)
         {
             var species = c.Species;
-            _topLevels.TryGetValue(species, out var topLevels);
+            _creatureCollection.TopLevels.TryGetValue(species, out var topLevels);
             var statWeights = breedingPlan1.StatWeighting.GetWeightingForSpecies(species);
-            var considerAsTopStat = StatsOptionsConsiderTopStats.GetStatsOptions(species).StatOptions;
-            LevelStatusFlags.DetermineLevelStatus(species, topLevels, statWeights, considerAsTopStat,
+            var considerAsTopStat = StatsOptionsConsiderTopStats.GetOptions(species).Options;
+            LevelColorStatusFlags.DetermineLevelStatus(species, topLevels, statWeights, considerAsTopStat,
                 c.levelsWild, c.levelsMutated, c.valuesBreeding, out _, out _);
 
             if (playImportSound)
             {
-                SoundFeedback.BeepSignalCurrentLevelFlags(IsCreatureAlreadyInLibrary(c.guid, c.ArkId, out _));
+                SoundFeedback.BeepSignalCurrentLevelFlags(IsCreatureAlreadyInLibrary(c.guid, c.ArkId, out _), playColorSound: playColorSound);
             }
         }
 
@@ -1071,7 +1075,7 @@ namespace ARKBreedingStats
             columns.AddRange(Stats.DisplayOrder.Select(s => new List<string> { Utils.StatName(s) }));
             columns.Add(new List<string> { "MaxLevel" });
 
-            foreach (var sp in _topLevels)
+            foreach (var sp in _creatureCollection.TopLevels)
             {
                 var maxLevel = 1; // base level
                 columns[0].Add(sp.Key.name);

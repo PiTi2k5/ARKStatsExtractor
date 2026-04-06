@@ -1,6 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -23,10 +25,7 @@ namespace ARKBreedingStats.uiControls
             Disposed += TagSelector_Disposed;
         }
 
-        private void TagSelector_Disposed(object sender, EventArgs e)
-        {
-            tt.RemoveAll();
-        }
+        private void TagSelector_Disposed(object sender, EventArgs e) => tt.RemoveAllAndDispose();
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -61,12 +60,14 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public tagStatus Status
         {
             get => status;
             set => setStatus(value);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TagName
         {
             get => label1.Text;

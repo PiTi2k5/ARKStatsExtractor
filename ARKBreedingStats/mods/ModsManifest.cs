@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using ARKBreedingStats.values;
 
 namespace ARKBreedingStats.mods
 {
@@ -23,24 +25,17 @@ namespace ARKBreedingStats.mods
         /// Dictionary of ModInfos. The key is the mod-filename.
         /// </summary>
         [JsonProperty("files")]
-        public Dictionary<string, ModInfo> modsByFiles;
+        public Dictionary<string, ModInfo> ModsByFiles = new Dictionary<string, ModInfo>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Dictionary of ModInfos. The key is the modTag.
+        /// Dictionary of ModInfos. The key is the modTag prepended by either ASE or ASA.
         /// </summary>
-        public Dictionary<string, ModInfo> modsByTag;
+        public Dictionary<string, ModInfo> ModsByTag = new Dictionary<string, ModInfo>();
 
         /// <summary>
         /// Dictionary of ModInfos. The key is the modID.
         /// </summary>
-        public Dictionary<string, ModInfo> modsByID;
-
-        public ModsManifest()
-        {
-            modsByFiles = new Dictionary<string, ModInfo>();
-            modsByTag = new Dictionary<string, ModInfo>();
-            modsByID = new Dictionary<string, ModInfo>();
-        }
+        public Dictionary<string, ModInfo> ModsById = new Dictionary<string, ModInfo>();
 
         /// <summary>
         /// Tries to load the manifest file.
@@ -59,10 +54,10 @@ namespace ARKBreedingStats.mods
                 {
                     // set format versions
                     // if an entry has no specific format version, it is the general format version of the manifest file
-                    foreach (var mi in tmpV.modsByFiles)
+                    foreach (var mi in tmpV.ModsByFiles)
                     {
-                        if (string.IsNullOrEmpty(mi.Value.format))
-                            mi.Value.format = tmpV.DefaultFormatVersion;
+                        if (string.IsNullOrEmpty(mi.Value.Format))
+                            mi.Value.Format = tmpV.DefaultFormatVersion;
                     }
 
                     return tmpV;
@@ -81,30 +76,41 @@ namespace ARKBreedingStats.mods
         }
 
         /// <summary>
-        /// Users can create an additional custom manifest file for manually created mod files. If available, it's loaded with this method.
+        /// User can create custom manual values files, e.g. for mods. If there are any available, load them.
+        /// The values files of supported mods in the manifest file are ignored.
         /// </summary>
-        /// <returns></returns>
-        public static bool TryLoadCustomModManifestFile(out ModsManifest customModsManifest)
+        public static bool LoadManualValueFiles(ModsManifest officialModsManifest, out ModsManifest customModsManifest)
         {
             customModsManifest = null;
-            string filePath = FileService.GetJsonPath(FileService.ValuesFolder, FileService.ModsManifestCustom);
-            if (!File.Exists(filePath)) return false;
+            string valuesFolderPath = FileService.GetJsonPath(FileService.ValuesFolder);
+            if (!Directory.Exists(valuesFolderPath)) return false;
 
-            if (FileService.LoadJsonFile(filePath, out ModsManifest tmpV, out string errorMessage))
+            var possibleModValueFiles = Directory.GetFiles(valuesFolderPath, "*.json");
+
+            customModsManifest = new ModsManifest();
+            var alreadyLoadedOfficialModIds = officialModsManifest.ModsByFiles
+                .Where(mf => !string.IsNullOrEmpty(mf.Value.Mod?.Id) && !mf.Value.ManuallyLoaded)
+                .Select(mf => mf.Value.Mod?.Id)
+                .ToHashSet();
+
+            foreach (var modValuesFilePath in possibleModValueFiles)
             {
-                // set format versions
-                // if an entry has no specific format version, it is the general format version of the manifest file
-                foreach (var mi in tmpV.modsByFiles)
-                {
-                    if (string.IsNullOrEmpty(mi.Value.format))
-                        mi.Value.format = tmpV.DefaultFormatVersion;
-                }
+                var fileName = Path.GetFileName(modValuesFilePath);
+                if (fileName.StartsWith("_") || (officialModsManifest.ModsByFiles.TryGetValue(fileName, out var modInfoAlreadyLoaded) && !modInfoAlreadyLoaded.ManuallyLoaded))
+                    continue;
 
-                customModsManifest = tmpV;
-                return true;
+                if (!ValuesFile.TryLoadingModInfoHeader(modValuesFilePath, out var modInfo))
+                    continue;
+
+                // if mod is official and already loaded, or already loaded in this loop, ignore file
+                if (!alreadyLoadedOfficialModIds.Add(modInfo.Mod.Id))
+                    continue;
+
+                modInfo.ManuallyLoaded = true;
+                customModsManifest.ModsByFiles.Add(fileName, modInfo);
             }
 
-            throw new SerializationException(errorMessage);
+            return customModsManifest.ModsByFiles.Any();
         }
 
         /// <summary>
@@ -121,31 +127,33 @@ namespace ARKBreedingStats.mods
         /// </summary>
         internal void Initialize()
         {
-            modsByTag = new Dictionary<string, ModInfo>();
-            modsByID = new Dictionary<string, ModInfo>();
+            ModsByTag = new Dictionary<string, ModInfo>();
+            ModsById = new Dictionary<string, ModInfo>();
 
             // generic entry for "other mod", this is needed to correctly determine the available color set.
-            modsByFiles.Add(Mod.OtherMod.FileName, new ModInfo { mod = Mod.OtherMod });
+            if (!ModsByFiles.ContainsKey(Mod.OtherMod.FileName))
+                ModsByFiles.Add(Mod.OtherMod.FileName, new ModInfo { Mod = Mod.OtherMod });
 
             string valuesPath = FileService.GetJsonPath(FileService.ValuesFolder);
 
-            foreach (KeyValuePair<string, ModInfo> fmi in modsByFiles)
+            foreach (var fmi in ModsByFiles)
             {
-                if (fmi.Value.mod == null) continue;
+                var modInfo = fmi.Value;
+                if (modInfo.Mod == null) continue;
 
-                fmi.Value.mod.FileName = fmi.Key;
-                fmi.Value.LocallyAvailable = !string.IsNullOrEmpty(fmi.Value.mod.FileName) && File.Exists(Path.Combine(valuesPath, fmi.Value.mod.FileName));
+                modInfo.Mod.FileName = fmi.Key;
+                modInfo.LocallyAvailable = !string.IsNullOrEmpty(modInfo.Mod.FileName) && File.Exists(Path.Combine(valuesPath, modInfo.Mod.FileName));
 
-                if (!string.IsNullOrEmpty(fmi.Value.mod.tag)
-                    && !modsByTag.ContainsKey(fmi.Value.mod.tag))
+                if (!string.IsNullOrEmpty(modInfo.Mod.Tag)
+                    && !ModsByTag.ContainsKey(modInfo.Mod.TagWithGamePrefix))
                 {
-                    modsByTag.Add(fmi.Value.mod.tag, fmi.Value);
+                    ModsByTag.Add(modInfo.Mod.TagWithGamePrefix, fmi.Value);
                 }
 
-                if (!string.IsNullOrEmpty(fmi.Value.mod.id)
-                    && !modsByID.ContainsKey(fmi.Value.mod.id))
+                if (!string.IsNullOrEmpty(modInfo.Mod.Id)
+                    && !ModsById.ContainsKey(modInfo.Mod.Id))
                 {
-                    modsByID.Add(fmi.Value.mod.id, fmi.Value);
+                    ModsById.Add(modInfo.Mod.Id, modInfo);
                 }
             }
         }
@@ -159,9 +167,9 @@ namespace ARKBreedingStats.mods
             foreach (var mf in modValueFiles)
             {
                 if (Updater.Updater.DownloadModValuesFile(mf)
-                    && modsByFiles.ContainsKey(mf))
+                    && ModsByFiles.TryGetValue(mf, out var modInfo))
                 {
-                    modsByFiles[mf].LocallyAvailable = true;
+                    modInfo.LocallyAvailable = true;
                     filesDownloaded = true;
                 }
             }
@@ -175,10 +183,12 @@ namespace ARKBreedingStats.mods
         /// <param name="manifest2"></param>
         /// <returns></returns>
         internal static ModsManifest MergeModsManifest(ModsManifest manifest1, ModsManifest manifest2)
-        => new ModsManifest()
+        => new ModsManifest
         {
             DefaultFormatVersion = manifest1.DefaultFormatVersion,
-            modsByFiles = manifest2.modsByFiles.Concat(manifest1.modsByFiles.Where(m1 => !manifest2.modsByFiles.ContainsKey(m1.Key))).ToDictionary(m => m.Key, m => m.Value)
+            ModsByFiles = manifest2.ModsByFiles
+                .Concat(manifest1.ModsByFiles.Where(m1 => !manifest2.ModsByFiles.ContainsKey(m1.Key)))
+                .ToDictionary(m => m.Key, m => m.Value)
         };
     }
 }

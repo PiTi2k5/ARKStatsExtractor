@@ -19,9 +19,9 @@ namespace ARKBreedingStats
             SetTesterInputsTamed(!rbWildTester.Checked);
             NumericUpDownTestingTE.Enabled = rbTamedTester.Checked;
             labelTesterTE.Enabled = rbTamedTester.Checked;
-            numericUpDownImprintingBonusTester.Enabled = rbBredTester.Checked;
-            labelImprintingTester.Enabled = rbBredTester.Checked;
-            lbImprintedCount.Enabled = rbBredTester.Checked;
+            numericUpDownImprintingBonusTester.Enabled = !rbWildTester.Checked;
+            labelImprintingTester.Enabled = !rbWildTester.Checked;
+            lbImprintedCount.Enabled = !rbWildTester.Checked;
 
             UpdateAllTesterValues();
         }
@@ -32,11 +32,19 @@ namespace ARKBreedingStats
         /// <param name="c">the creature to test</param>
         /// <param name="virtualCreature">set to true if the creature is not in the library</param>
         private void EditCreatureInTester(Creature c, bool virtualCreature = false)
+            => EditCreatureInTester(c, virtualCreature, Asb.TriggerSource.User);
+
+        /// <summary>
+        /// Call this function with a creature c to put all its stats in the levelup-tester (and go to the tester-tab) to see what it could become
+        /// </summary>
+        /// <param name="c">the creature to test</param>
+        /// <param name="virtualCreature">set to true if the creature is not in the library</param>
+        private void EditCreatureInTester(Creature c, bool virtualCreature, Asb.TriggerSource triggerSource)
         {
             if (c == null)
                 return;
 
-            speciesSelector1.SetSpecies(c.Species);
+            speciesSelector1.SetSpecies(c.Species, triggerSource: triggerSource);
             TamingEffectivenessTester = c.tamingEff;
             numericUpDownImprintingBonusTester.ValueSave = (decimal)c.imprintingBonus * 100;
             if (c.isBred)
@@ -79,11 +87,11 @@ namespace ARKBreedingStats
             TestingStatIOsRecalculateValue(_testingIOs[Stats.Torpidity]);
         }
 
-        private void SetTesterInputsTamed(bool tamed)
+        private void SetTesterInputsTamed(bool domesticated)
         {
             for (int s = 0; s < Stats.StatsCount; s++)
-                _testingIOs[s].postTame = tamed;
-            lbNotYetTamed.Visible = !tamed;
+                _testingIOs[s].PostTame = domesticated;
+            lbNotYetTamed.Visible = !domesticated;
         }
 
         /// <summary>
@@ -95,7 +103,7 @@ namespace ARKBreedingStats
             TestingStatIOsRecalculateValue(sIo);
 
             // update Torpor-level if changed value is not from torpor-StatIO
-            if (_updateTorporInTester && sIo.statIndex != Stats.Torpidity)
+            if (_updateTorporInTester && sIo.StatIndex != Stats.Torpidity)
             {
                 int torporLvl = 0;
                 for (int s = 0; s < Stats.StatsCount; s++)
@@ -134,7 +142,7 @@ namespace ARKBreedingStats
             statPotentials1.SetLevels(levelsWild, levelsMutations, false);
             //statGraphs1.setGraph(sE, 0, testingIOs[0].LevelWild, testingIOs[0].LevelDom, !radioButtonTesterWild.Checked, (double)NumericUpDownTestingTE.Value / 100, (double)numericUpDownImprintingBonusTester.Value / 100);
 
-            if (sIo.statIndex == Stats.Torpidity)
+            if (sIo.StatIndex == Stats.Torpidity)
             {
                 DisplayPreTamedLevelTester();
             }
@@ -155,11 +163,11 @@ namespace ARKBreedingStats
 
         private void TestingStatIOsRecalculateValue(StatIO sIo)
         {
-            sIo.BreedingValue = StatValueCalculation.CalculateValue(speciesSelector1.SelectedSpecies, sIo.statIndex, sIo.LevelWild, sIo.LevelMut, 0, true, 1, 0);
-            sIo.Input = StatValueCalculation.CalculateValue(speciesSelector1.SelectedSpecies, sIo.statIndex, sIo.LevelWild, sIo.LevelMut, sIo.LevelDom,
+            sIo.BreedingValue = StatValueCalculation.CalculateValue(speciesSelector1.SelectedSpecies, sIo.StatIndex, sIo.LevelWild, sIo.LevelMut, 0, true, 1, 0);
+            sIo.Input = StatValueCalculation.CalculateValue(speciesSelector1.SelectedSpecies, sIo.StatIndex, sIo.LevelWild, sIo.LevelMut, sIo.LevelDom,
                     rbTamedTester.Checked || rbBredTester.Checked,
                     rbBredTester.Checked ? 1 : Math.Max(0, TamingEffectivenessTester),
-                    rbBredTester.Checked ? (double)numericUpDownImprintingBonusTester.Value / 100 : 0, roundToIngamePrecision: false);
+                    !rbWildTester.Checked ? (double)numericUpDownImprintingBonusTester.Value / 100 : 0, roundToIngamePrecision: false);
         }
 
         private void creatureInfoInputTester_Add2Library_Clicked(CreatureInfoInput sender)
@@ -251,6 +259,10 @@ namespace ARKBreedingStats
                     labelCurrentTesterCreature.Text = c.name;
                 lbCurrentCreature.Visible = enable;
                 _creatureTesterEdit = c;
+                if (c != null && CreatureCollection.CurrentCreatureCollection?.CreatureById(c.guid, c.ArkId, out var alreadyExistingCreature) == true)
+                    creatureInfoInputTester.AlreadyExistingCreature = alreadyExistingCreature;
+                else
+                    creatureInfoInputTester.AlreadyExistingCreature = null;
             }
 
             if (enable)
@@ -266,6 +278,7 @@ namespace ARKBreedingStats
                 infoInput.CreatureNote = c.note;
                 infoInput.CooldownUntil = c.cooldownUntil;
                 infoInput.GrowingUntil = c.growingUntil;
+                infoInput.SetTimersToChanged();
                 infoInput.DomesticatedAt = c.domesticatedAt;
                 infoInput.AddedToLibraryAt = c.addedToLibrary;
                 infoInput.CreatureFlags = c.flags;
@@ -277,6 +290,7 @@ namespace ARKBreedingStats
                 UpdateParentListInput(infoInput);
                 infoInput.MutationCounterMother = c.mutationsMaternal;
                 infoInput.MutationCounterFather = c.mutationsPaternal;
+                infoInput.Traits = c.Traits?.ToArray();
             }
             else
             {
@@ -311,7 +325,7 @@ namespace ARKBreedingStats
             var species = speciesSelector1.SelectedSpecies;
             if (species == null) return;
 
-            var difficulty = (CreatureCollection.CurrentCreatureCollection?.maxWildLevel ?? 150) / 30;
+            var difficulty = (CreatureCollection.CurrentCreatureCollection?.maxWildLevel ?? Ark.MaxWildLevelDefault) / 30;
             var creature = DummyCreatures.CreateCreature(species, difficulty, !rbWildTester.Checked);
 
             for (int si = 0; si < Stats.StatsCount; si++)
@@ -323,7 +337,7 @@ namespace ARKBreedingStats
                 NumericUpDownTestingTE.ValueSaveDouble = creature.tamingEff * 100;
         }
 
-        private void pictureBoxColorRegionsTester_Click(object sender, EventArgs e)
+        private void InfographicFromTesterToClipboard()
         {
             var creature = new Creature
             {
@@ -344,7 +358,7 @@ namespace ARKBreedingStats
             creature.ExportInfoGraphicToClipboard(CreatureCollection.CurrentCreatureCollection);
         }
 
-        private void PbCreatureColorsExtractor_Click(object sender, EventArgs e)
+        private void InfographicFromExtractorToClipboard()
         {
             var creature = new Creature
             {

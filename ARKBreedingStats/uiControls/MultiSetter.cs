@@ -1,10 +1,12 @@
 ﻿using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
+using ARKBreedingStats.SpeciesImages;
+using ARKBreedingStats.utils;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ARKBreedingStats.utils;
 
 namespace ARKBreedingStats.uiControls
 {
@@ -26,12 +28,11 @@ namespace ARKBreedingStats.uiControls
             InitializeComponent();
         }
 
-        public MultiSetter(List<Creature> creatureList, List<Creature>[] parents, List<string> tagList, List<Species> speciesList, string[] ownerList, string[] tribeList, string[] serverList)
+        public MultiSetter(List<Creature> creatureList, List<Creature>[] parents, List<string> tagList, List<Species> speciesList, string[] ownerList, string[] tribeList, string[] serverList) : this()
         {
-            InitializeComponent();
             Disposed += MultiSetter_Disposed;
 
-            SuspendLayout();
+            this.SuspendDrawingAndLayout();
             _colors = new byte[Ark.ColorRegionCount];
             _tagControls = new List<MultiSetterTag>();
 
@@ -62,8 +63,9 @@ namespace ARKBreedingStats.uiControls
             TagsChanged = false;
             SpeciesChanged = false;
 
-            pictureBox1.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(_colors, _uniqueSpecies ? creatureList[0].Species : null,
-                    new[] { true, true, true, true, true, true }, game: CreatureCollection.CurrentCreatureCollection?.Game));
+            CreatureColored.GetColoredCreatureWithCallback(UpdateCreatureImage, this,
+                _colors, _uniqueSpecies ? creatureList[0].Species : null,
+                new[] { true, true, true, true, true, true }, 128, game: CreatureCollection.CurrentCreatureCollection?.Game);
 
             // tags
             foreach (string t in tagList)
@@ -122,8 +124,10 @@ namespace ARKBreedingStats.uiControls
                 cbbServer.Items.Add(s);
 
             SetLocalizations();
-            ResumeLayout();
+            this.ResumeDrawingAndLayout();
         }
+
+        private void UpdateCreatureImage(Bitmap bmp, CreatureImageFile.NeighbourPoseExist _) => pictureBox1.SetImageAndDisposeOld(bmp);
 
         private void buttonStatus_Click(object sender, EventArgs e)
         {
@@ -276,18 +280,15 @@ namespace ARKBreedingStats.uiControls
         }
         private void ChooseColor(int region, Button sender)
         {
-            if (_creatureList[0] != null && !_cp.isShown)
-            {
-                _cp.Cp.PickColor(_colors[region], "Region " + region);
-                if (_cp.ShowDialog() == DialogResult.OK)
-                {
-                    // color was chosen
-                    _colors[region] = _cp.Cp.SelectedColorId;
-                    sender.SetBackColorAndAccordingForeColor(CreatureColors.CreatureColor(_colors[region]));
-                    pictureBox1.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(_colors, _uniqueSpecies ? _creatureList[0].Species : null,
-                            new[] { true, true, true, true, true, true }, game: CreatureCollection.CurrentCreatureCollection?.Game));
-                }
-            }
+            if (_creatureList[0] == null || _cp.isShown) return;
+            _cp.Cp.PickColor(_colors[region], "Region " + region);
+            if (_cp.ShowDialog() != DialogResult.OK) return;
+            // color was chosen
+            _colors[region] = _cp.Cp.SelectedColorId;
+            sender.SetBackColorAndAccordingForeColor(CreatureColors.CreatureColor(_colors[region]));
+            CreatureColored.GetColoredCreatureWithCallback(UpdateCreatureImage, this,
+                _colors, _uniqueSpecies ? _creatureList[0].Species : null,
+                new[] { true, true, true, true, true, true }, 128, game: CreatureCollection.CurrentCreatureCollection?.Game);
         }
 
         private void checkBoxSpecies_CheckedChanged(object sender, EventArgs e)
@@ -315,11 +316,7 @@ namespace ARKBreedingStats.uiControls
             mst.TagCheckState = CheckState.Checked;
         }
 
-        private void MultiSetter_Disposed(object sender, EventArgs e)
-        {
-            _tt.RemoveAll();
-            _tt.Dispose();
-        }
+        private void MultiSetter_Disposed(object sender, EventArgs e) => _tt.RemoveAllAndDispose();
 
         private void SetLocalizations()
         {

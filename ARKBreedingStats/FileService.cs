@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace ARKBreedingStats
 {
@@ -16,7 +17,6 @@ namespace ARKBreedingStats
         public const string ValuesServerMultipliers = "serverMultipliers.json";
         public const string TamingFoodData = "tamingFoodData.json";
         public const string ManifestFileName = "_manifest.json";
-        public const string ModsManifestCustom = "_manifestCustom.json";
         public const string KibblesJson = "kibbles.json";
         public const string AliasesJson = "aliases.json";
         public const string IgnoreSpeciesClasses = "ignoreSpeciesClasses.json";
@@ -24,8 +24,9 @@ namespace ARKBreedingStats
         public const string CustomSpeciesVariants = "customSpeciesVariants.json";
         public const string DataFolderName = "data";
         public const string OcrReplacingsFile = "ocrReplacings.txt";
-        public const string EqualColorIdsFile = "equalColorIds.json";
         public const string HideVariantsInSpeciesNameFile = "hideVariantsInSpeciesName.txt";
+        public const string TraitDefinitionsFile = "traitDefinitions.json";
+        public const string ImageFolderName = "images";
 
         /// <summary>
         /// Where the colored species images are cached.
@@ -111,7 +112,7 @@ namespace ARKBreedingStats
             // load json-file of data
             try
             {
-                using (StreamReader sr = File.OpenText(filePath))
+                using (var sr = File.OpenText(filePath))
                 {
                     var ser = new Newtonsoft.Json.JsonSerializer();
                     if (converter != null)
@@ -136,12 +137,48 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
+        /// Loads a json object from a json-file (can't load json array).
+        /// </summary>
+        public static bool LoadJsonObjectFromJsonFile(string filePath, out JObject jsonObject, out string errorMessage)
+        {
+            errorMessage = null;
+            try
+            {
+                var jsonString = File.ReadAllText(filePath);
+                jsonObject = JObject.Parse(jsonString);
+                return true;
+            }
+            catch (Newtonsoft.Json.JsonReaderException ex)
+            {
+                errorMessage = $"File\n{Path.GetFullPath(filePath)}\ncouldn't be opened or read.\nError message:\n\n" + ex.Message;
+            }
+            catch (Newtonsoft.Json.JsonSerializationException ex)
+            {
+                errorMessage = $"File\n{Path.GetFullPath(filePath)}\ncouldn't be opened or read.\nError message:\n\n" + ex.Message;
+            }
+            jsonObject = null;
+            return false;
+        }
+
+        /// <summary>
         /// Loads json file if available, returns null if an error occured.
         /// </summary>
         public static T LoadJsonFileIfAvailable<T>(string filePath) where T : class =>
             !string.IsNullOrEmpty(filePath)
             && File.Exists(filePath)
             && LoadJsonFile(filePath, out T data, out _) ? data : null;
+
+        /// <summary>
+        /// Loads json file if available.
+        /// </summary>
+        public static bool LoadJsonFileIfAvailable<T>(string filePath, out T data, out string errorMessage) where T : class
+        {
+            data = null;
+            errorMessage = null;
+            return !string.IsNullOrEmpty(filePath)
+                   && File.Exists(filePath)
+                   && LoadJsonFile(filePath, out data, out errorMessage);
+        }
 
         /// <summary>
         /// Tries to create a directory if not existing. Returns true if the path exists.
@@ -185,9 +222,10 @@ namespace ARKBreedingStats
         /// <summary>
         /// Tries to delete a file, doesn't throw an exception when failing.
         /// </summary>
+        /// <returns>True if the file is not existing after this method ends.</returns>
         public static bool TryDeleteFile(FileInfo fileInfo)
         {
-            if (!fileInfo.Exists) return false;
+            if (!fileInfo.Exists) return true;
             try
             {
                 fileInfo.Delete();
@@ -292,21 +330,6 @@ namespace ARKBreedingStats
             //catch { return false; }
         }
 
-        private static HttpClient _httpClient;
-
-        /// <summary>
-        /// Returns a static HttpClient. It's apparently better to reuse one object per app only.
-        /// </summary>
-        public static HttpClient GetHttpClient
-        {
-            get
-            {
-                if (_httpClient == null)
-                    _httpClient = new HttpClient();
-                return _httpClient;
-            }
-        }
-
         /// <summary>
         /// Opens the folder in the explorer. If it's a file, it will be selected.
         /// </summary>
@@ -322,6 +345,17 @@ namespace ARKBreedingStats
 
             Process.Start("explorer.exe",
                 $"{(isFile ? "/select, " : string.Empty)}\"{path}\"");
+        }
+
+        /// <summary>
+        /// Replaces invalid characters from a file or folder name.
+        /// </summary>
+        public static string ReplaceInvalidCharacters(string name, char replaceBy = '_')
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+            var invalidCharacters = Path.GetInvalidFileNameChars();
+            if (invalidCharacters.Contains(replaceBy)) replaceBy = '_';
+            return invalidCharacters.Aggregate(name, (current, invalidChar) => current.Replace(invalidChar, replaceBy));
         }
     }
 }

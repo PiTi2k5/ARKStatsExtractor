@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace ARKBreedingStats.utils
 {
@@ -11,7 +16,7 @@ namespace ARKBreedingStats.utils
         /// <summary>
         /// Attempts to set the specified text to the system clipboard.
         /// </summary>
-        /// <param name="text">The text to be copied to the clipboard. If null, an empty string will be used.</param>
+        /// <param name="text">The text to be copied to the clipboard. If null or empty the clipboard will be cleared.</param>
         /// <param name="error">
         /// When the operation fails, this parameter will contain an error message describing the failure.
         /// If the operation succeeds, this parameter will be set to <c>null</c>.
@@ -22,6 +27,26 @@ namespace ARKBreedingStats.utils
         internal static bool SetText(string text, out string error)
         {
             error = null;
+            // if on non STA thread
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                var staThread = new Thread(() =>
+                {
+                    try
+                    {
+                        SetText(text, out _); // error cannot be passed back
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Exception when trying to set ClipboardText on STA thread: {ex.Message}");
+                    }
+                });
+                staThread.TrySetApartmentState(ApartmentState.STA);
+                staThread.Start();
+                staThread.Join();
+                return true;
+            }
 
             // clipboard operation can throw exception, try again on exception
             const int tries = 3;
@@ -30,7 +55,10 @@ namespace ARKBreedingStats.utils
             {
                 try
                 {
-                    System.Windows.Forms.Clipboard.SetText(text ?? string.Empty);
+                    if (string.IsNullOrEmpty(text))
+                        Clipboard.Clear();
+                    else
+                        Clipboard.SetText(text);
                     return true;
                 }
                 catch (Exception ex)
@@ -69,6 +97,26 @@ namespace ARKBreedingStats.utils
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to clear clipboard, error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Sets an image to the clipboard, trying to use PNG format to preserver the alpha channel.
+        /// </summary>
+        internal static void SetImageWithAlphaToClipboard(Image img, bool disposeBmp = true)
+        {
+            if (img == null) return;
+
+            using (var pngStream = new MemoryStream())
+            {
+                var data = new DataObject();
+                data.SetImage(img); // fallback, some applications do not accept the PNG version below
+
+                img.Save(pngStream, ImageFormat.Png);
+                data.SetData("PNG", false, pngStream);
+
+                Clipboard.SetDataObject(data, true);
+            }
+            if (disposeBmp) img.Dispose();
         }
     }
 }

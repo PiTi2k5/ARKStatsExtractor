@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.utils;
 using Newtonsoft.Json.Linq;
 
 namespace ARKBreedingStats.AsbServer
@@ -44,7 +45,7 @@ namespace ARKBreedingStats.AsbServer
 
                     try
                     {
-                        var client = FileService.GetHttpClient;
+                        var client = WebService.GetHttpClient;
                         using (var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead))
                         {
                             if (!response.IsSuccessStatusCode)
@@ -106,15 +107,20 @@ namespace ARKBreedingStats.AsbServer
                     }
                     catch (Exception ex)
                     {
-                        var tryToReconnect = reconnectTries++ < 3;
-                        WriteErrorMessage(
-                            $"ASB Server listening {ex.GetType()}: {ex.Message}{Environment.NewLine}{(tryToReconnect ? "Trying to reconnect" + Environment.NewLine : string.Empty)}Stack trace: {ex.StackTrace}",
-                            stopListening: !tryToReconnect);
+                        var tryToReconnect = reconnectTries++ < 4;
+                        if (tryToReconnect)
+                            WriteErrorMessage(
+                                $"ASB Server listening error ({ex.Message}), attempting to reconnect (try {reconnectTries})",
+                                stopListening: false);
+                        else
+                            WriteErrorMessage(
+                                $"ASB Server listening error: {ex.GetType()}: {ex.Message}{Environment.NewLine}Stack trace: {ex.StackTrace}",
+                                stopListening: true);
 
                         if (!tryToReconnect)
                             break;
-                        // try to reconnect after some time
-                        Thread.Sleep(10_000);
+                        // try to reconnect after with increasing delays (10, 20, 40, 80 s)
+                        Thread.Sleep(5_000 * (1 << reconnectTries));
                     }
                     finally
                     {
@@ -174,6 +180,7 @@ namespace ARKBreedingStats.AsbServer
                         continue;
                     case "event: replaced":
                         if (cancellationToken.IsCancellationRequested) return null;
+                        StopListening();
                         return new ProgressReportAsbServer
                         {
                             Message = "ASB Server listening stopped. Connection used by a different user",
@@ -216,9 +223,9 @@ namespace ARKBreedingStats.AsbServer
                                     var msg = new HttpRequestMessage(HttpMethod.Post,
                                         $"{ApiUri}respond/{serverSendName.ConnectionToken}/{serverSendName.ExportId}");
                                     msg.Content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                                    msg.Content.Headers.Add("Content-Length", jsonString.Length.ToString());
+                                    msg.Content.Headers.Add("Content-Length", Encoding.UTF8.GetByteCount(jsonString).ToString());
 
-                                    var sendResponse = await FileService.GetHttpClient.SendAsync(msg, cancellationToken);
+                                    var sendResponse = await WebService.GetHttpClient.SendAsync(msg, cancellationToken);
 #if DEBUG
                                     Console.WriteLine($"{DateTime.Now}: received send response: {await sendResponse.Content.ReadAsStringAsync()})");
 #endif
@@ -338,7 +345,7 @@ namespace ARKBreedingStats.AsbServer
         /// Sends creature data to the server, this is done for testing, usually other tools like the export gun mod do this.
         /// <param name="waitForResponse">If &gt; 0 a response is awaited for that many seconds. Else no waiting for a response.</param>
         /// </summary>
-        public static async void SendCreatureData(Creature creature, string token, int waitForResponse = 5)
+        public static async Task SendCreatureData(Creature creature, string token, int waitForResponse = 5)
         {
             if (creature == null || string.IsNullOrEmpty(token)) return;
 
@@ -380,7 +387,7 @@ namespace ARKBreedingStats.AsbServer
                     )
                 ) return;
 
-            var client = FileService.GetHttpClient;
+            var client = WebService.GetHttpClient;
 
             var id1 = (int)(creatureId >> 32);
             var id2 = (int)creatureId;

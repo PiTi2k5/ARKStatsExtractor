@@ -94,7 +94,7 @@ namespace ARKBreedingStats
 
         private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start(RepositoryInfo.RepositoryUrl);
+            Utils.OpenUri(RepositoryInfo.RepositoryUrl);
         }
 
         private const string Contributors = @"Thanks for contributions, help and support to
@@ -120,6 +120,7 @@ namespace ARKBreedingStats
 * ThatGamerBlue: species dividers in virtual listView
 * Jaymei: ATLAS species data
 * Shen: many ASA color region images
+* emma: fixes, hotkey addition
 
 Translations:
 * French by Vykan and Yanuut

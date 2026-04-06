@@ -162,7 +162,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="IncludeCooldownsInBreedingPlan" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="IncludeCryoedInBreedingPlan" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -314,9 +314,6 @@
     <Setting Name="applyNamePatternOnAutoImportForNewCreatures" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AlreadyAskedToDownloadSpeciesImageFiles" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="LibrarySelectSelectedSpeciesOnLoad" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -405,9 +402,6 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="CreatureTableExportFields" Type="System.Int32[]" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="SpeciesImagesFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ConsiderWastedStatsForTopCreatures" Type="System.Boolean" Scope="User">
@@ -603,6 +597,64 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="BeginServerListeningOnLaunch" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BreedingPlanOnlySameSpecies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BondedTamingRank" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="WindowPositionTraitSelection" Type="System.Drawing.Rectangle" Scope="User">
+      <Value Profile="(Default)">200, 200, 450, 600</Value>
+    </Setting>
+    <Setting Name="InfoGraphicBackgroundImagePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicBorderWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="PlayColorSoundOnAutoImport" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicTextOutlineColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">White</Value>
+    </Setting>
+    <Setting Name="InfoGraphicTextOutlineWidth" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicCreatureOutlineWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicCreatureOutlineColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">White</Value>
+    </Setting>
+    <Setting Name="InfoGraphicCreatureOutlineBlurring" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.8</Value>
+    </Setting>
+    <Setting Name="InfoGraphicBorderRadius" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicCreatureScaling" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="InfoGraphicPaddingX" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="InfoGraphicPaddingY" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="LibraryCombineBreedingCompatibleSpecies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SpeciesImagesUrls" Type="System.String[]" Scope="User">
+      <Value Profile="(Default)">
+                    &lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+                        &lt;string&gt;https://raw.github.com/arkutils/species-images/main/images/&lt;/string&gt;
+                    &lt;/ArrayOfString&gt;
+                </Value>
+    </Setting>
+    <Setting Name="LibraryShowStatLevelsThatCannotLevelup" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>

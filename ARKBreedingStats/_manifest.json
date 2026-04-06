@@ -2,30 +2,23 @@
   "format": "1.0",
   "modules":{
     "ARK Smart Breeding": {
-      "Id": "ARK Smart Breeding",
-      "Category": "main",
-      "version": "0.66.0.0"
-    },
-    "SpeciesColorImages": {
-      "Id": "SpeciesColorImages",
-      "Category": "Species Images",
-      "Name": "Species Images",
-      "Author": "cadaei, Myrmecoleon, coldino, Shen",
-      "Description": "Download this package to have a visualization for the colors of creatures (~35 MB), uncheck if you don't want to download these files.",
-      "Url": "https://github.com/cadon/ARKStatsExtractor/raw/master/speciesImages/speciesImages.zip",
-      "LocalPath": "images/speciesImages",
-      "IsFolder": true,
-      "Selectable": true,
-      "version": "2025.05.10"
+      "version": ""
     },
     "NamePatternTemplates": {
-      "Id": "NamePatternTemplates",
       "Category": "Name Pattern Templates",
       "Name": "Name Pattern Templates",
       "Description": "Templates for naming patterns",
-      "Url": "https://github.com/cadon/ARKStatsExtractor/raw/master/json/namePatternTemplates.json",
+      "Url": "https://raw.githubusercontent.com/cadon/ARKStatsExtractor/refs/heads/master/ARKBreedingStats/json/namePatternTemplates.json",
       "LocalPath": "json/namePatternTemplates.json",
+      "optional": true,
       "version": "2024.8.3"
+    },
+    "SpeciesImagePacks": {
+      "Category": "Images",
+      "Name": "Species image packs",
+      "Url": "https://raw.githubusercontent.com/cadon/ARKStatsExtractor/refs/heads/master/ARKBreedingStats/json/imagePacks.json",
+      "LocalPath": "json/imagePacks.json",
+      "version": "2026.2.28"
     }
   }
 }

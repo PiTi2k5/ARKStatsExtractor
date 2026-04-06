@@ -1,10 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
 using ARKBreedingStats.library;
-using ARKBreedingStats.StatsOptions;
+using ARKBreedingStats.SpeciesOptions.LevelColorSettings;
 using ARKBreedingStats.utils;
 using Cursors = System.Windows.Forms.Cursors;
 
@@ -12,23 +13,30 @@ namespace ARKBreedingStats.uiControls
 {
     public partial class StatIO : UserControl
     {
-        public bool postTame; // if false (aka creature untamed) display note that stat can be higher after taming
+        /// <summary>
+        /// If false (aka creature untamed/wild) display note that stat can be higher after taming.
+        /// </summary>
+        public bool PostTame;
         private StatIOStatus _status;
-        public bool percent; // indicates whether this stat is expressed as a percentile
+        private bool _percent;
         private string _statName;
         private double _breedingValue;
         private StatIOInputType _inputType;
         public event Action<StatIO> LevelChanged;
         public event Action<StatIO> InputValueChanged;
-        public int statIndex;
+        public int StatIndex;
         private bool _domZeroFixed;
         private readonly ToolTip _tt;
-        public int barMaxLevel = 45;
+        public int BarMaxLevel = 45;
         private const int MaxBarLength = 335;
         private bool _linkWildMutated;
         private int _wildMutatedSum;
         private readonly Debouncer _levelChangedDebouncer = new Debouncer();
         private StatLevelColors _statLevelColors;
+        /// <summary>
+        /// True if wild level and mutated level have different effects on the stat value. False for most stats and species.
+        /// </summary>
+        public bool CustomMutationLevelMultiplier;
 
         public StatIO()
         {
@@ -36,19 +44,20 @@ namespace ARKBreedingStats.uiControls
             nudLvW.Value = 0;
             nudLvD.Value = 0;
             labelBValue.Text = string.Empty;
-            postTame = true;
-            percent = false;
+            PostTame = true;
+            _percent = false;
             _breedingValue = 0;
             groupBox1.Click += groupBox1_Click;
             InputType = _inputType;
-            // ToolTips
+
             _tt = new ToolTip { InitialDelay = 300 };
             _tt.SetToolTip(checkBoxFixDomZero, "Check to lock to zero (if you never leveled up this stat)");
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double Input
         {
-            get => (double)numericUpDownInput.Value * (percent ? 0.01 : 1);
+            get => (double)numericUpDownInput.Value * (_percent ? 0.01 : 1);
             set
             {
                 if (value < 0)
@@ -58,13 +67,14 @@ namespace ARKBreedingStats.uiControls
                 }
                 else
                 {
-                    if (percent) value *= 100;
+                    if (_percent) value *= 100;
                     numericUpDownInput.ValueSave = (decimal)value;
                     labelFinalValue.Text = value.ToString("N1");
                 }
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Title
         {
             set
@@ -74,6 +84,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LevelWild
         {
             get => (short)nudLvW.Value;
@@ -96,6 +107,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LevelMut
         {
             get => (short)nudLvM.Value;
@@ -110,6 +122,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LevelDom
         {
             get => (short)nudLvD.Value;
@@ -120,6 +133,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double BreedingValue
         {
             get => _breedingValue;
@@ -127,7 +141,7 @@ namespace ARKBreedingStats.uiControls
             {
                 if (value >= 0)
                 {
-                    labelBValue.Text = Math.Round((percent ? 100 : 1) * value, 1).ToString("N1") + (postTame ? string.Empty : " +*");
+                    labelBValue.Text = Math.Round((_percent ? 100 : 1) * value, 1).ToString("N1") + (PostTame ? string.Empty : " +*");
                     _breedingValue = value;
                 }
                 else
@@ -137,16 +151,21 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        /// <summary>
+        /// Indicates whether this stat is expressed as a percentage.
+        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Percent
         {
-            get => percent;
+            get => _percent;
             set
             {
-                percent = value;
+                _percent = value;
                 Title = _statName;
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Selected
         {
             set
@@ -163,6 +182,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public StatIOStatus Status
         {
             get => _status;
@@ -192,8 +212,9 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
-        private LevelStatusFlags.LevelStatus _topLevel;
-        public LevelStatusFlags.LevelStatus TopLevel
+        private LevelColorStatusFlags.LevelStatus _topLevel;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public LevelColorStatusFlags.LevelStatus TopLevel
         {
             get => _topLevel;
             set
@@ -206,36 +227,36 @@ namespace ARKBreedingStats.uiControls
                 _tt.SetToolTip(labelWildLevel, null);
                 _tt.SetToolTip(labelMutatedLevel, null);
 
-                if (_topLevel == LevelStatusFlags.LevelStatus.Neutral) return;
+                if (_topLevel == LevelColorStatusFlags.LevelStatus.Neutral) return;
 
-                if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.TopLevel))
+                if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.TopLevel))
                 {
                     labelWildLevel.BackColor = Color.LightGreen;
                     _tt.SetToolTip(labelWildLevel, Loc.S("topLevel"));
                 }
-                else if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.NewTopLevel))
+                else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.NewTopLevel))
                 {
                     labelWildLevel.BackColor = Color.Gold;
                     _tt.SetToolTip(labelWildLevel, Loc.S("newTopLevel"));
                 }
 
-                if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.MaxLevelForLevelUp))
+                if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.MaxLevelForLevelUp))
                 {
                     labelWildLevel.BackColor = Color.DeepSkyBlue;
                     _tt.SetToolTip(labelWildLevel, Loc.S("maxLevelForLevelUp"));
                 }
-                else if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.MaxLevel))
+                else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.MaxLevel))
                 {
                     labelWildLevel.BackColor = Color.Orange;
                     _tt.SetToolTip(labelWildLevel, Loc.S("maxLevelSaved"));
                 }
-                else if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.UltraMaxLevel))
+                else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.UltraMaxLevel))
                 {
                     labelWildLevel.BackColor = Color.LightCoral;
                     _tt.SetToolTip(labelWildLevel, Loc.S("ultraMaxLevel"));
                 }
 
-                if (_topLevel.HasFlag(LevelStatusFlags.LevelStatus.NewMutation))
+                if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.NewMutation))
                 {
                     labelMutatedLevel.BackColor = Color.Gold;
                     _tt.SetToolTip(labelMutatedLevel, Loc.S("new mutation"));
@@ -243,6 +264,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowBarAndLock
         {
             set
@@ -253,6 +275,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public StatIOInputType InputType
         {
             get => _inputType;
@@ -265,6 +288,7 @@ namespace ARKBreedingStats.uiControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsActive
         {
             set
@@ -278,7 +302,7 @@ namespace ARKBreedingStats.uiControls
         public void Clear()
         {
             Status = StatIOStatus.Neutral;
-            TopLevel = LevelStatusFlags.LevelStatus.Neutral;
+            TopLevel = LevelColorStatusFlags.LevelStatus.Neutral;
             nudLvW.Value = 0;
             nudLvM.Value = 0;
             nudLvD.Value = 0;
@@ -324,18 +348,8 @@ namespace ARKBreedingStats.uiControls
                 LevelChangedDebouncer();
         }
 
-        private void SetLevelBar(Panel panel, int level, bool useCustomOdd = true, bool mutationLevel = false)
-        {
-            var range = _statLevelColors.GetLevelRange(level, out var lowerBound, useCustomOdd, mutationLevel);
-            if (range < 1) range = 1;
-            var lengthPercentage = 100 * (level - lowerBound) / range; // in percentage of the max bar width
-
-            if (lengthPercentage > 100) lengthPercentage = 100;
-            else if (lengthPercentage < 0) lengthPercentage = 0;
-
-            panel.Width = lengthPercentage * MaxBarLength / 100;
-            panel.BackColor = _statLevelColors.GetLevelColor(level, useCustomOdd, mutationLevel);
-        }
+        private void SetLevelBar(Panel panel, int level, bool useCustomOdd = true, bool mutationLevel = false) =>
+            LevelColorBar.SetLevelBar(panel, _statLevelColors, MaxBarLength, level, useCustomOdd, mutationLevel);
 
         private void LevelChangedDebouncer() => _levelChangedDebouncer.Debounce(200, () => LevelChanged?.Invoke(this), Dispatcher.CurrentDispatcher);
 
@@ -366,6 +380,7 @@ namespace ARKBreedingStats.uiControls
         private void labelWildLevel_Click(object sender, EventArgs e)
         {
             OnClick(e);
+            if (CustomMutationLevelMultiplier) return;
 
             var levelDelta = LevelDeltaMutationShift(LevelMut);
             if (levelDelta <= 0) return;
@@ -377,6 +392,7 @@ namespace ARKBreedingStats.uiControls
         private void labelMutatedLevel_Click(object sender, EventArgs e)
         {
             OnClick(e);
+            if (CustomMutationLevelMultiplier) return;
 
             var levelDelta = LevelDeltaMutationShift(LevelWild);
             if (levelDelta <= 0) return;
@@ -398,6 +414,7 @@ namespace ARKBreedingStats.uiControls
             checkBoxFixDomZero.Image = (_domZeroFixed ? Properties.Resources.locked : Properties.Resources.unlocked);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DomLevelLockedZero
         {
             get => _domZeroFixed;
@@ -407,6 +424,7 @@ namespace ARKBreedingStats.uiControls
         /// <summary>
         /// If true, the control tries to keep the sum of the wild and mutated levels equal.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LinkWildMutated
         {
             set

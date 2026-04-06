@@ -8,16 +8,16 @@ using System.Windows.Threading;
 using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
+using ARKBreedingStats.SpeciesImages;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
+using System.ComponentModel;
 
 namespace ARKBreedingStats.Pedigree
 {
     public partial class PedigreeControl : UserControl
     {
-        public delegate void EditCreatureEventHandler(Creature creature, bool virtualCreature);
-
-        public event EditCreatureEventHandler EditCreature;
+        public event Action<Creature, bool> EditCreature;
         public event Action<Creature> BestBreedingPartners;
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace ARKBreedingStats.Pedigree
         private int _compactGenerations;
         private int _displayedGenerations;
         private int _highlightInheritanceStatIndex = -1;
-        private int _yBottomOfPedigree; // used for descendents
+        private int _yBottomOfPedigree; // used for descendants
         private readonly PedigreeCreature _pedigreeHeader, _pedigreeHeaderMaternal, _pedigreeHeaderPaternal;
 
         public PedigreeControl()
@@ -234,10 +234,7 @@ namespace ARKBreedingStats.Pedigree
         {
             // clear pedigree
             if (suspendDrawingAndLayout)
-            {
-                splitContainer1.Panel2.SuspendDrawing();
-                SuspendLayout();
-            }
+                this.SuspendDrawingAndLayout();
 
             foreach (var pc in _pedigreeControls)
                 pc.Dispose();
@@ -250,10 +247,7 @@ namespace ARKBreedingStats.Pedigree
             PbRegionColors.Visible = false;
             LbCreatureName.Text = null;
             if (suspendDrawingAndLayout)
-            {
-                ResumeLayout();
-                splitContainer1.Panel2.ResumeDrawing();
-            }
+                this.ResumeDrawingAndLayout();
         }
 
         private void SetViewMode(PedigreeViewMode viewMode)
@@ -298,15 +292,13 @@ namespace ARKBreedingStats.Pedigree
         /// </summary>
         private void CreatePedigree()
         {
-            splitContainer1.Panel2.SuspendDrawing();
-            SuspendLayout();
+            splitContainer1.Panel2.SuspendDrawingAndLayout();
             // clear old pedigreeCreatures
             ClearControls(false);
             if (_selectedCreature == null)
             {
                 NoCreatureSelected();
-                ResumeLayout();
-                splitContainer1.Panel2.ResumeDrawing();
+                splitContainer1.Panel2.ResumeDrawingAndLayout();
                 return;
             }
 
@@ -343,7 +335,7 @@ namespace ARKBreedingStats.Pedigree
                 {
                     Location = new Point(PedigreeCreation.LeftMargin, _yBottomOfPedigree + PedigreeCreation.Margin)
                 });
-                _yBottomOfPedigree += 50;
+                _yBottomOfPedigree += PedigreeCreation.PedigreeElementHeight + 2 * PedigreeCreation.Margin;
             }
 
             // create descendants
@@ -351,21 +343,23 @@ namespace ARKBreedingStats.Pedigree
             var yDescendants = _yBottomOfPedigree + 3 * PedigreeCreation.Margin;
             foreach (Creature c in _creatureChildren)
             {
+                var y = yDescendants + (PedigreeCreation.Margin / 2 + PedigreeCreation.PedigreeElementHeight) * row;
+
                 PedigreeCreature pc = new PedigreeCreature(c, _enabledColorRegions)
                 {
-                    Location = new Point(PedigreeCreation.LeftMargin, yDescendants + 35 * row)
+                    Location = new Point(PedigreeCreation.LeftMargin, y)
                 };
                 if (c.levelsWild != null && _selectedCreature.levelsWild != null)
                 {
                     for (int s = 0; s < PedigreeCreature.DisplayedStatsCount; s++)
                     {
                         int si = PedigreeCreature.DisplayedStats[s];
-                        if (_selectedCreature.valuesDom[si] > 0 && _selectedCreature.levelsWild[si] >= 0 &&
+                        if (_selectedCreature.valuesCurrent[si] > 0 && _selectedCreature.levelsWild[si] >= 0 &&
                             _selectedCreature.levelsWild[si] == c.levelsWild[si])
                             _lines[0].Add(new[]
                             {
-                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 6,
-                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, yDescendants + 35 * row + 15, 0, 0
+                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, y + 6,
+                                PedigreeCreation.LeftMargin + PedigreeCreature.XOffsetFirstStat + PedigreeCreature.HorizontalStatDistance * s, y + 15, 0, 0
                         });
                     }
                 }
@@ -383,12 +377,17 @@ namespace ARKBreedingStats.Pedigree
                 ipc.BestBreedingPartners += BestBreedingPartners;
             }
 
-            PbRegionColors.SetImageAndDisposeOld(CreatureColored.GetColoredCreature(_selectedCreature.colors,
-                _selectedCreature.Species, _enabledColorRegions, 256, creatureSex: _selectedCreature.sex, game: CreatureCollection.CurrentCreatureCollection?.Game));
-            PbRegionColors.Visible = true;
+            splitContainer1.Panel2.ResumeDrawingAndLayout();
 
-            ResumeLayout();
-            splitContainer1.Panel2.ResumeDrawing();
+            CreatureColored.GetColoredCreatureWithCallback(DisplayCreatureImage, this, _selectedCreature.colors,
+                _selectedCreature.Species, _enabledColorRegions, 256, creatureSex: _selectedCreature.sex,
+                game: CreatureCollection.CurrentCreatureCollection?.Game);
+        }
+
+        private void DisplayCreatureImage(Bitmap bmp, CreatureImageFile.NeighbourPoseExist _)
+        {
+            PbRegionColors.SetImageAndDisposeOld(bmp);
+            PbRegionColors.Visible = true;
         }
 
         private static void DrawKey(PictureBox pb, Species species)
@@ -710,6 +709,7 @@ namespace ARKBreedingStats.Pedigree
 
         public ListView ListViewCreatures => listViewCreatures;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LeftColumnWidth
         {
             set => splitContainer1.SplitterDistance = value;

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using ARKBreedingStats.Library;
+using ARKBreedingStats.Traits;
 using ARKBreedingStats.values;
 using Newtonsoft.Json;
 
@@ -56,7 +58,7 @@ namespace ARKBreedingStats.importExportGun
                     switch (Path.GetExtension(filePath))
                     {
                         case ".sav":
-                            jsonText = ReadExportFile.ReadFile(filePath, "DinoExportGunSave_C", out resultText);
+                            jsonText = ReadExportFile.ReadFile(filePath, "DinoExportGunSave_C", out _, out resultText);
                             break;
                         case ".json":
                             jsonText = File.ReadAllText(filePath);
@@ -103,7 +105,17 @@ namespace ARKBreedingStats.importExportGun
                 resultText = $"Error when importing file {filePath}: file is empty. {resultText}";
                 return null;
             }
-            var exportedCreature = JsonConvert.DeserializeObject<ExportGunCreatureFile>(jsonText);
+
+            ExportGunCreatureFile exportedCreature;
+            try
+            {
+                exportedCreature = JsonConvert.DeserializeObject<ExportGunCreatureFile>(jsonText);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+
             if (exportedCreature == null)
             {
                 resultText = "jsonText couldn't be deserialized";
@@ -150,7 +162,7 @@ namespace ARKBreedingStats.importExportGun
 
             var arkId = Utils.ConvertArkIdsToLongArkId(ec.DinoId1Int, ec.DinoId2Int);
 
-            var c = new Creature(species, ec.DinoName, ec.Owner(), ec.TribeName, species?.noGender != false ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male,
+            var c = new Creature(species, ec.DinoName, ec.Owner(), ec.TribeName, species?.NoGender != false ? Sex.Unknown : ec.IsFemale ? Sex.Female : Sex.Male,
                 wildLevels, domLevels, mutLevels, ec.IsWild() ? -3 : ec.TameEffectiveness, ec.IsBred(), ec.DinoImprintingQuality,
                 CreatureCollection.CurrentCreatureCollection?.wildLevelStep)
             {
@@ -164,6 +176,8 @@ namespace ARKBreedingStats.importExportGun
                 mutationsPaternal = ec.RandomMutationsMale,
                 generation = -1 // indication that it has to be recalculated
             };
+
+            c.Traits = ec.Traits?.Select(CreatureTrait.TryParse).ToArray();
 
             c.RecalculateCreatureValues(CreatureCollection.CurrentCreatureCollection?.wildLevelStep);
             if (ec.NextAllowedMatingTimeDuration > 0)
@@ -201,7 +215,7 @@ namespace ARKBreedingStats.importExportGun
                     Wild = c.levelsWild?[si] ?? 0,
                     Tamed = c.levelsDom?[si] ?? 0,
                     Mutated = c.levelsMutated?[si] ?? 0,
-                    Value = (float)(c.valuesDom[si] - (Stats.IsPercentage(si) ? 1 : 0))
+                    Value = (float)(c.valuesCurrent[si] - (Stats.IsPercentage(si) ? 1 : 0))
                 };
             }
 
@@ -241,7 +255,8 @@ namespace ARKBreedingStats.importExportGun
                 TameEffectiveness = (float)c.tamingEff,
                 TamerString = c.owner,
                 TribeName = c.tribe,
-                NextAllowedMatingTimeDuration = c.cooldownUntil == null ? 0 : (c.cooldownUntil.Value - DateTime.Now).Seconds
+                NextAllowedMatingTimeDuration = c.cooldownUntil == null ? 0 : (c.cooldownUntil.Value - DateTime.Now).Seconds,
+                Traits = c.Traits?.Select(t => t.ToDefinitionString()).ToArray()
             };
 
             return ec;
@@ -285,8 +300,7 @@ namespace ARKBreedingStats.importExportGun
                     switch (Path.GetExtension(filePath))
                     {
                         case ".sav":
-                            jsonText = ReadExportFile.ReadFile(filePath, "DinoExportGunServerSave_C", out resultText);
-                            game = "ASE";
+                            jsonText = ReadExportFile.ReadFile(filePath, "DinoExportGunServerSave_C", out game, out resultText);
                             break;
                         case ".json":
                             jsonText = File.ReadAllText(filePath);
@@ -319,7 +333,16 @@ namespace ARKBreedingStats.importExportGun
                 resultText = $"The file is empty and cannot be imported: {filePath}{Environment.NewLine}{resultText}";
                 return null;
             }
-            var exportedServerMultipliers = JsonConvert.DeserializeObject<ExportGunServerFile>(jsonText);
+
+            ExportGunServerFile exportedServerMultipliers;
+            try
+            {
+                exportedServerMultipliers = JsonConvert.DeserializeObject<ExportGunServerFile>(jsonText);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
 
             // check if the file is a valid server settings file
             if (exportedServerMultipliers?.WildLevel == null
@@ -383,6 +406,8 @@ namespace ARKBreedingStats.importExportGun
                 sm.statMultipliers[s][ServerMultipliers.IndexLevelWild] = Math.Round(esm.WildLevel[s], roundToDigits);
                 sm.statMultipliers[s][ServerMultipliers.IndexLevelDom] = Math.Round(esm.TameLevel[s], roundToDigits);
             }
+            // On some servers the multiplier for the increase per wild level for torpidity is set to something different from 1.0, the game ignores this value as only uses 1. Reset it to that.
+            sm.statMultipliers[Stats.Torpidity][ServerMultipliers.IndexLevelWild] = 1;
             sm.TamingSpeedMultiplier = Math.Round(esm.TamingSpeedMultiplier, roundToDigits);
             sm.DinoCharacterFoodDrainMultiplier = Math.Round(esm.DinoCharacterFoodDrainMultiplier, roundToDigits);
             sm.WildDinoCharacterFoodDrainMultiplier = Math.Round(esm.WildDinoCharacterFoodDrainMultiplier, roundToDigits);
