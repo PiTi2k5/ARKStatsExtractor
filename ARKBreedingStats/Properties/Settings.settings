@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="ARKBreedingStats.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -213,10 +213,10 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="DefaultFontName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Microsoft Sans Serif</Value>
+      <Value Profile="(Default)">Segoe UI</Value>
     </Setting>
     <Setting Name="DefaultFontSize" Type="System.Single" Scope="User">
-      <Value Profile="(Default)">8.25</Value>
+      <Value Profile="(Default)">9</Value>
     </Setting>
     <Setting Name="SpeciesSelectorVerticalSplitterDistance" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">500</Value>
@@ -638,11 +638,8 @@
     <Setting Name="InfoGraphicCreatureScaling" Type="System.Single" Scope="User">
       <Value Profile="(Default)">1</Value>
     </Setting>
-    <Setting Name="InfoGraphicPaddingX" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3</Value>
-    </Setting>
-    <Setting Name="InfoGraphicPaddingY" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3</Value>
+    <Setting Name="InfoGraphicPadding" Type="System.Int32[]" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="LibraryCombineBreedingCompatibleSpecies" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -656,6 +653,114 @@
     </Setting>
     <Setting Name="LibraryShowStatLevelsThatCannotLevelup" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AppTheme" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="CustomPalettes" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CopyNameToClipboardWhenAppliedInLibrary" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicBackgroundSizing" Type="ARKBreedingStats.InfoGraphic.InfoGraphicSettings.BackgroundImageResizings" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="InfoGraphicStitchBackground" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicStitchGap" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicStitchLastFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicStitchMaxWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1500</Value>
+    </Setting>
+    <Setting Name="InfographicColorByCreature" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfographicTintBackgroundImage" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IgnoreIngameNameIfAlreadyImported" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ColorPatternsWindowRect" Type="System.Drawing.Rectangle" Scope="User">
+      <Value Profile="(Default)">0,0,0,0</Value>
+    </Setting>
+    <Setting Name="ColorPatternSelected" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ColorBreeding" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ColorBreedingConsiderInvisibleRegions" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicStyle" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">360</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernTheme" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernFontName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Segoe UI</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernAccentColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">34, 211, 238</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernAccentFromCreature" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernBarsByLevelQuality" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernValueDisplay" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowSpecies" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowStatValues" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowColors" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowMutations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernTransparentBackground" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernRegionNames" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowCreatureName" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowGeneration" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowMaxWildLevel" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernSumWildMut" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernBackColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="InfoGraphicModernArtworkHalo" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InfoGraphicModernShowSpeciesSuffixes" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

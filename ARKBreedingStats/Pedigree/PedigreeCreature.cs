@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ARKBreedingStats.library;
+using ARKBreedingStats.InfoGraphic;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.SpeciesImages;
 using ARKBreedingStats.Traits;
@@ -15,10 +15,19 @@ namespace ARKBreedingStats.Pedigree
 {
     public partial class PedigreeCreature : UserControl, IPedigreeCreature
     {
-        public const int ControlHeightWoMutations = 32;
-        public const int ControlHeightWMutations = 46;
-        public const int HorizontalStatDistance = 29;
-        public const int XOffsetFirstStat = 38;
+        public static int ControlHeightWoMutations;
+        public static int ControlHeightWMutations;
+        public static int HorizontalStatDistance;
+        public static int XOffsetFirstStat;
+
+        /// <param name="scale">Should be DeviceDpi/96f</param>
+        public static void InitializeScaling(float scale)
+        {
+            ControlHeightWoMutations = (int)(45 * scale);
+            ControlHeightWMutations = (int)(58 * scale);
+            HorizontalStatDistance = (int)(34 * scale);
+            XOffsetFirstStat = (int)(40 * scale);
+        }
 
         /// <summary>
         /// Display the species name after the creature name.
@@ -77,7 +86,8 @@ namespace ARKBreedingStats.Pedigree
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool TotalLevelUnknown { get; set; }
 
-        public static readonly int[] DisplayedStats = {
+        public static readonly int[] DisplayedStats =
+        [
             Stats.Health,
             Stats.Stamina,
             Stats.Oxygen,
@@ -86,7 +96,7 @@ namespace ARKBreedingStats.Pedigree
             Stats.MeleeDamageMultiplier,
             Stats.SpeedMultiplier,
             Stats.CraftingSpeedMultiplier
-            };
+        ];
         public static readonly int DisplayedStatsCount = DisplayedStats.Length;
 
         public PedigreeCreature()
@@ -146,42 +156,40 @@ namespace ARKBreedingStats.Pedigree
             var g = e.Graphics;
             var statIndex = (int)((Control)sender).Tag;
             var i = 0;
-            using (var p = new Pen(Color.Black))
-            using (var b = new SolidBrush(Color.White))
+            using var p = new Pen(Color.Black);
+            using var b = new SolidBrush(Color.White);
+            foreach (var t in Creature.Traits)
             {
-                foreach (var t in Creature.Traits)
+                if (t.TraitDefinition?.StatIndex != statIndex) continue;
+                if (t.MutationProbability > 0)
                 {
-                    if (t.TraitDefinition?.StatIndex != statIndex) continue;
-                    if (t.MutationProbability > 0)
-                    {
-                        p.Color = Color.DeepPink;
-                        b.Color = Color.Pink;
-                    }
-                    else if (t.MutationProbability < 0)
-                    {
-                        p.Color = Color.DarkGreen;
-                        b.Color = Color.GreenYellow;
-                    }
-                    else if (t.InheritHigherProbability > 0)
-                    {
-                        p.Color = Color.DarkBlue;
-                        b.Color = Color.DeepSkyBlue;
-                    }
-                    else if (t.InheritHigherProbability < 0)
-                    {
-                        p.Color = Color.DarkGoldenrod;
-                        b.Color = Color.Yellow;
-                    }
-                    else continue;
-
-                    const int circleWidth = 3;
-                    const int markersPerColumn = 3;
-                    var y = (i % markersPerColumn) * (circleWidth + 1);
-                    var x = (i / markersPerColumn) * (circleWidth + 1);
-                    g.FillEllipse(b, x, y, circleWidth, circleWidth);
-                    g.DrawEllipse(p, x, y, circleWidth, circleWidth);
-                    i++;
+                    p.Color = Color.DeepPink;
+                    b.Color = Color.Pink;
                 }
+                else if (t.MutationProbability < 0)
+                {
+                    p.Color = Color.DarkGreen;
+                    b.Color = Color.GreenYellow;
+                }
+                else if (t.InheritHigherProbability > 0)
+                {
+                    p.Color = Color.DarkBlue;
+                    b.Color = Color.DeepSkyBlue;
+                }
+                else if (t.InheritHigherProbability < 0)
+                {
+                    p.Color = Color.DarkGoldenrod;
+                    b.Color = Color.Yellow;
+                }
+                else continue;
+
+                const int circleWidth = 3;
+                const int markersPerColumn = 3;
+                var y = (i % markersPerColumn) * (circleWidth + 1);
+                var x = (i / markersPerColumn) * (circleWidth + 1);
+                g.FillEllipse(b, x, y, circleWidth, circleWidth);
+                g.DrawEllipse(p, x, y, circleWidth, circleWidth);
+                i++;
             }
         }
 
@@ -203,7 +211,8 @@ namespace ARKBreedingStats.Pedigree
         {
             e.DrawBackground();
             e.DrawBorder();
-            e.Graphics.DrawString(e.ToolTipText, TooltipFont, Brushes.Black, 0, 0);
+            using var textBrush = new SolidBrush(SystemColors.InfoText);
+            e.Graphics.DrawString(e.ToolTipText, TooltipFont, textBrush, 0, 0);
         }
 
         public PedigreeCreature(Creature creature, bool[] enabledColorRegions, int comboId = -1, bool displayPedigreeLink = false, bool displaySpecies = false, bool cursorHand = true) : this()
@@ -224,7 +233,7 @@ namespace ARKBreedingStats.Pedigree
         /// </summary>
         public void SetCustomStatNames(Dictionary<string, string> customStatNames = null)
         {
-            for (int s = 0; s < DisplayedStatsCount; s++)
+            for (var s = 0; s < DisplayedStatsCount; s++)
             {
                 _labelsStats[s].Text = Utils.StatName(DisplayedStats[s], true, customStatNames);
                 _ttMonospaced.SetToolTip(_labelsStats[s], Utils.StatName(DisplayedStats[s], customStatNames: customStatNames));
@@ -293,39 +302,40 @@ namespace ARKBreedingStats.Pedigree
                     {
                         // stat not used
                         _labelsStats[s].Text = "-";
-                        _labelsStats[s].BackColor = Color.WhiteSmoke;
-                        _labelsStats[s].ForeColor = Color.LightGray;
+                        _labelsStats[s].BackColor = SystemColors.ControlLight;
+                        _labelsStats[s].ForeColor = SystemColors.GrayText;
                     }
                     else if (_creature.levelsWild == null || _creature.levelsWild[si] < 0)
                     {
                         _labelsStats[s].Text = "?";
-                        _labelsStats[s].BackColor = Color.WhiteSmoke;
-                        _labelsStats[s].ForeColor = Color.LightGray;
+                        _labelsStats[s].BackColor = SystemColors.ControlLight;
+                        _labelsStats[s].ForeColor = SystemColors.GrayText;
                     }
                     else if (_creature.levelsWild[si] == 0 && (_creature.Species?.stats[si].IncPerTamedLevel ?? -1) == 0)
                     {
                         // stat cannot be leveled, e.g. speed for flyers, and thus it's assumed there are no wild levels applied, i.e. irrelevant for breeding.
                         _labelsStats[s].Text = "0";
-                        _labelsStats[s].BackColor = Color.WhiteSmoke;
-                        _labelsStats[s].ForeColor = Color.LightGray;
+                        _labelsStats[s].BackColor = SystemColors.ControlLight;
+                        _labelsStats[s].ForeColor = SystemColors.GrayText;
                         tooltipText = Utils.StatName(si, false, _creature.Species?.statNames) + ": "
-                            + $"{_creature.valuesBreeding[si] * (Stats.IsPercentage(si) ? 100 : 1),7:#,0.0}"
+                            + $"{(_creature.valuesBreeding?[si] ?? 0) * (Stats.IsPercentage(si) ? 100 : 1),7:#,0.0}"
                             + (Stats.IsPercentage(si) ? "%" : string.Empty);
                     }
                     else
                     {
                         _labelsStats[s].Text = _creature.levelsWild[si].ToString();
                         if (Properties.Settings.Default.Highlight255Level && _creature.levelsWild[si] > 253) // 255 is max, 254 is the highest that allows dom leveling
-                            _labelsStats[s].BackColor = Utils.AdjustColorLight(_creature.levelsWild[si] == 254 ? Utils.Level254 : Utils.Level255, _creature.IsTopStat(si) ? 0.2 : 0.7);
+                            _labelsStats[s].SetBackColorAndAccordingForeColor(Utils.AdjustColorLight(_creature.levelsWild[si] == 254 ? UiColors.Current.Level254 : UiColors.Current.Level255, _creature.IsTopStat(si) ? UiColors.DeltaLightnessTopStat : UiColors.DeltaLightnessConsideredStat));
                         else
-                            _labelsStats[s].BackColor = Utils.AdjustColorLight(levelColorOptions.Options[si].GetLevelColor(_creature.levelsWild[si]),
-                                _creature.IsTopStat(si) ? 0.2 : 0.7);
+                            _labelsStats[s].SetBackColorAndAccordingForeColor(Utils.AdjustColorLight(levelColorOptions.Options[si].GetLevelColor(_creature.levelsWild[si]),
+                                _creature.IsTopStat(si) ? UiColors.DeltaLightnessTopStat : UiColors.DeltaLightnessConsideredStat));
 
-                        _labelsStats[s].ForeColor = Parent?.ForeColor ?? Color.Black; // needed so text is not transparent on overlay
+                        //if (Parent?.ForeColor != null)
+                        //    _labelsStats[s].ForeColor = Parent.ForeColor; // needed so text is not transparent on overlay
                         var traitList = CreatureTrait.StringList(Creature.Traits?.Where(t => t.TraitDefinition?.StatIndex == si), Environment.NewLine);
                         if (!string.IsNullOrEmpty(traitList)) traitList = Environment.NewLine + "Traits:" + Environment.NewLine + traitList;
                         tooltipText = Utils.StatName(si, false, _creature.Species?.statNames) + ": "
-                            + $"{_creature.valuesBreeding[si] * (Stats.IsPercentage(si) ? 100 : 1),7:#,0.0}"
+                            + $"{(_creature.valuesBreeding?[si] ?? 0) * (Stats.IsPercentage(si) ? 100 : 1),7:#,0.0}"
                             + (Stats.IsPercentage(si) ? "%" : string.Empty)
                             + (_creature.levelsMutated == null ? string.Empty
                                 : Environment.NewLine + Loc.S("Mutation levels") + ": " + _creature.levelsMutated[si]
@@ -337,7 +347,7 @@ namespace ARKBreedingStats.Pedigree
                     {
                         _labelsStatsMut[s].Text = _creature.levelsMutated[si].ToString();
                         _labelsStatsMut[s].SetBackColorAndAccordingForeColor(Utils.AdjustColorLight(levelColorOptions.Options[si].GetLevelColor(_creature.levelsMutated[si], mutationLevel: true),
-                            _creature.IsTopMutationStat(si) ? 0.2 : 0.7));
+                            _creature.IsTopMutationStat(si) ? UiColors.DeltaLightnessTopStat : UiColors.DeltaLightnessConsideredStat));
                         _labelsStatsMut[s].Visible = true;
                     }
 
@@ -345,8 +355,8 @@ namespace ARKBreedingStats.Pedigree
                     _ttMonospaced.SetToolTip(_labelsStatsMut[s], tooltipText);
 
                     // fonts are strange and this seems to work. The assigned font-object is probably only used to read out the properties and then not used anymore.
-                    using (var font = new Font("Microsoft Sans Serif", 8.25F, _creature.IsTopStat(si) ? FontStyle.Bold : FontStyle.Regular, GraphicsUnit.Point, 0))
-                        _labelsStats[s].Font = font;
+                    using var font = new Font(Font, _creature.IsTopStat(si) ? FontStyle.Bold : FontStyle.Regular);
+                    _labelsStats[s].Font = font;
                 }
                 if (OnlyLevels)
                 {
@@ -358,19 +368,19 @@ namespace ARKBreedingStats.Pedigree
                 {
                     labelSex.Visible = true;
                     labelSex.Text = Utils.SexSymbol(_creature.sex);
-                    labelSex.BackColor = _creature.flags.HasFlag(CreatureFlags.Neutered) ? SystemColors.GrayText : Utils.SexColor(_creature.sex);
+                    labelSex.SetBackColorAndAccordingForeColor(_creature.flags.HasFlag(CreatureFlags.Neutered) ? SystemColors.GrayText : Utils.SexColor(_creature.sex));
                     UpdateColors(_creature.colors);
                     _tt.SetToolTip(pictureBox1, CreatureColored.RegionColorInfo(_creature.Species, _creature.colors));
                     labelSex.Visible = true;
                     pictureBox1.Visible = true;
                     plainTextcurrentValuesToolStripMenuItem.Visible = true;
                 }
-                int totalMutations = _creature.Mutations;
+                var totalMutations = _creature.Mutations;
                 if (totalMutations > 0)
                 {
                     var totalMutationsString = totalMutations.ToString();
                     labelMutations.Text = totalMutationsString.Length > 4 ? totalMutationsString.Substring(0, 4) + "…" : totalMutationsString;
-                    labelMutations.BackColor = totalMutations < Ark.MutationPossibleWithLessThan ? Utils.MutationColor : Utils.MutationColorOverLimit;
+                    labelMutations.SetBackColorAndAccordingForeColor(totalMutations < Ark.MutationPossibleWithLessThan ? UiColors.Current.Mutation : UiColors.Current.MutationOverLimit);
                     _ttMonospaced.SetToolTip(labelMutations,
                         $"Mutation-Counter: {totalMutations,13:#,0}\nMaternal: {_creature.mutationsMaternal,21:#,0}\nPaternal: {_creature.mutationsPaternal,21:#,0}");
                 }
@@ -432,7 +442,7 @@ namespace ARKBreedingStats.Pedigree
         /// </summary>
         public void Clear()
         {
-            for (int s = 0; s < DisplayedStatsCount; s++)
+            for (var s = 0; s < DisplayedStatsCount; s++)
             {
                 _labelsStats[s].Text = string.Empty;
                 _labelsStats[s].BackColor = SystemColors.Control;

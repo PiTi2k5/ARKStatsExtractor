@@ -29,7 +29,7 @@ namespace ARKBreedingStats.uiControls
         /// </summary>
         private void InitializeComponent()
         {
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new GroupBoxC();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.TlpRegionInfo = new System.Windows.Forms.TableLayoutPanel();
             this.LbCreatureCountHeader = new System.Windows.Forms.Label();
@@ -144,7 +144,7 @@ namespace ARKBreedingStats.uiControls
             // 
             this.LbColorStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.LbColorStatus.AutoSize = true;
-            this.LbColorStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbColorStatus.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LbColorStatus.Location = new System.Drawing.Point(232, 73);
             this.LbColorStatus.Margin = new System.Windows.Forms.Padding(2);
             this.LbColorStatus.Name = "LbColorStatus";
@@ -167,7 +167,7 @@ namespace ARKBreedingStats.uiControls
             // 
             this.LbStatsStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.LbStatsStatus.AutoSize = true;
-            this.LbStatsStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbStatsStatus.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LbStatsStatus.Location = new System.Drawing.Point(232, 52);
             this.LbStatsStatus.Margin = new System.Windows.Forms.Padding(2);
             this.LbStatsStatus.Name = "LbStatsStatus";
@@ -190,7 +190,7 @@ namespace ARKBreedingStats.uiControls
             // 
             this.LbIcon.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.LbIcon.AutoSize = true;
-            this.LbIcon.Font = new System.Drawing.Font("Microsoft Sans Serif", 30F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbIcon.Font = new System.Drawing.Font("Segoe UI", 30F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LbIcon.Location = new System.Drawing.Point(204, 2);
             this.LbIcon.Margin = new System.Windows.Forms.Padding(2);
             this.LbIcon.Name = "LbIcon";
@@ -211,8 +211,6 @@ namespace ARKBreedingStats.uiControls
             // 
             // CreatureAnalysis
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.groupBox1);
             this.Name = "CreatureAnalysis";
             this.Size = new System.Drawing.Size(261, 271);
@@ -227,7 +225,7 @@ namespace ARKBreedingStats.uiControls
 
         #endregion
 
-        private System.Windows.Forms.GroupBox groupBox1;
+        private GroupBoxC groupBox1;
         private System.Windows.Forms.Label LbColorAnalysis;
         private System.Windows.Forms.Label LbStatAnalysis;
         private System.Windows.Forms.Label LbConclusion;

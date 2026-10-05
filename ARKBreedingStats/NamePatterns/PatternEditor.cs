@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.Updater;
 using ARKBreedingStats.utils;
@@ -41,6 +40,7 @@ namespace ARKBreedingStats.NamePatterns
         {
             InitializeComponent();
             txtboxPattern.KeyDown += HandleTextBoxIndentation;
+            linkLabel1.LinkColor = UiColors.LinkLabelText();
         }
 
         private void HandleTextBoxIndentation(object sender, KeyEventArgs e)

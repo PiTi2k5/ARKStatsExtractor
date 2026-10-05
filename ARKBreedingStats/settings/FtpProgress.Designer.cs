@@ -47,7 +47,7 @@
             // StatusLabel
             // 
             this.StatusLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.StatusLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.StatusLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.StatusLabel.Location = new System.Drawing.Point(0, 0);
             this.StatusLabel.Name = "StatusLabel";
             this.StatusLabel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 30);
@@ -58,8 +58,6 @@
             // 
             // FtpProgressForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.button_Cancel;
             this.ClientSize = new System.Drawing.Size(384, 144);
             this.Controls.Add(this.button_Cancel);

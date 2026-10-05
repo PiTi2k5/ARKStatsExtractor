@@ -16,7 +16,6 @@ using System.Xml.Serialization;
 using ARKBreedingStats.importExportGun;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
-using ARKBreedingStats.library;
 
 namespace ARKBreedingStats
 {
@@ -75,7 +74,7 @@ namespace ARKBreedingStats
                     asaMode = _creatureCollection?.Game != Ark.Ase;
                     break;
                 default:
-                    var gameVersionDialog = new ArkVersionDialog(this);
+                    var gameVersionDialog = new ArkGameDialog(this);
                     gameVersionDialog.ShowDialog();
                     if (gameVersionDialog.UseSelectionAsDefault)
                         Properties.Settings.Default.NewLibraryGame = gameVersionDialog.GameVersion;
@@ -102,8 +101,10 @@ namespace ARKBreedingStats
             }
             else
             {
+                _creatureCollection.Game = Ark.Ase;
                 UpdateAsaIndicator();
             }
+
 
             pedigree1.Clear();
             breedingPlan1.Clear();
@@ -381,7 +382,7 @@ namespace ARKBreedingStats
         /// <returns></returns>
         private bool LoadCollectionFile(string filePath, bool keepCurrentCreatures = false, bool keepCurrentSelections = false, bool triggeredByFileWatcher = false, bool ignoreDeletionList = false)
         {
-            Species selectedSpecies = speciesSelector1.SelectedSpecies;
+            Species selectedSpecies = Values.V.SpeciesByBlueprint(speciesSelector1.LastSpecies.FirstOrDefault());
             Species selectedLibrarySpecies = listBoxSpeciesLib.SelectedItem as Species;
 
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
@@ -946,7 +947,7 @@ namespace ARKBreedingStats
             var persistentCreaturesAndOldName = newCreatures.Select(c => (creature:
                 IsCreatureAlreadyInLibrary(c.guid, c.ArkId, out alreadyExistingCreature)
                     ? alreadyExistingCreature
-                    : c, oldName: alreadyExistingCreature?.name)).ToArray();
+                    : c, oldName: alreadyExistingCreature?.name, newCreature: c)).ToArray();
 
             lastImportedCreature = newCreatures.LastOrDefault();
             var importCreatureExists = lastImportedCreature != null;
@@ -958,6 +959,14 @@ namespace ARKBreedingStats
                     // calculate level status of last added creature
                     _creatureCollection.DetermineColorStatus(speciesSelector1.SelectedSpecies, lastImportedCreature.colors, out _, out _, out _);
                     DetermineLevelStatusAndSoundFeedback(lastImportedCreature, playImportSound, playColorSound);
+
+                    if (alreadyExistingCreature != null &&
+                        Properties.Settings.Default.IgnoreIngameNameIfAlreadyImported)
+                    {
+                        foreach (var c in persistentCreaturesAndOldName)
+                            if (c.oldName != null)
+                                c.newCreature.name = c.oldName;
+                    }
 
                     _creatureCollection.MergeCreatureList(newCreatures, true);
                     UpdateCreatureParentLinkingSort(false);

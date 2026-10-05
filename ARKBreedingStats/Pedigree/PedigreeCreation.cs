@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using ARKBreedingStats.Library;
-using ARKBreedingStats.uiControls;
 
 namespace ARKBreedingStats.Pedigree
 {
@@ -15,14 +14,27 @@ namespace ARKBreedingStats.Pedigree
         /// <summary>
         /// Margin between pedigree elements.
         /// </summary>
-        internal const int Margin = 10;
-        private const int MinXPosCreature = 440;
-        internal const int PedigreeElementWidth = 325;
-        internal const int LeftMargin = 40;
-        internal const int TopMargin = 20;
-        private const int ControlDistance = 5;
+        internal static int Margin;
+        private static int MinXPosCreature;
+        internal static int PedigreeElementWidth;
+        internal static int LeftMargin;
+        internal static int TopMargin;
+        internal static int ControlDistance;
         internal static int PedigreeElementHeight;
         private static int _yCenterOfCreatureParent;
+
+        /// <param name="scale">Should be DeviceDpi/96f</param>
+        public static void InitializeScaling(float scale)
+        {
+            Margin = (int)(10 * scale);
+            MinXPosCreature = (int)(440 * scale);
+            PedigreeElementWidth = (int)(379 * scale);
+            LeftMargin = (int)(40 * scale);
+            TopMargin = (int)(20 * scale);
+            ControlDistance = (int)(10 * scale);
+            PedigreeCreature.InitializeScaling(scale);
+            PedigreeCreatureCompact.InitializeScaling(scale);
+        }
 
         public static void DisplayMutationLevels(bool displayMutationLevels)
         {
@@ -450,16 +462,15 @@ namespace ARKBreedingStats.Pedigree
                     }
                 }
 
-                const int lineControlOverlap = 2;
+                const int lineControlOverlap = 1;
 
                 if (motherInheritancePossible)
                 {
-                    lines[0].Add(new[]
-                    {
-                        PedigreeCreature.XOffsetFirstStat + x + PedigreeCreature.HorizontalStatDistance * s, y + PedigreeElementHeight - lineControlOverlap,
-                        PedigreeCreature.XOffsetFirstStat + x + PedigreeCreature.HorizontalStatDistance * s, y + PedigreeElementHeight + ControlDistance + lineControlOverlap, better == -1 ? 1 : 2,
+                    lines[0].Add([
+                        PedigreeCreature.XOffsetFirstStat + x + PedigreeCreature.HorizontalStatDistance * s, y + PedigreeElementHeight - lineControlOverlap - 1,
+                        PedigreeCreature.XOffsetFirstStat + x + PedigreeCreature.HorizontalStatDistance * s, y + PedigreeElementHeight + ControlDistance + lineControlOverlap - 1, better == -1 ? 1 : 2,
                         motherInheritanceWithMutationPossible ? 1 : 0
-                    });
+                    ]);
                 }
 
                 if (fatherInheritancePossible)

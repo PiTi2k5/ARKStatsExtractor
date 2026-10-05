@@ -33,6 +33,11 @@ namespace ARKBreedingStats.mods
                 new ListViewGroup("Unofficial")
             });
             LvAvailableModFiles.DoubleBuffered(true);
+
+            var lColor = UiColors.LinkLabelText();
+            LlModWebPage.LinkColor = lColor;
+            LlUnofficialModFiles.LinkColor = lColor;
+            linkLabelCustomModManual.LinkColor = lColor;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -294,8 +299,8 @@ namespace ARKBreedingStats.mods
                 _lviAvailableMods.Where(m => !m.mi.CurrentlyInLibrary
                                              && m.mi.Mod.IsAsa == filterIsAsa
                                              && (filter == null
-                                                 || m.mi.Mod.Title.IndexOf(filter, StringComparison.OrdinalIgnoreCase) != -1
-                                                 || m.mi.Mod.Tag.IndexOf(filter, StringComparison.OrdinalIgnoreCase) != -1
+                                                 || m.mi.Mod.Title?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true
+                                                 || m.mi.Mod.Tag?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true
                                                  )
                                              )
                     .Select(m => m.lvi)
@@ -307,7 +312,7 @@ namespace ARKBreedingStats.mods
 
             LvAvailableModFiles.EndUpdate();
 
-            TbModFilter.BackColor = filter == null ? SystemColors.Window : Color.LightYellow;
+            TbModFilter.BackColor = filter == null ? SystemColors.Window : UiColors.Current.FilterActive;
         }
 
         private void RbGameCheckedChanged(object sender, EventArgs e) => FilterModsDebounced();

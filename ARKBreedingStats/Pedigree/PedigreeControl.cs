@@ -5,13 +5,13 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.species;
 using ARKBreedingStats.SpeciesImages;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
 using System.ComponentModel;
+using ARKBreedingStats.InfoGraphic;
 
 namespace ARKBreedingStats.Pedigree
 {
@@ -106,8 +106,8 @@ namespace ARKBreedingStats.Pedigree
             if (_selectedCreature != null)
             {
                 DrawLines(e.Graphics, _lines, _pedigreeViewMode == PedigreeViewMode.Classic ? 1 : PedigreeCreatureCompact.PedigreeLineWidthFactor);
-                if (_creatureChildren.Any())
-                    e.Graphics.DrawString(Loc.S("Descendants"), new Font("Arial", 14), new SolidBrush(Color.Black), 50, _yBottomOfPedigree);
+                if (_creatureChildren.Length != 0)
+                    e.Graphics.DrawString(Loc.S("Descendants"), new Font(Font.FontFamily, Font.Size * 1.5f, FontStyle.Bold), new SolidBrush(SystemColors.ControlText), 50, _yBottomOfPedigree);
             }
         }
 
@@ -118,87 +118,85 @@ namespace ARKBreedingStats.Pedigree
         internal static void DrawLines(Graphics g, List<int[]>[] lines, float lineWidthFactor = 1)
         {
             // lines contains all the coordinates the arrows should be drawn: x1,y1,x2,y2,red/green,mutated/equal
-            using (Pen myPen = new Pen(Color.Green, 3))
+            using var myPen = new Pen(Color.Black, 3);
+            myPen.EndCap = LineCap.ArrowAnchor;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // stat inheritance lines. index 4 contains info about the color.
+            if (lines[0] != null)
             {
-                myPen.EndCap = LineCap.ArrowAnchor;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // stat inheritance lines. index 4 contains info about the color.
-                if (lines[0] != null)
+                foreach (int[] line in lines[0])
                 {
-                    foreach (int[] line in lines[0])
-                    {
-                        switch (line[4])
-                        {
-                            case 1:
-                                myPen.Color = Color.DarkRed;
-                                break;
-                            case 2:
-                                myPen.Color = Color.Green;
-                                break;
-                            default:
-                                myPen.Color = Color.LightGray;
-                                break;
-                        }
-
-                        if (line[5] > 0)
-                        {
-                            // if stat is mutated
-                            const int mutationBoxWidth = 14;
-                            g.FillEllipse(Brushes.LightGreen, (line[0] + line[2] - mutationBoxWidth) / 2,
-                                (line[1] + line[3] - mutationBoxWidth) / 2, mutationBoxWidth, mutationBoxWidth);
-                        }
-
-                        g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
-                    }
-
-                }
-
-                var fineLineWidth = lineWidthFactor;
-                var boldLineWidth = lineWidthFactor * 3;
-
-                // simple arrow lines. index 4 contains info about the width: 0: default, 1: bold.
-                if (lines[1] != null)
-                {
-                    foreach (int[] line in lines[1])
-                    {
-                        SetPenProperty(myPen, line[4]);
-                        g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
-                    }
-                }
-
-                // simple lines (generation lines for the compact mode). index 4 contains info about the width: 0: default, 1: bold.
-                if (lines[2] != null)
-                {
-                    myPen.EndCap = LineCap.Flat;
-                    foreach (int[] line in lines[2])
-                    {
-                        SetPenProperty(myPen, line[4]);
-                        g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
-                    }
-                }
-
-                void SetPenProperty(Pen p, int style)
-                {
-                    switch (style)
+                    switch (line[4])
                     {
                         case 1:
-                            p.Color = Color.Black;
-                            p.Width = fineLineWidth;
+                            myPen.Color = UiColors.Current.InheritanceLineWorse;
                             break;
                         case 2:
-                            p.Color = Color.Black;
-                            p.Width = boldLineWidth;
-                            break;
-                        case 3:
-                            p.Color = Utils.MutationMarkerColor;
-                            p.Width = boldLineWidth;
+                            myPen.Color = UiColors.Current.InheritanceLineBetter;
                             break;
                         default:
-                            p.Color = Color.DarkGray;
-                            p.Width = fineLineWidth;
+                            myPen.Color = SystemColors.GrayText;
                             break;
                     }
+
+                    if (line[5] > 0)
+                    {
+                        // if stat is mutated
+                        const int mutationBoxWidth = 14;
+                        using var b = new SolidBrush(UiColors.Current.Success);
+                        g.FillEllipse(b, (line[0] + line[2] - mutationBoxWidth) / 2,
+                            (line[1] + line[3] - mutationBoxWidth) / 2, mutationBoxWidth, mutationBoxWidth);
+                    }
+
+                    g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
+                }
+            }
+
+            var fineLineWidth = lineWidthFactor * 2;
+            var boldLineWidth = lineWidthFactor * 4;
+
+            // simple arrow lines. index 4 contains info about the width: 0: default, 1: bold.
+            if (lines[1] != null)
+            {
+                foreach (int[] line in lines[1])
+                {
+                    SetPenProperty(myPen, line[4]);
+                    g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
+                }
+            }
+
+            // simple lines (generation lines for the compact mode). index 4 contains info about the width: 0: default, 1: bold.
+            if (lines[2] != null)
+            {
+                myPen.EndCap = LineCap.Flat;
+                foreach (int[] line in lines[2])
+                {
+                    SetPenProperty(myPen, line[4]);
+                    g.DrawLine(myPen, line[0], line[1], line[2], line[3]);
+                }
+            }
+
+            void SetPenProperty(Pen p, int style)
+            {
+                switch (style)
+                {
+                    case 1:
+                        p.Color = SystemColors.ControlText;
+                        p.Width = fineLineWidth;
+                        break;
+                    case 2:
+                        p.Color = SystemColors.ControlText;
+                        p.Width = boldLineWidth;
+                        break;
+                    case 3:
+                        p.Color = UiColors.Current.MutationMarker;
+                        p.Width = boldLineWidth;
+                        break;
+                    default:
+                        p.Color = SystemColors.GrayText;
+                        p.Width = fineLineWidth;
+                        break;
                 }
             }
         }
@@ -315,7 +313,7 @@ namespace ARKBreedingStats.Pedigree
             if (_pedigreeViewMode == PedigreeViewMode.Classic)
             {
                 PedigreeCreation.CreateDetailedView(_selectedCreature, _lines, _pedigreeControls, _enabledColorRegions);
-                _yBottomOfPedigree = PedigreeCreation.TopMargin + 4 * PedigreeCreation.PedigreeElementHeight;
+                _yBottomOfPedigree = PedigreeCreation.TopMargin + 4 * PedigreeCreation.PedigreeElementHeight + 3 * PedigreeCreation.ControlDistance;
             }
             else
             {
@@ -329,7 +327,7 @@ namespace ARKBreedingStats.Pedigree
                 LbCreatureName.Text = _selectedCreature.name;
 
                 if (PbKeyExplanations.Image == null)
-                    DrawKey(PbKeyExplanations, _selectedSpecies);
+                    DrawKey(PbKeyExplanations, _selectedSpecies, Font, UiUtils.UiScaling);
 
                 _pedigreeControls.Add(new PedigreeCreature(_selectedCreature, _enabledColorRegions)
                 {
@@ -390,19 +388,18 @@ namespace ARKBreedingStats.Pedigree
             PbRegionColors.Visible = true;
         }
 
-        private static void DrawKey(PictureBox pb, Species species)
+        private static void DrawKey(PictureBox pb, Species species, Font font, float uiScaling)
         {
             if (species == null) return;
 
             var w = pb.Width;
             var h = pb.Height;
 
-            Bitmap bmp = new Bitmap(w, h);
-            using (Graphics g = Graphics.FromImage(bmp))
-            using (var font = new Font("Microsoft Sans Serif", 8.25f))
+            var bmp = new Bitmap(w, h);
+            using (var g = Graphics.FromImage(bmp))
             using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-            using (var pen = new Pen(Color.Black))
-            using (var brush = new SolidBrush(Color.Black))
+            using (var pen = new Pen(SystemColors.ControlText))
+            using (var brush = new SolidBrush(SystemColors.ControlText))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
@@ -411,15 +408,15 @@ namespace ARKBreedingStats.Pedigree
                 g.DrawRectangle(pen, 0, 0, w - 1, h - 1);
 
                 // stats
-                const int padding = 4;
-                const int statCircleSize = PedigreeCreatureCompact.DefaultStatSize * 3 / 2;
-                const int statRadius = statCircleSize / 2;
-                const int radiusInnerCircle = statRadius / 7;
+                var padding = (int)(4 * uiScaling);
+                var statCircleSize = PedigreeCreatureCompact.DefaultStatSize * 3 / 2;
+                var statRadius = statCircleSize / 2;
+                var radiusInnerCircle = statRadius / 7;
                 var statLeftTopCoords = new Point(padding, padding);
                 var center = new Point(statLeftTopCoords.X + statRadius, statLeftTopCoords.Y + statRadius);
-                brush.Color = Color.White;
+                brush.Color = SystemColors.HighlightText;
                 g.FillEllipse(brush, statLeftTopCoords.X, statLeftTopCoords.Y, statRadius * 2, statRadius * 2);
-                brush.Color = Color.Black;
+                brush.Color = SystemColors.ControlText;
 
                 var usedStats = Enumerable.Range(0, Stats.StatsCount).Where(si => si != Stats.Torpidity && species.UsesStat(si)).ToArray();
                 var anglePerStat = 360f / usedStats.Length;
@@ -430,7 +427,7 @@ namespace ARKBreedingStats.Pedigree
                     g.DrawPie(pen, statLeftTopCoords.X, statLeftTopCoords.Y, statCircleSize, statCircleSize, angle, anglePerStat);
 
                     // text
-                    const int radiusPosition = statRadius * 7 / 10;
+                    var radiusPosition = statRadius * 7 / 10;
                     var anglePosition = Math.PI * 2 / 360 * (angle + anglePerStat / 2);
                     const int statTexSizeHalf = 15;
                     var x = (int)Math.Round(radiusPosition * Math.Cos(anglePosition) + center.X - statTexSizeHalf);
@@ -443,12 +440,12 @@ namespace ARKBreedingStats.Pedigree
                 g.FillEllipse(brush, center.X - radiusInnerCircle, center.Y - radiusInnerCircle, 2 * radiusInnerCircle, 2 * radiusInnerCircle);
 
                 // circles
-                const int textX = 3 * padding + 6;
-                const int lineHeight = 15;
+                var textX = 3 * padding + 6;
+                var lineHeight = (int)(15 * uiScaling);
                 void CircleExplanation(Color circleColor, string text, int y, int circleSize, int circleOffset = 0)
                 {
                     PedigreeCreatureCompact.DrawFilledCircle(g, brush, pen, circleColor, padding + circleOffset, y + lineHeight / 4 + circleOffset, circleSize);
-                    brush.Color = Color.Black;
+                    brush.Color = SystemColors.ControlText;
                     g.DrawString(text, font, brush, textX, y);
                 }
 
@@ -457,35 +454,35 @@ namespace ARKBreedingStats.Pedigree
                     pen.Color = rectangleColor;
                     pen.Width = 2;
                     g.DrawRectangle(pen, padding, y, size, size);
-                    brush.Color = Color.Black;
+                    brush.Color = SystemColors.ControlText;
                     g.DrawString(text, font, brush, textX, y);
                 }
 
                 void ArrowExplanation(List<int[]> linesList, int lineStyle, string text, int y, int size)
                 {
                     var yLine = y + lineHeight / 2;
-                    linesList.Add(new[] { padding, yLine, padding + size, yLine, lineStyle });
-                    brush.Color = Color.Black;
+                    linesList.Add([padding, yLine, padding + size, yLine, lineStyle]);
+                    brush.Color = SystemColors.ControlText;
                     g.DrawString(text, font, brush, textX, y);
                 }
 
                 int yText = statRadius * 2 + 4 * padding;
-                CircleExplanation(Utils.MutationMarkerColor, "mutation in stat", yText, 6);
+                CircleExplanation(UiColors.Current.MutationMarker, "mutation in stat", yText, 6);
                 yText += lineHeight;
-                CircleExplanation(Utils.MutationMarkerPossibleColor, "possible mutation in stat", yText, 6);
+                CircleExplanation(UiColors.Current.MutationMarkerPossible, "possible mutation in stat", yText, 6);
                 yText += lineHeight;
-                CircleExplanation(Color.Yellow, "mutation in color", yText, 4, 1);
+                CircleExplanation(UiColors.Current.NewColorInSpecies, "mutation in color", yText, 4, 1);
                 yText += lineHeight;
-                CircleExplanation(Color.GreenYellow, "creature without mutations", yText, 6);
+                CircleExplanation(UiColors.Current.Success, "creature without mutations", yText, 6);
                 yText += lineHeight;
-                CircleExplanation(Utils.MutationColor, "creature mutations < limit", yText, 6);
+                CircleExplanation(UiColors.Current.Mutation, "creature mutations < limit", yText, 6);
                 yText += lineHeight;
-                CircleExplanation(Color.DarkRed, "creature mutations ≥ limit", yText, 6);
+                CircleExplanation(UiColors.Current.MutationOverLimit, "creature mutations ≥ limit", yText, 6);
                 yText += lineHeight;
                 // rectangles
-                RectangleExplanation(Color.DodgerBlue, "selected creature", yText, 10);
+                RectangleExplanation(UiColors.Current.PedigreeSelected, "selected creature", yText, 10);
                 yText += lineHeight;
-                RectangleExplanation(Utils.MutationMarkerColor, "creature with mutation", yText, 10);
+                RectangleExplanation(UiColors.Current.MutationMarker, "creature with mutation", yText, 10);
                 yText += lineHeight;
                 // arrows
                 var lines = new[] { null, new List<int[]>(), null };
@@ -552,8 +549,8 @@ namespace ARKBreedingStats.Pedigree
             // select creature in listView
             if (listViewCreatures.SelectedItems.Count == 0 || (Creature)listViewCreatures.SelectedItems[0].Tag != centralCreature)
             {
-                int index = -1;
-                for (int i = 0; i < listViewCreatures.Items.Count; i++)
+                var index = -1;
+                for (var i = 0; i < listViewCreatures.Items.Count; i++)
                 {
                     if ((Creature)listViewCreatures.Items[i].Tag == centralCreature)
                     {
@@ -636,11 +633,11 @@ namespace ARKBreedingStats.Pedigree
             listViewCreatures.BeginUpdate();
             var filterStrings = TextBoxFilter.Text.Split(',').Select(f => f.Trim())
                 .Where(f => !string.IsNullOrEmpty(f)).ToArray();
-            if (!filterStrings.Any()) filterStrings = null;
+            if (filterStrings.Length == 0) filterStrings = null;
 
             var items = new List<ListViewItem>();
 
-            foreach (Creature cr in _creaturesOfSpecies)
+            foreach (var cr in _creaturesOfSpecies)
             {
                 if (filterStrings != null
                    && !filterStrings.All(f =>
@@ -654,16 +651,16 @@ namespace ARKBreedingStats.Pedigree
                    ))
                     continue;
 
-                string crLevel = cr.LevelHatched > 0 ? cr.LevelHatched.ToString() : "?";
-                ListViewItem lvi = new ListViewItem(new[] { cr.name, crLevel })
+                var crLevel = cr.LevelHatched > 0 ? cr.LevelHatched.ToString() : "?";
+                var lvi = new ListViewItem([cr.name, crLevel])
                 {
                     Tag = cr,
                     UseItemStyleForSubItems = false
                 };
                 if (cr.flags.HasFlag(CreatureFlags.Placeholder))
-                    lvi.SubItems[0].ForeColor = Color.LightGray;
+                    lvi.SubItems[0].ForeColor = SystemColors.ControlLight;
                 if (crLevel == "?")
-                    lvi.SubItems[1].ForeColor = Color.LightGray;
+                    lvi.SubItems[1].ForeColor = SystemColors.ControlLight;
                 items.Add(lvi);
             }
 
@@ -712,8 +709,8 @@ namespace ARKBreedingStats.Pedigree
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LeftColumnWidth
         {
-            set => splitContainer1.SplitterDistance = value;
             get => splitContainer1.SplitterDistance;
+            set => splitContainer1.SplitterDistance = value;
         }
 
         private void RbViewClassic_CheckedChanged(object sender, EventArgs e)
@@ -743,7 +740,7 @@ namespace ARKBreedingStats.Pedigree
             /// H-shaped fractal arrangement, most compact.
             /// </summary>
             HView
-        };
+        }
 
         private void TbZoom_Scroll(object sender, EventArgs e)
         {

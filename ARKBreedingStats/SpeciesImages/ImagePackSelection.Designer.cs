@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats.SpeciesImages
+﻿using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats.SpeciesImages
 {
     partial class ImagePackSelection
     {
@@ -51,7 +53,7 @@
             this.LbDescription = new System.Windows.Forms.Label();
             this.TbUrl = new System.Windows.Forms.TextBox();
             this.LLFolder = new System.Windows.Forms.LinkLabel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new GroupBoxC();
             this.LbCustomPackInfo = new System.Windows.Forms.Label();
             this.BtOpenPackPreferenceFile = new System.Windows.Forms.Button();
             this.LlImagePackManual = new System.Windows.Forms.LinkLabel();
@@ -185,7 +187,7 @@
             // 
             // BtAdd
             // 
-            this.BtAdd.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtAdd.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtAdd.Location = new System.Drawing.Point(3, 74);
             this.BtAdd.Name = "BtAdd";
             this.BtAdd.Size = new System.Drawing.Size(38, 39);
@@ -196,7 +198,7 @@
             // 
             // BtRemove
             // 
-            this.BtRemove.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtRemove.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtRemove.Location = new System.Drawing.Point(3, 119);
             this.BtRemove.Name = "BtRemove";
             this.BtRemove.Size = new System.Drawing.Size(38, 39);
@@ -207,7 +209,7 @@
             // 
             // BtRemoveAll
             // 
-            this.BtRemoveAll.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtRemoveAll.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtRemoveAll.Location = new System.Drawing.Point(3, 164);
             this.BtRemoveAll.Name = "BtRemoveAll";
             this.BtRemoveAll.Size = new System.Drawing.Size(38, 39);
@@ -218,7 +220,7 @@
             // 
             // BtMoveUp
             // 
-            this.BtMoveUp.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtMoveUp.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtMoveUp.Location = new System.Drawing.Point(3, 209);
             this.BtMoveUp.Name = "BtMoveUp";
             this.BtMoveUp.Size = new System.Drawing.Size(38, 39);
@@ -229,7 +231,7 @@
             // 
             // BtMoveDown
             // 
-            this.BtMoveDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BtMoveDown.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtMoveDown.Location = new System.Drawing.Point(3, 254);
             this.BtMoveDown.Name = "BtMoveDown";
             this.BtMoveDown.Size = new System.Drawing.Size(38, 39);
@@ -279,7 +281,7 @@
             // 
             this.LbPackName.AutoSize = true;
             this.flowLayoutPanel1.SetFlowBreak(this.LbPackName, true);
-            this.LbPackName.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbPackName.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LbPackName.Location = new System.Drawing.Point(3, 30);
             this.LbPackName.Margin = new System.Windows.Forms.Padding(3, 0, 3, 10);
             this.LbPackName.Name = "LbPackName";
@@ -379,8 +381,6 @@
             // ImagePackSelection
             // 
             this.AcceptButton = this.BtOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.BtCancel;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.tableLayoutPanel1);
@@ -423,7 +423,7 @@
         private System.Windows.Forms.Button BtMoveDown;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.LinkLabel LLFolder;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private GroupBoxC groupBox1;
         private System.Windows.Forms.Label LbCustomPackInfo;
         private System.Windows.Forms.Button BtOpenPackPreferenceFile;
         private System.Windows.Forms.TextBox TbUrl;

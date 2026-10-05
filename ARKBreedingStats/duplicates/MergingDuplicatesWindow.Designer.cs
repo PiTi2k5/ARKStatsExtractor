@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats.duplicates
+﻿using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats.duplicates
 {
     partial class MergingDuplicatesWindow
     {
@@ -30,11 +32,11 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btUseRight = new System.Windows.Forms.Button();
-            this.gbLeftCreature = new System.Windows.Forms.GroupBox();
+            this.gbLeftCreature = new GroupBoxC();
             this.lbCreatureInfosLeft = new System.Windows.Forms.Label();
             this.statsDisplay2 = new ARKBreedingStats.uiControls.StatsDisplay();
             this.label1 = new System.Windows.Forms.Label();
-            this.gbRightCreature = new System.Windows.Forms.GroupBox();
+            this.gbRightCreature = new GroupBoxC();
             this.lbCreatureInfosRight = new System.Windows.Forms.Label();
             this.statsDisplay1 = new ARKBreedingStats.uiControls.StatsDisplay();
             this.btUseLeft = new System.Windows.Forms.Button();
@@ -72,7 +74,7 @@
             // btUseRight
             // 
             this.btUseRight.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btUseRight.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btUseRight.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btUseRight.Location = new System.Drawing.Point(387, 442);
             this.btUseRight.Name = "btUseRight";
             this.btUseRight.Size = new System.Drawing.Size(379, 44);
@@ -115,7 +117,7 @@
             // 
             this.tableLayoutPanel1.SetColumnSpan(this.label1, 2);
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(3, 30);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(763, 40);
@@ -154,7 +156,7 @@
             // btUseLeft
             // 
             this.btUseLeft.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btUseLeft.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btUseLeft.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btUseLeft.Location = new System.Drawing.Point(3, 442);
             this.btUseLeft.Name = "btUseLeft";
             this.btUseLeft.Size = new System.Drawing.Size(378, 44);
@@ -167,7 +169,7 @@
             // 
             this.tableLayoutPanel1.SetColumnSpan(this.btKeepBoth, 2);
             this.btKeepBoth.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btKeepBoth.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btKeepBoth.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btKeepBoth.Location = new System.Drawing.Point(3, 492);
             this.btKeepBoth.Name = "btKeepBoth";
             this.btKeepBoth.Size = new System.Drawing.Size(763, 44);
@@ -187,8 +189,6 @@
             // 
             // MergingDuplicatesWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(769, 539);
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -207,11 +207,11 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button btUseRight;
-        private System.Windows.Forms.GroupBox gbLeftCreature;
+        private GroupBoxC gbLeftCreature;
         private System.Windows.Forms.Label lbCreatureInfosLeft;
         private uiControls.StatsDisplay statsDisplay2;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.GroupBox gbRightCreature;
+        private GroupBoxC gbRightCreature;
         private System.Windows.Forms.Label lbCreatureInfosRight;
         private uiControls.StatsDisplay statsDisplay1;
         private System.Windows.Forms.Button btUseLeft;

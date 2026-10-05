@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats.NamePatterns
+﻿using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats.NamePatterns
 {
     partial class PatternEditor
     {
@@ -37,7 +39,7 @@
             this.btnClear = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new GroupBoxC();
             this.StopwatchLabel = new System.Windows.Forms.Label();
             this.cbPreview = new System.Windows.Forms.CheckBox();
             this.panel4 = new System.Windows.Forms.Panel();
@@ -122,7 +124,7 @@
             // btnClear
             // 
             this.btnClear.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnClear.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnClear.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnClear.ForeColor = System.Drawing.Color.Maroon;
             this.btnClear.Location = new System.Drawing.Point(678, 0);
             this.btnClear.Name = "btnClear";
@@ -180,7 +182,7 @@
             // 
             this.StopwatchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StopwatchLabel.AutoSize = true;
-            this.StopwatchLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.StopwatchLabel.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.StopwatchLabel.Location = new System.Drawing.Point(512, 8);
             this.StopwatchLabel.Name = "StopwatchLabel";
             this.StopwatchLabel.Size = new System.Drawing.Size(39, 29);
@@ -265,7 +267,7 @@
             this.TabPageKeysFunctions.Size = new System.Drawing.Size(688, 452);
             this.TabPageKeysFunctions.TabIndex = 0;
             this.TabPageKeysFunctions.Text = "Keys and Functions";
-            this.TabPageKeysFunctions.UseVisualStyleBackColor = true;
+            this.TabPageKeysFunctions.UseVisualStyleBackColor = false;
             // 
             // TlpKeysFunctions
             // 
@@ -351,7 +353,7 @@
             this.TabPagePatternTemplates.Size = new System.Drawing.Size(688, 452);
             this.TabPagePatternTemplates.TabIndex = 1;
             this.TabPagePatternTemplates.Text = "Templates";
-            this.TabPagePatternTemplates.UseVisualStyleBackColor = true;
+            this.TabPagePatternTemplates.UseVisualStyleBackColor = false;
             // 
             // TabPageJavaScriptConsole
             // 
@@ -362,7 +364,7 @@
             this.TabPageJavaScriptConsole.Size = new System.Drawing.Size(688, 452);
             this.TabPageJavaScriptConsole.TabIndex = 2;
             this.TabPageJavaScriptConsole.Text = "JavaScript Console";
-            this.TabPageJavaScriptConsole.UseVisualStyleBackColor = true;
+            this.TabPageJavaScriptConsole.UseVisualStyleBackColor = false;
             // 
             // TextboxJavaScriptConsole
             // 
@@ -408,8 +410,6 @@
             // 
             // PatternEditor
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(702, 674);
             this.Controls.Add(this.splitContainer1);
@@ -454,7 +454,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private GroupBoxC groupBox1;
         private System.Windows.Forms.CheckBox cbPreview;
         private System.Windows.Forms.CheckBox CbPatternNameToClipboardAfterManualApplication;
         private System.Windows.Forms.TabControl tabControl1;

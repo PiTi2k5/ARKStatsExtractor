@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats.settings
+using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats.settings
 {
     partial class Settings
     {
@@ -31,98 +33,94 @@
             components = new System.ComponentModel.Container();
             System.Windows.Forms.Button BtOpenLevelColorOptions;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Settings));
-            groupBoxMultiplier = new System.Windows.Forms.GroupBox();
+            groupBoxMultiplier = new GroupBoxC();
+            tlpStatMultipliers = new System.Windows.Forms.TableLayoutPanel();
             CbHighlightAdjustedMultipliers = new System.Windows.Forms.CheckBox();
-            flowLayoutPanelStatMultipliers = new System.Windows.Forms.FlowLayoutPanel();
             labelInfo = new System.Windows.Forms.Label();
-            labelTameLevel = new System.Windows.Forms.Label();
-            labelWildLevel = new System.Windows.Forms.Label();
-            labelTameAff = new System.Windows.Forms.Label();
-            labelTameAdd = new System.Windows.Forms.Label();
             buttonOK = new System.Windows.Forms.Button();
             buttonCancel = new System.Windows.Forms.Button();
             checkBoxAutoSave = new System.Windows.Forms.CheckBox();
             chkCollectionSync = new System.Windows.Forms.CheckBox();
             label6 = new System.Windows.Forms.Label();
             label5 = new System.Windows.Forms.Label();
-            groupBox2 = new System.Windows.Forms.GroupBox();
-            nudTamedDinoCharacterFoodDrain = new ARKBreedingStats.uiControls.Nud();
-            nudTamedDinoCharacterFoodDrainEvent = new ARKBreedingStats.uiControls.Nud();
+            groupBox2 = new GroupBoxC();
+            nudTamedDinoCharacterFoodDrain = new Nud();
+            nudTamedDinoCharacterFoodDrainEvent = new Nud();
             label64 = new System.Windows.Forms.Label();
-            nudBabyImprintAmountEvent = new ARKBreedingStats.uiControls.Nud();
+            nudBabyImprintAmountEvent = new Nud();
             label49 = new System.Windows.Forms.Label();
-            nudBabyImprintAmount = new ARKBreedingStats.uiControls.Nud();
+            nudBabyImprintAmount = new Nud();
             label44 = new System.Windows.Forms.Label();
-            nudMatingSpeed = new ARKBreedingStats.uiControls.Nud();
-            nudBabyFoodConsumptionSpeedEvent = new ARKBreedingStats.uiControls.Nud();
-            nudMatingIntervalEvent = new ARKBreedingStats.uiControls.Nud();
-            nudBabyCuddleIntervalEvent = new ARKBreedingStats.uiControls.Nud();
-            nudBabyMatureSpeedEvent = new ARKBreedingStats.uiControls.Nud();
-            nudEggHatchSpeedEvent = new ARKBreedingStats.uiControls.Nud();
+            nudMatingSpeed = new Nud();
+            nudBabyFoodConsumptionSpeedEvent = new Nud();
+            nudMatingIntervalEvent = new Nud();
+            nudBabyCuddleIntervalEvent = new Nud();
+            nudBabyMatureSpeedEvent = new Nud();
+            nudEggHatchSpeedEvent = new Nud();
             labelBabyFoodConsumptionSpeed = new System.Windows.Forms.Label();
-            nudBabyFoodConsumptionSpeed = new ARKBreedingStats.uiControls.Nud();
+            nudBabyFoodConsumptionSpeed = new Nud();
             label3 = new System.Windows.Forms.Label();
-            nudMatingInterval = new ARKBreedingStats.uiControls.Nud();
+            nudMatingInterval = new Nud();
             label17 = new System.Windows.Forms.Label();
-            nudBabyCuddleInterval = new ARKBreedingStats.uiControls.Nud();
+            nudBabyCuddleInterval = new Nud();
             label13 = new System.Windows.Forms.Label();
             label9 = new System.Windows.Forms.Label();
-            nudBabyMatureSpeed = new ARKBreedingStats.uiControls.Nud();
-            nudBabyImprintingStatScale = new ARKBreedingStats.uiControls.Nud();
+            nudBabyMatureSpeed = new Nud();
+            nudBabyImprintingStatScale = new Nud();
             label8 = new System.Windows.Forms.Label();
-            nudEggHatchSpeed = new ARKBreedingStats.uiControls.Nud();
-            groupBox3 = new System.Windows.Forms.GroupBox();
+            nudEggHatchSpeed = new Nud();
+            groupBox3 = new GroupBoxC();
             LbDefaultLevelups = new System.Windows.Forms.Label();
-            nudMaxServerLevel = new ARKBreedingStats.uiControls.Nud();
+            nudMaxServerLevel = new Nud();
             lbMaxTotalLevel = new System.Windows.Forms.Label();
-            nudMaxGraphLevel = new ARKBreedingStats.uiControls.Nud();
+            nudMaxGraphLevel = new Nud();
             label18 = new System.Windows.Forms.Label();
             label11 = new System.Windows.Forms.Label();
-            nudMaxWildLevels = new ARKBreedingStats.uiControls.Nud();
+            nudMaxWildLevels = new Nud();
             label10 = new System.Windows.Forms.Label();
-            nudMaxDomLevels = new ARKBreedingStats.uiControls.Nud();
+            nudMaxDomLevels = new Nud();
             label27 = new System.Windows.Forms.Label();
-            groupBox4 = new System.Windows.Forms.GroupBox();
+            groupBox4 = new GroupBoxC();
             CbHighlightLevel255 = new System.Windows.Forms.CheckBox();
             cbIgnoreSexInBreedingPlan = new System.Windows.Forms.CheckBox();
             label16 = new System.Windows.Forms.Label();
             radioButtonFahrenheit = new System.Windows.Forms.RadioButton();
             radioButtonCelsius = new System.Windows.Forms.RadioButton();
             label12 = new System.Windows.Forms.Label();
-            numericUpDownMaxBreedingSug = new ARKBreedingStats.uiControls.Nud();
-            groupBox5 = new System.Windows.Forms.GroupBox();
-            NudWildDinoCharacterFoodDrainMultiplier = new ARKBreedingStats.uiControls.Nud();
+            numericUpDownMaxBreedingSug = new Nud();
+            groupBox5 = new GroupBoxC();
+            NudWildDinoCharacterFoodDrainMultiplier = new Nud();
             label69 = new System.Windows.Forms.Label();
             label67 = new System.Windows.Forms.Label();
-            NudWildDinoTorporDrainMultiplier = new ARKBreedingStats.uiControls.Nud();
-            nudDinoCharacterFoodDrainEvent = new ARKBreedingStats.uiControls.Nud();
-            nudTamingSpeedEvent = new ARKBreedingStats.uiControls.Nud();
+            NudWildDinoTorporDrainMultiplier = new Nud();
+            nudDinoCharacterFoodDrainEvent = new Nud();
+            nudTamingSpeedEvent = new Nud();
             label7 = new System.Windows.Forms.Label();
             label14 = new System.Windows.Forms.Label();
-            nudDinoCharacterFoodDrain = new ARKBreedingStats.uiControls.Nud();
-            nudTamingSpeed = new ARKBreedingStats.uiControls.Nud();
-            groupBox6 = new System.Windows.Forms.GroupBox();
+            nudDinoCharacterFoodDrain = new Nud();
+            nudTamingSpeed = new Nud();
+            groupBox6 = new GroupBoxC();
             label55 = new System.Windows.Forms.Label();
-            NudWaitBeforeAutoLoad = new ARKBreedingStats.uiControls.Nud();
+            NudWaitBeforeAutoLoad = new Nud();
             label54 = new System.Windows.Forms.Label();
-            NudKeepBackupFilesCount = new ARKBreedingStats.uiControls.Nud();
+            NudKeepBackupFilesCount = new Nud();
             label53 = new System.Windows.Forms.Label();
             BtClearBackupFolder = new System.Windows.Forms.Button();
             label52 = new System.Windows.Forms.Label();
             BtBackupFolder = new System.Windows.Forms.Button();
             label2 = new System.Windows.Forms.Label();
-            NudBackupEveryMinutes = new ARKBreedingStats.uiControls.Nud();
-            groupBox7 = new System.Windows.Forms.GroupBox();
+            NudBackupEveryMinutes = new Nud();
+            groupBox7 = new GroupBoxC();
             CbExtractorConvertWildTorporTotalLevel = new System.Windows.Forms.CheckBox();
             CbSetMutationLevelsExtractor = new System.Windows.Forms.CheckBox();
             checkBoxDisplayHiddenStats = new System.Windows.Forms.CheckBox();
             tabControlSettings = new System.Windows.Forms.TabControl();
             tabPageMultipliers = new System.Windows.Forms.TabPage();
-            groupBox12 = new System.Windows.Forms.GroupBox();
+            groupBox12 = new GroupBoxC();
             BtnUpdateOfficialEventValues = new System.Windows.Forms.Button();
             CbAutoOfficialMultipliers = new System.Windows.Forms.CheckBox();
             CbbOfficialMultipliers = new System.Windows.Forms.ComboBox();
-            GbNewLibraryGame = new System.Windows.Forms.GroupBox();
+            GbNewLibraryGame = new GroupBoxC();
             RbNewLibraryGameAskEachTime = new System.Windows.Forms.RadioButton();
             RbNewLibraryGameKeep = new System.Windows.Forms.RadioButton();
             RbNewLibraryGameAsa = new System.Windows.Forms.RadioButton();
@@ -138,56 +136,51 @@
             RbGameAse = new System.Windows.Forms.RadioButton();
             BtImportSettingsSelectFile = new System.Windows.Forms.Button();
             CbAtlasSettings = new System.Windows.Forms.CheckBox();
-            groupBox29 = new System.Windows.Forms.GroupBox();
+            groupBox29 = new GroupBoxC();
             CbAllowSpeedLeveling = new System.Windows.Forms.CheckBox();
             CbAllowFlyerSpeedLeveling = new System.Windows.Forms.CheckBox();
             label34 = new System.Windows.Forms.Label();
-            groupBox18 = new System.Windows.Forms.GroupBox();
+            groupBox18 = new GroupBoxC();
             btApplyPreset = new System.Windows.Forms.Button();
             cbbStatMultiplierPresets = new System.Windows.Forms.ComboBox();
             cbSingleplayerSettings = new System.Windows.Forms.CheckBox();
-            groupBox11 = new System.Windows.Forms.GroupBox();
+            groupBox11 = new GroupBoxC();
             cbAllowMoreThanHundredImprinting = new System.Windows.Forms.CheckBox();
-            nudWildLevelStep = new ARKBreedingStats.uiControls.Nud();
+            nudWildLevelStep = new Nud();
             cbConsiderWildLevelSteps = new System.Windows.Forms.CheckBox();
             buttonEventToDefault = new System.Windows.Forms.Button();
             labelEvent = new System.Windows.Forms.Label();
             tabPageGeneral = new System.Windows.Forms.TabPage();
             CbAskSaveSettingsOnClose = new System.Windows.Forms.CheckBox();
-            groupBox31 = new System.Windows.Forms.GroupBox();
+            groupBox31 = new GroupBoxC();
             CbColorIdOnColorRegionButton = new System.Windows.Forms.CheckBox();
             CbAlwaysShowAllColorRegions = new System.Windows.Forms.CheckBox();
             CbHideInvisibleColorRegions = new System.Windows.Forms.CheckBox();
-            groupBox30 = new System.Windows.Forms.GroupBox();
+            groupBox30 = new GroupBoxC();
             CbExportTableFieldsAll = new System.Windows.Forms.CheckBox();
             BExportSpreadsheetMoveDown = new System.Windows.Forms.Button();
             BExportSpreadsheetMoveUp = new System.Windows.Forms.Button();
             ClbExportSpreadsheetFields = new System.Windows.Forms.CheckedListBox();
-            GbImgCacheLocalAppData = new System.Windows.Forms.GroupBox();
+            GbImgCacheLocalAppData = new GroupBoxC();
             CbImgCacheUseLocalAppData = new System.Windows.Forms.CheckBox();
-            GbSpecies = new System.Windows.Forms.GroupBox();
+            GbSpecies = new GroupBoxC();
             LbSpeciesSelectorCountLastUsed = new System.Windows.Forms.Label();
-            NudSpeciesSelectorCountLastUsed = new ARKBreedingStats.uiControls.Nud();
-            groupBox16 = new System.Windows.Forms.GroupBox();
+            NudSpeciesSelectorCountLastUsed = new Nud();
+            groupBox16 = new GroupBoxC();
             CbDisplayServerTokenPopup = new System.Windows.Forms.CheckBox();
             CbStreamerMode = new System.Windows.Forms.CheckBox();
             cbDevTools = new System.Windows.Forms.CheckBox();
-            groupBox26 = new System.Windows.Forms.GroupBox();
+            groupBox26 = new GroupBoxC();
             cbAdminConsoleCommandWithCheat = new System.Windows.Forms.CheckBox();
-            groupBox25 = new System.Windows.Forms.GroupBox();
-            CbbAppDefaultFontName = new System.Windows.Forms.ComboBox();
-            label48 = new System.Windows.Forms.Label();
-            CbbColorMode = new System.Windows.Forms.ComboBox();
-            nudDefaultFontSize = new ARKBreedingStats.uiControls.Nud();
-            label33 = new System.Windows.Forms.Label();
-            label32 = new System.Windows.Forms.Label();
-            groupBox20 = new System.Windows.Forms.GroupBox();
+            groupBox20 = new GroupBoxC();
             cbPrettifyJSON = new System.Windows.Forms.CheckBox();
-            groupBox17 = new System.Windows.Forms.GroupBox();
+            groupBox17 = new GroupBoxC();
             LbLanguage2 = new System.Windows.Forms.Label();
             CbbLanguage2 = new System.Windows.Forms.ComboBox();
             CbbLanguage = new System.Windows.Forms.ComboBox();
-            groupBox9 = new System.Windows.Forms.GroupBox();
+            groupBox9 = new GroupBoxC();
+            CbCopyNameToClipboardWhenAppliedInLibrary = new System.Windows.Forms.CheckBox();
+            CbLibraryShowStatLevelsThatCannotLevelup = new System.Windows.Forms.CheckBox();
             CbLibraryGenerateNameWarnTooLongName = new System.Windows.Forms.CheckBox();
             CbLibraryDisplayZeroMutationLevels = new System.Windows.Forms.CheckBox();
             CbDisplayLibraryCreatureIndex = new System.Windows.Forms.CheckBox();
@@ -199,45 +192,105 @@
             cbLibraryHighlightTopCreatures = new System.Windows.Forms.CheckBox();
             cbApplyGlobalSpeciesToLibrary = new System.Windows.Forms.CheckBox();
             cbCreatureColorsLibrary = new System.Windows.Forms.CheckBox();
+            tabPageVisuals = new System.Windows.Forms.TabPage();
+            GbColorPreview = new GroupBoxC();
+            LblPreviewName = new System.Windows.Forms.Label();
+            LblPreviewAsBackground = new System.Windows.Forms.Label();
+            LblPreviewAsForeground = new System.Windows.Forms.Label();
+            LblPreviewRgb = new System.Windows.Forms.Label();
+            groupBox33 = new GroupBoxC();
+            BtnResetPalette = new System.Windows.Forms.Button();
+            CbbPaletteKey = new System.Windows.Forms.ComboBox();
+            propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            groupBox25 = new GroupBoxC();
+            CbbAppDefaultFontName = new System.Windows.Forms.ComboBox();
+            label48 = new System.Windows.Forms.Label();
+            CbbColorMode = new System.Windows.Forms.ComboBox();
+            nudDefaultFontSize = new Nud();
+            label33 = new System.Windows.Forms.Label();
+            label32 = new System.Windows.Forms.Label();
+            labelAppTheme = new System.Windows.Forms.Label();
+            CbbAppTheme = new System.Windows.Forms.ComboBox();
             tabPageInfoGraphic = new System.Windows.Forms.TabPage();
-            BtNewRandomInfoGraphicCreature = new System.Windows.Forms.Button();
-            label63 = new System.Windows.Forms.Label();
-            PbInfoGraphicPreview = new System.Windows.Forms.PictureBox();
-            groupBox32 = new System.Windows.Forms.GroupBox();
+            GbInfoGraphicModern = new GroupBoxC();
+            LbInfoGraphicModernWidth = new System.Windows.Forms.Label();
+            NudInfoGraphicModernWidth = new Nud();
+            LbInfoGraphicModernTheme = new System.Windows.Forms.Label();
+            CbbInfoGraphicModernTheme = new System.Windows.Forms.ComboBox();
+            LbInfoGraphicModernFont = new System.Windows.Forms.Label();
+            CbbInfoGraphicModernFontName = new System.Windows.Forms.ComboBox();
+            LbInfoGraphicModernAccent = new System.Windows.Forms.Label();
+            BtInfoGraphicModernAccentColor = new System.Windows.Forms.Button();
+            LbInfoGraphicModernValues = new System.Windows.Forms.Label();
+            CbbInfoGraphicModernValueDisplay = new System.Windows.Forms.ComboBox();
+            LbInfoGraphicModernRegionNames = new System.Windows.Forms.Label();
+            CbbInfoGraphicModernRegionNames = new System.Windows.Forms.ComboBox();
+            CbInfoGraphicModernAccentFromCreature = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernBarsByLevelQuality = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowSpecies = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowStatValues = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowColors = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowMutations = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernTransparentBackground = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowCreatureName = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowGeneration = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowMaxWildLevel = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernSumWildMut = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernArtworkHalo = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicModernShowSpeciesSuffixes = new System.Windows.Forms.CheckBox();
+            LbInfoGraphicModernBackColor = new System.Windows.Forms.Label();
+            BtInfoGraphicModernBackColor = new System.Windows.Forms.Button();
+            BtInfoGraphicModernResetColors = new System.Windows.Forms.Button();
+            groupBox34 = new GroupBoxC();
+            label80 = new System.Windows.Forms.Label();
+            NudInfoGraphicStitchMaxWidth = new Nud();
+            label79 = new System.Windows.Forms.Label();
+            NudInfoGraphicStitchBackgroundOpacity = new Nud();
+            NudInfoGraphicStitchGap = new Nud();
             label78 = new System.Windows.Forms.Label();
-            NudInfoGraphicPaddingY = new ARKBreedingStats.uiControls.Nud();
+            BtInfoGraphicStitchBackgroundColor = new System.Windows.Forms.Button();
+            BtNewRandomInfoGraphicCreature = new System.Windows.Forms.Button();
+            PbInfoGraphicPreview = new System.Windows.Forms.PictureBox();
+            groupBox32 = new GroupBoxC();
+            CbInfoGraphicTintBackgroundByCreature = new System.Windows.Forms.CheckBox();
+            CbInfoGraphicColorsByCreature = new System.Windows.Forms.CheckBox();
+            BtInfoGraphicColorTextOutlineAuto = new System.Windows.Forms.Button();
+            NudInfoGraphicPaddingLeft = new Nud();
+            NudInfoGraphicPaddingBottom = new Nud();
+            NudInfoGraphicPaddingRight = new Nud();
+            CbbInfoGraphicBackgroundResizing = new System.Windows.Forms.ComboBox();
             label77 = new System.Windows.Forms.Label();
-            NudInfoGraphicPaddingX = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicPaddingTop = new Nud();
             label76 = new System.Windows.Forms.Label();
-            NudInfoGraphicCreatureScaling = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicCreatureScaling = new Nud();
             label75 = new System.Windows.Forms.Label();
-            NudInfoGraphicBorderRadius = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicBorderRadius = new Nud();
             label74 = new System.Windows.Forms.Label();
-            NudInfoGraphicCreatureOutlineBlurring = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicCreatureOutlineBlurring = new Nud();
             label71 = new System.Windows.Forms.Label();
-            NudInfoGraphicCreatureOutlineWidth = new ARKBreedingStats.uiControls.Nud();
-            NudInfoGraphicCreatureOutlineAlpha = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicCreatureOutlineWidth = new Nud();
+            NudInfoGraphicCreatureOutlineAlpha = new Nud();
             BtInfoGraphicCreatureOutlineColor = new System.Windows.Forms.Button();
-            NudInfoGraphicTextOutlineWidth = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicTextOutlineWidth = new Nud();
             label73 = new System.Windows.Forms.Label();
-            NudInfoGraphicTextOutlineAlpha = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicTextOutlineAlpha = new Nud();
             BtInfoGraphicTextOutlineColor = new System.Windows.Forms.Button();
             label72 = new System.Windows.Forms.Label();
             BtInfoGraphicClearBgImg = new System.Windows.Forms.Button();
             BtInfoGraphicBackgroundImagePath = new System.Windows.Forms.Button();
-            NudInfoGraphicBorderWidth = new ARKBreedingStats.uiControls.Nud();
-            NudInfoGraphicBorderAlpha = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicBorderWidth = new Nud();
+            NudInfoGraphicBorderAlpha = new Nud();
             label57 = new System.Windows.Forms.Label();
-            NudInfoGraphicBgAlpha = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicBgAlpha = new Nud();
             CbbInfoGraphicFontName = new System.Windows.Forms.ComboBox();
             label51 = new System.Windows.Forms.Label();
-            NudInfoGraphicFgAlpha = new ARKBreedingStats.uiControls.Nud();
-            nudInfoGraphicHeight = new ARKBreedingStats.uiControls.Nud();
+            NudInfoGraphicFgAlpha = new Nud();
+            nudInfoGraphicHeight = new Nud();
             BtInfoGraphicForeColor = new System.Windows.Forms.Button();
             BtInfoGraphicBackColor = new System.Windows.Forms.Button();
             BtInfoGraphicBorderColor = new System.Windows.Forms.Button();
             LbInfoGraphicSize = new System.Windows.Forms.Label();
-            groupBox28 = new System.Windows.Forms.GroupBox();
+            groupBox28 = new GroupBoxC();
             CbInfoGraphicSumWildMut = new System.Windows.Forms.CheckBox();
             PanelDomLevels = new System.Windows.Forms.Panel();
             RbInfoGraphicDomValues = new System.Windows.Forms.RadioButton();
@@ -249,6 +302,8 @@
             CbInfoGraphicMutationCounter = new System.Windows.Forms.CheckBox();
             CbInfoGraphicGenerations = new System.Windows.Forms.CheckBox();
             CbInfoGraphicDisplayMaxWildLevel = new System.Windows.Forms.CheckBox();
+            CbbInfoGraphicStyle = new System.Windows.Forms.ComboBox();
+            LbInfoGraphicStyle = new System.Windows.Forms.Label();
             label50 = new System.Windows.Forms.Label();
             tabPageImportSavegame = new System.Windows.Forms.TabPage();
             label68 = new System.Windows.Forms.Label();
@@ -256,10 +311,10 @@
             cbSaveImportCryo = new System.Windows.Forms.CheckBox();
             label24 = new System.Windows.Forms.Label();
             cbIgnoreUnknownBPOnSaveImport = new System.Windows.Forms.CheckBox();
-            groupBox14 = new System.Windows.Forms.GroupBox();
-            fileSelectorExtractedSaveFolder = new ARKBreedingStats.uiControls.FileSelector();
+            groupBox14 = new GroupBoxC();
+            fileSelectorExtractedSaveFolder = new FileSelector();
             textBoxImportTribeNameFilter = new System.Windows.Forms.TextBox();
-            groupBox15 = new System.Windows.Forms.GroupBox();
+            groupBox15 = new GroupBoxC();
             dataGridView_FileLocations = new System.Windows.Forms.DataGridView();
             convenientNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             serverNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -274,15 +329,15 @@
             cbImportUpdateCreatureStatus = new System.Windows.Forms.CheckBox();
             tabPageImportExported = new System.Windows.Forms.TabPage();
             BtGetExportFolderAutomatically = new System.Windows.Forms.Button();
-            groupBox27 = new System.Windows.Forms.GroupBox();
+            groupBox27 = new GroupBoxC();
             label46 = new System.Windows.Forms.Label();
             RbTamerStringForTribe = new System.Windows.Forms.RadioButton();
             RbTamerStringForOwner = new System.Windows.Forms.RadioButton();
-            groupBox23 = new System.Windows.Forms.GroupBox();
+            groupBox23 = new GroupBoxC();
             label31 = new System.Windows.Forms.Label();
             label30 = new System.Windows.Forms.Label();
-            nudImportLowerBoundTE = new ARKBreedingStats.uiControls.Nud();
-            groupBox22 = new System.Windows.Forms.GroupBox();
+            nudImportLowerBoundTE = new Nud();
+            groupBox22 = new GroupBoxC();
             CbImportPlaySoundColorFeedback = new System.Windows.Forms.CheckBox();
             CbBringToFrontOnImportExportIssue = new System.Windows.Forms.CheckBox();
             CbAutoExtractAddToLibrary = new System.Windows.Forms.CheckBox();
@@ -306,17 +361,18 @@
             cbMoveImportedFileToSubFolder = new System.Windows.Forms.CheckBox();
             label28 = new System.Windows.Forms.Label();
             cbAutoImportExported = new System.Windows.Forms.CheckBox();
-            groupBox21 = new System.Windows.Forms.GroupBox();
+            groupBox21 = new GroupBoxC();
+            CbIgnoreIngameNameIfAlreadyImported = new System.Windows.Forms.CheckBox();
             CbCopyNameToClipboardOnImport = new System.Windows.Forms.CheckBox();
             CbApplyNamingPatternOnImportAlways = new System.Windows.Forms.CheckBox();
             cbApplyNamePatternOnImportOnNewCreatures = new System.Windows.Forms.CheckBox();
             label41 = new System.Windows.Forms.Label();
             cbCopyPatternNameToClipboard = new System.Windows.Forms.CheckBox();
             cbApplyNamePatternOnImportOnEmptyNames = new System.Windows.Forms.CheckBox();
-            groupBox19 = new System.Windows.Forms.GroupBox();
+            groupBox19 = new GroupBoxC();
             label26 = new System.Windows.Forms.Label();
             nudWarnImportMoreThan = new System.Windows.Forms.NumericUpDown();
-            groupBox13 = new System.Windows.Forms.GroupBox();
+            groupBox13 = new GroupBoxC();
             dataGridViewExportFolders = new System.Windows.Forms.DataGridView();
             convenientNameDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ownerSuffixDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -328,11 +384,11 @@
             btAddExportFolder = new System.Windows.Forms.Button();
             label25 = new System.Windows.Forms.Label();
             tabPageTimers = new System.Windows.Forms.TabPage();
-            groupBox24 = new System.Windows.Forms.GroupBox();
+            groupBox24 = new GroupBoxC();
             cbKeepExpiredTimersInOverlay = new System.Windows.Forms.CheckBox();
             cbDeleteExpiredTimersOnSaving = new System.Windows.Forms.CheckBox();
             cbTimersInOverlayAutomatically = new System.Windows.Forms.CheckBox();
-            groupBox8 = new System.Windows.Forms.GroupBox();
+            groupBox8 = new GroupBoxC();
             label22 = new System.Windows.Forms.Label();
             tbPlayAlarmsSeconds = new System.Windows.Forms.TextBox();
             customSCCustom = new customSoundChooser();
@@ -341,58 +397,58 @@
             customSCStarving = new customSoundChooser();
             label20 = new System.Windows.Forms.Label();
             tabPageOverlay = new System.Windows.Forms.TabPage();
-            groupBox10 = new System.Windows.Forms.GroupBox();
+            groupBox10 = new GroupBoxC();
             label56 = new System.Windows.Forms.Label();
             BtOverlayPatternEdit = new System.Windows.Forms.Button();
             label70 = new System.Windows.Forms.Label();
             label15 = new System.Windows.Forms.Label();
-            nudOverlayInfoHeight = new ARKBreedingStats.uiControls.Nud();
-            nudOverlayInfoWidth = new ARKBreedingStats.uiControls.Nud();
-            NudOverlayRelativeFontSize = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayInfoHeight = new Nud();
+            nudOverlayInfoWidth = new Nud();
+            NudOverlayRelativeFontSize = new Nud();
             label65 = new System.Windows.Forms.Label();
             CbOverlayDisplayInheritance = new System.Windows.Forms.CheckBox();
             label45 = new System.Windows.Forms.Label();
             pCustomOverlayLocation = new System.Windows.Forms.Panel();
-            nudCustomOverlayLocX = new ARKBreedingStats.uiControls.Nud();
+            nudCustomOverlayLocX = new Nud();
             label42 = new System.Windows.Forms.Label();
             label43 = new System.Windows.Forms.Label();
-            nudCustomOverlayLocY = new ARKBreedingStats.uiControls.Nud();
+            nudCustomOverlayLocY = new Nud();
             cbCustomOverlayLocation = new System.Windows.Forms.CheckBox();
             label38 = new System.Windows.Forms.Label();
-            nudOverlayInfoPosY = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayInfoPosY = new Nud();
             label39 = new System.Windows.Forms.Label();
-            nudOverlayInfoPosDFR = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayInfoPosDFR = new Nud();
             label40 = new System.Windows.Forms.Label();
             label37 = new System.Windows.Forms.Label();
-            nudOverlayTimerPosY = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayTimerPosY = new Nud();
             label36 = new System.Windows.Forms.Label();
-            nudOverlayTimerPosX = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayTimerPosX = new Nud();
             label35 = new System.Windows.Forms.Label();
             cbInventoryCheck = new System.Windows.Forms.CheckBox();
             label21 = new System.Windows.Forms.Label();
-            nudOverlayInfoDuration = new ARKBreedingStats.uiControls.Nud();
+            nudOverlayInfoDuration = new Nud();
             chkbSpeechRecognition = new System.Windows.Forms.CheckBox();
             label66 = new System.Windows.Forms.Label();
             tabPageOCR = new System.Windows.Forms.TabPage();
-            groupBox1 = new System.Windows.Forms.GroupBox();
+            groupBox1 = new GroupBoxC();
             BtGameNameAsa = new System.Windows.Forms.Button();
             label62 = new System.Windows.Forms.Label();
             label61 = new System.Windows.Forms.Label();
             label60 = new System.Windows.Forms.Label();
             label59 = new System.Windows.Forms.Label();
             label58 = new System.Windows.Forms.Label();
-            NudOCRClipboardCropHeight = new ARKBreedingStats.uiControls.Nud();
-            NudOCRClipboardCropWidth = new ARKBreedingStats.uiControls.Nud();
-            NudOCRClipboardCropTop = new ARKBreedingStats.uiControls.Nud();
-            NudOCRClipboardCropLeft = new ARKBreedingStats.uiControls.Nud();
+            NudOCRClipboardCropHeight = new Nud();
+            NudOCRClipboardCropWidth = new Nud();
+            NudOCRClipboardCropTop = new Nud();
+            NudOCRClipboardCropLeft = new Nud();
             CbOCRFromClipboard = new System.Windows.Forms.CheckBox();
             BtGameNameAse = new System.Windows.Forms.Button();
             cbOCRIgnoreImprintValue = new System.Windows.Forms.CheckBox();
             cbShowOCRButton = new System.Windows.Forms.CheckBox();
             label23 = new System.Windows.Forms.Label();
-            nudWaitBeforeScreenCapture = new ARKBreedingStats.uiControls.Nud();
+            nudWaitBeforeScreenCapture = new Nud();
             label19 = new System.Windows.Forms.Label();
-            nudWhiteThreshold = new ARKBreedingStats.uiControls.Nud();
+            nudWhiteThreshold = new Nud();
             tbOCRCaptureApp = new System.Windows.Forms.TextBox();
             label4 = new System.Windows.Forms.Label();
             cbbOCRApp = new System.Windows.Forms.ComboBox();
@@ -400,7 +456,6 @@
             panel1 = new System.Windows.Forms.Panel();
             colorDialog1 = new System.Windows.Forms.ColorDialog();
             toolTip1 = new System.Windows.Forms.ToolTip(components);
-            CbLibraryShowStatLevelsThatCannotLevelup = new System.Windows.Forms.CheckBox();
             BtOpenLevelColorOptions = new System.Windows.Forms.Button();
             groupBoxMultiplier.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -456,16 +511,27 @@
             ((System.ComponentModel.ISupportInitialize)NudSpeciesSelectorCountLastUsed).BeginInit();
             groupBox16.SuspendLayout();
             groupBox26.SuspendLayout();
-            groupBox25.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)nudDefaultFontSize).BeginInit();
             groupBox20.SuspendLayout();
             groupBox17.SuspendLayout();
             groupBox9.SuspendLayout();
+            tabPageVisuals.SuspendLayout();
+            GbColorPreview.SuspendLayout();
+            groupBox33.SuspendLayout();
+            groupBox25.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)nudDefaultFontSize).BeginInit();
             tabPageInfoGraphic.SuspendLayout();
+            GbInfoGraphicModern.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicModernWidth).BeginInit();
+            groupBox34.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchMaxWidth).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchBackgroundOpacity).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchGap).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PbInfoGraphicPreview).BeginInit();
             groupBox32.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingY).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingX).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingLeft).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingBottom).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingRight).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingTop).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicCreatureScaling).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicBorderRadius).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicCreatureOutlineBlurring).BeginInit();
@@ -537,13 +603,9 @@
             // 
             // groupBoxMultiplier
             // 
+            groupBoxMultiplier.Controls.Add(tlpStatMultipliers);
             groupBoxMultiplier.Controls.Add(CbHighlightAdjustedMultipliers);
-            groupBoxMultiplier.Controls.Add(flowLayoutPanelStatMultipliers);
             groupBoxMultiplier.Controls.Add(labelInfo);
-            groupBoxMultiplier.Controls.Add(labelTameLevel);
-            groupBoxMultiplier.Controls.Add(labelWildLevel);
-            groupBoxMultiplier.Controls.Add(labelTameAff);
-            groupBoxMultiplier.Controls.Add(labelTameAdd);
             groupBoxMultiplier.Location = new System.Drawing.Point(7, 61);
             groupBoxMultiplier.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBoxMultiplier.Name = "groupBoxMultiplier";
@@ -552,6 +614,18 @@
             groupBoxMultiplier.TabIndex = 1;
             groupBoxMultiplier.TabStop = false;
             groupBoxMultiplier.Text = "Stat-Multipliers";
+            // 
+            // tlpStatMultipliers
+            // 
+            tlpStatMultipliers.AutoScroll = true;
+            tlpStatMultipliers.ColumnCount = 1;
+            tlpStatMultipliers.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            tlpStatMultipliers.Location = new System.Drawing.Point(7, 57);
+            tlpStatMultipliers.Name = "tlpStatMultipliers";
+            tlpStatMultipliers.RowCount = 1;
+            tlpStatMultipliers.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            tlpStatMultipliers.Size = new System.Drawing.Size(432, 432);
+            tlpStatMultipliers.TabIndex = 6;
             // 
             // CbHighlightAdjustedMultipliers
             // 
@@ -566,14 +640,6 @@
             CbHighlightAdjustedMultipliers.UseVisualStyleBackColor = true;
             CbHighlightAdjustedMultipliers.CheckedChanged += CbHighlightAdjustedMultipliers_CheckedChanged;
             // 
-            // flowLayoutPanelStatMultipliers
-            // 
-            flowLayoutPanelStatMultipliers.Location = new System.Drawing.Point(0, 80);
-            flowLayoutPanelStatMultipliers.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            flowLayoutPanelStatMultipliers.Name = "flowLayoutPanelStatMultipliers";
-            flowLayoutPanelStatMultipliers.Size = new System.Drawing.Size(438, 406);
-            flowLayoutPanelStatMultipliers.TabIndex = 2;
-            // 
             // labelInfo
             // 
             labelInfo.Location = new System.Drawing.Point(7, 18);
@@ -582,46 +648,6 @@
             labelInfo.Size = new System.Drawing.Size(360, 36);
             labelInfo.TabIndex = 0;
             labelInfo.Text = "The multipliers are saved with each library. If the server you play on changes its multipliers, you can adjust them here.";
-            // 
-            // labelTameLevel
-            // 
-            labelTameLevel.AutoSize = true;
-            labelTameLevel.Location = new System.Drawing.Point(224, 61);
-            labelTameLevel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            labelTameLevel.Name = "labelTameLevel";
-            labelTameLevel.Size = new System.Drawing.Size(63, 15);
-            labelTameLevel.TabIndex = 4;
-            labelTameLevel.Text = "TameLevel";
-            // 
-            // labelWildLevel
-            // 
-            labelWildLevel.AutoSize = true;
-            labelWildLevel.Location = new System.Drawing.Point(154, 61);
-            labelWildLevel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            labelWildLevel.Name = "labelWildLevel";
-            labelWildLevel.Size = new System.Drawing.Size(58, 15);
-            labelWildLevel.TabIndex = 1;
-            labelWildLevel.Text = "WildLevel";
-            // 
-            // labelTameAff
-            // 
-            labelTameAff.AutoSize = true;
-            labelTameAff.Location = new System.Drawing.Point(363, 61);
-            labelTameAff.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            labelTameAff.Name = "labelTameAff";
-            labelTameAff.Size = new System.Drawing.Size(52, 15);
-            labelTameAff.TabIndex = 2;
-            labelTameAff.Text = "TameAff";
-            // 
-            // labelTameAdd
-            // 
-            labelTameAdd.AutoSize = true;
-            labelTameAdd.Location = new System.Drawing.Point(294, 61);
-            labelTameAdd.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            labelTameAdd.Name = "labelTameAdd";
-            labelTameAdd.Size = new System.Drawing.Size(58, 15);
-            labelTameAdd.TabIndex = 1;
-            labelTameAdd.Text = "TameAdd";
             // 
             // buttonOK
             // 
@@ -729,7 +755,7 @@
             // nudTamedDinoCharacterFoodDrain
             // 
             nudTamedDinoCharacterFoodDrain.DecimalPlaces = 6;
-            nudTamedDinoCharacterFoodDrain.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudTamedDinoCharacterFoodDrain.ForeColor = System.Drawing.Color.Black;
             nudTamedDinoCharacterFoodDrain.Location = new System.Drawing.Point(214, 262);
             nudTamedDinoCharacterFoodDrain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudTamedDinoCharacterFoodDrain.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -741,7 +767,7 @@
             // nudTamedDinoCharacterFoodDrainEvent
             // 
             nudTamedDinoCharacterFoodDrainEvent.DecimalPlaces = 6;
-            nudTamedDinoCharacterFoodDrainEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudTamedDinoCharacterFoodDrainEvent.ForeColor = System.Drawing.Color.Black;
             nudTamedDinoCharacterFoodDrainEvent.Location = new System.Drawing.Point(307, 262);
             nudTamedDinoCharacterFoodDrainEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudTamedDinoCharacterFoodDrainEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -763,7 +789,7 @@
             // nudBabyImprintAmountEvent
             // 
             nudBabyImprintAmountEvent.DecimalPlaces = 6;
-            nudBabyImprintAmountEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyImprintAmountEvent.ForeColor = System.Drawing.Color.Black;
             nudBabyImprintAmountEvent.Location = new System.Drawing.Point(307, 172);
             nudBabyImprintAmountEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyImprintAmountEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -785,7 +811,7 @@
             // nudBabyImprintAmount
             // 
             nudBabyImprintAmount.DecimalPlaces = 6;
-            nudBabyImprintAmount.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyImprintAmount.ForeColor = System.Drawing.Color.Black;
             nudBabyImprintAmount.Location = new System.Drawing.Point(214, 172);
             nudBabyImprintAmount.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyImprintAmount.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -807,7 +833,7 @@
             // nudMatingSpeed
             // 
             nudMatingSpeed.DecimalPlaces = 6;
-            nudMatingSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudMatingSpeed.ForeColor = System.Drawing.Color.Black;
             nudMatingSpeed.Location = new System.Drawing.Point(214, 22);
             nudMatingSpeed.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudMatingSpeed.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -819,7 +845,7 @@
             // nudBabyFoodConsumptionSpeedEvent
             // 
             nudBabyFoodConsumptionSpeedEvent.DecimalPlaces = 6;
-            nudBabyFoodConsumptionSpeedEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyFoodConsumptionSpeedEvent.ForeColor = System.Drawing.Color.Black;
             nudBabyFoodConsumptionSpeedEvent.Location = new System.Drawing.Point(307, 232);
             nudBabyFoodConsumptionSpeedEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyFoodConsumptionSpeedEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -831,7 +857,7 @@
             // nudMatingIntervalEvent
             // 
             nudMatingIntervalEvent.DecimalPlaces = 6;
-            nudMatingIntervalEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudMatingIntervalEvent.ForeColor = System.Drawing.Color.Black;
             nudMatingIntervalEvent.Location = new System.Drawing.Point(307, 52);
             nudMatingIntervalEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudMatingIntervalEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -843,7 +869,7 @@
             // nudBabyCuddleIntervalEvent
             // 
             nudBabyCuddleIntervalEvent.DecimalPlaces = 6;
-            nudBabyCuddleIntervalEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyCuddleIntervalEvent.ForeColor = System.Drawing.Color.Black;
             nudBabyCuddleIntervalEvent.Location = new System.Drawing.Point(307, 142);
             nudBabyCuddleIntervalEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyCuddleIntervalEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -855,7 +881,7 @@
             // nudBabyMatureSpeedEvent
             // 
             nudBabyMatureSpeedEvent.DecimalPlaces = 6;
-            nudBabyMatureSpeedEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyMatureSpeedEvent.ForeColor = System.Drawing.Color.Black;
             nudBabyMatureSpeedEvent.Location = new System.Drawing.Point(307, 112);
             nudBabyMatureSpeedEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyMatureSpeedEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -867,7 +893,7 @@
             // nudEggHatchSpeedEvent
             // 
             nudEggHatchSpeedEvent.DecimalPlaces = 6;
-            nudEggHatchSpeedEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudEggHatchSpeedEvent.ForeColor = System.Drawing.Color.Black;
             nudEggHatchSpeedEvent.Location = new System.Drawing.Point(307, 82);
             nudEggHatchSpeedEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudEggHatchSpeedEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -889,7 +915,7 @@
             // nudBabyFoodConsumptionSpeed
             // 
             nudBabyFoodConsumptionSpeed.DecimalPlaces = 6;
-            nudBabyFoodConsumptionSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyFoodConsumptionSpeed.ForeColor = System.Drawing.Color.Black;
             nudBabyFoodConsumptionSpeed.Location = new System.Drawing.Point(214, 232);
             nudBabyFoodConsumptionSpeed.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyFoodConsumptionSpeed.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -911,7 +937,7 @@
             // nudMatingInterval
             // 
             nudMatingInterval.DecimalPlaces = 6;
-            nudMatingInterval.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudMatingInterval.ForeColor = System.Drawing.Color.Black;
             nudMatingInterval.Location = new System.Drawing.Point(214, 52);
             nudMatingInterval.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudMatingInterval.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -933,7 +959,7 @@
             // nudBabyCuddleInterval
             // 
             nudBabyCuddleInterval.DecimalPlaces = 6;
-            nudBabyCuddleInterval.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyCuddleInterval.ForeColor = System.Drawing.Color.Black;
             nudBabyCuddleInterval.Location = new System.Drawing.Point(214, 142);
             nudBabyCuddleInterval.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyCuddleInterval.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -965,7 +991,7 @@
             // nudBabyMatureSpeed
             // 
             nudBabyMatureSpeed.DecimalPlaces = 6;
-            nudBabyMatureSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyMatureSpeed.ForeColor = System.Drawing.Color.Black;
             nudBabyMatureSpeed.Location = new System.Drawing.Point(214, 112);
             nudBabyMatureSpeed.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyMatureSpeed.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -977,7 +1003,7 @@
             // nudBabyImprintingStatScale
             // 
             nudBabyImprintingStatScale.DecimalPlaces = 6;
-            nudBabyImprintingStatScale.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudBabyImprintingStatScale.ForeColor = System.Drawing.Color.Black;
             nudBabyImprintingStatScale.Location = new System.Drawing.Point(214, 202);
             nudBabyImprintingStatScale.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudBabyImprintingStatScale.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -999,7 +1025,7 @@
             // nudEggHatchSpeed
             // 
             nudEggHatchSpeed.DecimalPlaces = 6;
-            nudEggHatchSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudEggHatchSpeed.ForeColor = System.Drawing.Color.Black;
             nudEggHatchSpeed.Location = new System.Drawing.Point(214, 82);
             nudEggHatchSpeed.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudEggHatchSpeed.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1120,11 +1146,11 @@
             // label27
             // 
             label27.AutoSize = true;
-            label27.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            label27.Font = new System.Drawing.Font("Segoe UI", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
             label27.Location = new System.Drawing.Point(336, 24);
             label27.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label27.Name = "label27";
-            label27.Size = new System.Drawing.Size(46, 31);
+            label27.Size = new System.Drawing.Size(54, 37);
             label27.TabIndex = 12;
             label27.Text = "💡";
             toolTip1.SetToolTip(label27, "If you have the files Game.ini or GameUserSettings.ini from your server, you can drag&&drop them on this window to insert their values.");
@@ -1248,7 +1274,7 @@
             // NudWildDinoCharacterFoodDrainMultiplier
             // 
             NudWildDinoCharacterFoodDrainMultiplier.DecimalPlaces = 6;
-            NudWildDinoCharacterFoodDrainMultiplier.ForeColor = System.Drawing.SystemColors.WindowText;
+            NudWildDinoCharacterFoodDrainMultiplier.ForeColor = System.Drawing.Color.Black;
             NudWildDinoCharacterFoodDrainMultiplier.Location = new System.Drawing.Point(214, 82);
             NudWildDinoCharacterFoodDrainMultiplier.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             NudWildDinoCharacterFoodDrainMultiplier.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1280,7 +1306,7 @@
             // NudWildDinoTorporDrainMultiplier
             // 
             NudWildDinoTorporDrainMultiplier.DecimalPlaces = 6;
-            NudWildDinoTorporDrainMultiplier.ForeColor = System.Drawing.SystemColors.WindowText;
+            NudWildDinoTorporDrainMultiplier.ForeColor = System.Drawing.Color.Black;
             NudWildDinoTorporDrainMultiplier.Location = new System.Drawing.Point(214, 112);
             NudWildDinoTorporDrainMultiplier.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             NudWildDinoTorporDrainMultiplier.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1292,7 +1318,7 @@
             // nudDinoCharacterFoodDrainEvent
             // 
             nudDinoCharacterFoodDrainEvent.DecimalPlaces = 6;
-            nudDinoCharacterFoodDrainEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudDinoCharacterFoodDrainEvent.ForeColor = System.Drawing.Color.Black;
             nudDinoCharacterFoodDrainEvent.Location = new System.Drawing.Point(307, 52);
             nudDinoCharacterFoodDrainEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudDinoCharacterFoodDrainEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1304,7 +1330,7 @@
             // nudTamingSpeedEvent
             // 
             nudTamingSpeedEvent.DecimalPlaces = 6;
-            nudTamingSpeedEvent.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudTamingSpeedEvent.ForeColor = System.Drawing.Color.Black;
             nudTamingSpeedEvent.Location = new System.Drawing.Point(307, 22);
             nudTamingSpeedEvent.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudTamingSpeedEvent.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1336,7 +1362,7 @@
             // nudDinoCharacterFoodDrain
             // 
             nudDinoCharacterFoodDrain.DecimalPlaces = 6;
-            nudDinoCharacterFoodDrain.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudDinoCharacterFoodDrain.ForeColor = System.Drawing.Color.Black;
             nudDinoCharacterFoodDrain.Location = new System.Drawing.Point(214, 52);
             nudDinoCharacterFoodDrain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudDinoCharacterFoodDrain.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1348,7 +1374,7 @@
             // nudTamingSpeed
             // 
             nudTamingSpeed.DecimalPlaces = 6;
-            nudTamingSpeed.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudTamingSpeed.ForeColor = System.Drawing.Color.Black;
             nudTamingSpeed.Location = new System.Drawing.Point(214, 22);
             nudTamingSpeed.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudTamingSpeed.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
@@ -1487,11 +1513,11 @@
             groupBox7.Controls.Add(CbExtractorConvertWildTorporTotalLevel);
             groupBox7.Controls.Add(CbSetMutationLevelsExtractor);
             groupBox7.Controls.Add(checkBoxDisplayHiddenStats);
-            groupBox7.Location = new System.Drawing.Point(7, 442);
+            groupBox7.Location = new System.Drawing.Point(384, 7);
             groupBox7.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox7.Name = "groupBox7";
             groupBox7.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox7.Size = new System.Drawing.Size(370, 102);
+            groupBox7.Size = new System.Drawing.Size(484, 102);
             groupBox7.TabIndex = 2;
             groupBox7.TabStop = false;
             groupBox7.Text = "Extractor";
@@ -1533,6 +1559,7 @@
             // 
             tabControlSettings.Controls.Add(tabPageMultipliers);
             tabControlSettings.Controls.Add(tabPageGeneral);
+            tabControlSettings.Controls.Add(tabPageVisuals);
             tabControlSettings.Controls.Add(tabPageInfoGraphic);
             tabControlSettings.Controls.Add(tabPageImportSavegame);
             tabControlSettings.Controls.Add(tabPageImportExported);
@@ -1580,7 +1607,6 @@
             tabPageMultipliers.Size = new System.Drawing.Size(876, 860);
             tabPageMultipliers.TabIndex = 1;
             tabPageMultipliers.Text = "Multipliers";
-            tabPageMultipliers.UseVisualStyleBackColor = true;
             tabPageMultipliers.DragDrop += tabPage2_DragDrop;
             tabPageMultipliers.DragEnter += tabPage2_DragEnter;
             // 
@@ -1938,7 +1964,7 @@
             // 
             // nudWildLevelStep
             // 
-            nudWildLevelStep.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudWildLevelStep.ForeColor = System.Drawing.Color.Black;
             nudWildLevelStep.Location = new System.Drawing.Point(372, 20);
             nudWildLevelStep.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudWildLevelStep.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
@@ -1990,7 +2016,6 @@
             tabPageGeneral.Controls.Add(GbSpecies);
             tabPageGeneral.Controls.Add(groupBox16);
             tabPageGeneral.Controls.Add(groupBox26);
-            tabPageGeneral.Controls.Add(groupBox25);
             tabPageGeneral.Controls.Add(groupBox20);
             tabPageGeneral.Controls.Add(groupBox17);
             tabPageGeneral.Controls.Add(groupBox9);
@@ -2004,7 +2029,6 @@
             tabPageGeneral.Size = new System.Drawing.Size(876, 860);
             tabPageGeneral.TabIndex = 0;
             tabPageGeneral.Text = "General";
-            tabPageGeneral.UseVisualStyleBackColor = true;
             // 
             // CbAskSaveSettingsOnClose
             // 
@@ -2022,7 +2046,7 @@
             groupBox31.Controls.Add(CbColorIdOnColorRegionButton);
             groupBox31.Controls.Add(CbAlwaysShowAllColorRegions);
             groupBox31.Controls.Add(CbHideInvisibleColorRegions);
-            groupBox31.Location = new System.Drawing.Point(384, 393);
+            groupBox31.Location = new System.Drawing.Point(388, 402);
             groupBox31.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox31.Name = "groupBox31";
             groupBox31.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2070,11 +2094,11 @@
             groupBox30.Controls.Add(BExportSpreadsheetMoveDown);
             groupBox30.Controls.Add(BExportSpreadsheetMoveUp);
             groupBox30.Controls.Add(ClbExportSpreadsheetFields);
-            groupBox30.Location = new System.Drawing.Point(384, 477);
+            groupBox30.Location = new System.Drawing.Point(384, 484);
             groupBox30.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox30.Name = "groupBox30";
             groupBox30.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox30.Size = new System.Drawing.Size(482, 227);
+            groupBox30.Size = new System.Drawing.Size(482, 220);
             groupBox30.TabIndex = 13;
             groupBox30.TabStop = false;
             groupBox30.Text = "Info to export for spreadsheet";
@@ -2126,7 +2150,7 @@
             // GbImgCacheLocalAppData
             // 
             GbImgCacheLocalAppData.Controls.Add(CbImgCacheUseLocalAppData);
-            GbImgCacheLocalAppData.Location = new System.Drawing.Point(384, 213);
+            GbImgCacheLocalAppData.Location = new System.Drawing.Point(384, 223);
             GbImgCacheLocalAppData.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             GbImgCacheLocalAppData.Name = "GbImgCacheLocalAppData";
             GbImgCacheLocalAppData.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2183,7 +2207,7 @@
             groupBox16.Controls.Add(CbDisplayServerTokenPopup);
             groupBox16.Controls.Add(CbStreamerMode);
             groupBox16.Controls.Add(cbDevTools);
-            groupBox16.Location = new System.Drawing.Point(384, 270);
+            groupBox16.Location = new System.Drawing.Point(388, 279);
             groupBox16.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox16.Name = "groupBox16";
             groupBox16.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2225,7 +2249,7 @@
             // groupBox26
             // 
             groupBox26.Controls.Add(cbAdminConsoleCommandWithCheat);
-            groupBox26.Location = new System.Drawing.Point(384, 104);
+            groupBox26.Location = new System.Drawing.Point(384, 115);
             groupBox26.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox26.Name = "groupBox26";
             groupBox26.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2245,88 +2269,10 @@
             cbAdminConsoleCommandWithCheat.Text = "Admin console commands with prefix \"cheat\"";
             cbAdminConsoleCommandWithCheat.UseVisualStyleBackColor = true;
             // 
-            // groupBox25
-            // 
-            groupBox25.Controls.Add(CbbAppDefaultFontName);
-            groupBox25.Controls.Add(label48);
-            groupBox25.Controls.Add(CbbColorMode);
-            groupBox25.Controls.Add(nudDefaultFontSize);
-            groupBox25.Controls.Add(label33);
-            groupBox25.Controls.Add(label32);
-            groupBox25.Location = new System.Drawing.Point(384, 7);
-            groupBox25.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox25.Name = "groupBox25";
-            groupBox25.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox25.Size = new System.Drawing.Size(482, 90);
-            groupBox25.TabIndex = 6;
-            groupBox25.TabStop = false;
-            groupBox25.Text = "Visuals (needs application restart)";
-            // 
-            // CbbAppDefaultFontName
-            // 
-            CbbAppDefaultFontName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            CbbAppDefaultFontName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
-            CbbAppDefaultFontName.FormattingEnabled = true;
-            CbbAppDefaultFontName.Location = new System.Drawing.Point(86, 20);
-            CbbAppDefaultFontName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            CbbAppDefaultFontName.Name = "CbbAppDefaultFontName";
-            CbbAppDefaultFontName.Size = new System.Drawing.Size(258, 23);
-            CbbAppDefaultFontName.TabIndex = 17;
-            // 
-            // label48
-            // 
-            label48.AutoSize = true;
-            label48.Location = new System.Drawing.Point(7, 55);
-            label48.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label48.Name = "label48";
-            label48.Size = new System.Drawing.Size(70, 15);
-            label48.TabIndex = 4;
-            label48.Text = "Color mode";
-            // 
-            // CbbColorMode
-            // 
-            CbbColorMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            CbbColorMode.FormattingEnabled = true;
-            CbbColorMode.Location = new System.Drawing.Point(86, 52);
-            CbbColorMode.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            CbbColorMode.Name = "CbbColorMode";
-            CbbColorMode.Size = new System.Drawing.Size(258, 23);
-            CbbColorMode.TabIndex = 5;
-            // 
-            // nudDefaultFontSize
-            // 
-            nudDefaultFontSize.DecimalPlaces = 2;
-            nudDefaultFontSize.ForeColor = System.Drawing.SystemColors.GrayText;
-            nudDefaultFontSize.Location = new System.Drawing.Point(391, 21);
-            nudDefaultFontSize.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            nudDefaultFontSize.Name = "nudDefaultFontSize";
-            nudDefaultFontSize.Size = new System.Drawing.Size(84, 23);
-            nudDefaultFontSize.TabIndex = 3;
-            // 
-            // label33
-            // 
-            label33.AutoSize = true;
-            label33.Location = new System.Drawing.Point(352, 23);
-            label33.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label33.Name = "label33";
-            label33.Size = new System.Drawing.Size(27, 15);
-            label33.TabIndex = 2;
-            label33.Text = "Size";
-            // 
-            // label32
-            // 
-            label32.AutoSize = true;
-            label32.Location = new System.Drawing.Point(7, 25);
-            label32.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label32.Name = "label32";
-            label32.Size = new System.Drawing.Size(70, 15);
-            label32.TabIndex = 0;
-            label32.Text = "Default font";
-            // 
             // groupBox20
             // 
             groupBox20.Controls.Add(cbPrettifyJSON);
-            groupBox20.Location = new System.Drawing.Point(384, 160);
+            groupBox20.Location = new System.Drawing.Point(384, 171);
             groupBox20.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox20.Name = "groupBox20";
             groupBox20.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2392,6 +2338,7 @@
             // 
             // groupBox9
             // 
+            groupBox9.Controls.Add(CbCopyNameToClipboardWhenAppliedInLibrary);
             groupBox9.Controls.Add(CbLibraryShowStatLevelsThatCannotLevelup);
             groupBox9.Controls.Add(CbLibraryGenerateNameWarnTooLongName);
             groupBox9.Controls.Add(CbLibraryDisplayZeroMutationLevels);
@@ -2404,14 +2351,35 @@
             groupBox9.Controls.Add(cbLibraryHighlightTopCreatures);
             groupBox9.Controls.Add(cbApplyGlobalSpeciesToLibrary);
             groupBox9.Controls.Add(cbCreatureColorsLibrary);
-            groupBox9.Location = new System.Drawing.Point(7, 550);
+            groupBox9.Location = new System.Drawing.Point(8, 441);
             groupBox9.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox9.Name = "groupBox9";
             groupBox9.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox9.Size = new System.Drawing.Size(370, 307);
+            groupBox9.Size = new System.Drawing.Size(370, 341);
             groupBox9.TabIndex = 4;
             groupBox9.TabStop = false;
             groupBox9.Text = "Library";
+            // 
+            // CbCopyNameToClipboardWhenAppliedInLibrary
+            // 
+            CbCopyNameToClipboardWhenAppliedInLibrary.AutoSize = true;
+            CbCopyNameToClipboardWhenAppliedInLibrary.Location = new System.Drawing.Point(7, 307);
+            CbCopyNameToClipboardWhenAppliedInLibrary.Name = "CbCopyNameToClipboardWhenAppliedInLibrary";
+            CbCopyNameToClipboardWhenAppliedInLibrary.Size = new System.Drawing.Size(351, 19);
+            CbCopyNameToClipboardWhenAppliedInLibrary.TabIndex = 12;
+            CbCopyNameToClipboardWhenAppliedInLibrary.Text = "Copy name to clipboard when name pattern applied in library";
+            CbCopyNameToClipboardWhenAppliedInLibrary.UseVisualStyleBackColor = true;
+            // 
+            // CbLibraryShowStatLevelsThatCannotLevelup
+            // 
+            CbLibraryShowStatLevelsThatCannotLevelup.AutoSize = true;
+            CbLibraryShowStatLevelsThatCannotLevelup.Location = new System.Drawing.Point(7, 258);
+            CbLibraryShowStatLevelsThatCannotLevelup.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CbLibraryShowStatLevelsThatCannotLevelup.Name = "CbLibraryShowStatLevelsThatCannotLevelup";
+            CbLibraryShowStatLevelsThatCannotLevelup.Size = new System.Drawing.Size(245, 19);
+            CbLibraryShowStatLevelsThatCannotLevelup.TabIndex = 11;
+            CbLibraryShowStatLevelsThatCannotLevelup.Text = "Display levels of stats that cannot level up";
+            CbLibraryShowStatLevelsThatCannotLevelup.UseVisualStyleBackColor = true;
             // 
             // CbLibraryGenerateNameWarnTooLongName
             // 
@@ -2535,13 +2503,221 @@
             cbCreatureColorsLibrary.Text = "Show Creature-Colors columns in library";
             cbCreatureColorsLibrary.UseVisualStyleBackColor = true;
             // 
+            // tabPageVisuals
+            // 
+            tabPageVisuals.AutoScroll = true;
+            tabPageVisuals.Controls.Add(GbColorPreview);
+            tabPageVisuals.Controls.Add(groupBox33);
+            tabPageVisuals.Controls.Add(groupBox25);
+            tabPageVisuals.Location = new System.Drawing.Point(4, 24);
+            tabPageVisuals.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabPageVisuals.Name = "tabPageVisuals";
+            tabPageVisuals.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabPageVisuals.Size = new System.Drawing.Size(876, 860);
+            tabPageVisuals.TabIndex = 8;
+            tabPageVisuals.Text = "Visuals";
+            // 
+            // GbColorPreview
+            // 
+            GbColorPreview.Controls.Add(LblPreviewName);
+            GbColorPreview.Controls.Add(LblPreviewAsBackground);
+            GbColorPreview.Controls.Add(LblPreviewAsForeground);
+            GbColorPreview.Controls.Add(LblPreviewRgb);
+            GbColorPreview.Location = new System.Drawing.Point(495, 104);
+            GbColorPreview.Name = "GbColorPreview";
+            GbColorPreview.Size = new System.Drawing.Size(370, 750);
+            GbColorPreview.TabIndex = 3;
+            GbColorPreview.TabStop = false;
+            GbColorPreview.Text = "Preview";
+            // 
+            // LblPreviewName
+            // 
+            LblPreviewName.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            LblPreviewName.Location = new System.Drawing.Point(10, 22);
+            LblPreviewName.Name = "LblPreviewName";
+            LblPreviewName.Size = new System.Drawing.Size(350, 22);
+            LblPreviewName.TabIndex = 0;
+            LblPreviewName.Text = "(select a color)";
+            // 
+            // LblPreviewAsBackground
+            // 
+            LblPreviewAsBackground.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            LblPreviewAsBackground.Font = new System.Drawing.Font("Segoe UI", 10F);
+            LblPreviewAsBackground.Location = new System.Drawing.Point(10, 50);
+            LblPreviewAsBackground.Name = "LblPreviewAsBackground";
+            LblPreviewAsBackground.Size = new System.Drawing.Size(350, 36);
+            LblPreviewAsBackground.TabIndex = 1;
+            LblPreviewAsBackground.Text = "Sample text on this background";
+            LblPreviewAsBackground.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // LblPreviewAsForeground
+            // 
+            LblPreviewAsForeground.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            LblPreviewAsForeground.Font = new System.Drawing.Font("Segoe UI", 10F);
+            LblPreviewAsForeground.Location = new System.Drawing.Point(10, 92);
+            LblPreviewAsForeground.Name = "LblPreviewAsForeground";
+            LblPreviewAsForeground.Size = new System.Drawing.Size(350, 36);
+            LblPreviewAsForeground.TabIndex = 2;
+            LblPreviewAsForeground.Text = "Sample text in this color";
+            LblPreviewAsForeground.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // LblPreviewRgb
+            // 
+            LblPreviewRgb.AutoSize = true;
+            LblPreviewRgb.Location = new System.Drawing.Point(10, 134);
+            LblPreviewRgb.Name = "LblPreviewRgb";
+            LblPreviewRgb.Size = new System.Drawing.Size(0, 15);
+            LblPreviewRgb.TabIndex = 3;
+            // 
+            // groupBox33
+            // 
+            groupBox33.Controls.Add(BtnResetPalette);
+            groupBox33.Controls.Add(CbbPaletteKey);
+            groupBox33.Controls.Add(propertyGrid1);
+            groupBox33.Location = new System.Drawing.Point(8, 104);
+            groupBox33.Name = "groupBox33";
+            groupBox33.Size = new System.Drawing.Size(481, 750);
+            groupBox33.TabIndex = 2;
+            groupBox33.TabStop = false;
+            groupBox33.Text = "Color Palette";
+            // 
+            // BtnResetPalette
+            // 
+            BtnResetPalette.Location = new System.Drawing.Point(6, 725);
+            BtnResetPalette.Name = "BtnResetPalette";
+            BtnResetPalette.Size = new System.Drawing.Size(130, 23);
+            BtnResetPalette.TabIndex = 3;
+            BtnResetPalette.Text = "Reset to Default";
+            BtnResetPalette.UseVisualStyleBackColor = true;
+            // 
+            // CbbPaletteKey
+            // 
+            CbbPaletteKey.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbPaletteKey.FormattingEnabled = true;
+            CbbPaletteKey.Location = new System.Drawing.Point(6, 22);
+            CbbPaletteKey.Name = "CbbPaletteKey";
+            CbbPaletteKey.Size = new System.Drawing.Size(250, 23);
+            CbbPaletteKey.TabIndex = 0;
+            // 
+            // propertyGrid1
+            // 
+            propertyGrid1.BackColor = System.Drawing.SystemColors.Control;
+            propertyGrid1.Location = new System.Drawing.Point(6, 51);
+            propertyGrid1.Name = "propertyGrid1";
+            propertyGrid1.Size = new System.Drawing.Size(465, 668);
+            propertyGrid1.TabIndex = 1;
+            // 
+            // groupBox25
+            // 
+            groupBox25.Controls.Add(CbbAppDefaultFontName);
+            groupBox25.Controls.Add(label48);
+            groupBox25.Controls.Add(CbbColorMode);
+            groupBox25.Controls.Add(nudDefaultFontSize);
+            groupBox25.Controls.Add(label33);
+            groupBox25.Controls.Add(label32);
+            groupBox25.Controls.Add(labelAppTheme);
+            groupBox25.Controls.Add(CbbAppTheme);
+            groupBox25.Location = new System.Drawing.Point(7, 7);
+            groupBox25.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            groupBox25.Name = "groupBox25";
+            groupBox25.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            groupBox25.Size = new System.Drawing.Size(482, 91);
+            groupBox25.TabIndex = 0;
+            groupBox25.TabStop = false;
+            groupBox25.Text = "Visuals (needs application restart)";
+            // 
+            // CbbAppDefaultFontName
+            // 
+            CbbAppDefaultFontName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            CbbAppDefaultFontName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            CbbAppDefaultFontName.FormattingEnabled = true;
+            CbbAppDefaultFontName.Location = new System.Drawing.Point(86, 20);
+            CbbAppDefaultFontName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CbbAppDefaultFontName.Name = "CbbAppDefaultFontName";
+            CbbAppDefaultFontName.Size = new System.Drawing.Size(239, 23);
+            CbbAppDefaultFontName.TabIndex = 17;
+            // 
+            // label48
+            // 
+            label48.AutoSize = true;
+            label48.Location = new System.Drawing.Point(7, 55);
+            label48.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label48.Name = "label48";
+            label48.Size = new System.Drawing.Size(70, 15);
+            label48.TabIndex = 4;
+            label48.Text = "Color mode";
+            // 
+            // CbbColorMode
+            // 
+            CbbColorMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbColorMode.FormattingEnabled = true;
+            CbbColorMode.Location = new System.Drawing.Point(86, 52);
+            CbbColorMode.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CbbColorMode.Name = "CbbColorMode";
+            CbbColorMode.Size = new System.Drawing.Size(239, 23);
+            CbbColorMode.TabIndex = 5;
+            // 
+            // nudDefaultFontSize
+            // 
+            nudDefaultFontSize.DecimalPlaces = 2;
+            nudDefaultFontSize.ForeColor = System.Drawing.SystemColors.GrayText;
+            nudDefaultFontSize.Location = new System.Drawing.Point(391, 21);
+            nudDefaultFontSize.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            nudDefaultFontSize.Name = "nudDefaultFontSize";
+            nudDefaultFontSize.Size = new System.Drawing.Size(84, 23);
+            nudDefaultFontSize.TabIndex = 3;
+            // 
+            // label33
+            // 
+            label33.AutoSize = true;
+            label33.Location = new System.Drawing.Point(356, 23);
+            label33.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label33.Name = "label33";
+            label33.Size = new System.Drawing.Size(27, 15);
+            label33.TabIndex = 2;
+            label33.Text = "Size";
+            // 
+            // label32
+            // 
+            label32.AutoSize = true;
+            label32.Location = new System.Drawing.Point(7, 25);
+            label32.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label32.Name = "label32";
+            label32.Size = new System.Drawing.Size(70, 15);
+            label32.TabIndex = 0;
+            label32.Text = "Default font";
+            // 
+            // labelAppTheme
+            // 
+            labelAppTheme.AutoSize = true;
+            labelAppTheme.Location = new System.Drawing.Point(339, 55);
+            labelAppTheme.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            labelAppTheme.Name = "labelAppTheme";
+            labelAppTheme.Size = new System.Drawing.Size(44, 15);
+            labelAppTheme.TabIndex = 18;
+            labelAppTheme.Text = "Theme";
+            // 
+            // CbbAppTheme
+            // 
+            CbbAppTheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbAppTheme.FormattingEnabled = true;
+            CbbAppTheme.Location = new System.Drawing.Point(391, 52);
+            CbbAppTheme.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CbbAppTheme.Name = "CbbAppTheme";
+            CbbAppTheme.Size = new System.Drawing.Size(83, 23);
+            CbbAppTheme.TabIndex = 19;
+            // 
             // tabPageInfoGraphic
             // 
+            tabPageInfoGraphic.AutoScroll = true;
+            tabPageInfoGraphic.Controls.Add(GbInfoGraphicModern);
+            tabPageInfoGraphic.Controls.Add(groupBox34);
             tabPageInfoGraphic.Controls.Add(BtNewRandomInfoGraphicCreature);
-            tabPageInfoGraphic.Controls.Add(label63);
             tabPageInfoGraphic.Controls.Add(PbInfoGraphicPreview);
             tabPageInfoGraphic.Controls.Add(groupBox32);
             tabPageInfoGraphic.Controls.Add(groupBox28);
+            tabPageInfoGraphic.Controls.Add(CbbInfoGraphicStyle);
+            tabPageInfoGraphic.Controls.Add(LbInfoGraphicStyle);
             tabPageInfoGraphic.Controls.Add(label50);
             tabPageInfoGraphic.Location = new System.Drawing.Point(4, 24);
             tabPageInfoGraphic.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -2549,11 +2725,420 @@
             tabPageInfoGraphic.Size = new System.Drawing.Size(876, 860);
             tabPageInfoGraphic.TabIndex = 7;
             tabPageInfoGraphic.Text = "Info Graphic";
-            tabPageInfoGraphic.UseVisualStyleBackColor = true;
+            // 
+            // GbInfoGraphicModern
+            // 
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernWidth);
+            GbInfoGraphicModern.Controls.Add(NudInfoGraphicModernWidth);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernTheme);
+            GbInfoGraphicModern.Controls.Add(CbbInfoGraphicModernTheme);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernFont);
+            GbInfoGraphicModern.Controls.Add(CbbInfoGraphicModernFontName);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernAccent);
+            GbInfoGraphicModern.Controls.Add(BtInfoGraphicModernAccentColor);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernValues);
+            GbInfoGraphicModern.Controls.Add(CbbInfoGraphicModernValueDisplay);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernRegionNames);
+            GbInfoGraphicModern.Controls.Add(CbbInfoGraphicModernRegionNames);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernAccentFromCreature);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernBarsByLevelQuality);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowSpecies);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowStatValues);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowColors);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowMutations);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernTransparentBackground);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowCreatureName);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowGeneration);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowMaxWildLevel);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernSumWildMut);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernArtworkHalo);
+            GbInfoGraphicModern.Controls.Add(CbInfoGraphicModernShowSpeciesSuffixes);
+            GbInfoGraphicModern.Controls.Add(LbInfoGraphicModernBackColor);
+            GbInfoGraphicModern.Controls.Add(BtInfoGraphicModernBackColor);
+            GbInfoGraphicModern.Controls.Add(BtInfoGraphicModernResetColors);
+            GbInfoGraphicModern.Location = new System.Drawing.Point(9, 54);
+            GbInfoGraphicModern.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            GbInfoGraphicModern.Name = "GbInfoGraphicModern";
+            GbInfoGraphicModern.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            GbInfoGraphicModern.Size = new System.Drawing.Size(856, 302);
+            GbInfoGraphicModern.TabIndex = 23;
+            GbInfoGraphicModern.TabStop = false;
+            GbInfoGraphicModern.Text = "Modern style";
+            GbInfoGraphicModern.Visible = false;
+            // 
+            // LbInfoGraphicModernWidth
+            // 
+            LbInfoGraphicModernWidth.AutoSize = true;
+            LbInfoGraphicModernWidth.Location = new System.Drawing.Point(14, 31);
+            LbInfoGraphicModernWidth.Name = "LbInfoGraphicModernWidth";
+            LbInfoGraphicModernWidth.Size = new System.Drawing.Size(39, 15);
+            LbInfoGraphicModernWidth.TabIndex = 0;
+            LbInfoGraphicModernWidth.Text = "Width";
+            // 
+            // NudInfoGraphicModernWidth
+            // 
+            NudInfoGraphicModernWidth.ForeColor = System.Drawing.Color.Black;
+            NudInfoGraphicModernWidth.Increment = new decimal(new int[] { 10, 0, 0, 0 });
+            NudInfoGraphicModernWidth.Location = new System.Drawing.Point(120, 28);
+            NudInfoGraphicModernWidth.Maximum = new decimal(new int[] { 2000, 0, 0, 0 });
+            NudInfoGraphicModernWidth.Minimum = new decimal(new int[] { 240, 0, 0, 0 });
+            NudInfoGraphicModernWidth.Name = "NudInfoGraphicModernWidth";
+            NudInfoGraphicModernWidth.Size = new System.Drawing.Size(80, 23);
+            NudInfoGraphicModernWidth.TabIndex = 1;
+            NudInfoGraphicModernWidth.Value = new decimal(new int[] { 360, 0, 0, 0 });
+            NudInfoGraphicModernWidth.ValueChanged += NudInfoGraphicValueChanged;
+            // 
+            // LbInfoGraphicModernTheme
+            // 
+            LbInfoGraphicModernTheme.AutoSize = true;
+            LbInfoGraphicModernTheme.Location = new System.Drawing.Point(14, 63);
+            LbInfoGraphicModernTheme.Name = "LbInfoGraphicModernTheme";
+            LbInfoGraphicModernTheme.Size = new System.Drawing.Size(44, 15);
+            LbInfoGraphicModernTheme.TabIndex = 2;
+            LbInfoGraphicModernTheme.Text = "Theme";
+            // 
+            // CbbInfoGraphicModernTheme
+            // 
+            CbbInfoGraphicModernTheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbInfoGraphicModernTheme.FormattingEnabled = true;
+            CbbInfoGraphicModernTheme.Location = new System.Drawing.Point(120, 60);
+            CbbInfoGraphicModernTheme.Name = "CbbInfoGraphicModernTheme";
+            CbbInfoGraphicModernTheme.Size = new System.Drawing.Size(140, 23);
+            CbbInfoGraphicModernTheme.TabIndex = 3;
+            CbbInfoGraphicModernTheme.SelectedIndexChanged += CbbInfoGraphicModern_SelectedIndexChanged;
+            // 
+            // LbInfoGraphicModernFont
+            // 
+            LbInfoGraphicModernFont.AutoSize = true;
+            LbInfoGraphicModernFont.Location = new System.Drawing.Point(14, 95);
+            LbInfoGraphicModernFont.Name = "LbInfoGraphicModernFont";
+            LbInfoGraphicModernFont.Size = new System.Drawing.Size(31, 15);
+            LbInfoGraphicModernFont.TabIndex = 4;
+            LbInfoGraphicModernFont.Text = "Font";
+            // 
+            // CbbInfoGraphicModernFontName
+            // 
+            CbbInfoGraphicModernFontName.FormattingEnabled = true;
+            CbbInfoGraphicModernFontName.Location = new System.Drawing.Point(120, 92);
+            CbbInfoGraphicModernFontName.Name = "CbbInfoGraphicModernFontName";
+            CbbInfoGraphicModernFontName.Size = new System.Drawing.Size(200, 23);
+            CbbInfoGraphicModernFontName.TabIndex = 5;
+            CbbInfoGraphicModernFontName.SelectedIndexChanged += CbbInfoGraphicModern_SelectedIndexChanged;
+            // 
+            // LbInfoGraphicModernAccent
+            // 
+            LbInfoGraphicModernAccent.AutoSize = true;
+            LbInfoGraphicModernAccent.Location = new System.Drawing.Point(14, 127);
+            LbInfoGraphicModernAccent.Name = "LbInfoGraphicModernAccent";
+            LbInfoGraphicModernAccent.Size = new System.Drawing.Size(74, 15);
+            LbInfoGraphicModernAccent.TabIndex = 6;
+            LbInfoGraphicModernAccent.Text = "Accent color";
+            // 
+            // BtInfoGraphicModernAccentColor
+            // 
+            BtInfoGraphicModernAccentColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicModernAccentColor.Location = new System.Drawing.Point(120, 124);
+            BtInfoGraphicModernAccentColor.Name = "BtInfoGraphicModernAccentColor";
+            BtInfoGraphicModernAccentColor.Size = new System.Drawing.Size(108, 23);
+            BtInfoGraphicModernAccentColor.TabIndex = 7;
+            BtInfoGraphicModernAccentColor.Text = "Accent";
+            BtInfoGraphicModernAccentColor.UseVisualStyleBackColor = true;
+            BtInfoGraphicModernAccentColor.Click += ColorButtonClick;
+            // 
+            // LbInfoGraphicModernValues
+            // 
+            LbInfoGraphicModernValues.AutoSize = true;
+            LbInfoGraphicModernValues.Location = new System.Drawing.Point(14, 159);
+            LbInfoGraphicModernValues.Name = "LbInfoGraphicModernValues";
+            LbInfoGraphicModernValues.Size = new System.Drawing.Size(63, 15);
+            LbInfoGraphicModernValues.TabIndex = 8;
+            LbInfoGraphicModernValues.Text = "Stat values";
+            // 
+            // CbbInfoGraphicModernValueDisplay
+            // 
+            CbbInfoGraphicModernValueDisplay.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbInfoGraphicModernValueDisplay.FormattingEnabled = true;
+            CbbInfoGraphicModernValueDisplay.Location = new System.Drawing.Point(120, 156);
+            CbbInfoGraphicModernValueDisplay.Name = "CbbInfoGraphicModernValueDisplay";
+            CbbInfoGraphicModernValueDisplay.Size = new System.Drawing.Size(200, 23);
+            CbbInfoGraphicModernValueDisplay.TabIndex = 9;
+            CbbInfoGraphicModernValueDisplay.SelectedIndexChanged += CbbInfoGraphicModern_SelectedIndexChanged;
+            // 
+            // LbInfoGraphicModernRegionNames
+            // 
+            LbInfoGraphicModernRegionNames.AutoSize = true;
+            LbInfoGraphicModernRegionNames.Location = new System.Drawing.Point(14, 191);
+            LbInfoGraphicModernRegionNames.Name = "LbInfoGraphicModernRegionNames";
+            LbInfoGraphicModernRegionNames.Size = new System.Drawing.Size(82, 15);
+            LbInfoGraphicModernRegionNames.TabIndex = 17;
+            LbInfoGraphicModernRegionNames.Text = "Region names";
+            // 
+            // CbbInfoGraphicModernRegionNames
+            // 
+            CbbInfoGraphicModernRegionNames.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbInfoGraphicModernRegionNames.FormattingEnabled = true;
+            CbbInfoGraphicModernRegionNames.Location = new System.Drawing.Point(120, 188);
+            CbbInfoGraphicModernRegionNames.Name = "CbbInfoGraphicModernRegionNames";
+            CbbInfoGraphicModernRegionNames.Size = new System.Drawing.Size(200, 23);
+            CbbInfoGraphicModernRegionNames.TabIndex = 18;
+            CbbInfoGraphicModernRegionNames.SelectedIndexChanged += CbbInfoGraphicModern_SelectedIndexChanged;
+            // 
+            // CbInfoGraphicModernAccentFromCreature
+            // 
+            CbInfoGraphicModernAccentFromCreature.AutoSize = true;
+            CbInfoGraphicModernAccentFromCreature.Location = new System.Drawing.Point(380, 30);
+            CbInfoGraphicModernAccentFromCreature.Name = "CbInfoGraphicModernAccentFromCreature";
+            CbInfoGraphicModernAccentFromCreature.Size = new System.Drawing.Size(190, 19);
+            CbInfoGraphicModernAccentFromCreature.TabIndex = 10;
+            CbInfoGraphicModernAccentFromCreature.Text = "Accent color based on creature";
+            CbInfoGraphicModernAccentFromCreature.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernAccentFromCreature.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernBarsByLevelQuality
+            // 
+            CbInfoGraphicModernBarsByLevelQuality.AutoSize = true;
+            CbInfoGraphicModernBarsByLevelQuality.Location = new System.Drawing.Point(380, 56);
+            CbInfoGraphicModernBarsByLevelQuality.Name = "CbInfoGraphicModernBarsByLevelQuality";
+            CbInfoGraphicModernBarsByLevelQuality.Size = new System.Drawing.Size(184, 19);
+            CbInfoGraphicModernBarsByLevelQuality.TabIndex = 11;
+            CbInfoGraphicModernBarsByLevelQuality.Text = "Color stat bars by level quality";
+            CbInfoGraphicModernBarsByLevelQuality.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernBarsByLevelQuality.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowSpecies
+            // 
+            CbInfoGraphicModernShowSpecies.AutoSize = true;
+            CbInfoGraphicModernShowSpecies.Location = new System.Drawing.Point(380, 82);
+            CbInfoGraphicModernShowSpecies.Name = "CbInfoGraphicModernShowSpecies";
+            CbInfoGraphicModernShowSpecies.Size = new System.Drawing.Size(98, 19);
+            CbInfoGraphicModernShowSpecies.TabIndex = 12;
+            CbInfoGraphicModernShowSpecies.Text = "Species name";
+            CbInfoGraphicModernShowSpecies.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowSpecies.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowStatValues
+            // 
+            CbInfoGraphicModernShowStatValues.AutoSize = true;
+            CbInfoGraphicModernShowStatValues.Location = new System.Drawing.Point(380, 108);
+            CbInfoGraphicModernShowStatValues.Name = "CbInfoGraphicModernShowStatValues";
+            CbInfoGraphicModernShowStatValues.Size = new System.Drawing.Size(82, 19);
+            CbInfoGraphicModernShowStatValues.TabIndex = 13;
+            CbInfoGraphicModernShowStatValues.Text = "Stat values";
+            CbInfoGraphicModernShowStatValues.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowStatValues.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowColors
+            // 
+            CbInfoGraphicModernShowColors.AutoSize = true;
+            CbInfoGraphicModernShowColors.Location = new System.Drawing.Point(380, 134);
+            CbInfoGraphicModernShowColors.Name = "CbInfoGraphicModernShowColors";
+            CbInfoGraphicModernShowColors.Size = new System.Drawing.Size(97, 19);
+            CbInfoGraphicModernShowColors.TabIndex = 14;
+            CbInfoGraphicModernShowColors.Text = "Color regions";
+            CbInfoGraphicModernShowColors.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowColors.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowMutations
+            // 
+            CbInfoGraphicModernShowMutations.AutoSize = true;
+            CbInfoGraphicModernShowMutations.Location = new System.Drawing.Point(380, 160);
+            CbInfoGraphicModernShowMutations.Name = "CbInfoGraphicModernShowMutations";
+            CbInfoGraphicModernShowMutations.Size = new System.Drawing.Size(124, 19);
+            CbInfoGraphicModernShowMutations.TabIndex = 15;
+            CbInfoGraphicModernShowMutations.Text = "Mutation counters";
+            CbInfoGraphicModernShowMutations.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowMutations.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernTransparentBackground
+            // 
+            CbInfoGraphicModernTransparentBackground.AutoSize = true;
+            CbInfoGraphicModernTransparentBackground.Location = new System.Drawing.Point(380, 186);
+            CbInfoGraphicModernTransparentBackground.Name = "CbInfoGraphicModernTransparentBackground";
+            CbInfoGraphicModernTransparentBackground.Size = new System.Drawing.Size(155, 19);
+            CbInfoGraphicModernTransparentBackground.TabIndex = 16;
+            CbInfoGraphicModernTransparentBackground.Text = "Transparent background";
+            CbInfoGraphicModernTransparentBackground.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernTransparentBackground.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowCreatureName
+            // 
+            CbInfoGraphicModernShowCreatureName.AutoSize = true;
+            CbInfoGraphicModernShowCreatureName.Location = new System.Drawing.Point(600, 30);
+            CbInfoGraphicModernShowCreatureName.Name = "CbInfoGraphicModernShowCreatureName";
+            CbInfoGraphicModernShowCreatureName.Size = new System.Drawing.Size(141, 19);
+            CbInfoGraphicModernShowCreatureName.TabIndex = 19;
+            CbInfoGraphicModernShowCreatureName.Text = "Creature name as title";
+            CbInfoGraphicModernShowCreatureName.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowCreatureName.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowGeneration
+            // 
+            CbInfoGraphicModernShowGeneration.AutoSize = true;
+            CbInfoGraphicModernShowGeneration.Location = new System.Drawing.Point(600, 56);
+            CbInfoGraphicModernShowGeneration.Name = "CbInfoGraphicModernShowGeneration";
+            CbInfoGraphicModernShowGeneration.Size = new System.Drawing.Size(164, 19);
+            CbInfoGraphicModernShowGeneration.TabIndex = 20;
+            CbInfoGraphicModernShowGeneration.Text = "Generation of the creature";
+            CbInfoGraphicModernShowGeneration.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowGeneration.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowMaxWildLevel
+            // 
+            CbInfoGraphicModernShowMaxWildLevel.AutoSize = true;
+            CbInfoGraphicModernShowMaxWildLevel.Location = new System.Drawing.Point(600, 82);
+            CbInfoGraphicModernShowMaxWildLevel.Name = "CbInfoGraphicModernShowMaxWildLevel";
+            CbInfoGraphicModernShowMaxWildLevel.Size = new System.Drawing.Size(134, 19);
+            CbInfoGraphicModernShowMaxWildLevel.TabIndex = 21;
+            CbInfoGraphicModernShowMaxWildLevel.Text = "Max wild server level";
+            CbInfoGraphicModernShowMaxWildLevel.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowMaxWildLevel.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernSumWildMut
+            // 
+            CbInfoGraphicModernSumWildMut.AutoSize = true;
+            CbInfoGraphicModernSumWildMut.Location = new System.Drawing.Point(600, 108);
+            CbInfoGraphicModernSumWildMut.Name = "CbInfoGraphicModernSumWildMut";
+            CbInfoGraphicModernSumWildMut.Size = new System.Drawing.Size(192, 19);
+            CbInfoGraphicModernSumWildMut.TabIndex = 22;
+            CbInfoGraphicModernSumWildMut.Text = "Sum of wild and mutated levels";
+            CbInfoGraphicModernSumWildMut.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernSumWildMut.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernArtworkHalo
+            // 
+            CbInfoGraphicModernArtworkHalo.AutoSize = true;
+            CbInfoGraphicModernArtworkHalo.Location = new System.Drawing.Point(600, 134);
+            CbInfoGraphicModernArtworkHalo.Name = "CbInfoGraphicModernArtworkHalo";
+            CbInfoGraphicModernArtworkHalo.Size = new System.Drawing.Size(172, 19);
+            CbInfoGraphicModernArtworkHalo.TabIndex = 26;
+            CbInfoGraphicModernArtworkHalo.Text = "Outline around the creature";
+            CbInfoGraphicModernArtworkHalo.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernArtworkHalo.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // CbInfoGraphicModernShowSpeciesSuffixes
+            // 
+            CbInfoGraphicModernShowSpeciesSuffixes.AutoSize = true;
+            CbInfoGraphicModernShowSpeciesSuffixes.Location = new System.Drawing.Point(600, 160);
+            CbInfoGraphicModernShowSpeciesSuffixes.Name = "CbInfoGraphicModernShowSpeciesSuffixes";
+            CbInfoGraphicModernShowSpeciesSuffixes.Size = new System.Drawing.Size(200, 19);
+            CbInfoGraphicModernShowSpeciesSuffixes.TabIndex = 27;
+            CbInfoGraphicModernShowSpeciesSuffixes.Text = "Variant and mod in species name";
+            CbInfoGraphicModernShowSpeciesSuffixes.UseVisualStyleBackColor = true;
+            CbInfoGraphicModernShowSpeciesSuffixes.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
+            // 
+            // LbInfoGraphicModernBackColor
+            // 
+            LbInfoGraphicModernBackColor.AutoSize = true;
+            LbInfoGraphicModernBackColor.Location = new System.Drawing.Point(14, 223);
+            LbInfoGraphicModernBackColor.Name = "LbInfoGraphicModernBackColor";
+            LbInfoGraphicModernBackColor.Size = new System.Drawing.Size(101, 15);
+            LbInfoGraphicModernBackColor.TabIndex = 23;
+            LbInfoGraphicModernBackColor.Text = "Background color";
+            // 
+            // BtInfoGraphicModernBackColor
+            // 
+            BtInfoGraphicModernBackColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicModernBackColor.Location = new System.Drawing.Point(120, 220);
+            BtInfoGraphicModernBackColor.Name = "BtInfoGraphicModernBackColor";
+            BtInfoGraphicModernBackColor.Size = new System.Drawing.Size(108, 23);
+            BtInfoGraphicModernBackColor.TabIndex = 24;
+            BtInfoGraphicModernBackColor.Text = "From theme";
+            BtInfoGraphicModernBackColor.UseVisualStyleBackColor = true;
+            BtInfoGraphicModernBackColor.Click += BtInfoGraphicModernBackColor_Click;
+            // 
+            // BtInfoGraphicModernResetColors
+            // 
+            BtInfoGraphicModernResetColors.Location = new System.Drawing.Point(236, 220);
+            BtInfoGraphicModernResetColors.Name = "BtInfoGraphicModernResetColors";
+            BtInfoGraphicModernResetColors.Size = new System.Drawing.Size(120, 23);
+            BtInfoGraphicModernResetColors.TabIndex = 25;
+            BtInfoGraphicModernResetColors.Text = "Reset to default";
+            BtInfoGraphicModernResetColors.UseVisualStyleBackColor = true;
+            BtInfoGraphicModernResetColors.Click += BtInfoGraphicModernResetColors_Click;
+            // 
+            // groupBox34
+            // 
+            groupBox34.Controls.Add(label80);
+            groupBox34.Controls.Add(NudInfoGraphicStitchMaxWidth);
+            groupBox34.Controls.Add(label79);
+            groupBox34.Controls.Add(NudInfoGraphicStitchBackgroundOpacity);
+            groupBox34.Controls.Add(NudInfoGraphicStitchGap);
+            groupBox34.Controls.Add(label78);
+            groupBox34.Controls.Add(BtInfoGraphicStitchBackgroundColor);
+            groupBox34.Location = new System.Drawing.Point(8, 362);
+            groupBox34.Name = "groupBox34";
+            groupBox34.Size = new System.Drawing.Size(449, 109);
+            groupBox34.TabIndex = 20;
+            groupBox34.TabStop = false;
+            groupBox34.Text = "Multiple images in one file (stitched)";
+            // 
+            // label80
+            // 
+            label80.AutoSize = true;
+            label80.Location = new System.Drawing.Point(139, 82);
+            label80.Name = "label80";
+            label80.Size = new System.Drawing.Size(46, 15);
+            label80.TabIndex = 24;
+            label80.Text = "opacity";
+            // 
+            // NudInfoGraphicStitchMaxWidth
+            // 
+            NudInfoGraphicStitchMaxWidth.Location = new System.Drawing.Point(192, 22);
+            NudInfoGraphicStitchMaxWidth.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
+            NudInfoGraphicStitchMaxWidth.Name = "NudInfoGraphicStitchMaxWidth";
+            NudInfoGraphicStitchMaxWidth.Size = new System.Drawing.Size(54, 23);
+            NudInfoGraphicStitchMaxWidth.TabIndex = 23;
+            // 
+            // label79
+            // 
+            label79.AutoSize = true;
+            label79.Location = new System.Drawing.Point(6, 24);
+            label79.Name = "label79";
+            label79.Size = new System.Drawing.Size(135, 15);
+            label79.TabIndex = 22;
+            label79.Text = "Max width of image [px]";
+            // 
+            // NudInfoGraphicStitchBackgroundOpacity
+            // 
+            NudInfoGraphicStitchBackgroundOpacity.ForeColor = System.Drawing.SystemColors.GrayText;
+            NudInfoGraphicStitchBackgroundOpacity.Location = new System.Drawing.Point(192, 80);
+            NudInfoGraphicStitchBackgroundOpacity.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            NudInfoGraphicStitchBackgroundOpacity.Maximum = new decimal(new int[] { 255, 0, 0, 0 });
+            NudInfoGraphicStitchBackgroundOpacity.Name = "NudInfoGraphicStitchBackgroundOpacity";
+            NudInfoGraphicStitchBackgroundOpacity.Size = new System.Drawing.Size(54, 23);
+            NudInfoGraphicStitchBackgroundOpacity.TabIndex = 21;
+            // 
+            // NudInfoGraphicStitchGap
+            // 
+            NudInfoGraphicStitchGap.Location = new System.Drawing.Point(192, 51);
+            NudInfoGraphicStitchGap.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            NudInfoGraphicStitchGap.Name = "NudInfoGraphicStitchGap";
+            NudInfoGraphicStitchGap.Size = new System.Drawing.Size(54, 23);
+            NudInfoGraphicStitchGap.TabIndex = 2;
+            // 
+            // label78
+            // 
+            label78.AutoSize = true;
+            label78.Location = new System.Drawing.Point(6, 52);
+            label78.Name = "label78";
+            label78.Size = new System.Drawing.Size(186, 15);
+            label78.TabIndex = 1;
+            label78.Text = "Gap between creature images [px]";
+            // 
+            // BtInfoGraphicStitchBackgroundColor
+            // 
+            BtInfoGraphicStitchBackgroundColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicStitchBackgroundColor.Location = new System.Drawing.Point(6, 77);
+            BtInfoGraphicStitchBackgroundColor.Name = "BtInfoGraphicStitchBackgroundColor";
+            BtInfoGraphicStitchBackgroundColor.Size = new System.Drawing.Size(112, 25);
+            BtInfoGraphicStitchBackgroundColor.TabIndex = 0;
+            BtInfoGraphicStitchBackgroundColor.Text = "Background";
+            BtInfoGraphicStitchBackgroundColor.UseVisualStyleBackColor = true;
+            BtInfoGraphicStitchBackgroundColor.Click += BtInfoGraphicStitchBackgroundColor_Click;
             // 
             // BtNewRandomInfoGraphicCreature
             // 
-            BtNewRandomInfoGraphicCreature.Location = new System.Drawing.Point(72, 365);
+            BtNewRandomInfoGraphicCreature.Location = new System.Drawing.Point(8, 477);
             BtNewRandomInfoGraphicCreature.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtNewRandomInfoGraphicCreature.Name = "BtNewRandomInfoGraphicCreature";
             BtNewRandomInfoGraphicCreature.Size = new System.Drawing.Size(233, 28);
@@ -2562,19 +3147,9 @@
             BtNewRandomInfoGraphicCreature.UseVisualStyleBackColor = true;
             BtNewRandomInfoGraphicCreature.Click += BtNewRandomInfoGraphicCreature_Click;
             // 
-            // label63
-            // 
-            label63.AutoSize = true;
-            label63.Location = new System.Drawing.Point(13, 372);
-            label63.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label63.Name = "label63";
-            label63.Size = new System.Drawing.Size(48, 15);
-            label63.TabIndex = 18;
-            label63.Text = "Preview";
-            // 
             // PbInfoGraphicPreview
             // 
-            PbInfoGraphicPreview.Location = new System.Drawing.Point(9, 434);
+            PbInfoGraphicPreview.Location = new System.Drawing.Point(9, 511);
             PbInfoGraphicPreview.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             PbInfoGraphicPreview.Name = "PbInfoGraphicPreview";
             PbInfoGraphicPreview.Size = new System.Drawing.Size(388, 165);
@@ -2583,10 +3158,15 @@
             // 
             // groupBox32
             // 
-            groupBox32.Controls.Add(label78);
-            groupBox32.Controls.Add(NudInfoGraphicPaddingY);
+            groupBox32.Controls.Add(CbInfoGraphicTintBackgroundByCreature);
+            groupBox32.Controls.Add(CbInfoGraphicColorsByCreature);
+            groupBox32.Controls.Add(BtInfoGraphicColorTextOutlineAuto);
+            groupBox32.Controls.Add(NudInfoGraphicPaddingLeft);
+            groupBox32.Controls.Add(NudInfoGraphicPaddingBottom);
+            groupBox32.Controls.Add(NudInfoGraphicPaddingRight);
+            groupBox32.Controls.Add(CbbInfoGraphicBackgroundResizing);
             groupBox32.Controls.Add(label77);
-            groupBox32.Controls.Add(NudInfoGraphicPaddingX);
+            groupBox32.Controls.Add(NudInfoGraphicPaddingTop);
             groupBox32.Controls.Add(label76);
             groupBox32.Controls.Add(NudInfoGraphicCreatureScaling);
             groupBox32.Controls.Add(label75);
@@ -2620,31 +3200,86 @@
             groupBox32.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox32.Name = "groupBox32";
             groupBox32.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox32.Size = new System.Drawing.Size(401, 375);
+            groupBox32.Size = new System.Drawing.Size(401, 417);
             groupBox32.TabIndex = 17;
             groupBox32.TabStop = false;
             groupBox32.Text = "Visuals";
             // 
-            // label78
+            // CbInfoGraphicTintBackgroundByCreature
             // 
-            label78.AutoSize = true;
-            label78.Location = new System.Drawing.Point(194, 275);
-            label78.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label78.Name = "label78";
-            label78.Size = new System.Drawing.Size(61, 15);
-            label78.TabIndex = 42;
-            label78.Text = "Padding Y";
+            CbInfoGraphicTintBackgroundByCreature.AutoSize = true;
+            CbInfoGraphicTintBackgroundByCreature.Location = new System.Drawing.Point(190, 302);
+            CbInfoGraphicTintBackgroundByCreature.Name = "CbInfoGraphicTintBackgroundByCreature";
+            CbInfoGraphicTintBackgroundByCreature.Size = new System.Drawing.Size(150, 19);
+            CbInfoGraphicTintBackgroundByCreature.TabIndex = 50;
+            CbInfoGraphicTintBackgroundByCreature.Text = "Tint background image";
+            CbInfoGraphicTintBackgroundByCreature.UseVisualStyleBackColor = true;
+            CbInfoGraphicTintBackgroundByCreature.CheckedChanged += NudInfoGraphicCheckedChanged;
             // 
-            // NudInfoGraphicPaddingY
+            // CbInfoGraphicColorsByCreature
             // 
-            NudInfoGraphicPaddingY.ForeColor = System.Drawing.SystemColors.GrayText;
-            NudInfoGraphicPaddingY.Location = new System.Drawing.Point(266, 272);
-            NudInfoGraphicPaddingY.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            NudInfoGraphicPaddingY.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
-            NudInfoGraphicPaddingY.Name = "NudInfoGraphicPaddingY";
-            NudInfoGraphicPaddingY.Size = new System.Drawing.Size(68, 23);
-            NudInfoGraphicPaddingY.TabIndex = 41;
-            NudInfoGraphicPaddingY.ValueChanged += NudInfoGraphicValueChanged;
+            CbInfoGraphicColorsByCreature.AutoSize = true;
+            CbInfoGraphicColorsByCreature.Location = new System.Drawing.Point(7, 302);
+            CbInfoGraphicColorsByCreature.Name = "CbInfoGraphicColorsByCreature";
+            CbInfoGraphicColorsByCreature.Size = new System.Drawing.Size(157, 19);
+            CbInfoGraphicColorsByCreature.TabIndex = 49;
+            CbInfoGraphicColorsByCreature.Text = "Colors based on creature";
+            CbInfoGraphicColorsByCreature.UseVisualStyleBackColor = true;
+            CbInfoGraphicColorsByCreature.CheckedChanged += NudInfoGraphicCheckedChanged;
+            // 
+            // BtInfoGraphicColorTextOutlineAuto
+            // 
+            BtInfoGraphicColorTextOutlineAuto.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicColorTextOutlineAuto.Location = new System.Drawing.Point(92, 129);
+            BtInfoGraphicColorTextOutlineAuto.Name = "BtInfoGraphicColorTextOutlineAuto";
+            BtInfoGraphicColorTextOutlineAuto.Size = new System.Drawing.Size(23, 23);
+            BtInfoGraphicColorTextOutlineAuto.TabIndex = 48;
+            BtInfoGraphicColorTextOutlineAuto.Text = "A";
+            BtInfoGraphicColorTextOutlineAuto.UseVisualStyleBackColor = true;
+            BtInfoGraphicColorTextOutlineAuto.Click += BtInfoGraphicColorTextOutlineAuto_Click;
+            // 
+            // NudInfoGraphicPaddingLeft
+            // 
+            NudInfoGraphicPaddingLeft.ForeColor = System.Drawing.SystemColors.GrayText;
+            NudInfoGraphicPaddingLeft.Location = new System.Drawing.Point(341, 273);
+            NudInfoGraphicPaddingLeft.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            NudInfoGraphicPaddingLeft.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            NudInfoGraphicPaddingLeft.Name = "NudInfoGraphicPaddingLeft";
+            NudInfoGraphicPaddingLeft.Size = new System.Drawing.Size(52, 23);
+            NudInfoGraphicPaddingLeft.TabIndex = 47;
+            NudInfoGraphicPaddingLeft.ValueChanged += NudInfoGraphicValueChanged;
+            // 
+            // NudInfoGraphicPaddingBottom
+            // 
+            NudInfoGraphicPaddingBottom.ForeColor = System.Drawing.SystemColors.GrayText;
+            NudInfoGraphicPaddingBottom.Location = new System.Drawing.Point(281, 273);
+            NudInfoGraphicPaddingBottom.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            NudInfoGraphicPaddingBottom.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            NudInfoGraphicPaddingBottom.Name = "NudInfoGraphicPaddingBottom";
+            NudInfoGraphicPaddingBottom.Size = new System.Drawing.Size(52, 23);
+            NudInfoGraphicPaddingBottom.TabIndex = 46;
+            NudInfoGraphicPaddingBottom.ValueChanged += NudInfoGraphicValueChanged;
+            // 
+            // NudInfoGraphicPaddingRight
+            // 
+            NudInfoGraphicPaddingRight.ForeColor = System.Drawing.SystemColors.GrayText;
+            NudInfoGraphicPaddingRight.Location = new System.Drawing.Point(221, 273);
+            NudInfoGraphicPaddingRight.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            NudInfoGraphicPaddingRight.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            NudInfoGraphicPaddingRight.Name = "NudInfoGraphicPaddingRight";
+            NudInfoGraphicPaddingRight.Size = new System.Drawing.Size(52, 23);
+            NudInfoGraphicPaddingRight.TabIndex = 45;
+            NudInfoGraphicPaddingRight.ValueChanged += NudInfoGraphicValueChanged;
+            // 
+            // CbbInfoGraphicBackgroundResizing
+            // 
+            CbbInfoGraphicBackgroundResizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbInfoGraphicBackgroundResizing.FormattingEnabled = true;
+            CbbInfoGraphicBackgroundResizing.Location = new System.Drawing.Point(267, 112);
+            CbbInfoGraphicBackgroundResizing.Name = "CbbInfoGraphicBackgroundResizing";
+            CbbInfoGraphicBackgroundResizing.Size = new System.Drawing.Size(126, 23);
+            CbbInfoGraphicBackgroundResizing.TabIndex = 43;
+            CbbInfoGraphicBackgroundResizing.SelectedIndexChanged += CbbInfoGraphicBackgroundResizing_SelectedIndexChanged;
             // 
             // label77
             // 
@@ -2652,20 +3287,20 @@
             label77.Location = new System.Drawing.Point(10, 275);
             label77.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label77.Name = "label77";
-            label77.Size = new System.Drawing.Size(61, 15);
+            label77.Size = new System.Drawing.Size(147, 15);
             label77.TabIndex = 40;
-            label77.Text = "Padding X";
+            label77.Text = "Padding top-righ-bott-left";
             // 
-            // NudInfoGraphicPaddingX
+            // NudInfoGraphicPaddingTop
             // 
-            NudInfoGraphicPaddingX.ForeColor = System.Drawing.SystemColors.GrayText;
-            NudInfoGraphicPaddingX.Location = new System.Drawing.Point(119, 272);
-            NudInfoGraphicPaddingX.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            NudInfoGraphicPaddingX.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
-            NudInfoGraphicPaddingX.Name = "NudInfoGraphicPaddingX";
-            NudInfoGraphicPaddingX.Size = new System.Drawing.Size(68, 23);
-            NudInfoGraphicPaddingX.TabIndex = 39;
-            NudInfoGraphicPaddingX.ValueChanged += NudInfoGraphicValueChanged;
+            NudInfoGraphicPaddingTop.ForeColor = System.Drawing.SystemColors.GrayText;
+            NudInfoGraphicPaddingTop.Location = new System.Drawing.Point(161, 273);
+            NudInfoGraphicPaddingTop.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            NudInfoGraphicPaddingTop.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            NudInfoGraphicPaddingTop.Name = "NudInfoGraphicPaddingTop";
+            NudInfoGraphicPaddingTop.Size = new System.Drawing.Size(52, 23);
+            NudInfoGraphicPaddingTop.TabIndex = 39;
+            NudInfoGraphicPaddingTop.ValueChanged += NudInfoGraphicValueChanged;
             // 
             // label76
             // 
@@ -2768,10 +3403,11 @@
             // 
             // BtInfoGraphicCreatureOutlineColor
             // 
-            BtInfoGraphicCreatureOutlineColor.Location = new System.Drawing.Point(7, 209);
+            BtInfoGraphicCreatureOutlineColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicCreatureOutlineColor.Location = new System.Drawing.Point(7, 212);
             BtInfoGraphicCreatureOutlineColor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicCreatureOutlineColor.Name = "BtInfoGraphicCreatureOutlineColor";
-            BtInfoGraphicCreatureOutlineColor.Size = new System.Drawing.Size(108, 27);
+            BtInfoGraphicCreatureOutlineColor.Size = new System.Drawing.Size(108, 23);
             BtInfoGraphicCreatureOutlineColor.TabIndex = 30;
             BtInfoGraphicCreatureOutlineColor.Text = "Creature outline";
             BtInfoGraphicCreatureOutlineColor.UseVisualStyleBackColor = true;
@@ -2812,10 +3448,11 @@
             // 
             // BtInfoGraphicTextOutlineColor
             // 
-            BtInfoGraphicTextOutlineColor.Location = new System.Drawing.Point(7, 126);
+            BtInfoGraphicTextOutlineColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicTextOutlineColor.Location = new System.Drawing.Point(7, 129);
             BtInfoGraphicTextOutlineColor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicTextOutlineColor.Name = "BtInfoGraphicTextOutlineColor";
-            BtInfoGraphicTextOutlineColor.Size = new System.Drawing.Size(108, 27);
+            BtInfoGraphicTextOutlineColor.Size = new System.Drawing.Size(82, 23);
             BtInfoGraphicTextOutlineColor.TabIndex = 26;
             BtInfoGraphicTextOutlineColor.Text = "Text outline";
             BtInfoGraphicTextOutlineColor.UseVisualStyleBackColor = true;
@@ -2844,10 +3481,10 @@
             // 
             // BtInfoGraphicBackgroundImagePath
             // 
-            BtInfoGraphicBackgroundImagePath.Location = new System.Drawing.Point(267, 77);
+            BtInfoGraphicBackgroundImagePath.Location = new System.Drawing.Point(267, 66);
             BtInfoGraphicBackgroundImagePath.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicBackgroundImagePath.Name = "BtInfoGraphicBackgroundImagePath";
-            BtInfoGraphicBackgroundImagePath.Size = new System.Drawing.Size(127, 55);
+            BtInfoGraphicBackgroundImagePath.Size = new System.Drawing.Size(127, 40);
             BtInfoGraphicBackgroundImagePath.TabIndex = 23;
             BtInfoGraphicBackgroundImagePath.Text = "Background image";
             BtInfoGraphicBackgroundImagePath.UseVisualStyleBackColor = true;
@@ -2877,10 +3514,10 @@
             // 
             // label57
             // 
-            label57.Location = new System.Drawing.Point(7, 302);
+            label57.Location = new System.Drawing.Point(8, 337);
             label57.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label57.Name = "label57";
-            label57.Size = new System.Drawing.Size(387, 73);
+            label57.Size = new System.Drawing.Size(385, 77);
             label57.TabIndex = 18;
             label57.Text = resources.GetString("label57.Text");
             // 
@@ -2900,7 +3537,7 @@
             CbbInfoGraphicFontName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             CbbInfoGraphicFontName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             CbbInfoGraphicFontName.FormattingEnabled = true;
-            CbbInfoGraphicFontName.Location = new System.Drawing.Point(267, 46);
+            CbbInfoGraphicFontName.Location = new System.Drawing.Point(267, 37);
             CbbInfoGraphicFontName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             CbbInfoGraphicFontName.Name = "CbbInfoGraphicFontName";
             CbbInfoGraphicFontName.Size = new System.Drawing.Size(126, 23);
@@ -2910,7 +3547,7 @@
             // label51
             // 
             label51.AutoSize = true;
-            label51.Location = new System.Drawing.Point(268, 23);
+            label51.Location = new System.Drawing.Point(267, 19);
             label51.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label51.Name = "label51";
             label51.Size = new System.Drawing.Size(64, 15);
@@ -2930,7 +3567,7 @@
             // 
             // nudInfoGraphicHeight
             // 
-            nudInfoGraphicHeight.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudInfoGraphicHeight.ForeColor = System.Drawing.Color.Black;
             nudInfoGraphicHeight.Location = new System.Drawing.Point(147, 21);
             nudInfoGraphicHeight.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudInfoGraphicHeight.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
@@ -2943,10 +3580,11 @@
             // 
             // BtInfoGraphicForeColor
             // 
-            BtInfoGraphicForeColor.Location = new System.Drawing.Point(7, 98);
+            BtInfoGraphicForeColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicForeColor.Location = new System.Drawing.Point(7, 102);
             BtInfoGraphicForeColor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicForeColor.Name = "BtInfoGraphicForeColor";
-            BtInfoGraphicForeColor.Size = new System.Drawing.Size(108, 27);
+            BtInfoGraphicForeColor.Size = new System.Drawing.Size(108, 23);
             BtInfoGraphicForeColor.TabIndex = 9;
             BtInfoGraphicForeColor.Text = "Text";
             BtInfoGraphicForeColor.UseVisualStyleBackColor = true;
@@ -2954,10 +3592,11 @@
             // 
             // BtInfoGraphicBackColor
             // 
-            BtInfoGraphicBackColor.Location = new System.Drawing.Point(7, 153);
+            BtInfoGraphicBackColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicBackColor.Location = new System.Drawing.Point(7, 157);
             BtInfoGraphicBackColor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicBackColor.Name = "BtInfoGraphicBackColor";
-            BtInfoGraphicBackColor.Size = new System.Drawing.Size(108, 27);
+            BtInfoGraphicBackColor.Size = new System.Drawing.Size(108, 23);
             BtInfoGraphicBackColor.TabIndex = 10;
             BtInfoGraphicBackColor.Text = "Background";
             BtInfoGraphicBackColor.UseVisualStyleBackColor = true;
@@ -2965,10 +3604,11 @@
             // 
             // BtInfoGraphicBorderColor
             // 
-            BtInfoGraphicBorderColor.Location = new System.Drawing.Point(7, 181);
+            BtInfoGraphicBorderColor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            BtInfoGraphicBorderColor.Location = new System.Drawing.Point(7, 185);
             BtInfoGraphicBorderColor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             BtInfoGraphicBorderColor.Name = "BtInfoGraphicBorderColor";
-            BtInfoGraphicBorderColor.Size = new System.Drawing.Size(108, 27);
+            BtInfoGraphicBorderColor.Size = new System.Drawing.Size(108, 23);
             BtInfoGraphicBorderColor.TabIndex = 11;
             BtInfoGraphicBorderColor.Text = "Border";
             BtInfoGraphicBorderColor.UseVisualStyleBackColor = true;
@@ -3136,6 +3776,26 @@
             CbInfoGraphicDisplayMaxWildLevel.UseVisualStyleBackColor = true;
             CbInfoGraphicDisplayMaxWildLevel.CheckedChanged += CbInfoGraphicCheckBoxRadioButtonChanged;
             // 
+            // CbbInfoGraphicStyle
+            // 
+            CbbInfoGraphicStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            CbbInfoGraphicStyle.FormattingEnabled = true;
+            CbbInfoGraphicStyle.Location = new System.Drawing.Point(440, 18);
+            CbbInfoGraphicStyle.Name = "CbbInfoGraphicStyle";
+            CbbInfoGraphicStyle.Size = new System.Drawing.Size(140, 23);
+            CbbInfoGraphicStyle.TabIndex = 22;
+            CbbInfoGraphicStyle.SelectedIndexChanged += CbbInfoGraphicStyle_SelectedIndexChanged;
+            // 
+            // LbInfoGraphicStyle
+            // 
+            LbInfoGraphicStyle.AutoSize = true;
+            LbInfoGraphicStyle.Location = new System.Drawing.Point(400, 21);
+            LbInfoGraphicStyle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            LbInfoGraphicStyle.Name = "LbInfoGraphicStyle";
+            LbInfoGraphicStyle.Size = new System.Drawing.Size(32, 15);
+            LbInfoGraphicStyle.TabIndex = 21;
+            LbInfoGraphicStyle.Text = "Style";
+            // 
             // label50
             // 
             label50.AutoSize = true;
@@ -3166,16 +3826,15 @@
             tabPageImportSavegame.Size = new System.Drawing.Size(876, 860);
             tabPageImportSavegame.TabIndex = 2;
             tabPageImportSavegame.Text = "Import Savegame";
-            tabPageImportSavegame.UseVisualStyleBackColor = true;
             // 
             // label68
             // 
             label68.AutoSize = true;
-            label68.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            label68.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             label68.Location = new System.Drawing.Point(9, 3);
             label68.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label68.Name = "label68";
-            label68.Size = new System.Drawing.Size(506, 20);
+            label68.Size = new System.Drawing.Size(480, 21);
             label68.TabIndex = 1;
             label68.Text = "Only ARK: Survival Evolved is support, no support for ASA yet.";
             // 
@@ -3362,7 +4021,7 @@
             labelSavegameFileLocationHint.Location = new System.Drawing.Point(4, 19);
             labelSavegameFileLocationHint.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             labelSavegameFileLocationHint.Name = "labelSavegameFileLocationHint";
-            labelSavegameFileLocationHint.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            labelSavegameFileLocationHint.Padding = new System.Windows.Forms.Padding(6);
             labelSavegameFileLocationHint.Size = new System.Drawing.Size(658, 27);
             labelSavegameFileLocationHint.TabIndex = 0;
             labelSavegameFileLocationHint.Text = "Location example for The Island: ...\\Steam\\steamapps\\common\\ARK\\ShooterGame\\Saved\\SavedArksLocal\\TheIsland.ark";
@@ -3405,7 +4064,6 @@
             tabPageImportExported.Size = new System.Drawing.Size(876, 860);
             tabPageImportExported.TabIndex = 3;
             tabPageImportExported.Text = "Import Exported";
-            tabPageImportExported.UseVisualStyleBackColor = true;
             // 
             // BtGetExportFolderAutomatically
             // 
@@ -3791,6 +4449,7 @@
             // 
             // groupBox21
             // 
+            groupBox21.Controls.Add(CbIgnoreIngameNameIfAlreadyImported);
             groupBox21.Controls.Add(CbCopyNameToClipboardOnImport);
             groupBox21.Controls.Add(CbApplyNamingPatternOnImportAlways);
             groupBox21.Controls.Add(cbApplyNamePatternOnImportOnNewCreatures);
@@ -3801,15 +4460,26 @@
             groupBox21.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox21.Name = "groupBox21";
             groupBox21.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox21.Size = new System.Drawing.Size(371, 205);
+            groupBox21.Size = new System.Drawing.Size(371, 220);
             groupBox21.TabIndex = 5;
             groupBox21.TabStop = false;
             groupBox21.Text = "Auto naming on import";
             // 
+            // CbIgnoreIngameNameIfAlreadyImported
+            // 
+            CbIgnoreIngameNameIfAlreadyImported.AutoSize = true;
+            CbIgnoreIngameNameIfAlreadyImported.Location = new System.Drawing.Point(8, 123);
+            CbIgnoreIngameNameIfAlreadyImported.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CbIgnoreIngameNameIfAlreadyImported.Name = "CbIgnoreIngameNameIfAlreadyImported";
+            CbIgnoreIngameNameIfAlreadyImported.Size = new System.Drawing.Size(322, 19);
+            CbIgnoreIngameNameIfAlreadyImported.TabIndex = 6;
+            CbIgnoreIngameNameIfAlreadyImported.Text = "keep ASB name if already imported (ignore game name)";
+            CbIgnoreIngameNameIfAlreadyImported.UseVisualStyleBackColor = true;
+            // 
             // CbCopyNameToClipboardOnImport
             // 
             CbCopyNameToClipboardOnImport.AutoSize = true;
-            CbCopyNameToClipboardOnImport.Location = new System.Drawing.Point(7, 170);
+            CbCopyNameToClipboardOnImport.Location = new System.Drawing.Point(8, 195);
             CbCopyNameToClipboardOnImport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             CbCopyNameToClipboardOnImport.Name = "CbCopyNameToClipboardOnImport";
             CbCopyNameToClipboardOnImport.Size = new System.Drawing.Size(248, 19);
@@ -3852,7 +4522,7 @@
             // cbCopyPatternNameToClipboard
             // 
             cbCopyPatternNameToClipboard.AutoSize = true;
-            cbCopyPatternNameToClipboard.Location = new System.Drawing.Point(7, 143);
+            cbCopyPatternNameToClipboard.Location = new System.Drawing.Point(8, 168);
             cbCopyPatternNameToClipboard.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             cbCopyPatternNameToClipboard.Name = "cbCopyPatternNameToClipboard";
             cbCopyPatternNameToClipboard.Size = new System.Drawing.Size(231, 19);
@@ -3912,7 +4582,7 @@
             groupBox13.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             groupBox13.Name = "groupBox13";
             groupBox13.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            groupBox13.Size = new System.Drawing.Size(985, 301);
+            groupBox13.Size = new System.Drawing.Size(861, 301);
             groupBox13.TabIndex = 2;
             groupBox13.TabStop = false;
             groupBox13.Text = "ARK export folders";
@@ -3927,7 +4597,7 @@
             dataGridViewExportFolders.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             dataGridViewExportFolders.Name = "dataGridViewExportFolders";
             dataGridViewExportFolders.RowHeadersVisible = false;
-            dataGridViewExportFolders.Size = new System.Drawing.Size(977, 252);
+            dataGridViewExportFolders.Size = new System.Drawing.Size(853, 252);
             dataGridViewExportFolders.TabIndex = 1;
             dataGridViewExportFolders.CellClick += dataGridViewExportFolders_CellClick;
             // 
@@ -3936,12 +4606,14 @@
             convenientNameDataGridViewTextBoxColumn1.DataPropertyName = "ConvenientName";
             convenientNameDataGridViewTextBoxColumn1.HeaderText = "Name";
             convenientNameDataGridViewTextBoxColumn1.Name = "convenientNameDataGridViewTextBoxColumn1";
+            convenientNameDataGridViewTextBoxColumn1.Width = 80;
             // 
             // ownerSuffixDataGridViewTextBoxColumn
             // 
             ownerSuffixDataGridViewTextBoxColumn.DataPropertyName = "OwnerSuffix";
             ownerSuffixDataGridViewTextBoxColumn.HeaderText = "Owner suffix";
             ownerSuffixDataGridViewTextBoxColumn.Name = "ownerSuffixDataGridViewTextBoxColumn";
+            ownerSuffixDataGridViewTextBoxColumn.Width = 70;
             // 
             // folderPathDataGridViewTextBoxColumn
             // 
@@ -3955,31 +4627,33 @@
             // 
             dgvExportFolderChange.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             dgvExportFolderChange.HeaderText = "Change";
-            dgvExportFolderChange.MinimumWidth = 50;
+            dgvExportFolderChange.MinimumWidth = 20;
             dgvExportFolderChange.Name = "dgvExportFolderChange";
             dgvExportFolderChange.ReadOnly = true;
             dgvExportFolderChange.Text = "Change";
             dgvExportFolderChange.UseColumnTextForButtonValue = true;
-            dgvExportFolderChange.Width = 50;
+            dgvExportFolderChange.Width = 60;
             // 
             // dgvExportFolderDelete
             // 
             dgvExportFolderDelete.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             dgvExportFolderDelete.HeaderText = "Delete";
-            dgvExportFolderDelete.MinimumWidth = 50;
+            dgvExportFolderDelete.MinimumWidth = 20;
             dgvExportFolderDelete.Name = "dgvExportFolderDelete";
             dgvExportFolderDelete.ReadOnly = true;
             dgvExportFolderDelete.Text = "Delete";
             dgvExportFolderDelete.UseColumnTextForButtonValue = true;
-            dgvExportFolderDelete.Width = 50;
+            dgvExportFolderDelete.Width = 55;
             // 
             // dgvExportMakeDefault
             // 
+            dgvExportMakeDefault.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             dgvExportMakeDefault.HeaderText = "Default";
             dgvExportMakeDefault.Name = "dgvExportMakeDefault";
             dgvExportMakeDefault.ReadOnly = true;
             dgvExportMakeDefault.Text = "Make default";
             dgvExportMakeDefault.UseColumnTextForButtonValue = true;
+            dgvExportMakeDefault.Width = 85;
             // 
             // aTExportFolderLocationsBindingSource
             // 
@@ -3992,7 +4666,7 @@
             btAddExportFolder.Location = new System.Drawing.Point(4, 19);
             btAddExportFolder.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             btAddExportFolder.Name = "btAddExportFolder";
-            btAddExportFolder.Size = new System.Drawing.Size(977, 27);
+            btAddExportFolder.Size = new System.Drawing.Size(853, 27);
             btAddExportFolder.TabIndex = 0;
             btAddExportFolder.Text = "Add Export Folder…";
             btAddExportFolder.UseVisualStyleBackColor = true;
@@ -4019,7 +4693,6 @@
             tabPageTimers.Size = new System.Drawing.Size(876, 860);
             tabPageTimers.TabIndex = 6;
             tabPageTimers.Text = "Timers";
-            tabPageTimers.UseVisualStyleBackColor = true;
             // 
             // groupBox24
             // 
@@ -4154,7 +4827,6 @@
             tabPageOverlay.Size = new System.Drawing.Size(876, 860);
             tabPageOverlay.TabIndex = 5;
             tabPageOverlay.Text = "Overlay";
-            tabPageOverlay.UseVisualStyleBackColor = true;
             // 
             // groupBox10
             // 
@@ -4260,7 +4932,7 @@
             // NudOverlayRelativeFontSize
             // 
             NudOverlayRelativeFontSize.DecimalPlaces = 2;
-            NudOverlayRelativeFontSize.ForeColor = System.Drawing.SystemColors.WindowText;
+            NudOverlayRelativeFontSize.ForeColor = System.Drawing.Color.Black;
             NudOverlayRelativeFontSize.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
             NudOverlayRelativeFontSize.Location = new System.Drawing.Point(255, 288);
             NudOverlayRelativeFontSize.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -4498,7 +5170,7 @@
             // 
             // nudOverlayInfoDuration
             // 
-            nudOverlayInfoDuration.ForeColor = System.Drawing.SystemColors.WindowText;
+            nudOverlayInfoDuration.ForeColor = System.Drawing.Color.Black;
             nudOverlayInfoDuration.Location = new System.Drawing.Point(175, 95);
             nudOverlayInfoDuration.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             nudOverlayInfoDuration.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
@@ -4521,11 +5193,11 @@
             // label66
             // 
             label66.AutoSize = true;
-            label66.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            label66.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
             label66.Location = new System.Drawing.Point(7, 18);
             label66.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label66.Name = "label66";
-            label66.Size = new System.Drawing.Size(37, 26);
+            label66.Size = new System.Drawing.Size(43, 30);
             label66.TabIndex = 19;
             label66.Text = "💡";
             // 
@@ -4540,7 +5212,6 @@
             tabPageOCR.Size = new System.Drawing.Size(876, 860);
             tabPageOCR.TabIndex = 4;
             tabPageOCR.Text = "OCR";
-            tabPageOCR.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -4811,28 +5482,15 @@
             panel1.Size = new System.Drawing.Size(884, 35);
             panel1.TabIndex = 12;
             // 
-            // CbLibraryShowStatLevelsThatCannotLevelup
-            // 
-            CbLibraryShowStatLevelsThatCannotLevelup.AutoSize = true;
-            CbLibraryShowStatLevelsThatCannotLevelup.Location = new System.Drawing.Point(7, 258);
-            CbLibraryShowStatLevelsThatCannotLevelup.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            CbLibraryShowStatLevelsThatCannotLevelup.Name = "CbLibraryShowStatLevelsThatCannotLevelup";
-            CbLibraryShowStatLevelsThatCannotLevelup.Size = new System.Drawing.Size(245, 19);
-            CbLibraryShowStatLevelsThatCannotLevelup.TabIndex = 11;
-            CbLibraryShowStatLevelsThatCannotLevelup.Text = "Display levels of stats that cannot level up";
-            CbLibraryShowStatLevelsThatCannotLevelup.UseVisualStyleBackColor = true;
-            // 
             // Settings
             // 
             AcceptButton = buttonOK;
             AllowDrop = true;
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             CancelButton = buttonCancel;
             ClientSize = new System.Drawing.Size(884, 923);
             Controls.Add(tabControlSettings);
             Controls.Add(panel1);
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             Name = "Settings";
             ShowInTaskbar = false;
@@ -4911,22 +5569,36 @@
             groupBox16.ResumeLayout(false);
             groupBox26.ResumeLayout(false);
             groupBox26.PerformLayout();
-            groupBox25.ResumeLayout(false);
-            groupBox25.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)nudDefaultFontSize).EndInit();
             groupBox20.ResumeLayout(false);
             groupBox20.PerformLayout();
             groupBox17.ResumeLayout(false);
             groupBox17.PerformLayout();
             groupBox9.ResumeLayout(false);
             groupBox9.PerformLayout();
+            tabPageVisuals.ResumeLayout(false);
+            GbColorPreview.ResumeLayout(false);
+            GbColorPreview.PerformLayout();
+            groupBox33.ResumeLayout(false);
+            groupBox25.ResumeLayout(false);
+            groupBox25.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)nudDefaultFontSize).EndInit();
             tabPageInfoGraphic.ResumeLayout(false);
             tabPageInfoGraphic.PerformLayout();
+            GbInfoGraphicModern.ResumeLayout(false);
+            GbInfoGraphicModern.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicModernWidth).EndInit();
+            groupBox34.ResumeLayout(false);
+            groupBox34.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchMaxWidth).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchBackgroundOpacity).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicStitchGap).EndInit();
             ((System.ComponentModel.ISupportInitialize)PbInfoGraphicPreview).EndInit();
             groupBox32.ResumeLayout(false);
             groupBox32.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingY).EndInit();
-            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingX).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingLeft).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingBottom).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingRight).EndInit();
+            ((System.ComponentModel.ISupportInitialize)NudInfoGraphicPaddingTop).EndInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicCreatureScaling).EndInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicBorderRadius).EndInit();
             ((System.ComponentModel.ISupportInitialize)NudInfoGraphicCreatureOutlineBlurring).EndInit();
@@ -5005,34 +5677,30 @@
 
         #endregion
 
-        private System.Windows.Forms.GroupBox groupBoxMultiplier;
+        private GroupBoxC groupBoxMultiplier;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.Label labelTameLevel;
-        private System.Windows.Forms.Label labelWildLevel;
-        private System.Windows.Forms.Label labelTameAff;
-        private System.Windows.Forms.Label labelTameAdd;
         private System.Windows.Forms.Label labelInfo;
         private System.Windows.Forms.CheckBox checkBoxAutoSave;
         private System.Windows.Forms.Label label5;
         private ARKBreedingStats.uiControls.Nud NudBackupEveryMinutes;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private GroupBoxC groupBox2;
         private System.Windows.Forms.Label label8;
         private ARKBreedingStats.uiControls.Nud nudEggHatchSpeed;
         private System.Windows.Forms.Label label9;
         private ARKBreedingStats.uiControls.Nud nudBabyMatureSpeed;
-        private System.Windows.Forms.GroupBox groupBox3;
+        private GroupBoxC groupBox3;
         private System.Windows.Forms.Label label10;
         private ARKBreedingStats.uiControls.Nud nudMaxDomLevels;
         private System.Windows.Forms.Label label11;
         private ARKBreedingStats.uiControls.Nud nudMaxWildLevels;
-        private System.Windows.Forms.GroupBox groupBox4;
+        private GroupBoxC groupBox4;
         private System.Windows.Forms.Label label12;
         private ARKBreedingStats.uiControls.Nud numericUpDownMaxBreedingSug;
         private System.Windows.Forms.Label label13;
         private ARKBreedingStats.uiControls.Nud nudBabyImprintingStatScale;
-        private System.Windows.Forms.GroupBox groupBox5;
+        private GroupBoxC groupBox5;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label14;
         private ARKBreedingStats.uiControls.Nud nudDinoCharacterFoodDrain;
@@ -5043,16 +5711,17 @@
         private System.Windows.Forms.RadioButton radioButtonCelsius;
         private System.Windows.Forms.Label label17;
         private ARKBreedingStats.uiControls.Nud nudBabyCuddleInterval;
-        private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.GroupBox groupBox7;
+        private GroupBoxC groupBox6;
+        private GroupBoxC groupBox7;
         private System.Windows.Forms.CheckBox checkBoxDisplayHiddenStats;
         private ARKBreedingStats.uiControls.Nud nudMaxGraphLevel;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TabControl tabControlSettings;
         private System.Windows.Forms.TabPage tabPageGeneral;
+        private System.Windows.Forms.TabPage tabPageVisuals;
         private System.Windows.Forms.TabPage tabPageMultipliers;
-        private System.Windows.Forms.GroupBox groupBox10;
+        private GroupBoxC groupBox10;
         private System.Windows.Forms.CheckBox chkbSpeechRecognition;
         private System.Windows.Forms.Label label3;
         private ARKBreedingStats.uiControls.Nud nudMatingInterval;
@@ -5069,20 +5738,20 @@
         private ARKBreedingStats.uiControls.Nud nudTamingSpeedEvent;
         private System.Windows.Forms.Button buttonEventToDefault;
         private System.Windows.Forms.Label labelEvent;
-        private System.Windows.Forms.GroupBox groupBox11;
+        private GroupBoxC groupBox11;
         private uiControls.Nud nudWildLevelStep;
         private System.Windows.Forms.CheckBox cbConsiderWildLevelSteps;
         private System.Windows.Forms.CheckBox cbSingleplayerSettings;
         private System.Windows.Forms.CheckBox cbInventoryCheck;
         private System.Windows.Forms.CheckBox cbAllowMoreThanHundredImprinting;
-        private System.Windows.Forms.GroupBox groupBox9;
+        private GroupBoxC groupBox9;
         private System.Windows.Forms.CheckBox cbCreatureColorsLibrary;
         private System.Windows.Forms.TabPage tabPageImportSavegame;
         private System.Windows.Forms.Label label24;
-        private System.Windows.Forms.GroupBox groupBox15;
-        private System.Windows.Forms.GroupBox groupBox14;
+        private GroupBoxC groupBox15;
+        private GroupBoxC groupBox14;
         private System.Windows.Forms.CheckBox cbImportUpdateCreatureStatus;
-        private System.Windows.Forms.GroupBox groupBox16;
+        private GroupBoxC groupBox16;
         private System.Windows.Forms.CheckBox cbDevTools;
         private System.Windows.Forms.Button btAddSavegameFileLocation;
         private uiControls.FileSelector fileSelectorExtractedSaveFolder;
@@ -5093,41 +5762,40 @@
         private System.Windows.Forms.CheckBox cbIgnoreSexInBreedingPlan;
         private uiControls.Nud nudMaxServerLevel;
         private System.Windows.Forms.Label lbMaxTotalLevel;
-        private System.Windows.Forms.GroupBox groupBox17;
+        private GroupBoxC groupBox17;
         private System.Windows.Forms.ComboBox CbbLanguage;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label labelSavegameFileLocationHint;
         private System.Windows.Forms.TextBox textBoxImportTribeNameFilter;
         private System.Windows.Forms.Label label_Filter;
-        private System.Windows.Forms.GroupBox groupBox13;
+        private GroupBoxC groupBox13;
         private System.Windows.Forms.DataGridView dataGridViewExportFolders;
         private System.Windows.Forms.Button btAddExportFolder;
         private System.Windows.Forms.BindingSource aTExportFolderLocationsBindingSource;
         private System.Windows.Forms.CheckBox cbApplyGlobalSpeciesToLibrary;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelStatMultipliers;
         private System.Windows.Forms.ComboBox cbbStatMultiplierPresets;
-        private System.Windows.Forms.GroupBox groupBox18;
+        private GroupBoxC groupBox18;
         private System.Windows.Forms.Button btApplyPreset;
-        private System.Windows.Forms.GroupBox groupBox19;
+        private GroupBoxC groupBox19;
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.NumericUpDown nudWarnImportMoreThan;
-        private System.Windows.Forms.GroupBox groupBox20;
+        private GroupBoxC groupBox20;
         private System.Windows.Forms.CheckBox cbPrettifyJSON;
-        private System.Windows.Forms.GroupBox groupBox21;
+        private GroupBoxC groupBox21;
         private System.Windows.Forms.CheckBox cbApplyNamePatternOnImportOnEmptyNames;
         private System.Windows.Forms.CheckBox cbCopyPatternNameToClipboard;
-        private System.Windows.Forms.GroupBox groupBox22;
+        private GroupBoxC groupBox22;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.CheckBox cbAutoImportExported;
         private System.Windows.Forms.CheckBox cbMoveImportedFileToSubFolder;
         private System.Windows.Forms.CheckBox cbDeleteAutoImportedFile;
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.CheckBox cbPlaySoundOnAutomaticImport;
-        private System.Windows.Forms.GroupBox groupBox23;
+        private GroupBoxC groupBox23;
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Label label30;
         private uiControls.Nud nudImportLowerBoundTE;
-        private System.Windows.Forms.GroupBox groupBox25;
+        private GroupBoxC groupBox25;
         private uiControls.Nud nudDefaultFontSize;
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.Label label32;
@@ -5135,7 +5803,7 @@
         private System.Windows.Forms.Button btExportMultipliers;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.TabPage tabPageOCR;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private GroupBoxC groupBox1;
         private System.Windows.Forms.CheckBox cbOCRIgnoreImprintValue;
         private System.Windows.Forms.CheckBox cbShowOCRButton;
         private System.Windows.Forms.Label label23;
@@ -5169,16 +5837,16 @@
         private System.Windows.Forms.Label label44;
         private uiControls.Nud nudMatingSpeed;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.GroupBox groupBox26;
+        private GroupBoxC groupBox26;
         private System.Windows.Forms.CheckBox cbAdminConsoleCommandWithCheat;
-        private System.Windows.Forms.GroupBox GbSpecies;
+        private GroupBoxC GbSpecies;
         private System.Windows.Forms.Label LbSpeciesSelectorCountLastUsed;
         private uiControls.Nud NudSpeciesSelectorCountLastUsed;
         private System.Windows.Forms.CheckBox cbApplyNamePatternOnImportOnNewCreatures;
         private System.Windows.Forms.CheckBox CbLibrarySelectSelectedSpeciesOnLoad;
         private System.Windows.Forms.Label LbDefaultLevelups;
         private System.Windows.Forms.Label label45;
-        private System.Windows.Forms.GroupBox groupBox27;
+        private GroupBoxC groupBox27;
         private System.Windows.Forms.RadioButton RbTamerStringForTribe;
         private System.Windows.Forms.RadioButton RbTamerStringForOwner;
         private System.Windows.Forms.Label label46;
@@ -5207,11 +5875,11 @@
         private uiControls.Nud NudKeepBackupFilesCount;
         private System.Windows.Forms.Label label53;
         private System.Windows.Forms.TabPage tabPageTimers;
-        private System.Windows.Forms.GroupBox groupBox24;
+        private GroupBoxC groupBox24;
         private System.Windows.Forms.CheckBox cbKeepExpiredTimersInOverlay;
         private System.Windows.Forms.CheckBox cbDeleteExpiredTimersOnSaving;
         private System.Windows.Forms.CheckBox cbTimersInOverlayAutomatically;
-        private System.Windows.Forms.GroupBox groupBox8;
+        private GroupBoxC groupBox8;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox tbPlayAlarmsSeconds;
         private customSoundChooser customSCCustom;
@@ -5219,22 +5887,16 @@
         private customSoundChooser customSCBirth;
         private customSoundChooser customSCStarving;
         private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.GroupBox GbImgCacheLocalAppData;
+        private GroupBoxC GbImgCacheLocalAppData;
         private System.Windows.Forms.CheckBox CbImgCacheUseLocalAppData;
-        private System.Windows.Forms.GroupBox groupBox29;
+        private GroupBoxC groupBox29;
         private System.Windows.Forms.CheckBox CbAllowFlyerSpeedLeveling;
-        private System.Windows.Forms.DataGridViewTextBoxColumn convenientNameDataGridViewTextBoxColumn1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ownerSuffixDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn folderPathDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewButtonColumn dgvExportFolderChange;
-        private System.Windows.Forms.DataGridViewButtonColumn dgvExportFolderDelete;
-        private System.Windows.Forms.DataGridViewButtonColumn dgvExportMakeDefault;
         private System.Windows.Forms.CheckBox CbExportFileRenameAfterImport;
         private System.Windows.Forms.TextBox TbExportFileRename;
         private System.Windows.Forms.CheckBox CbAutoImportSuccessGotoLibrary;
         private System.Windows.Forms.CheckBox CbHighlightAdjustedMultipliers;
         private System.Windows.Forms.CheckBox CbPauseGrowingTimerAfterAdding;
-        private System.Windows.Forms.GroupBox groupBox30;
+        private GroupBoxC groupBox30;
         private System.Windows.Forms.Button BExportSpreadsheetMoveUp;
         private System.Windows.Forms.CheckedListBox ClbExportSpreadsheetFields;
         private System.Windows.Forms.Button BExportSpreadsheetMoveDown;
@@ -5262,7 +5924,7 @@
         private uiControls.Nud NudOCRClipboardCropLeft;
         private System.Windows.Forms.CheckBox CbOCRFromClipboard;
         private System.Windows.Forms.TabPage tabPageInfoGraphic;
-        private System.Windows.Forms.GroupBox groupBox28;
+        private GroupBoxC groupBox28;
         private System.Windows.Forms.ComboBox CbbInfoGraphicFontName;
         private System.Windows.Forms.CheckBox CbInfoGraphicColorRegionNamesIfNoImage;
         private System.Windows.Forms.CheckBox CbInfoGraphicStatValues;
@@ -5276,13 +5938,44 @@
         private System.Windows.Forms.Label label51;
         private System.Windows.Forms.CheckBox CbInfoGraphicDisplayMaxWildLevel;
         private System.Windows.Forms.Label label50;
+        private System.Windows.Forms.Label LbInfoGraphicStyle;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicStyle;
+        private GroupBoxC GbInfoGraphicModern;
+        private System.Windows.Forms.Label LbInfoGraphicModernWidth;
+        private uiControls.Nud NudInfoGraphicModernWidth;
+        private System.Windows.Forms.Label LbInfoGraphicModernTheme;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicModernTheme;
+        private System.Windows.Forms.Label LbInfoGraphicModernFont;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicModernFontName;
+        private System.Windows.Forms.Label LbInfoGraphicModernAccent;
+        private System.Windows.Forms.Button BtInfoGraphicModernAccentColor;
+        private System.Windows.Forms.Label LbInfoGraphicModernValues;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicModernValueDisplay;
+        private System.Windows.Forms.Label LbInfoGraphicModernRegionNames;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicModernRegionNames;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernAccentFromCreature;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernBarsByLevelQuality;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowSpecies;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowStatValues;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowColors;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowMutations;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernTransparentBackground;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowCreatureName;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowGeneration;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowMaxWildLevel;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernSumWildMut;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernArtworkHalo;
+        private System.Windows.Forms.CheckBox CbInfoGraphicModernShowSpeciesSuffixes;
+        private System.Windows.Forms.Label LbInfoGraphicModernBackColor;
+        private System.Windows.Forms.Button BtInfoGraphicModernBackColor;
+        private System.Windows.Forms.Button BtInfoGraphicModernResetColors;
         private System.Windows.Forms.Label LbInfoGraphicSize;
         private uiControls.Nud nudInfoGraphicHeight;
-        private System.Windows.Forms.GroupBox groupBox32;
+        private GroupBoxC groupBox32;
         private System.Windows.Forms.PictureBox PbInfoGraphicPreview;
         private System.Windows.Forms.Label label63;
         private System.Windows.Forms.CheckBox CbBringToFrontOnImportExportIssue;
-        private System.Windows.Forms.GroupBox groupBox31;
+        private GroupBoxC groupBox31;
         private System.Windows.Forms.CheckBox CbHideInvisibleColorRegions;
         private System.Windows.Forms.Button BtNewRandomInfoGraphicCreature;
         private System.Windows.Forms.Button BtSettingsToClipboard;
@@ -5319,7 +6012,7 @@
         private System.Windows.Forms.Button BtBeepUpdated;
         private System.Windows.Forms.CheckBox CbStreamerMode;
         private System.Windows.Forms.CheckBox CbLibraryDisplayZeroMutationLevels;
-        private System.Windows.Forms.GroupBox GbNewLibraryGame;
+        private GroupBoxC GbNewLibraryGame;
         private System.Windows.Forms.RadioButton RbNewLibraryGameKeep;
         private System.Windows.Forms.RadioButton RbNewLibraryGameAsa;
         private System.Windows.Forms.RadioButton RbNewLibraryGameAse;
@@ -5328,7 +6021,7 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ComboBox CbbOfficialMultipliers;
         private System.Windows.Forms.CheckBox CbAutoOfficialMultipliers;
-        private System.Windows.Forms.GroupBox groupBox12;
+        private GroupBoxC groupBox12;
         private System.Windows.Forms.Button BtnUpdateOfficialEventValues;
         private System.Windows.Forms.Panel PanelDomLevels;
         private System.Windows.Forms.RadioButton RbInfoGraphicDomValues;
@@ -5371,9 +6064,42 @@
         private System.Windows.Forms.Label label76;
         private uiControls.Nud NudInfoGraphicCreatureScaling;
         private System.Windows.Forms.Label label77;
-        private uiControls.Nud NudInfoGraphicPaddingX;
-        private System.Windows.Forms.Label label78;
-        private uiControls.Nud NudInfoGraphicPaddingY;
+        private uiControls.Nud NudInfoGraphicPaddingTop;
         private System.Windows.Forms.CheckBox CbLibraryShowStatLevelsThatCannotLevelup;
+        private System.Windows.Forms.Label labelAppTheme;
+        private System.Windows.Forms.ComboBox CbbAppTheme;
+        private System.Windows.Forms.PropertyGrid propertyGrid1;
+        private GroupBoxC groupBox33;
+        private System.Windows.Forms.ComboBox CbbPaletteKey;
+        private System.Windows.Forms.Button BtnResetPalette;
+        private GroupBoxC GbColorPreview;
+        private System.Windows.Forms.Label LblPreviewName;
+        private System.Windows.Forms.Label LblPreviewAsBackground;
+        private System.Windows.Forms.Label LblPreviewAsForeground;
+        private System.Windows.Forms.Label LblPreviewRgb;
+        private System.Windows.Forms.CheckBox CbCopyNameToClipboardWhenAppliedInLibrary;
+        private System.Windows.Forms.DataGridViewTextBoxColumn convenientNameDataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ownerSuffixDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn folderPathDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewButtonColumn dgvExportFolderChange;
+        private System.Windows.Forms.DataGridViewButtonColumn dgvExportFolderDelete;
+        private System.Windows.Forms.DataGridViewButtonColumn dgvExportMakeDefault;
+        private System.Windows.Forms.ComboBox CbbInfoGraphicBackgroundResizing;
+        private uiControls.Nud NudInfoGraphicPaddingLeft;
+        private uiControls.Nud NudInfoGraphicPaddingBottom;
+        private uiControls.Nud NudInfoGraphicPaddingRight;
+        private System.Windows.Forms.Button BtInfoGraphicColorTextOutlineAuto;
+        private GroupBoxC groupBox34;
+        private uiControls.Nud NudInfoGraphicStitchBackgroundOpacity;
+        private System.Windows.Forms.Label label79;
+        private uiControls.Nud NudInfoGraphicStitchMaxWidth;
+        private uiControls.Nud NudInfoGraphicStitchGap;
+        private System.Windows.Forms.Label label78;
+        private System.Windows.Forms.Button BtInfoGraphicStitchBackgroundColor;
+        private System.Windows.Forms.Label label80;
+        private System.Windows.Forms.CheckBox CbInfoGraphicTintBackgroundByCreature;
+        private System.Windows.Forms.CheckBox CbInfoGraphicColorsByCreature;
+        private System.Windows.Forms.CheckBox CbIgnoreIngameNameIfAlreadyImported;
+        private System.Windows.Forms.TableLayoutPanel tlpStatMultipliers;
     }
 }

@@ -1,4 +1,4 @@
-﻿using ARKBreedingStats.Library;
+using ARKBreedingStats.Library;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
@@ -11,17 +11,18 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ARKBreedingStats.importExportGun;
-using ARKBreedingStats.library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.SpeciesOptions;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
+using ARKBreedingStats.InfoGraphic;
+using ARKBreedingStats.InfoGraphic.Modern;
 
 namespace ARKBreedingStats.settings
 {
     public partial class Settings : Form
     {
-        private MultiplierSetting[] _multSetter;
+        private StatMultipliers[] _multSetter;
         private readonly CreatureCollection _cc;
         private ToolTip _tt;
         private Dictionary<string, string> _languages;
@@ -29,6 +30,7 @@ namespace ARKBreedingStats.settings
         public bool LanguageChanged;
         public bool ColorRegionDisplayChanged;
         private CancellationTokenSource _cancellationTokenSource;
+        private string _lastInfoGraphicBackgroundFolder;
 
         public Settings(CreatureCollection cc, SettingsTabPages page)
         {
@@ -97,14 +99,32 @@ namespace ARKBreedingStats.settings
         {
             InitializeComponent();
             DisplayServerMultiplierPresets();
-            _multSetter = new MultiplierSetting[Stats.StatsCount];
-            for (int s = 0; s < Stats.StatsCount; s++)
+            _tt = new ToolTip();
+
+            var multiplierNames = new[]{("WildLevel", "PerLevelStatsMultiplier_DinoWild"),
+                ("TameLevel", "PerLevelStatsMultiplier_DinoTamed"),
+                ("TameAdd", "PerLevelStatsMultiplier_DinoTamed_Add"),
+                ("TameAff", "PerLevelStatsMultiplier_DinoTamed_Affinity")};
+            tlpStatMultipliers.ColumnCount = 5;
+            tlpStatMultipliers.RowCount = Stats.StatsCount + 1;
+            var colWidth = (int)(70 * UiUtils.UiScaling);
+            for (var i = 0; i < 4; i++)
             {
-                _multSetter[s] = new MultiplierSetting
-                {
-                    StatName = $"[{s}] {Utils.StatName(s)}"
-                };
-                flowLayoutPanelStatMultipliers.Controls.Add(_multSetter[s]);
+                tlpStatMultipliers.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, colWidth));
+                var lb = new Label { Text = multiplierNames[i].Item1, Anchor = AnchorStyles.Right };
+                _tt.SetToolTip(lb, multiplierNames[i].Item2);
+                tlpStatMultipliers.Controls.Add(lb, i + 1, 0);
+            }
+            _multSetter = new StatMultipliers[Stats.StatsCount];
+            for (var s = 0; s < Stats.StatsCount; s++)
+            {
+                var lb = new Label { Text = $"[{s}] {Utils.StatName(s)}" };
+                var inputControls = Enumerable.Range(0, 4).Select(i => new Nud { DecimalPlaces = 4, Increment = 0.1M, Maximum = 2_000_000_000, Width = colWidth }).ToArray();
+                _multSetter[s] = new StatMultipliers(inputControls);
+                tlpStatMultipliers.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                tlpStatMultipliers.Controls.Add(lb, 0, s + 1);
+                for (var i = 0; i < 4; i++)
+                    tlpStatMultipliers.Controls.Add(inputControls[i], i + 1, s + 1);
             }
 
             CbHideInvisibleColorRegions.Visible = Values.V.InvisibleColorRegionsExist;
@@ -152,15 +172,10 @@ namespace ARKBreedingStats.settings
             LanguageChanged = false;
 
             // Tooltips
-            _tt = new ToolTip();
             _tt.SetToolTip(NudBackupEveryMinutes, "If the value is 0 then every time something is changed a backup file is created.\nThis can create very similar backup files and potential data losses could be overwritten fast.\nA value of 5 is recommended.");
             _tt.SetToolTip(chkCollectionSync, "If checked, the tool automatically reloads the library if it was changed. Use this if multiple persons edit the file, e.g. via a shared folder.\nIt's recommended to check this along with \"Auto save\"");
             _tt.SetToolTip(checkBoxAutoSave, "If checked, the library is saved after each change automatically.\nIt's recommended to check this along with \"Auto load collection file\"");
             _tt.SetToolTip(nudMaxGraphLevel, "This number defines the level that is shown as maximum in the charts.\nUsually it's good to set this value to one third of the max wild level.");
-            _tt.SetToolTip(labelTameAdd, "PerLevelStatsMultiplier_DinoTamed_Add");
-            _tt.SetToolTip(labelTameAff, "PerLevelStatsMultiplier_DinoTamed_Affinity");
-            _tt.SetToolTip(labelWildLevel, "PerLevelStatsMultiplier_DinoWild");
-            _tt.SetToolTip(labelTameLevel, "PerLevelStatsMultiplier_DinoTamed");
             _tt.SetToolTip(chkbSpeechRecognition, "If the overlay is enabled, you can ask via the microphone for taming-infos,\ne.g.\"Argentavis level 30\" to display basic taming-infos in the overlay");
             _tt.SetToolTip(labelBabyFoodConsumptionSpeed, "BabyFoodConsumptionSpeedMultiplier");
             _tt.SetToolTip(checkBoxDisplayHiddenStats, "Enable if you have the oxygen-values of all creatures, e.g. by using a mod.");
@@ -175,6 +190,9 @@ namespace ARKBreedingStats.settings
             _tt.SetToolTip(CbExportFileRenameAfterImport, "Use a pattern to create the new file name, a subset of the keywords and functions from the naming pattern work.");
             _tt.SetToolTip(CbHighlightAdjustedMultipliers, "Highlight multipliers that are set to non-official values.\nDoes not update on multiplier change, this button needs to be rechecked then.\nCan be used to share screenshots of these settings.");
             _tt.SetToolTip(LbLanguage2, "Here you can specify a different language for exported data, e.g. the info graphics.");
+            _tt.SetToolTip(BtInfoGraphicColorTextOutlineAuto, "Set outline color automatically based on the text color");
+            _tt.SetToolTip(CbInfoGraphicColorsByCreature, "Sets the colors of text, background and border based on the main color of the creature while using the lightness of the set colors");
+            _tt.SetToolTip(CbInfoGraphicTintBackgroundByCreature, "Tints the background image based on the main color of the creature while using the lightness of the background color");
 
             // localizations / translations
             // for a new translation
@@ -195,7 +213,7 @@ namespace ARKBreedingStats.settings
                 { "русский", "ru"},
                 { "Türkçe", "tr"},
                 { "简体中文", "zh"},
-                { "繁體中文", "zh-tw"}
+                { "繁體中文", "zh-TW"}
             };
 
             CbbLanguage.Items.Add(Loc.S("SystemLanguage"));
@@ -209,12 +227,30 @@ namespace ARKBreedingStats.settings
 
             _languages[Loc.S("SystemLanguage")] = string.Empty;
 
-            foreach (var cm in Enum.GetNames(typeof(ColorModeColors.AsbColorMode)))
+            foreach (var cm in Enum.GetNames(typeof(UiColors.ColorMode)))
                 CbbColorMode.Items.Add(cm);
+
+            CbbAppTheme.Items.Add("System");
+            CbbAppTheme.Items.Add("Light");
+            CbbAppTheme.Items.Add("Dark");
 
             var availableFonts = FontFamily.Families.Select(f => f.Name).ToArray();
             CbbInfoGraphicFontName.Items.AddRange(availableFonts);
+            CbbInfoGraphicModernFontName.Items.AddRange(availableFonts);
             CbbAppDefaultFontName.Items.AddRange(availableFonts);
+
+            CbbInfoGraphicBackgroundResizing.DataSource = Enum.GetValues<InfoGraphicSettings.BackgroundImageResizings>();
+
+            CbbInfoGraphicStyle.Items.Add("Classic");
+            CbbInfoGraphicStyle.Items.Add("Modern");
+            CbbInfoGraphicModernTheme.Items.Add("Dark");
+            CbbInfoGraphicModernTheme.Items.Add("Light");
+            CbbInfoGraphicModernValueDisplay.Items.Add("Current");
+            CbbInfoGraphicModernValueDisplay.Items.Add("Breeding");
+            CbbInfoGraphicModernValueDisplay.Items.Add("Breeding | current");
+            CbbInfoGraphicModernRegionNames.Items.Add("Never");
+            CbbInfoGraphicModernRegionNames.Items.Add("Only without creature image");
+            CbbInfoGraphicModernRegionNames.Items.Add("Always");
         }
 
         private void LoadSettings(CreatureCollection cc)
@@ -393,12 +429,45 @@ namespace ARKBreedingStats.settings
             NudInfoGraphicCreatureOutlineWidth.ValueSave = Properties.Settings.Default.InfoGraphicCreatureOutlineWidth;
             NudInfoGraphicCreatureOutlineBlurring.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicCreatureOutlineBlurring;
             NudInfoGraphicCreatureScaling.ValueSave = (decimal)Properties.Settings.Default.InfoGraphicCreatureScaling;
-            NudInfoGraphicPaddingX.ValueSave = Properties.Settings.Default.InfoGraphicPaddingX;
-            NudInfoGraphicPaddingY.ValueSave = Properties.Settings.Default.InfoGraphicPaddingY;
+            NudInfoGraphicPaddingTop.ValueSave = Properties.Settings.Default.InfoGraphicPadding?[0] ?? 0;
+            NudInfoGraphicPaddingRight.ValueSave = Properties.Settings.Default.InfoGraphicPadding?[1] ?? 0;
+            NudInfoGraphicPaddingBottom.ValueSave = Properties.Settings.Default.InfoGraphicPadding?[2] ?? 0;
+            NudInfoGraphicPaddingLeft.ValueSave = Properties.Settings.Default.InfoGraphicPadding?[3] ?? 0;
             CbInfoGraphicAddRegionNames.Checked = Properties.Settings.Default.InfoGraphicExtraRegionNames;
             CbInfoGraphicColorRegionNamesIfNoImage.Checked = Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage;
             CbInfoGraphicStatValues.Checked = Properties.Settings.Default.InfoGraphicShowStatValues;
             InfoGraphicBackgroundImagePath = Properties.Settings.Default.InfoGraphicBackgroundImagePath;
+            CbbInfoGraphicBackgroundResizing.SelectedItem = Properties.Settings.Default.InfoGraphicBackgroundSizing;
+            CbInfoGraphicColorsByCreature.Checked = Properties.Settings.Default.InfographicColorByCreature;
+            CbInfoGraphicTintBackgroundByCreature.Checked = Properties.Settings.Default.InfographicTintBackgroundImage;
+            // modern style
+            CbbInfoGraphicStyle.SelectedIndex = ClampIndex(Properties.Settings.Default.InfoGraphicStyle, CbbInfoGraphicStyle);
+            NudInfoGraphicModernWidth.ValueSave = Properties.Settings.Default.InfoGraphicModernWidth;
+            CbbInfoGraphicModernTheme.SelectedIndex = ClampIndex(Properties.Settings.Default.InfoGraphicModernTheme, CbbInfoGraphicModernTheme);
+            CbbInfoGraphicModernValueDisplay.SelectedIndex = ClampIndex(Properties.Settings.Default.InfoGraphicModernValueDisplay, CbbInfoGraphicModernValueDisplay);
+            CbbInfoGraphicModernRegionNames.SelectedIndex = ClampIndex(Properties.Settings.Default.InfoGraphicModernRegionNames, CbbInfoGraphicModernRegionNames);
+            CbbInfoGraphicModernFontName.Text = Properties.Settings.Default.InfoGraphicModernFontName;
+            BtInfoGraphicModernAccentColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicModernAccentColor));
+            SetModernBackColorButton(Properties.Settings.Default.InfoGraphicModernBackColor);
+            CbInfoGraphicModernAccentFromCreature.Checked = Properties.Settings.Default.InfoGraphicModernAccentFromCreature;
+            CbInfoGraphicModernBarsByLevelQuality.Checked = Properties.Settings.Default.InfoGraphicModernBarsByLevelQuality;
+            CbInfoGraphicModernShowCreatureName.Checked = Properties.Settings.Default.InfoGraphicModernShowCreatureName;
+            CbInfoGraphicModernShowSpecies.Checked = Properties.Settings.Default.InfoGraphicModernShowSpecies;
+            CbInfoGraphicModernShowGeneration.Checked = Properties.Settings.Default.InfoGraphicModernShowGeneration;
+            CbInfoGraphicModernShowMaxWildLevel.Checked = Properties.Settings.Default.InfoGraphicModernShowMaxWildLevel;
+            CbInfoGraphicModernSumWildMut.Checked = Properties.Settings.Default.InfoGraphicModernSumWildMut;
+            CbInfoGraphicModernArtworkHalo.Checked = Properties.Settings.Default.InfoGraphicModernArtworkHalo;
+            CbInfoGraphicModernShowSpeciesSuffixes.Checked = Properties.Settings.Default.InfoGraphicModernShowSpeciesSuffixes;
+            CbInfoGraphicModernShowStatValues.Checked = Properties.Settings.Default.InfoGraphicModernShowStatValues;
+            CbInfoGraphicModernShowColors.Checked = Properties.Settings.Default.InfoGraphicModernShowColors;
+            CbInfoGraphicModernShowMutations.Checked = Properties.Settings.Default.InfoGraphicModernShowMutations;
+            CbInfoGraphicModernTransparentBackground.Checked = Properties.Settings.Default.InfoGraphicModernTransparentBackground;
+            UpdateInfoGraphicStyleControlVisibility();
+            // stitching
+            NudInfoGraphicStitchMaxWidth.ValueSave = Properties.Settings.Default.InfoGraphicStitchMaxWidth;
+            NudInfoGraphicStitchGap.ValueSave = Properties.Settings.Default.InfoGraphicStitchGap;
+            NudInfoGraphicStitchBackgroundOpacity.ValueSave = Properties.Settings.Default.InfoGraphicStitchBackground.A;
+            BtInfoGraphicStitchBackgroundColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, Properties.Settings.Default.InfoGraphicStitchBackground));
 
             #endregion
 
@@ -417,6 +486,7 @@ namespace ARKBreedingStats.settings
             CbLibraryDisplayZeroMutationLevels.Checked = Properties.Settings.Default.LibraryDisplayZeroMutationLevels;
             CbLibraryShowStatLevelsThatCannotLevelup.Checked = Properties.Settings.Default.LibraryShowStatLevelsThatCannotLevelup;
             CbLibraryGenerateNameWarnTooLongName.Checked = Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated;
+            CbCopyNameToClipboardWhenAppliedInLibrary.Checked = Properties.Settings.Default.CopyNameToClipboardWhenAppliedInLibrary;
 
             #endregion
 
@@ -435,6 +505,7 @@ namespace ARKBreedingStats.settings
             CbApplyNamingPatternOnImportAlways.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportAlways;
             cbApplyNamePatternOnImportOnEmptyNames.Checked = Properties.Settings.Default.applyNamePatternOnImportIfEmptyName;
             cbApplyNamePatternOnImportOnNewCreatures.Checked = Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures;
+            CbIgnoreIngameNameIfAlreadyImported.Checked = Properties.Settings.Default.IgnoreIngameNameIfAlreadyImported;
             cbCopyPatternNameToClipboard.Checked = Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied;
             CbCopyNameToClipboardOnImport.Checked = Properties.Settings.Default.CopyNameToClipboardOnImport;
             cbAutoImportExported.Checked = Properties.Settings.Default.AutoImportExportedCreatures;
@@ -514,6 +585,19 @@ namespace ARKBreedingStats.settings
             CbColorIdOnColorRegionButton.Checked = Properties.Settings.Default.ShowColorIdOnRegionButtons;
 
             CbbColorMode.SelectedIndex = Math.Min(CbbColorMode.Items.Count, Math.Max(0, Properties.Settings.Default.ColorMode));
+            CbbAppTheme.SelectedIndex = Math.Min(CbbAppTheme.Items.Count - 1, Math.Max(0, Properties.Settings.Default.AppTheme));
+
+            // Populate the palette key dropdown and select the current palette
+            CbbPaletteKey.Items.AddRange(UiColors.GetAllPaletteKeys());
+            var currentKey = UiColors.CurrentPaletteKey;
+            var keyIndex = CbbPaletteKey.Items.IndexOf(currentKey);
+            CbbPaletteKey.SelectedIndex = keyIndex >= 0 ? keyIndex : 0;
+            LoadPaletteForSelectedKey();
+
+            CbbPaletteKey.SelectedIndexChanged += (s, e) => LoadPaletteForSelectedKey();
+            BtnResetPalette.Click += BtnResetPalette_Click;
+            propertyGrid1.SelectedGridItemChanged += PropertyGrid1_SelectedGridItemChanged;
+            propertyGrid1.PropertyValueChanged += PropertyGrid1_PropertyValueChanged;
         }
 
         private void SaveSettings()
@@ -680,12 +764,42 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.InfoGraphicCreatureOutlineWidth = (int)NudInfoGraphicCreatureOutlineWidth.Value;
             Properties.Settings.Default.InfoGraphicCreatureOutlineBlurring = (float)NudInfoGraphicCreatureOutlineBlurring.Value;
             Properties.Settings.Default.InfoGraphicCreatureScaling = (float)NudInfoGraphicCreatureScaling.Value;
-            Properties.Settings.Default.InfoGraphicPaddingX = (int)NudInfoGraphicPaddingX.Value;
-            Properties.Settings.Default.InfoGraphicPaddingY = (int)NudInfoGraphicPaddingY.Value;
+            Properties.Settings.Default.InfoGraphicPadding = [(int)NudInfoGraphicPaddingTop.Value, (int)NudInfoGraphicPaddingRight.Value, (int)NudInfoGraphicPaddingBottom.Value, (int)NudInfoGraphicPaddingLeft.Value];
             Properties.Settings.Default.InfoGraphicExtraRegionNames = CbInfoGraphicAddRegionNames.Checked;
             Properties.Settings.Default.InfoGraphicShowRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked;
             Properties.Settings.Default.InfoGraphicShowStatValues = CbInfoGraphicStatValues.Checked;
             Properties.Settings.Default.InfoGraphicBackgroundImagePath = InfoGraphicBackgroundImagePath;
+            Properties.Settings.Default.InfoGraphicBackgroundSizing =
+                (InfoGraphicSettings.BackgroundImageResizings)(CbbInfoGraphicBackgroundResizing.SelectedItem ??
+                                                               InfoGraphicSettings.BackgroundImageResizings.Original);
+            Properties.Settings.Default.InfographicColorByCreature = CbInfoGraphicColorsByCreature.Checked;
+            Properties.Settings.Default.InfographicTintBackgroundImage = CbInfoGraphicTintBackgroundByCreature.Checked;
+            // modern style
+            Properties.Settings.Default.InfoGraphicStyle = Math.Max(0, CbbInfoGraphicStyle.SelectedIndex);
+            Properties.Settings.Default.InfoGraphicModernWidth = (int)NudInfoGraphicModernWidth.Value;
+            Properties.Settings.Default.InfoGraphicModernTheme = Math.Max(0, CbbInfoGraphicModernTheme.SelectedIndex);
+            Properties.Settings.Default.InfoGraphicModernValueDisplay = Math.Max(0, CbbInfoGraphicModernValueDisplay.SelectedIndex);
+            Properties.Settings.Default.InfoGraphicModernRegionNames = Math.Max(0, CbbInfoGraphicModernRegionNames.SelectedIndex);
+            Properties.Settings.Default.InfoGraphicModernFontName = CbbInfoGraphicModernFontName.Text;
+            Properties.Settings.Default.InfoGraphicModernAccentColor = BtInfoGraphicModernAccentColor.BackColor;
+            Properties.Settings.Default.InfoGraphicModernBackColor = _infoGraphicModernBackColor;
+            Properties.Settings.Default.InfoGraphicModernAccentFromCreature = CbInfoGraphicModernAccentFromCreature.Checked;
+            Properties.Settings.Default.InfoGraphicModernBarsByLevelQuality = CbInfoGraphicModernBarsByLevelQuality.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowCreatureName = CbInfoGraphicModernShowCreatureName.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowSpecies = CbInfoGraphicModernShowSpecies.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowGeneration = CbInfoGraphicModernShowGeneration.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowMaxWildLevel = CbInfoGraphicModernShowMaxWildLevel.Checked;
+            Properties.Settings.Default.InfoGraphicModernSumWildMut = CbInfoGraphicModernSumWildMut.Checked;
+            Properties.Settings.Default.InfoGraphicModernArtworkHalo = CbInfoGraphicModernArtworkHalo.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowSpeciesSuffixes = CbInfoGraphicModernShowSpeciesSuffixes.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowStatValues = CbInfoGraphicModernShowStatValues.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowColors = CbInfoGraphicModernShowColors.Checked;
+            Properties.Settings.Default.InfoGraphicModernShowMutations = CbInfoGraphicModernShowMutations.Checked;
+            Properties.Settings.Default.InfoGraphicModernTransparentBackground = CbInfoGraphicModernTransparentBackground.Checked;
+            // stitching
+            Properties.Settings.Default.InfoGraphicStitchMaxWidth = (int)NudInfoGraphicStitchMaxWidth.Value;
+            Properties.Settings.Default.InfoGraphicStitchGap = (int)NudInfoGraphicStitchGap.Value;
+            Properties.Settings.Default.InfoGraphicStitchBackground = Color.FromArgb((int)NudInfoGraphicStitchBackgroundOpacity.Value, BtInfoGraphicStitchBackgroundColor.BackColor);
 
             #endregion
 
@@ -703,6 +817,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.LibraryDisplayZeroMutationLevels = CbLibraryDisplayZeroMutationLevels.Checked;
             Properties.Settings.Default.LibraryShowStatLevelsThatCannotLevelup = CbLibraryShowStatLevelsThatCannotLevelup.Checked;
             Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated = CbLibraryGenerateNameWarnTooLongName.Checked;
+            Properties.Settings.Default.CopyNameToClipboardWhenAppliedInLibrary = CbCopyNameToClipboardWhenAppliedInLibrary.Checked;
 
             #endregion
 
@@ -715,6 +830,7 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.applyNamePatternOnAutoImportAlways = CbApplyNamingPatternOnImportAlways.Checked;
             Properties.Settings.Default.applyNamePatternOnImportIfEmptyName = cbApplyNamePatternOnImportOnEmptyNames.Checked;
             Properties.Settings.Default.applyNamePatternOnAutoImportForNewCreatures = cbApplyNamePatternOnImportOnNewCreatures.Checked;
+            Properties.Settings.Default.IgnoreIngameNameIfAlreadyImported = CbIgnoreIngameNameIfAlreadyImported.Checked;
             Properties.Settings.Default.copyNameToClipboardOnImportWhenAutoNameApplied = cbCopyPatternNameToClipboard.Checked;
             Properties.Settings.Default.CopyNameToClipboardOnImport = CbCopyNameToClipboardOnImport.Checked;
             Properties.Settings.Default.AutoImportExportedCreatures = cbAutoImportExported.Checked;
@@ -785,6 +901,18 @@ namespace ARKBreedingStats.settings
             Properties.Settings.Default.ShowColorIdOnRegionButtons = CbColorIdOnColorRegionButton.Checked;
 
             Properties.Settings.Default.ColorMode = Math.Max(0, CbbColorMode.SelectedIndex);
+            Properties.Settings.Default.AppTheme = Math.Max(0, CbbAppTheme.SelectedIndex);
+
+            // Save the edited palette under the key selected in the palette dropdown
+            if (propertyGrid1.SelectedObject is UiPalette editedPalette
+                && CbbPaletteKey.SelectedItem is string selectedKey
+                && UiColors.TryParsePaletteKey(selectedKey, out var editColorMode, out var editIsDark))
+            {
+                UiColors.SaveUserPalette(editColorMode, editIsDark, editedPalette);
+            }
+
+            // Re-initialize the active palette from the current app theme/color mode settings
+            UiColors.Initialize((UiColors.ColorMode)Math.Max(0, CbbColorMode.SelectedIndex), Math.Max(0, CbbAppTheme.SelectedIndex));
 
             Properties.Settings.Default.Save();
         }
@@ -1316,22 +1444,18 @@ namespace ARKBreedingStats.settings
 
         private void btExportMultipliers_Click(object sender, EventArgs e)
         {
-            using (SaveFileDialog dlg = new SaveFileDialog
+            using var dlg = new SaveFileDialog();
+            dlg.Filter = "ARK Multiplier File (*.ini)|*.ini";
+            dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            dlg.FileName = "ASBMultipliers";
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+            try
             {
-                Filter = "ARK Multiplier File (*.ini)|*.ini",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                FileName = "ASBMultipliers"
-            })
+                File.WriteAllText(dlg.FileName, GetMultiplierSettings());
+            }
+            catch (Exception ex)
             {
-                if (dlg.ShowDialog() != DialogResult.OK) return;
-                try
-                {
-                    File.WriteAllText(dlg.FileName, GetMultiplierSettings());
-                }
-                catch (Exception ex)
-                {
-                    MessageBoxes.ExceptionMessageBox(ex, "Error while writing settings file:", "File writing error");
-                }
+                MessageBoxes.ExceptionMessageBox(ex, "Error while writing settings file:", "File writing error");
             }
         }
 
@@ -1406,12 +1530,13 @@ namespace ARKBreedingStats.settings
             Unknown = -1,
             Multipliers = 0,
             General = 1,
-            InfoGraphicPreview = 2,
-            SaveImport = 3,
-            ExportedImport = 4,
-            Timers = 5,
-            Overlay = 6,
-            Ocr = 7
+            Visuals = 2,
+            InfoGraphicPreview = 3,
+            SaveImport = 4,
+            ExportedImport = 5,
+            Timers = 6,
+            Overlay = 7,
+            Ocr = 8
         }
 
         private void cbCustomOverlayLocation_CheckedChanged(object sender, EventArgs e)
@@ -1489,15 +1614,13 @@ namespace ARKBreedingStats.settings
 
         private void SelectFolder(Button folderButton, string initialFolder = null, bool displayFullPathOnButton = false)
         {
-            using (var dlg = new FolderBrowserDialog())
+            using var dlg = new FolderBrowserDialog();
+            dlg.RootFolder = Environment.SpecialFolder.Desktop;
+            if (!string.IsNullOrEmpty(initialFolder) && Directory.Exists(initialFolder))
+                dlg.SelectedPath = initialFolder;
+            if (dlg.ShowDialog() == DialogResult.OK)
             {
-                dlg.RootFolder = Environment.SpecialFolder.Desktop;
-                if (!string.IsNullOrEmpty(initialFolder) && Directory.Exists(initialFolder))
-                    dlg.SelectedPath = initialFolder;
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    SetFolderSelectionButton(folderButton, dlg.SelectedPath, displayFullPathOnButton);
-                }
+                SetFolderSelectionButton(folderButton, dlg.SelectedPath, displayFullPathOnButton);
             }
         }
 
@@ -1600,7 +1723,7 @@ namespace ARKBreedingStats.settings
 
             void HighlightCheckbox(CheckBox cb, bool defaultUnchecked = true)
             {
-                cb.SetBackColorAndAccordingForeColor(highlight && cb.Checked == defaultUnchecked ? Color.FromArgb(190, 40, 20) : Color.Transparent);
+                cb.SetBackColorAndAccordingForeColor(highlight && cb.Checked == defaultUnchecked ? Color.FromArgb(220, 120, 20) : Color.Transparent);
             }
         }
 
@@ -1654,8 +1777,8 @@ namespace ARKBreedingStats.settings
             }
         }
 
-        private readonly DataGridViewCellStyle _styleDefaultEntry = new DataGridViewCellStyle { BackColor = Color.FromArgb(211, 247, 211) };
-        private readonly DataGridViewCellStyle _styleFolderNotFound = new DataGridViewCellStyle { BackColor = Color.FromArgb(247, 215, 211) };
+        private readonly DataGridViewCellStyle _styleDefaultEntry = new DataGridViewCellStyle { BackColor = UiColors.Current.Success, ForeColor = Utils.ForeColor(UiColors.Current.Success) };
+        private readonly DataGridViewCellStyle _styleFolderNotFound = new DataGridViewCellStyle { BackColor = UiColors.Current.Error, ForeColor = Utils.ForeColor(UiColors.Current.Error) };
 
         private void HighlightDefaultImportExportFolderEntry()
         {
@@ -1689,52 +1812,165 @@ namespace ARKBreedingStats.settings
 
         private void CbInfoGraphicCheckBoxRadioButtonChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
 
+        private void CbbInfoGraphicBackgroundResizing_SelectedIndexChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
+
         private void ShowInfoGraphicPreviewDebounced(int debounceMs = 300) =>
             _infoGraphicPreviewDebouncer.Debounce(debounceMs, ShowInfoGraphicPreview, Dispatcher.CurrentDispatcher);
+        /// <summary>
+        /// Shows the classic settings or the modern ones, depending on the selected style.
+        /// </summary>
+        private void UpdateInfoGraphicStyleControlVisibility()
+        {
+            var modern = (InfoGraphicStyles)Math.Max(0, CbbInfoGraphicStyle.SelectedIndex) == InfoGraphicStyles.Modern;
+            GbInfoGraphicModern.Visible = modern;
+            groupBox28.Visible = !modern;
+            groupBox32.Visible = !modern;
+        }
+
+        private void CbbInfoGraphicStyle_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateInfoGraphicStyleControlVisibility();
+            ShowInfoGraphicPreviewDebounced(0);
+        }
+
+        private void CbbInfoGraphicModern_SelectedIndexChanged(object sender, EventArgs e) =>
+            ShowInfoGraphicPreviewDebounced();
+
+        /// <summary>
+        /// Custom background of the modern info graphic. Empty means the theme decides, which the
+        /// button shows by its caption rather than by a color.
+        /// </summary>
+        private Color _infoGraphicModernBackColor = Color.Empty;
+
+        private void SetModernBackColorButton(Color color)
+        {
+            _infoGraphicModernBackColor = color;
+            if (color.IsEmpty || color.A == 0)
+            {
+                BtInfoGraphicModernBackColor.UseVisualStyleBackColor = true;
+                BtInfoGraphicModernBackColor.SetBackColorAndAccordingForeColor(Color.Transparent);
+                BtInfoGraphicModernBackColor.Text = "From theme";
+                return;
+            }
+
+            BtInfoGraphicModernBackColor.SetBackColorAndAccordingForeColor(Color.FromArgb(255, color));
+            BtInfoGraphicModernBackColor.Text = "Custom";
+        }
+
+        private void BtInfoGraphicModernBackColor_Click(object sender, EventArgs e)
+        {
+            colorDialog1.Color = _infoGraphicModernBackColor.IsEmpty
+                ? Color.FromArgb(0x0B, 0x1A, 0x20)
+                : _infoGraphicModernBackColor;
+            if (colorDialog1.ShowDialog() != DialogResult.OK) return;
+
+            SetModernBackColorButton(colorDialog1.Color);
+            ShowInfoGraphicPreviewDebounced(0);
+        }
+
+        private void BtInfoGraphicModernResetColors_Click(object sender, EventArgs e)
+        {
+            BtInfoGraphicModernAccentColor.SetBackColorAndAccordingForeColor(
+                ModernInfoGraphicSettings.DefaultAccent);
+            SetModernBackColorButton(Color.Empty);
+            CbInfoGraphicModernAccentFromCreature.Checked = false;
+            ShowInfoGraphicPreviewDebounced(0);
+        }
+
+        /// <summary>
+        /// Index of a stored setting, limited to the entries the combo box actually has.
+        /// </summary>
+        private static int ClampIndex(int index, ComboBox cbb) =>
+            cbb.Items.Count == 0 ? -1 : Math.Max(0, Math.Min(index, cbb.Items.Count - 1));
+
         private async Task ShowInfoGraphicPreview()
         {
             if (_infoGraphicPreviewCreature == null)
                 CreateInfoGraphicCreature();
             if (_infoGraphicPreviewCreature == null) return;
 
-            var height = (int)nudInfoGraphicHeight.Value;
-            var fontName = CbbInfoGraphicFontName.Text;
-            var foreColor = Color.FromArgb((int)NudInfoGraphicFgAlpha.Value, BtInfoGraphicForeColor.BackColor);
-            var backColor = Color.FromArgb((int)NudInfoGraphicBgAlpha.Value, BtInfoGraphicBackColor.BackColor);
-            var borderColor = Color.FromArgb((int)NudInfoGraphicBorderAlpha.Value, BtInfoGraphicBorderColor.BackColor);
-            var borderWidth = (int)NudInfoGraphicBorderWidth.Value;
-            var borderRadius = (float)NudInfoGraphicBorderRadius.Value;
-            var paddingX = (int)NudInfoGraphicPaddingX.Value;
-            var paddingY = (int)NudInfoGraphicPaddingY.Value;
-            var textOutlineColor = Color.FromArgb((int)NudInfoGraphicTextOutlineAlpha.Value, BtInfoGraphicTextOutlineColor.BackColor);
-            var creatureOutlineColor = Color.FromArgb((int)NudInfoGraphicCreatureOutlineAlpha.Value, BtInfoGraphicCreatureOutlineColor.BackColor);
-            var creatureOutlineWidth = (int)NudInfoGraphicCreatureOutlineWidth.Value;
-            var creatureOutlineBlurring = (float)NudInfoGraphicCreatureOutlineBlurring.Value;
-            var creatureScaling = (float)NudInfoGraphicCreatureScaling.Value;
-            var textOutlineWidth = (float)NudInfoGraphicTextOutlineWidth.Value;
-            var displayCreatureName = CbInfoGraphicCreatureName.Checked;
-            var displayDomValues = RbInfoGraphicDomValues.Checked;
-            var sumWildMut = CbInfoGraphicSumWildMut.Checked;
-            var displayMutationCounter = CbInfoGraphicMutationCounter.Checked;
-            var displayGenerations = CbInfoGraphicGenerations.Checked;
-            var displayStatValues = CbInfoGraphicStatValues.Checked;
-            var displayMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked;
-            var addRegionNames = CbInfoGraphicAddRegionNames.Checked;
-            var colorRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked;
-            var backgroundImagePath = InfoGraphicBackgroundImagePath;
+            if ((InfoGraphicStyles)Math.Max(0, CbbInfoGraphicStyle.SelectedIndex) == InfoGraphicStyles.Modern)
+            {
+                await ShowModernInfoGraphicPreview();
+                return;
+            }
 
-            var bmp = await _infoGraphicPreviewCreature
-                    .InfoGraphicAsync(_cc,
-                        height, fontName, foreColor, backColor, borderColor, borderWidth, borderRadius, paddingX, paddingY, textOutlineColor,
-                        textOutlineWidth, displayCreatureName, displayDomValues,
-                        sumWildMut, displayMutationCounter, displayGenerations,
-                        displayStatValues, displayMaxWildLevel, addRegionNames, colorRegionNamesIfNoImage,
-                        creatureOutlineColor, backgroundImagePath, creatureOutlineWidth, creatureOutlineBlurring, creatureScaling);
+            var infoGraphicSettings = new InfoGraphicSettings
+            {
+                infoGraphicHeight = (int)nudInfoGraphicHeight.Value,
+                fontName = CbbInfoGraphicFontName.Text,
+                foreColor = Color.FromArgb((int)NudInfoGraphicFgAlpha.Value, BtInfoGraphicForeColor.BackColor),
+                backColor = Color.FromArgb((int)NudInfoGraphicBgAlpha.Value, BtInfoGraphicBackColor.BackColor),
+                borderColor = Color.FromArgb((int)NudInfoGraphicBorderAlpha.Value, BtInfoGraphicBorderColor.BackColor),
+                borderWidth = (int)NudInfoGraphicBorderWidth.Value,
+                borderRadius = (float)NudInfoGraphicBorderRadius.Value,
+                Padding = [(int)NudInfoGraphicPaddingTop.Value, (int)NudInfoGraphicPaddingRight.Value, (int)NudInfoGraphicPaddingBottom.Value, (int)NudInfoGraphicPaddingLeft.Value],
+                colorOutlineText = Color.FromArgb((int)NudInfoGraphicTextOutlineAlpha.Value, BtInfoGraphicTextOutlineColor.BackColor),
+                colorOutlineCreature = Color.FromArgb((int)NudInfoGraphicCreatureOutlineAlpha.Value, BtInfoGraphicCreatureOutlineColor.BackColor),
+                widthOutlineCreature = (int)NudInfoGraphicCreatureOutlineWidth.Value,
+                creatureOutlineBlurring = (float)NudInfoGraphicCreatureOutlineBlurring.Value,
+                creatureScaling = (float)NudInfoGraphicCreatureScaling.Value,
+                widthOutlineText = (float)NudInfoGraphicTextOutlineWidth.Value,
+                displayCreatureName = CbInfoGraphicCreatureName.Checked,
+                displayWithDomLevels = RbInfoGraphicDomValues.Checked,
+                displaySumWildMutLevels = CbInfoGraphicSumWildMut.Checked,
+                displayMutations = CbInfoGraphicMutationCounter.Checked,
+                displayGenerations = CbInfoGraphicGenerations.Checked,
+                displayStatValues = CbInfoGraphicStatValues.Checked,
+                displayMaxWildLevel = CbInfoGraphicDisplayMaxWildLevel.Checked,
+                displayExtraRegionNames = CbInfoGraphicAddRegionNames.Checked,
+                displayRegionNamesIfNoImage = CbInfoGraphicColorRegionNamesIfNoImage.Checked,
+                backgroundImagePath = InfoGraphicBackgroundImagePath,
+                BackgroundImageResizing = (InfoGraphicSettings.BackgroundImageResizings)(CbbInfoGraphicBackgroundResizing.SelectedItem ?? InfoGraphicSettings.BackgroundImageResizings.Original),
+                ColorBasedOnCreature = CbInfoGraphicColorsByCreature.Checked,
+                TintBackgroundImage = CbInfoGraphicTintBackgroundByCreature.Checked
+            };
+
+            var bmp = await _infoGraphicPreviewCreature.InfoGraphicAsync(_cc, infoGraphicSettings);
 
             if (bmp == null) return;
+            PbInfoGraphicPreview.SizeMode = PictureBoxSizeMode.Normal;
             PbInfoGraphicPreview.Size = bmp.Size;
             PbInfoGraphicPreview.SetImageAndDisposeOld(bmp);
             HighlightBackgroundOpacityIssue();
+        }
+
+        private async Task ShowModernInfoGraphicPreview()
+        {
+            var modernSettings = new ModernInfoGraphicSettings
+            {
+                Width = (int)NudInfoGraphicModernWidth.Value,
+                Theme = (ModernInfoGraphicSettings.ModernThemes)Math.Max(0, CbbInfoGraphicModernTheme.SelectedIndex),
+                FontName = CbbInfoGraphicModernFontName.Text,
+                AccentColor = BtInfoGraphicModernAccentColor.BackColor,
+                BackgroundColor = _infoGraphicModernBackColor,
+                AccentFromCreature = CbInfoGraphicModernAccentFromCreature.Checked,
+                BarsByLevelQuality = CbInfoGraphicModernBarsByLevelQuality.Checked,
+                ValueDisplay = (ModernInfoGraphicSettings.StatValueDisplays)Math.Max(0, CbbInfoGraphicModernValueDisplay.SelectedIndex),
+                RegionNames = (ModernInfoGraphicSettings.ColorRegionNameDisplays)Math.Max(0, CbbInfoGraphicModernRegionNames.SelectedIndex),
+                ShowCreatureName = CbInfoGraphicModernShowCreatureName.Checked,
+                ShowSpecies = CbInfoGraphicModernShowSpecies.Checked,
+                ShowGeneration = CbInfoGraphicModernShowGeneration.Checked,
+                ShowMaxWildLevel = CbInfoGraphicModernShowMaxWildLevel.Checked,
+                SumWildAndMutatedLevels = CbInfoGraphicModernSumWildMut.Checked,
+                ArtworkHalo = CbInfoGraphicModernArtworkHalo.Checked,
+                ShowSpeciesSuffixes = CbInfoGraphicModernShowSpeciesSuffixes.Checked,
+                ShowStatValues = CbInfoGraphicModernShowStatValues.Checked,
+                ShowColors = CbInfoGraphicModernShowColors.Checked,
+                ShowMutations = CbInfoGraphicModernShowMutations.Checked,
+                TransparentBackground = CbInfoGraphicModernTransparentBackground.Checked
+            };
+
+            var bmp = await ModernInfoGraphic.RenderAsync(_infoGraphicPreviewCreature, _cc, modernSettings);
+            if (bmp == null) return;
+
+            // the exported card is deliberately larger than the space available here, show it
+            // scaled to fit. The saved and copied image always uses the full configured width.
+            const int maxPreviewHeight = 330;
+            var previewScale = Math.Min(1f, maxPreviewHeight / (float)bmp.Height);
+            PbInfoGraphicPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            PbInfoGraphicPreview.Size = new Size((int)(bmp.Width * previewScale), (int)(bmp.Height * previewScale));
+            PbInfoGraphicPreview.SetImageAndDisposeOld(bmp);
         }
 
         private void BtNewRandomInfoGraphicCreature_Click(object sender, EventArgs e)
@@ -1768,19 +2004,31 @@ namespace ARKBreedingStats.settings
         private void CbbInfoGraphicFontName_SelectedIndexChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
 
         private void NudInfoGraphicValueChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
+        private void NudInfoGraphicCheckedChanged(object sender, EventArgs e) => ShowInfoGraphicPreviewDebounced();
 
         private void BtInfoGraphicBackgroundImagePath_Click(object sender, EventArgs e)
         {
-            using (var openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*";
-                openFileDialog.Title = "Select Background Image for InfoGraphic";
+            var initialFolder = string.IsNullOrEmpty(InfoGraphicBackgroundImagePath)
+                ? _lastInfoGraphicBackgroundFolder
+                : Path.GetDirectoryName(InfoGraphicBackgroundImagePath);
+            using var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*";
+            openFileDialog.Title = "Select Background Image for InfoGraphic";
+            if (!string.IsNullOrEmpty(initialFolder))
+                openFileDialog.InitialDirectory = initialFolder;
 
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    InfoGraphicBackgroundImagePath = openFileDialog.FileName;
-                }
-            }
+            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
+
+            InfoGraphicBackgroundImagePath = openFileDialog.FileName;
+        }
+
+        private void BtInfoGraphicColorTextOutlineAuto_Click(object sender, EventArgs e)
+        {
+            var dark = Utils.ForeColor(BtInfoGraphicForeColor.BackColor).R < 100;
+            var outlineColor = Utils.AdjustColorLight(BtInfoGraphicForeColor.BackColor, dark ? -.8 : .8);
+            BtInfoGraphicTextOutlineColor.SetBackColorAndAccordingForeColor(outlineColor);
+            if (NudInfoGraphicTextOutlineWidth.Value == 0) NudInfoGraphicTextOutlineWidth.Value = 1;
+            else ShowInfoGraphicPreview();
         }
 
         private void BtInfoGraphicClearBgImg_Click(object sender, EventArgs e) => InfoGraphicBackgroundImagePath = null;
@@ -1794,6 +2042,8 @@ namespace ARKBreedingStats.settings
             {
                 _infoGraphicBackgroundImagePath = value;
                 BtInfoGraphicBackgroundImagePath.Text = $"Background image{Environment.NewLine}{(string.IsNullOrEmpty(value) ? "<none>" : Path.GetFileName(value))}";
+                if (value != null)
+                    _lastInfoGraphicBackgroundFolder = Path.GetDirectoryName(value);
                 ShowInfoGraphicPreviewDebounced(50);
             }
         }
@@ -1804,8 +2054,15 @@ namespace ARKBreedingStats.settings
         private void HighlightBackgroundOpacityIssue()
         {
             var highlight = NudInfoGraphicBgAlpha.Value > 254 && !string.IsNullOrEmpty(InfoGraphicBackgroundImagePath);
-            label57.BackColor = highlight ? Color.LightSalmon : Color.Transparent;
-            NudInfoGraphicBgAlpha.BackColor = highlight ? Color.LightSalmon : SystemColors.Window;
+            label57.SetBackColorAndAccordingForeColor(highlight ? UiColors.Current.Error : Color.Transparent);
+            NudInfoGraphicBgAlpha.BackColor = highlight ? UiColors.Current.Error : SystemColors.Window;
+        }
+
+        private void BtInfoGraphicStitchBackgroundColor_Click(object sender, EventArgs e)
+        {
+            colorDialog1.Color = BtInfoGraphicStitchBackgroundColor.BackColor;
+            if (colorDialog1.ShowDialog() != DialogResult.OK) return;
+            BtInfoGraphicStitchBackgroundColor.SetBackColorAndAccordingForeColor(colorDialog1.Color);
         }
 
         #endregion
@@ -2002,6 +2259,85 @@ namespace ARKBreedingStats.settings
                 (Properties.Settings.Default.PatternEditorFormRectangle, _) = Utils.GetWindowRectangle(pe);
                 Properties.Settings.Default.PatternEditorSplitterDistance = pe.SplitterDistance;
             }
+        }
+
+        private void propertyGrid1_Click(object sender, EventArgs e)
+        {
+            // PropertyGrid handles editing via its built-in color editor
+        }
+
+        private void LoadPaletteForSelectedKey()
+        {
+            if (CbbPaletteKey.SelectedItem is not string key) return;
+            propertyGrid1.SelectedObject = UiColors.LoadSavedOrDefault(key);
+            ApplyPreviewTheme();
+        }
+
+        private void BtnResetPalette_Click(object sender, EventArgs e)
+        {
+            if (CbbPaletteKey.SelectedItem is not string key) return;
+            if (!UiColors.TryParsePaletteKey(key, out var colorMode, out var isDark)) return;
+            propertyGrid1.SelectedObject = UiColors.GetDefaultPalette(colorMode, isDark);
+        }
+
+        private void PropertyGrid1_SelectedGridItemChanged(object sender, SelectedGridItemChangedEventArgs e)
+        {
+            UpdateColorPreview(e.NewSelection);
+        }
+
+        private void PropertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            UpdateColorPreview(propertyGrid1.SelectedGridItem);
+        }
+
+        private void UpdateColorPreview(GridItem item)
+        {
+            bool editingDark = CbbPaletteKey.SelectedItem is string pk && pk.EndsWith("_Dark", StringComparison.Ordinal);
+            var themeBg = editingDark ? Color.FromArgb(30, 30, 30) : Color.FromArgb(240, 240, 240);
+            var themeFg = editingDark ? Color.White : Color.Black;
+
+            if (item?.Value is not Color color)
+            {
+                LblPreviewName.Text = "(select a color)";
+                LblPreviewName.ForeColor = themeFg;
+                LblPreviewAsBackground.BackColor = themeBg;
+                LblPreviewAsBackground.ForeColor = themeFg;
+                LblPreviewAsForeground.BackColor = themeBg;
+                LblPreviewAsForeground.ForeColor = themeFg;
+                LblPreviewRgb.Text = string.Empty;
+                return;
+            }
+
+            LblPreviewName.Text = item.Label;
+            LblPreviewName.ForeColor = themeFg;
+            LblPreviewRgb.Text = $"R: {color.R}  G: {color.G}  B: {color.B}  (#{color.R:X2}{color.G:X2}{color.B:X2})";
+            LblPreviewRgb.ForeColor = themeFg;
+
+            // As background: auto-contrast text on the selected color
+            LblPreviewAsBackground.SetBackColorAndAccordingForeColor(color);
+            LblPreviewAsBackground.Text = $"\"{item.Label}\" as background";
+
+            // As foreground: the selected color as text on the target theme's background
+            LblPreviewAsForeground.BackColor = themeBg;
+            LblPreviewAsForeground.ForeColor = color;
+            LblPreviewAsForeground.Text = $"\"{item.Label}\" as text on {(editingDark ? "dark" : "light")} theme";
+        }
+
+        /// <summary>
+        /// Applies the theme (light/dark) derived from the selected palette key
+        /// to the entire preview GroupBox and its children.
+        /// </summary>
+        private void ApplyPreviewTheme()
+        {
+            bool editingDark = CbbPaletteKey.SelectedItem is string pk && pk.EndsWith("_Dark", StringComparison.Ordinal);
+            var themeBg = editingDark ? Color.FromArgb(30, 30, 30) : Color.FromArgb(240, 240, 240);
+            var themeFg = editingDark ? Color.White : Color.Black;
+
+            GbColorPreview.BackColor = themeBg;
+            GbColorPreview.ForeColor = themeFg;
+
+            // Re-apply the current grid selection so sample labels pick up the new theme
+            UpdateColorPreview(propertyGrid1.SelectedGridItem);
         }
     }
 }

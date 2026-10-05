@@ -42,7 +42,7 @@
             // LbStatName
             // 
             this.LbStatName.AutoSize = true;
-            this.LbStatName.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LbStatName.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LbStatName.Location = new System.Drawing.Point(3, 3);
             this.LbStatName.Name = "LbStatName";
             this.LbStatName.Size = new System.Drawing.Size(61, 24);
@@ -116,8 +116,6 @@
             // 
             // StatLevelGraphOptionsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.HueControlMutations);
             this.Controls.Add(this.CbUseDifferentColorsForMutationLevels);
             this.Controls.Add(this.CbOverrideGraphSettings);

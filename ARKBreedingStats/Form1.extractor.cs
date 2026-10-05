@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using ARKBreedingStats.library;
 using ARKBreedingStats.utils;
 using ARKBreedingStats.ocr;
 using ARKBreedingStats.uiControls;
@@ -83,13 +82,13 @@ namespace ARKBreedingStats
                 var levelsWildTooMany = sumW + sumM - _extractor.LevelWildMutSum;
                 if (levelsWildTooMany > 0)
                 {
-                    lbSumWild.ForeColor = Color.Red;
+                    lbSumWild.ForeColor = UiColors.Current.ErrorText;
                     lbSumWild.Text = "+" + levelsWildTooMany;
                     inbound = false;
                 }
                 else if (levelsImpossibleToDistribute > 0)
                 {
-                    lbSumWild.ForeColor = Color.Red;
+                    lbSumWild.ForeColor = UiColors.Current.ErrorText;
                     lbSumWild.Text = "-" + levelsImpossibleToDistribute;
                     inbound = false;
                 }
@@ -106,11 +105,11 @@ namespace ARKBreedingStats
                 }
                 else
                 {
-                    lbSumDom.ForeColor = Color.Red;
+                    lbSumDom.ForeColor = UiColors.Current.ErrorText;
                     inbound = false;
                     // if there are no other combination options, the total level may be wrong
                     if (_extractor.UniqueResults)
-                        numericUpDownLevel.BackColor = Color.LightSalmon;
+                        numericUpDownLevel.BackColor = UiColors.Current.Warning;
                 }
             }
             else
@@ -118,12 +117,12 @@ namespace ARKBreedingStats
                 lbSumWild.Text = Loc.S("na");
                 lbSumDom.Text = Loc.S("na");
             }
-            panelSums.BackColor = inbound ? SystemColors.Control : Color.FromArgb(255, 200, 200);
+            panelSums.BackColor = inbound ? SystemColors.Control : UiColors.Current.MutationOverLimit;
 
             bool torporLevelValid = numericUpDownLevel.Value > _statIOs[Stats.Torpidity].LevelWild;
             if (!torporLevelValid)
             {
-                numericUpDownLevel.BackColor = Color.LightSalmon;
+                numericUpDownLevel.BackColor = UiColors.Current.Warning;
                 _statIOs[Stats.Torpidity].Status = StatIOStatus.Error;
             }
             else
@@ -611,7 +610,7 @@ namespace ARKBreedingStats
                 labelTE.BackColor = Color.Transparent;
                 pBondedTamingExtractor.BackColor = Color.Transparent;
                 llOnlineHelpExtractionIssues.Visible = false;
-                labelErrorHelp.Visible = false;
+                TbExtractionFailInfo.Visible = false;
                 lbImprintingFailInfo.Visible = false; // TODO move imprinting-fail to upper note-info
                 BtCopyIssueDumpToClipboard.Visible = false;
                 ColoredCreatureImageDisplayExtractor.Visible = true;
@@ -620,26 +619,26 @@ namespace ARKBreedingStats
 
             // highlight controls which most likely need to be checked to solve the issue
             if (issues.HasFlag(IssueNotes.Issue.WildTamedBred))
-                panelWildTamedBred.BackColor = Color.LightSalmon;
+                panelWildTamedBred.BackColor = UiColors.Current.Warning;
             if (issues.HasFlag(IssueNotes.Issue.TamingEffectivenessRange))
             {
                 if (numericUpDownLowerTEffBound.Value > 0)
-                    numericUpDownLowerTEffBound.BackColor = Color.LightSalmon;
+                    numericUpDownLowerTEffBound.BackColor = UiColors.Current.Warning;
                 if (numericUpDownUpperTEffBound.Value < 100)
-                    numericUpDownUpperTEffBound.BackColor = Color.LightSalmon;
+                    numericUpDownUpperTEffBound.BackColor = UiColors.Current.Warning;
                 if (numericUpDownLowerTEffBound.Value == 0 && numericUpDownUpperTEffBound.Value == 100)
                     issues -= IssueNotes.Issue.TamingEffectivenessRange;
             }
             if (issues.HasFlag(IssueNotes.Issue.CreatureLevel))
             {
-                numericUpDownLevel.BackColor = Color.LightSalmon;
-                numericUpDownImprintingBonusExtractor.BackColor = Color.LightSalmon;
+                numericUpDownLevel.BackColor = UiColors.Current.Warning;
+                numericUpDownImprintingBonusExtractor.BackColor = UiColors.Current.Warning;
                 _statIOs[Stats.Torpidity].Status = StatIOStatus.Error;
             }
             if (issues.HasFlag(IssueNotes.Issue.ImprintingLocked))
-                cbExactlyImprinting.BackColor = Color.LightSalmon;
+                cbExactlyImprinting.BackColor = UiColors.Current.Warning;
             if (issues.HasFlag(IssueNotes.Issue.ImprintingNotPossible))
-                numericUpDownImprintingBonusExtractor.BackColor = Color.LightSalmon;
+                numericUpDownImprintingBonusExtractor.BackColor = UiColors.Current.Warning;
 
             // don't show some issue notes if the input is not wrong
             if (issues.HasFlag(IssueNotes.Issue.LockedDom))
@@ -668,19 +667,16 @@ namespace ARKBreedingStats
                 if (_creatureCollection.considerWildLevelSteps)
                     issues |= IssueNotes.Issue.WildLevelSteps;
                 issues |= IssueNotes.Issue.BondedTaming;
-                pBondedTamingExtractor.BackColor = Color.LightSalmon;
+                pBondedTamingExtractor.BackColor = UiColors.Current.Warning;
             }
 
             if (_extractor.ResultWasSortedOutBecauseOfImpossibleTe)
                 issues |= IssueNotes.Issue.ImpossibleTe;
 
             // some species have specific extraction issues, e.g. due to a unique taming method that results in a bred status but with a TE less than 100 %.
-            var speciesName = speciesSelector1.SelectedSpecies.name;
-            string speciesSpecificExtractionFail = null;
-            _speciesSpecificExtractionFails?.TryGetValue(speciesName, out speciesSpecificExtractionFail);
-
-            labelErrorHelp.Text = $"{Loc.S("extractionFailedHeader")}:\n\n{IssueNotes.GetHelpTexts(issues, speciesSpecificExtractionFail)}";
-            labelErrorHelp.Visible = true;
+            var speciesSpecificExtractionFail = _speciesSpecificExtractionFails?.GetValueOrDefault(speciesSelector1.SelectedSpecies.name);
+            TbExtractionFailInfo.Text = $"{Loc.S("extractionFailedHeader")}:{Environment.NewLine + Environment.NewLine}{IssueNotes.GetHelpTexts(issues, speciesSpecificExtractionFail)}";
+            TbExtractionFailInfo.Visible = true;
             llOnlineHelpExtractionIssues.Visible = true;
             groupBoxPossibilities.Visible = false;
             groupBoxRadarChartExtractor.Visible = false;
@@ -1354,6 +1350,7 @@ namespace ARKBreedingStats
         /// <param name="species"></param>
         private void SetStatsActiveAccordingToUsage(Species species)
         {
+            if (species == null) return;
             for (int s = 0; s < Stats.StatsCount; s++)
             {
                 _activeStats[s] = species.UsesStat(s);
@@ -1377,6 +1374,21 @@ namespace ARKBreedingStats
                 {
                     cv.Mother = mother;
                 }
+                else if (!string.IsNullOrEmpty(cv.motherName))
+                {
+                    var archetype = _creatureCollection.creatures.FirstOrDefault(a =>
+                        a.flags.HasFlag(CreatureFlags.Archetype)
+                        && a.Species == cv.Species
+                        && a.name == cv.motherName
+                        && (a.sex == Sex.Female || a.sex == Sex.Unknown));
+                    if (archetype != null)
+                        cv.Mother = archetype;
+                    else if (cv.motherArkId != 0)
+                    {
+                        cv.Mother = new Creature(cv.motherArkId, cv.Species);
+                        _creatureCollection.creatures.Add(cv.Mother);
+                    }
+                }
                 else if (cv.motherArkId != 0)
                 {
                     cv.Mother = new Creature(cv.motherArkId, cv.Species);
@@ -1389,6 +1401,21 @@ namespace ARKBreedingStats
                 if (_creatureCollection.CreatureById(useGuid, cv.fatherArkId, out Creature father))
                 {
                     cv.Father = father;
+                }
+                else if (!string.IsNullOrEmpty(cv.fatherName))
+                {
+                    var archetype = _creatureCollection.creatures.FirstOrDefault(a =>
+                        a.flags.HasFlag(CreatureFlags.Archetype)
+                        && a.Species == cv.Species
+                        && a.name == cv.fatherName
+                        && (a.sex == Sex.Male || a.sex == Sex.Unknown));
+                    if (archetype != null)
+                        cv.Father = archetype;
+                    else if (cv.fatherArkId != 0)
+                    {
+                        cv.Father = new Creature(cv.fatherArkId, cv.Species);
+                        _creatureCollection.creatures.Add(cv.Father);
+                    }
                 }
                 else if (cv.fatherArkId != 0)
                 {
@@ -1440,9 +1467,24 @@ namespace ARKBreedingStats
                 }
                 else
                 {
-                    c.Mother = new Creature(c.motherGuid, c.Species, c.Species.NoGender ? Sex.Unknown : Sex.Female);
-                    c.Mother.name = (c.Mother.sex == Sex.Female ? "Mother" : "Parent") + " of " + c.name;
-                    _creatureCollection.creatures.Add(c.Mother);
+                    // Check for an archetype creature matching by name, species, and sex
+                    var archetype = !string.IsNullOrEmpty(c.motherName)
+                        ? _creatureCollection.creatures.FirstOrDefault(a =>
+                            a.flags.HasFlag(CreatureFlags.Archetype)
+                            && a.Species == c.Species
+                            && a.name == c.motherName
+                            && (a.sex == Sex.Female || a.sex == Sex.Unknown))
+                        : null;
+                    if (archetype != null)
+                    {
+                        c.Mother = archetype;
+                    }
+                    else
+                    {
+                        c.Mother = new Creature(c.motherGuid, c.Species, c.Species.NoGender ? Sex.Unknown : Sex.Female);
+                        c.Mother.name = (c.Mother.sex == Sex.Female ? "Mother" : "Parent") + " of " + c.name;
+                        _creatureCollection.creatures.Add(c.Mother);
+                    }
                 }
             }
             if (c.Father == null && c.fatherGuid != Guid.Empty)
@@ -1453,9 +1495,24 @@ namespace ARKBreedingStats
                 }
                 else
                 {
-                    c.Father = new Creature(c.fatherGuid, c.Species, c.Species.NoGender ? Sex.Unknown : Sex.Male);
-                    c.Father.name = (c.Father.sex == Sex.Male ? "Father" : "Parent") + " of " + c.name;
-                    _creatureCollection.creatures.Add(c.Father);
+                    // Check for an archetype creature matching by name, species, and sex
+                    var archetype = !string.IsNullOrEmpty(c.fatherName)
+                        ? _creatureCollection.creatures.FirstOrDefault(a =>
+                            a.flags.HasFlag(CreatureFlags.Archetype)
+                            && a.Species == c.Species
+                            && a.name == c.fatherName
+                            && (a.sex == Sex.Male || a.sex == Sex.Unknown))
+                        : null;
+                    if (archetype != null)
+                    {
+                        c.Father = archetype;
+                    }
+                    else
+                    {
+                        c.Father = new Creature(c.fatherGuid, c.Species, c.Species.NoGender ? Sex.Unknown : Sex.Male);
+                        c.Father.name = (c.Father.sex == Sex.Male ? "Father" : "Parent") + " of " + c.name;
+                        _creatureCollection.creatures.Add(c.Father);
+                    }
                 }
             }
         }

@@ -1,5 +1,4 @@
 ﻿using ARKBreedingStats.importExported;
-using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.mods;
 using ARKBreedingStats.NamePatterns;
@@ -30,6 +29,7 @@ using static ARKBreedingStats.Asb;
 using static ARKBreedingStats.settings.Settings;
 using static ARKBreedingStats.uiControls.StatWeighting;
 using Color = System.Drawing.Color;
+using ARKBreedingStats.InfoGraphic;
 
 namespace ARKBreedingStats
 {
@@ -56,7 +56,7 @@ namespace ARKBreedingStats
                 bool triggeredByFileWatcher = false);
 
         public delegate void SetMessageLabelTextEventHandler(string text = null, MessageBoxIcon icon = MessageBoxIcon.None,
-            string path = null, string clipboardContent = null, bool displayPopup = false, string customPopupMessage = null);
+            string path = null, string clipboardContent = null, bool displayPopup = false, string customPopupMessage = null, bool ignoreNextMessage = false);
 
         private bool _updateTorporInTester;
         private bool _filterListAllowed;
@@ -116,9 +116,26 @@ namespace ARKBreedingStats
             //            Properties.Settings.Default.Reset();
             //#endif
 
+            // Apply theme setting: 0 = System, 1 = Light, 2 = Dark
+            var theme = Properties.Settings.Default.AppTheme;
+            Application.SetColorMode(theme switch
+            {
+                1 => SystemColorMode.Classic,
+                2 => SystemColorMode.Dark,
+                _ => SystemColorMode.System
+            });
+
+            // Initialize the central color palette
+            UiColors.Initialize(
+                (UiColors.ColorMode)Properties.Settings.Default.ColorMode,
+                theme);
+
             _tt = new ToolTip();
             InitLocalization();
             InitializeComponent();
+
+            UiUtils.UiScaling = DeviceDpi / 96f;
+            PedigreeCreation.InitializeScaling(UiUtils.UiScaling);
 
             // Create an instance of a ListView column sorter and assign it
             // to the ListView controls
@@ -170,7 +187,7 @@ namespace ARKBreedingStats
             listViewLibrary.CacheVirtualItems += ListViewLibrary_CacheVirtualItems;
             listViewLibrary.OwnerDraw = true;
             listViewLibrary.DrawItem += ListViewLibrary_DrawItem;
-            listViewLibrary.DrawColumnHeader += (sender, args) => args.DrawDefault = true;
+            listViewLibrary.DrawColumnHeader += ListViewLibrary_DrawColumnHeader;
             listViewLibrary.DrawSubItem += ListViewLibrary_DrawSubItem;
 
             speciesSelector1.SetTextBox(tbSpeciesGlobal);
@@ -185,9 +202,6 @@ namespace ARKBreedingStats
 
             ColoredCreatureImageDisplayExtractor.SetClickEventInfographic(InfographicFromExtractorToClipboard);
             ColoredCreatureImageDisplayTester.SetClickEventInfographic(InfographicFromTesterToClipboard);
-
-            openSettingsToolStripMenuItem.ShortcutKeyDisplayString = new KeysConverter()
-                .ConvertTo(Keys.Control, typeof(string))?.ToString().Replace("None", ",");
 
             for (int s = 0; s < Stats.StatsCount; s++)
             {
@@ -281,6 +295,8 @@ namespace ARKBreedingStats
 
             listBoxSpeciesLib.SupportSeparatorLines();
 
+            llOnlineHelpExtractionIssues.LinkColor = UiColors.LinkLabelText();
+
             _reactOnCreatureSelectionChange = true;
         }
 
@@ -342,15 +358,15 @@ namespace ARKBreedingStats
             // initialize speech recognition if enabled
             InitializeSpeechRecognition();
 
-            // UI loaded
+            // library
+            radarChartLibrary.SetLevels(new int[Stats.StatsCount], species: Values.V.Species.FirstOrDefault());
 
-            // set theme colors
-            //this.InitializeTabControls();
-            //this.SetColors(Color.FromArgb(20, 20, 20), Color.LightGray);
+            // UI loaded
 
             //// initialize controls
             extractionTestControl1.CopyToExtractor += ExtractionTestControl1_CopyToExtractor;
             extractionTestControl1.CopyToTester += ExtractionTestControl1_CopyToTester;
+            levelSolverControl1.CopyToTester += LevelSolverControl1_CopyToTester;
 
             // dev tabs
             if (!Properties.Settings.Default.DevTools)
@@ -833,6 +849,10 @@ namespace ARKBreedingStats
             {
                 statsMultiplierTesting1.SetSpecies(species);
             }
+            else if (tabControlMain.SelectedTab == tabPageLevelSolver)
+            {
+                levelSolverControl1.SetSpecies(species);
+            }
             else if (tabControlMain.SelectedTab == tabPageBreedingPlan)
             {
                 if (breedingPlan1.CurrentSpecies == species)
@@ -884,8 +904,8 @@ namespace ARKBreedingStats
             // apply multipliers
             Values.V.ApplyMultipliers(_creatureCollection, cbEventMultipliers.Checked);
             tamingControl1.SetServerMultipliers(Values.V.currentServerMultipliers);
+            levelSolverControl1.Recalculate();
 
-            ColorModeColors.SetColors((ColorModeColors.AsbColorMode)Properties.Settings.Default.ColorMode);
             RecalculateAllCreaturesValues();
 
             breedingPlan1.UpdateBreedingData();
@@ -1336,7 +1356,7 @@ namespace ARKBreedingStats
             input.CreaturesOfSameSpecies = _creatureCollection.creatures
                 .Where(c => c.Species == speciesSelector1.SelectedSpecies).ToArray();
             input.parentListValid = true;
-            input.NamesOfAllCreatures = _creatureCollection.creatures.Select(c => c.name).ToList();
+            input.NamesOfAllCreatures = _creatureCollection.creatures.Select(c => c.name).Where(n => !string.IsNullOrEmpty(n)).ToHashSet();
             input.LibraryCreatureCount = _creatureCollection.creatures.Count;
         }
 
@@ -1538,14 +1558,17 @@ namespace ARKBreedingStats
         /// <param name="icon">Back color of the message</param>
         /// <param name="path">If valid path to file or folder, the user can click on the message to display the path in the explorer</param>
         /// <param name="clipboardText">If not null, user can copy this text to the clipboard by clicking on the label</param>
+        /// <param name="ignoreNextMessage">If true, the next message label will not be shown. This can be used to avoid an error message to be overwritten by a status message.</param>
         private void SetMessageLabelText(string text = null, MessageBoxIcon icon = MessageBoxIcon.None,
-            string path = null, string clipboardText = null, bool displayPopup = false, string customPopupText = null)
+            string path = null, string clipboardText = null, bool displayPopup = false, string customPopupText = null, bool ignoreNextMessage = false)
         {
             if (_ignoreNextMessageLabel)
             {
                 _ignoreNextMessageLabel = false;
                 return;
             }
+
+            if (ignoreNextMessage) _ignoreNextMessageLabel = true;
             // a TextBox needs \r\n for a new line, only \n will not result in a line break.
             TbMessageLabel.Text = text;
             SetMessageLabelLink(path, clipboardText);
@@ -1553,13 +1576,13 @@ namespace ARKBreedingStats
             switch (icon)
             {
                 case MessageBoxIcon.Information:
-                    TbMessageLabel.BackColor = Color.LightGreen;
+                    TbMessageLabel.BackColor = UiColors.Current.Success;
                     break;
                 case MessageBoxIcon.Warning:
-                    TbMessageLabel.BackColor = Color.Yellow;
+                    TbMessageLabel.BackColor = UiColors.Current.Caution;
                     break;
                 case MessageBoxIcon.Error:
-                    TbMessageLabel.BackColor = Color.LightSalmon;
+                    TbMessageLabel.BackColor = UiColors.Current.Warning;
                     break;
                 default:
                     TbMessageLabel.BackColor = SystemColors.Control;
@@ -1832,6 +1855,10 @@ namespace ARKBreedingStats
             {
                 statsMultiplierTesting1.SetSpecies(speciesSelector1.SelectedSpecies);
             }
+            else if (tabControlMain.SelectedTab == tabPageLevelSolver)
+            {
+                levelSolverControl1.SetSpecies(speciesSelector1.SelectedSpecies);
+            }
         }
 
         private void DisplayCreatureInPedigree(Creature creature)
@@ -2018,7 +2045,7 @@ namespace ARKBreedingStats
         private void PasteCreatureFromClipboard()
         {
             var importedCreatures = ExportImportCreatures.ImportFromClipboard(out var errorText);
-            if (importedCreatures?.Any() != true)
+            if (importedCreatures == null || importedCreatures.Length == 0)
             {
                 if (!string.IsNullOrEmpty(errorText))
                     SetMessageLabelText(errorText, MessageBoxIcon.Error);
@@ -2222,12 +2249,12 @@ namespace ARKBreedingStats
             if (page == SettingsTabPages.Unknown)
                 page = _settingsLastTabPage;
 
-            bool libraryTopCreatureColorHighlight = Properties.Settings.Default.LibraryHighlightTopCreatures;
-            bool considerWastedStatsForTopCreatures = Properties.Settings.Default.ConsiderWastedStatsForTopCreatures;
+            var libraryTopCreatureColorHighlight = Properties.Settings.Default.LibraryHighlightTopCreatures;
+            var considerWastedStatsForTopCreatures = Properties.Settings.Default.ConsiderWastedStatsForTopCreatures;
             var gameSettingBefore = _creatureCollection.Game;
             var displayLibraryCreatureIndexBefore = Properties.Settings.Default.DisplayLibraryCreatureIndex;
 
-            using (Settings settingsForm = new Settings(_creatureCollection, page))
+            using (var settingsForm = new Settings(_creatureCollection, page))
             {
                 var settingsSaved = settingsForm.ShowDialog() == DialogResult.OK;
                 _settingsLastTabPage = settingsForm.LastTabPageIndex;
@@ -3172,6 +3199,7 @@ namespace ARKBreedingStats
             Values.V.ApplyMultipliers(_creatureCollection, cbEventMultipliers.Checked, false);
 
             tamingControl1.SetServerMultipliers(Values.V.currentServerMultipliers);
+            levelSolverControl1.Recalculate();
             breedingPlan1.UpdateBreedingData();
             raisingControl1.UpdateRaisingData();
         }
@@ -3518,6 +3546,7 @@ namespace ARKBreedingStats
                     false, false, out _);
 
             Values.V.ApplyMultipliers(_creatureCollection);
+            levelSolverControl1.Recalculate();
         }
 
         private void tsBtAddAsExtractionTest_Click(object sender, EventArgs e)
@@ -3587,6 +3616,7 @@ namespace ARKBreedingStats
         private void StatsMultiplierTesting1_OnApplyMultipliers()
         {
             Values.V.ApplyMultipliers(_creatureCollection);
+            levelSolverControl1.Recalculate();
             SetCollectionChanged(true);
         }
 
@@ -3605,6 +3635,7 @@ namespace ARKBreedingStats
                 {
                     Values.V.ApplyMultipliers(_creatureCollection, eventMultipliers: cbEventMultipliers.Checked,
                         applyStatMultipliers: true);
+                    levelSolverControl1.Recalculate();
                     SetCollectionChanged(true);
                     if (tabControlMain.SelectedTab == tabPageStatTesting)
                     {
@@ -4001,7 +4032,7 @@ namespace ARKBreedingStats
 
         private void editSortingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Values.V.OpenSpeciesNameSortingFile();
+            Values.OpenSpeciesNameSortingFile();
         }
 
         private void helpAboutSpeciesSortingToolStripMenuItem_Click(object sender, EventArgs e)

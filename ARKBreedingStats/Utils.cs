@@ -36,7 +36,7 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Returns a string with ARKml tags. Currently that doesn't seem to be supported anymore by the ARK chat.
+        /// Returns a string with ARKml tags for colored text. It does not seem to be supported anymore by the ARK chat.
         /// </summary>
         public static string GetARKml(string text, int r, int g, int b) => $"<RichColor Color=\"{Math.Round(r / 255d, 2)},{Math.Round(g / 255d, 2)},{Math.Round(b / 255d, 2)},1\">{text}</>";
 
@@ -99,7 +99,7 @@ namespace ARKBreedingStats
                 g = (byte)(g * lightDelta);
                 b = (byte)(b * lightDelta);
             }
-            return Color.FromArgb(r, g, b);
+            return Color.FromArgb(color.A, r, g, b);
         }
 
         /// <summary>
@@ -113,12 +113,12 @@ namespace ARKBreedingStats
         }
 
         /// <summary>
-        /// Returns a color from hsl values.
+        /// Returns a color from hsv values.
         /// </summary>
         /// <param name="hue">red: 0, green: 120, blue: 240</param>
         /// <param name="saturation">0…1 gray to colorful</param>
         /// <param name="value">0…1 black to full intensity / white</param>
-        public static Color ColorFromHsv(double hue, double saturation = 1, double value = 1, double alpha = 1)
+        public static Color ColorFromHsv(double hue, double saturation = 1, double value = 1, byte alpha = 255)
         {
             hue %= 360;
             if (hue < 0) hue += 360;
@@ -128,7 +128,7 @@ namespace ARKBreedingStats
             var v = (byte)(value * 255);
             if (saturation < double.Epsilon)
             {
-                return Color.FromArgb(v, v, v);
+                return Color.FromArgb(alpha, v, v, v);
             }
 
             // there are six hue sections from 0 to 360 with each having 60 degrees
@@ -176,35 +176,8 @@ namespace ARKBreedingStats
                     b = q;
                     break;
             }
-            return Color.FromArgb((int)(255 * alpha), r, g, b);
+            return Color.FromArgb(alpha, r, g, b);
         }
-
-        /// <summary>
-        /// Used for highlighting critical levels. Level 254 is the highest level that allows dom leveling.
-        /// </summary>
-        public static Color Level254 => Color.FromArgb(0, 196, 255);
-
-        /// <summary>
-        /// Used for highlighting critical levels. Level 255 is the highest level that can be saved.
-        /// </summary>
-        public static Color Level255 => Color.FromArgb(255, 0, 159);
-
-        /// <summary>
-        /// Color that represents a mutation.
-        /// </summary>
-        public static Color MutationColor => Color.FromArgb(225, 192, 255);
-        /// <summary>
-        /// Color that represents a mutation number over the limit.
-        /// </summary>
-        public static Color MutationColorOverLimit => Color.FromArgb(255, 200, 200);
-        /// <summary>
-        /// Color that represents a mutation marker or line, is more vibrant than the MutationColor.
-        /// </summary>
-        public static Color MutationMarkerColor => Color.Magenta;
-        /// <summary>
-        /// Color that represents a possible (not guaranteed) mutation marker or line.
-        /// </summary>
-        public static Color MutationMarkerPossibleColor => Color.FromArgb(204, 123, 255);
 
         /// <summary>
         /// String icon that represents a sex.
@@ -229,10 +202,10 @@ namespace ARKBreedingStats
         {
             switch (s)
             {
-                case Sex.Male:
-                    return Color.FromArgb(220, 235, 255);
                 case Sex.Female:
-                    return Color.FromArgb(255, 230, 255);
+                    return UiColors.Current.SexFemale;
+                case Sex.Male:
+                    return UiColors.Current.SexMale;
                 default:
                     return SystemColors.Control;
             }
@@ -376,7 +349,7 @@ namespace ARKBreedingStats
             if (_statNames == null || statIndex < 0 || statIndex >= _statNames.Length)
                 return string.Empty;
 
-            if (customStatNames != null && customStatNames.TryGetValue(statIndex.ToString(), out string statName))
+            if (customStatNames != null && customStatNames.TryGetValue(statIndex.ToString(), out var statName))
             {
                 return Loc.S(abbreviation ? $"{statName}_Abb" : statName, secondaryCulture: secondaryLanguage);
             }
@@ -442,6 +415,7 @@ namespace ARKBreedingStats
         /// <returns>ForeColor</returns>
         public static Color ForeColor(Color backColor)
         {
+            if (backColor.A == 0) return SystemColors.ControlText;
             return backColor.R * .3f + backColor.G * .59f + backColor.B * .11f < 110 ? Color.White : Color.Black;
         }
 

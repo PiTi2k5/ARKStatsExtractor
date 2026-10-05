@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
-using ARKBreedingStats.library;
+using ARKBreedingStats.Library;
 using ARKBreedingStats.SpeciesOptions.LevelColorSettings;
 using ARKBreedingStats.utils;
 using Cursors = System.Windows.Forms.Cursors;
@@ -27,8 +27,10 @@ namespace ARKBreedingStats.uiControls
         public int StatIndex;
         private bool _domZeroFixed;
         private readonly ToolTip _tt;
-        public int BarMaxLevel = 45;
-        private const int MaxBarLength = 335;
+        public int BarMaxLevel = 50;
+        private readonly int _maxBarLength;
+        private static int _heightControl;
+        private static int _heightControlCollapsed;
         private bool _linkWildMutated;
         private int _wildMutatedSum;
         private readonly Debouncer _levelChangedDebouncer = new Debouncer();
@@ -49,6 +51,12 @@ namespace ARKBreedingStats.uiControls
             _breedingValue = 0;
             groupBox1.Click += groupBox1_Click;
             InputType = _inputType;
+            _maxBarLength = Width - 2 * panelBarWildLevels.Margin.Left;
+            if (_heightControl == 0)
+            {
+                _heightControl = Height;
+                _heightControlCollapsed = UiUtils.UiLengthInt(16);
+            }
 
             _tt = new ToolTip { InitialDelay = 300 };
             _tt.SetToolTip(checkBoxFixDomZero, "Check to lock to zero (if you never leveled up this stat)");
@@ -195,18 +203,18 @@ namespace ARKBreedingStats.uiControls
                 switch (_status)
                 {
                     case StatIOStatus.Unique:
-                        BackColor = ColorModeColors.Success;
+                        BackColor = UiColors.Current.Success;
                         break;
                     case StatIOStatus.Neutral:
-                        BackColor = ColorModeColors.Neutral;
+                        BackColor = UiColors.Current.Neutral;
                         break;
                     case StatIOStatus.NonUnique:
-                        BackColor = ColorModeColors.NonUnique;
+                        BackColor = UiColors.Current.NonUnique;
                         Cursor = Cursors.Hand;
                         break;
                     case StatIOStatus.Error:
-                        numericUpDownInput.BackColor = Color.FromArgb(255, 200, 200);
-                        BackColor = ColorModeColors.Error;
+                        numericUpDownInput.BackColor = UiColors.Current.Error;
+                        BackColor = UiColors.Current.Error;
                         break;
                 }
             }
@@ -224,6 +232,8 @@ namespace ARKBreedingStats.uiControls
 
                 labelWildLevel.BackColor = Color.Transparent;
                 labelMutatedLevel.BackColor = Color.Transparent;
+                labelWildLevel.ForeColor = SystemColors.ControlText;
+                labelMutatedLevel.ForeColor = SystemColors.ControlText;
                 _tt.SetToolTip(labelWildLevel, null);
                 _tt.SetToolTip(labelMutatedLevel, null);
 
@@ -231,34 +241,34 @@ namespace ARKBreedingStats.uiControls
 
                 if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.TopLevel))
                 {
-                    labelWildLevel.BackColor = Color.LightGreen;
+                    labelWildLevel.SetBackColorAndAccordingForeColor(UiColors.Current.TopBreedingSome);
                     _tt.SetToolTip(labelWildLevel, Loc.S("topLevel"));
                 }
                 else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.NewTopLevel))
                 {
-                    labelWildLevel.BackColor = Color.Gold;
+                    labelWildLevel.SetBackColorAndAccordingForeColor(UiColors.Current.TopBreedingAll);
                     _tt.SetToolTip(labelWildLevel, Loc.S("newTopLevel"));
                 }
 
                 if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.MaxLevelForLevelUp))
                 {
-                    labelWildLevel.BackColor = Color.DeepSkyBlue;
+                    labelWildLevel.SetBackColorAndAccordingForeColor(UiColors.Current.Level254);
                     _tt.SetToolTip(labelWildLevel, Loc.S("maxLevelForLevelUp"));
                 }
                 else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.MaxLevel))
                 {
-                    labelWildLevel.BackColor = Color.Orange;
+                    labelWildLevel.SetBackColorAndAccordingForeColor(UiColors.Current.Level255);
                     _tt.SetToolTip(labelWildLevel, Loc.S("maxLevelSaved"));
                 }
                 else if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.UltraMaxLevel))
                 {
-                    labelWildLevel.BackColor = Color.LightCoral;
+                    labelWildLevel.SetBackColorAndAccordingForeColor(UiColors.Current.OverLevelWarning);
                     _tt.SetToolTip(labelWildLevel, Loc.S("ultraMaxLevel"));
                 }
 
                 if (_topLevel.HasFlag(LevelColorStatusFlags.LevelStatus.NewMutation))
                 {
-                    labelMutatedLevel.BackColor = Color.Gold;
+                    labelMutatedLevel.SetBackColorAndAccordingForeColor(UiColors.Current.TopBreedingAll);
                     _tt.SetToolTip(labelMutatedLevel, Loc.S("new mutation"));
                 }
             }
@@ -293,8 +303,9 @@ namespace ARKBreedingStats.uiControls
         {
             set
             {
-                Height = value ? 50 : 16;
+                Height = value ? _heightControl : _heightControlCollapsed;
                 Enabled = value;
+                panelFinalValue.Visible = value;
             }
             get => Enabled;
         }
@@ -349,7 +360,7 @@ namespace ARKBreedingStats.uiControls
         }
 
         private void SetLevelBar(Panel panel, int level, bool useCustomOdd = true, bool mutationLevel = false) =>
-            LevelColorBar.SetLevelBar(panel, _statLevelColors, MaxBarLength, level, useCustomOdd, mutationLevel);
+            LevelColorBar.SetLevelBar(panel, _statLevelColors, _maxBarLength, level, useCustomOdd, mutationLevel);
 
         private void LevelChangedDebouncer() => _levelChangedDebouncer.Debounce(200, () => LevelChanged?.Invoke(this), Dispatcher.CurrentDispatcher);
 

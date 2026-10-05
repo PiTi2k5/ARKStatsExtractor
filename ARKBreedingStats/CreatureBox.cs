@@ -1,5 +1,4 @@
-﻿using ARKBreedingStats.library;
-using ARKBreedingStats.Library;
+﻿using ARKBreedingStats.Library;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,6 +7,8 @@ using ARKBreedingStats.species;
 using ARKBreedingStats.SpeciesImages;
 using ARKBreedingStats.utils;
 using System.ComponentModel;
+using System.Linq;
+using ARKBreedingStats.InfoGraphic;
 
 namespace ARKBreedingStats
 {
@@ -50,7 +51,7 @@ namespace ARKBreedingStats
             _creature = creature;
             regionColorChooser1.SetSpecies(creature.Species, creature.colors);
             regionColorChooser1.ColorIdsAlsoPossible = creature.ColorIdsAlsoPossible;
-            _colorRegionUseds = regionColorChooser1.ColorRegionsUseds;
+            _colorRegionUseds = creature.Species?.EnabledColorRegions ?? Enumerable.Repeat(true, Ark.ColorRegionCount).ToArray();
 
             UpdateLabel();
             this.ResumeDrawingAndLayout();
@@ -118,43 +119,43 @@ namespace ARKBreedingStats
         public void UpdateLabel()
         {
             LbMotherAndWildInfo.Text = string.Empty;
-            if (_creature != null)
+            if (_creature == null) return;
+            groupBox1.Text = $"{_creature.name} (Lvl {_creature.Level}/{_creature.LevelHatched + _cc.maxDomLevel})";
+
+            void SetParentLabel(Label l, string lbText = null, bool clickable = false)
             {
-                groupBox1.Text = $"{_creature.name} (Lvl {_creature.Level}/{_creature.LevelHatched + _cc.maxDomLevel})";
-
-                void SetParentLabel(Label l, string lbText = null, bool clickable = false)
-                {
-                    l.Text = lbText;
-                    l.Cursor = clickable ? Cursors.Hand : null;
-                    _tt.SetToolTip(l, clickable ? lbText : null);
-                }
-
-                SetParentLabel(LbFather);
-
-                if (_creature.Mother != null || _creature.Father != null)
-                {
-                    SetParentLabel(LbMotherAndWildInfo, _creature.Mother != null ? $"{Loc.S("Mother")}: {_creature.Mother.name}" : null, _creature.Mother != null);
-                    SetParentLabel(LbFather, _creature.Father != null ? $"{Loc.S("Father")}: {_creature.Father.name}" : null, _creature.Father != null);
-                }
-                else if (_creature.isBred)
-                {
-                    SetParentLabel(LbMotherAndWildInfo, "bred, click 'edit' to add parents");
-                }
-                else if (_creature.isDomesticated)
-                {
-                    SetParentLabel(LbMotherAndWildInfo, _creature.tamingEff >= 0 ? "was level " + _creature.levelFound + " when wild, tamed with TE: " + (_creature.tamingEff * 100).ToString("N1") + "%" : "wild level and TE unknown.");
-                }
-                else
-                {
-                    SetParentLabel(LbMotherAndWildInfo, "is wild level " + _creature.levelFound);
-                }
-                statsDisplay1.SetCreatureValues(_creature);
-                labelNotes.Text = _creature.note;
-                _tt.SetToolTip(labelNotes, _creature.note);
-                pictureBox1.Visible = false;
-                CreatureColored.GetColoredCreatureWithCallback(UpdateCreatureImage, this, _creature.colors, _creature.Species,
-                    _colorRegionUseds, 128, creatureSex: _creature.sex, game: _cc.Game);
+                l.Text = lbText ?? string.Empty;
+                l.Cursor = clickable ? Cursors.Hand : Cursors.Default;
+                _tt.SetToolTip(l, clickable ? lbText : null);
             }
+
+            SetParentLabel(LbFather);
+
+            if (_creature.Mother != null || _creature.Father != null)
+            {
+                SetParentLabel(LbMotherAndWildInfo, _creature.Mother != null ? $"{Loc.S("Mother")}: {_creature.Mother.name}" : null, _creature.Mother != null);
+                SetParentLabel(LbFather, _creature.Father != null ? $"{Loc.S("Father")}: {_creature.Father.name}" : null, _creature.Father != null);
+            }
+            else if (_creature.isBred)
+            {
+                SetParentLabel(LbMotherAndWildInfo, "bred, click 'edit' to add parents");
+            }
+            else if (_creature.isDomesticated)
+            {
+                SetParentLabel(LbMotherAndWildInfo, _creature.tamingEff >= 0 ? $"was level {_creature.levelFound} when wild"
+                    : "wild level and TE unknown.");
+                SetParentLabel(LbFather, _creature.tamingEff >= 0 ? $"tamed with TE: {_creature.tamingEff * 100:N1}%" : string.Empty);
+            }
+            else
+            {
+                SetParentLabel(LbMotherAndWildInfo, "is wild level " + _creature.levelFound);
+            }
+            statsDisplay1.SetCreatureValues(_creature);
+            labelNotes.Text = _creature.note;
+            _tt.SetToolTip(labelNotes, _creature.note);
+            pictureBox1.SetImageAndDisposeOld(null);
+            CreatureColored.GetColoredCreatureWithCallback(UpdateCreatureImage, this, _creature.colors, _creature.Species,
+                _colorRegionUseds, pictureBox1.Width, creatureSex: _creature.sex, game: _cc.Game);
         }
 
         private void UpdateCreatureImage(Bitmap bmp, CreatureImageFile.NeighbourPoseExist _)
@@ -162,7 +163,6 @@ namespace ARKBreedingStats
             pictureBox1.SetImageAndDisposeOld(bmp);
             _tt.SetToolTip(pictureBox1, CreatureColored.RegionColorInfo(_creature.Species, _creature.colors)
                                         + "\n\nClick to copy creature infos as image to the clipboard");
-            pictureBox1.Visible = true;
         }
 
         private void CloseSettings(bool save)
@@ -218,7 +218,6 @@ namespace ARKBreedingStats
             LbMotherAndWildInfo.Text = string.Empty;
             LbFather.Text = string.Empty;
             statsDisplay1.Clear();
-            pictureBox1.Visible = false;
             labelNotes.Text = string.Empty;
             regionColorChooser1.Clear();
         }
@@ -252,12 +251,13 @@ namespace ARKBreedingStats
                 PopulateParentsList();
         }
 
-        public void UpdateCreatureImage(bool colorsChanged = true)
+        public void UpdateCreatureImage(bool colorsChanged = true, int regionId = -1)
         {
             if (_creature == null) return;
             if (colorsChanged)
             {
                 _creature.colors = regionColorChooser1.ColorIds;
+                _creature.ColorIdsAlsoPossible = regionColorChooser1.ColorIdsAlsoPossible;
                 Changed?.Invoke(_creature, false, false);
             }
 

@@ -1,24 +1,24 @@
-﻿using ARKBreedingStats.Library;
+﻿using ARKBreedingStats.InfoGraphic;
+using ARKBreedingStats.Library;
+using ARKBreedingStats.NamePatterns;
+using ARKBreedingStats.settings;
 using ARKBreedingStats.species;
 using ARKBreedingStats.uiControls;
+using ARKBreedingStats.utils;
 using ARKBreedingStats.values;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-using System.Windows.Threading;
-using ARKBreedingStats.utils;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
-using ARKBreedingStats.library;
-using ARKBreedingStats.settings;
-using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
-using ARKBreedingStats.NamePatterns;
-using Brushes = System.Drawing.Brushes;
+using System.Windows.Threading;
 using Color = System.Drawing.Color;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace ARKBreedingStats
 {
@@ -239,6 +239,7 @@ namespace ARKBreedingStats
             notesControl1.NoteList = _creatureCollection.noteList;
             raisingControl1.CreatureCollection = _creatureCollection;
             statsMultiplierTesting1.CreatureCollection = _creatureCollection;
+            levelSolverControl1.CreatureCollection = _creatureCollection;
 
             var duplicatesWereRemoved = UpdateParents(_creatureCollection.creatures);
             UpdateIncubationParents(_creatureCollection);
@@ -797,14 +798,36 @@ namespace ARKBreedingStats
                 if (c.motherGuid == Guid.Empty && c.fatherGuid == Guid.Empty) continue;
 
                 Creature mother = null;
-                if (c.motherGuid != Guid.Empty
-                    && !creatureGuids.TryGetValue(c.motherGuid, out mother))
-                    mother = EnsurePlaceholderCreature(placeholderAncestors, c, c.motherGuid, c.motherName, Sex.Female);
+                if (c.motherGuid != Guid.Empty && !creatureGuids.TryGetValue(c.motherGuid, out mother))
+                {
+                    // Check for an archetype creature matching by name, species, and sex
+                    if (!string.IsNullOrEmpty(c.motherName))
+                    {
+                        mother = _creatureCollection.creatures.FirstOrDefault(a =>
+                            a.flags.HasFlag(CreatureFlags.Archetype) &&
+                            a.Species == c.Species &&
+                            a.name == c.motherName &&
+                            (a.sex == Sex.Female || a.sex == Sex.Unknown));
+                    }
+
+                    mother ??= EnsurePlaceholderCreature(placeholderAncestors, c, c.motherGuid, c.motherName, Sex.Female);
+                }
 
                 Creature father = null;
-                if (c.fatherGuid != Guid.Empty
-                    && !creatureGuids.TryGetValue(c.fatherGuid, out father))
-                    father = EnsurePlaceholderCreature(placeholderAncestors, c, c.fatherGuid, c.fatherName, Sex.Male);
+                if (c.fatherGuid != Guid.Empty && !creatureGuids.TryGetValue(c.fatherGuid, out father))
+                {
+                    // Check for an archetype creature matching by name, species, and sex
+                    if (!string.IsNullOrEmpty(c.fatherName))
+                    {
+                        father = _creatureCollection.creatures.FirstOrDefault(a =>
+                            a.flags.HasFlag(CreatureFlags.Archetype) &&
+                            a.Species == c.Species &&
+                            a.name == c.fatherName &&
+                            (a.sex == Sex.Male || a.sex == Sex.Unknown));
+                    }
+
+                    father ??= EnsurePlaceholderCreature(placeholderAncestors, c, c.fatherGuid, c.fatherName, Sex.Male);
+                }
 
                 c.Mother = mother;
                 c.Father = father;
@@ -883,8 +906,8 @@ namespace ARKBreedingStats
             else
             {
                 // if no items are shown, shade red, if something is shown and potentially some are sorted out, shade yellow
-                ToolStripTextBoxLibraryFilter.BackColor = _creaturesDisplayed.Any() ? Color.LightGoldenrodYellow : Color.LightSalmon;
-                ToolStripButtonLibraryFilterClear.BackColor = Color.Orange;
+                ToolStripTextBoxLibraryFilter.BackColor = _creaturesDisplayed.Any() ? UiColors.Current.FilterActive : UiColors.Current.FilterEmpty;
+                ToolStripButtonLibraryFilterClear.BackColor = UiColors.Current.FilterButton;
             }
         }
 
@@ -1018,7 +1041,10 @@ namespace ARKBreedingStats
                     _creatureCollection.GetCreatureCountBySpecies()
                         .TryGetValue(creature.Species.blueprintPath, out count);
 
-                var displayedText = creature.Species.DescriptiveNameAndMod + " (" + count + ")";
+                var speciesName = creature.Species.DescriptiveNameAndMod;
+                if (!string.IsNullOrEmpty(creature.Species.nameMale) && creature.Species.nameMale != creature.Species.name) speciesName = creature.Species.nameMale + " / " + speciesName;
+                if (!string.IsNullOrEmpty(creature.Species.nameFemale) && creature.Species.nameFemale != creature.Species.name) speciesName = creature.Species.nameFemale + " / " + speciesName;
+                var displayedText = speciesName + " (" + count + ")";
 
                 if (Properties.Settings.Default.LibraryCombineBreedingCompatibleSpecies && creature.Species.matesWith?.Any() == true)
                 {
@@ -1035,11 +1061,34 @@ namespace ARKBreedingStats
                 }
 
                 float middle = (rect.Top + rect.Bottom) / 2f;
-                e.Graphics.FillRectangle(Brushes.Blue, rect.Left, middle, rect.Width - 3, 1);
+                using var lineBrush = new SolidBrush(UiColors.Current.DividerLine);
+                e.Graphics.FillRectangle(lineBrush, rect.Left, middle, rect.Width - 3, 1);
                 SizeF strSize = e.Graphics.MeasureString(displayedText, e.Item.Font);
                 e.Graphics.FillRectangle(new SolidBrush(e.Item.BackColor), rect.Left, rect.Top, strSize.Width + 15, rect.Height);
-                e.Graphics.DrawString(displayedText, e.Item.Font, Brushes.Black, rect.Left + 10, rect.Top + ((rect.Height - strSize.Height) / 2f));
+                using var textBrush = new SolidBrush(SystemColors.ControlText);
+                e.Graphics.DrawString(displayedText, e.Item.Font, textBrush, rect.Left + 10, rect.Top + ((rect.Height - strSize.Height) / 2f));
             }
+        }
+
+        private void ListViewLibrary_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            // DrawBackground() uses the native visual styles renderer which ignores WinForms dark mode.
+            // Fill manually with SystemColors so the background, dividers, and text respond to the theme.
+            using (var backBrush = new SolidBrush(SystemColors.Window))
+                e.Graphics.FillRectangle(backBrush, e.Bounds);
+            using (var dividerPen = new Pen(SystemColors.ControlLight))
+                e.Graphics.DrawLine(dividerPen, e.Bounds.Right - 2, e.Bounds.Top, e.Bounds.Right - 2, e.Bounds.Bottom);
+
+            var textFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding;
+            textFlags |= e.Header.TextAlign switch
+            {
+                HorizontalAlignment.Center => TextFormatFlags.HorizontalCenter,
+                HorizontalAlignment.Right => TextFormatFlags.Right,
+                _ => TextFormatFlags.Left,
+            };
+            const int headerPadding = 6;
+            var textBounds = new Rectangle(e.Bounds.X + headerPadding, e.Bounds.Y, e.Bounds.Width - headerPadding * 2, e.Bounds.Height);
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, e.Font, textBounds, SystemColors.ControlText, textFlags);
         }
 
         private void ListViewLibrary_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
@@ -1259,60 +1308,62 @@ namespace ARKBreedingStats
                         && cr.Species?.CanLevelUpWildOrHaveMutations(s) == false))
                 {
                     // not used
-                    lvi.SubItems[ColumnIndexFirstStat + s].ForeColor = Color.White;
-                    lvi.SubItems[ColumnIndexFirstStat + s].BackColor = Color.White;
+                    lvi.SubItems[ColumnIndexFirstStat + s].ForeColor = SystemColors.Window;
+                    lvi.SubItems[ColumnIndexFirstStat + s].BackColor = SystemColors.Window;
                 }
                 else if (cr.levelsWild[s] < 0)
                 {
                     // unknown level 
-                    lvi.SubItems[ColumnIndexFirstStat + s].ForeColor = Color.WhiteSmoke;
-                    lvi.SubItems[ColumnIndexFirstStat + s].BackColor = Color.White;
+                    lvi.SubItems[ColumnIndexFirstStat + s].ForeColor = SystemColors.GrayText;
+                    lvi.SubItems[ColumnIndexFirstStat + s].BackColor = SystemColors.Window;
                 }
                 else
                 {
                     var backColor = Utils.AdjustColorLight(statOptionsColors[s].GetLevelColor(cr.levelsWild[s]),
-                        statOptionsTopStats[s].ConsiderStat ? cr.IsTopStat(s) ? 0.2 : 0.75 : 0.93);
+                        statOptionsTopStats[s].ConsiderStat ? cr.IsTopStat(s) ? UiColors.DeltaLightnessTopStat : UiColors.DeltaLightnessConsideredStat : UiColors.DeltaLightnessUnconsideredStat);
                     lvi.SubItems[ColumnIndexFirstStat + s].SetBackColorAndAccordingForeColor(backColor);
                 }
 
                 // mutated levels
                 if (cr.levelsMutated == null || (!displayZeroMutationLevels && cr.levelsMutated[s] == 0))
                 {
-                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].ForeColor = Color.White;
-                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].BackColor = Color.White;
+                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].ForeColor = SystemColors.Window;
+                    lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].BackColor = SystemColors.Window;
                 }
                 else
                 {
                     var backColor = Utils.AdjustColorLight(statOptionsColors[s].GetLevelColor(cr.levelsMutated[s], false, true),
-                        statOptionsTopStats[s].ConsiderStat ? cr.IsTopMutationStat(s) ? 0.2 : 0.75 : 0.93);
+                        statOptionsTopStats[s].ConsiderStat ? cr.IsTopMutationStat(s) ? UiColors.DeltaLightnessTopStat : UiColors.DeltaLightnessConsideredStat : UiColors.DeltaLightnessUnconsideredStat);
                     lvi.SubItems[ColumnIndexFirstStat + Stats.StatsCount + s].SetBackColorAndAccordingForeColor(backColor);
                 }
             }
-            lvi.SubItems[ColumnIndexSex].BackColor = cr.flags.HasFlag(CreatureFlags.Neutered) ? Color.FromArgb(220, 220, 220) :
-                    cr.sex == Sex.Female ? Color.FromArgb(255, 230, 255) :
-                    cr.sex == Sex.Male ? Color.FromArgb(220, 235, 255) : SystemColors.Window;
+            lvi.SubItems[ColumnIndexSex].BackColor = cr.flags.HasFlag(CreatureFlags.Neutered)
+                    ? UiColors.Current.SexNeutered
+                    : cr.sex == Sex.Female
+                    ? UiColors.Current.SexFemale
+                    : cr.sex == Sex.Male
+                    ? UiColors.Current.SexMale
+                    : SystemColors.Window;
 
             switch (cr.Status)
             {
                 case CreatureStatus.Dead:
                     lvi.SubItems[ColumnIndexName].ForeColor = SystemColors.GrayText;
-                    lvi.BackColor = Color.FromArgb(255, 250, 240);
+                    lvi.BackColor = UiColors.Current.DeadCreature;
                     break;
                 case CreatureStatus.Unavailable:
                     lvi.SubItems[ColumnIndexName].ForeColor = SystemColors.GrayText;
                     break;
                 case CreatureStatus.Obelisk:
-                    lvi.SubItems[ColumnIndexName].ForeColor = Color.DarkBlue;
+                    lvi.SubItems[ColumnIndexName].ForeColor = UiColors.Current.ObeliskText;
                     break;
                 default:
+                    if (_creatureCollection.maxServerLevel > 0
+                            && cr.levelsWild[Stats.Torpidity] + 1 + _creatureCollection.maxDomLevel > _creatureCollection.maxServerLevel + cr.Species.ServerLevelCapIncrease)
                     {
-                        if (_creatureCollection.maxServerLevel > 0
-                            && cr.levelsWild[Stats.Torpidity] + 1 + _creatureCollection.maxDomLevel > _creatureCollection.maxServerLevel + (cr.Species.name.StartsWith("X-") || cr.Species.name.StartsWith("R-") ? 50 : 0))
-                        {
-                            lvi.SubItems[ColumnIndexName].ForeColor = Color.OrangeRed; // this creature may pass the max server level and could be deleted by the game
-                        }
-                        break;
+                        lvi.SubItems[ColumnIndexName].ForeColor = UiColors.Current.OverLevelWarning; // this creature may pass the max server level and could be deleted by the game
                     }
+                    break;
             }
 
             lvi.UseItemStyleForSubItems = false;
@@ -1322,46 +1373,44 @@ namespace ARKBreedingStats
             {
                 if (Properties.Settings.Default.LibraryHighlightTopCreatures && cr.topBreedingCreature)
                 {
-                    if (cr.onlyTopConsideredStats)
-                        lvi.BackColor = Color.Gold;
-                    else
-                        lvi.BackColor = Color.LightGreen;
+                    lvi.BackColor = cr.onlyTopConsideredStats ? UiColors.Current.TopBreedingAll : UiColors.Current.TopBreedingSome;
+                    lvi.ForeColor = Utils.ForeColor(lvi.BackColor);
                 }
-                lvi.SubItems[ColumnIndexTopStats].BackColor = Utils.GetColorFromPercent(cr.TopStatsConsideredCount * 8 + 44, 0.7);
+                lvi.SubItems[ColumnIndexTopStats].SetBackColorAndAccordingForeColor(Utils.GetColorFromPercent(cr.TopStatsConsideredCount * 8 + 44, UiColors.DeltaLightnessConsideredStat));
             }
             else
             {
-                lvi.SubItems[ColumnIndexTopStats].ForeColor = Color.LightGray;
+                lvi.SubItems[ColumnIndexTopStats].ForeColor = SystemColors.GrayText;
             }
 
             // color for timestamp domesticated
             if (cr.domesticatedAt == null || cr.domesticatedAt.Value.Year < 2015)
             {
                 lvi.SubItems[ColumnIndexAdded].Text = "n/a";
-                lvi.SubItems[ColumnIndexAdded].ForeColor = Color.LightGray;
+                lvi.SubItems[ColumnIndexAdded].ForeColor = SystemColors.GrayText;
             }
 
             // color for topness
-            lvi.SubItems[ColumnIndexTopness].BackColor = Utils.GetColorFromPercent(cr.topness / 5 - 100, 0.8); // topness is in permille. gradient from 50-100
+            lvi.SubItems[ColumnIndexTopness].SetBackColorAndAccordingForeColor(Utils.GetColorFromPercent(cr.topness / 5 - 100, UiColors.DeltaLightnessConsideredStat)); // topness is in permille. gradient from 50-100
 
             // color for generation
             if (cr.generation == 0)
-                lvi.SubItems[ColumnIndexGeneration].ForeColor = Color.LightGray;
+                lvi.SubItems[ColumnIndexGeneration].ForeColor = SystemColors.GrayText;
 
             // color of WildLevelColumn
             if (cr.levelFound == 0)
-                lvi.SubItems[ColumnIndexWildLevel].ForeColor = Color.LightGray;
+                lvi.SubItems[ColumnIndexWildLevel].ForeColor = SystemColors.GrayText;
 
             // color for mutations counter
             if (cr.Mutations > 0)
             {
                 if (cr.Mutations < Ark.MutationPossibleWithLessThan)
-                    lvi.SubItems[ColumnIndexMutations].BackColor = Utils.MutationColor;
+                    lvi.SubItems[ColumnIndexMutations].SetBackColorAndAccordingForeColor(UiColors.Current.Mutation);
                 else
-                    lvi.SubItems[ColumnIndexMutations].BackColor = Utils.MutationColorOverLimit;
+                    lvi.SubItems[ColumnIndexMutations].SetBackColorAndAccordingForeColor(UiColors.Current.MutationOverLimit);
             }
             else
-                lvi.SubItems[ColumnIndexMutations].ForeColor = Color.LightGray;
+                lvi.SubItems[ColumnIndexMutations].ForeColor = SystemColors.GrayText;
 
             // color for cooldown
             lvi.SubItems[ColumnIndexCountdown].ForeColor = cooldownForeColor;
@@ -1369,18 +1418,18 @@ namespace ARKBreedingStats
 
             if (Properties.Settings.Default.showColorsInLibrary)
             {
+                var desiredColors = ColorOptionsWantedRegions.GetOptions(cr.Species);
+
                 // color for colors
                 for (int cl = 0; cl < Ark.ColorRegionCount; cl++)
                 {
                     if (cr.colors[cl] != 0)
-                    {
-                        lvi.SubItems[ColumnIndexFirstColor + cl].BackColor = CreatureColors.CreatureColor(cr.colors[cl]);
-                        lvi.SubItems[ColumnIndexFirstColor + cl].ForeColor = Utils.ForeColor(lvi.SubItems[ColumnIndexFirstColor + cl].BackColor);
-                    }
+                        lvi.SubItems[ColumnIndexFirstColor + cl].SetBackColorAndAccordingForeColor(CreatureColors.CreatureColor(cr.colors[cl]));
                     else
-                    {
-                        lvi.SubItems[ColumnIndexFirstColor + cl].ForeColor = cr.Species.EnabledColorRegions[cl] ? Color.LightGray : Color.White;
-                    }
+                        lvi.SubItems[ColumnIndexFirstColor + cl].ForeColor = cr.Species.EnabledColorRegions[cl] ? SystemColors.GrayText : SystemColors.Window;
+
+                    if (desiredColors.Options[cl].IsColorWanted(cr.colors[cl]))
+                        lvi.SubItems[ColumnIndexFirstColor + cl].Font = new Font(lvi.SubItems[ColumnIndexFirstColor + cl].Font, FontStyle.Bold);
                 }
             }
 
@@ -1406,7 +1455,7 @@ namespace ARKBreedingStats
             }
             else if (!cr.growingUntil.HasValue || cr.growingUntil.Value <= now)
             {
-                foreColor = Color.LightGray;
+                foreColor = SystemColors.GrayText;
                 return "-";
             }
             else if (!cr.growingPaused)
@@ -1421,7 +1470,7 @@ namespace ARKBreedingStats
 
             if (!useGrowingLeft && now > dt)
             {
-                foreColor = Color.LightGray;
+                foreColor = SystemColors.GrayText;
                 return "-";
             }
 
@@ -1435,21 +1484,21 @@ namespace ARKBreedingStats
             {
                 // growing
                 if (minCld < 1)
-                    backColor = Color.FromArgb(168, 187, 255); // light blue
+                    backColor = UiColors.Current.GrowingImminent;
                 else if (minCld < 10)
-                    backColor = Color.FromArgb(197, 168, 255); // light blue/pink
+                    backColor = UiColors.Current.GrowingSoon;
                 else
-                    backColor = Color.FromArgb(236, 168, 255); // light pink
+                    backColor = UiColors.Current.GrowingLater;
             }
             else
             {
                 // mating-cooldown
                 if (minCld < 1)
-                    backColor = Color.FromArgb(235, 255, 109); // green-yellow
+                    backColor = UiColors.Current.CooldownImminent;
                 else if (minCld < 10)
-                    backColor = Color.FromArgb(255, 250, 109); // yellow
+                    backColor = UiColors.Current.CooldownSoon;
                 else
-                    backColor = Color.FromArgb(255, 179, 109); // yellow-orange
+                    backColor = UiColors.Current.CooldownLater;
             }
 
             return useGrowingLeft ? Utils.Duration(cr.growingLeft) : dt.ToString();
@@ -1608,111 +1657,172 @@ namespace ARKBreedingStats
             var filterString = ToolStripTextBoxLibraryFilter.Text.Trim();
             if (!string.IsNullOrEmpty(filterString))
             {
-                // filter parameter are separated by commas and all parameter must be found on an item to have it included
-                var filterStrings = filterString.Split(',').Select(f => f.Trim())
-                    .Where(f => !string.IsNullOrEmpty(f)).ToList();
-
-                // extract stat level filter
-                var statGreaterThan = new Dictionary<int, int>();
-                var statLessThan = new Dictionary<int, int>();
-                var statEqualTo = new Dictionary<int, int>();
-                var statFilterRegex = new Regex(@"(\w{2}) ?(<|>|==) ?(\d+)");
-
-                // color filter
-                var colorFilterOr = new Dictionary<int[], int[]>(); // includes creatures that have in one of the regions one of the colors
-                var colorFilterRegexOr = new Regex(@"c([0-5 ]+): ?([\d ]+)");
-
-                // mutation filter
-                var mutationFilterEqualTo = -1;
-                var mutationFilterGreaterThan = -1;
-                var mutationFilterLessThan = -1;
-
-                var removeFilterIndex = new List<int>(); // remove all filter entries that are added to specific filter properties
-                // start at the end, so the removed filter indices are also removed from the end
-                for (var i = filterStrings.Count - 1; i >= 0; i--)
+                if (filterString.StartsWith("re:"))
                 {
-                    var f = filterStrings[i];
-
-                    // color region filter
-                    var m = colorFilterRegexOr.Match(f);
-                    if (m.Success)
+                    var regexString = filterString.Substring(3);
+                    if (!string.IsNullOrEmpty(regexString))
                     {
-                        var colorIds = m.Groups[2].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(int.Parse).Distinct().ToArray();
-                        if (!colorIds.Any()) continue;
-
-                        var colorRegions = m.Groups[1].Value.Where(r => r != ' ').Select(r => int.Parse(r.ToString())).ToArray();
-
-                        colorFilterOr[colorRegions] = colorIds;
-                        removeFilterIndex.Add(i);
-                        continue;
-                    }
-
-                    // stat filter
-                    m = statFilterRegex.Match(f);
-                    if (!m.Success) continue;
-                    if (!Utils.StatAbbreviationToIndex.TryGetValue(m.Groups[1].Value, out var statIndex))
-                    {
-                        // mutations
-                        if (m.Groups[1].Value == "mu")
+                        try
                         {
-                            switch (m.Groups[2].Value)
-                            {
-                                case ">":
-                                    mutationFilterGreaterThan = int.Parse(m.Groups[3].Value);
-                                    break;
-                                case "<":
-                                    mutationFilterLessThan = int.Parse(m.Groups[3].Value);
-                                    break;
-                                case "==":
-                                    mutationFilterEqualTo = int.Parse(m.Groups[3].Value);
-                                    break;
-                            }
-                            removeFilterIndex.Add(i);
+                            SetMessageLabelText();
+                            // do regex filtering
+                            var re = new Regex(regexString);
+
+                            filteredList = filteredList.Where(c =>
+                                re.IsMatch(c.name)
+                                || re.IsMatch(c.SpeciesName)
+                                || (c.owner != null && re.IsMatch(c.owner))
+                                || (c.tribe != null && re.IsMatch(c.tribe))
+                                || (c.note != null && re.IsMatch(c.note))
+                                || (c.ArkIdInGame != null && re.IsMatch(c.ArkIdInGame))
+                                || (c.server != null && re.IsMatch(c.server))
+                                || c.tags?.Any(t => re.IsMatch(t)) == true
+                            );
                         }
-                        continue;
+                        catch (Exception ex)
+                        {
+                            SetMessageLabelText($"Error while doing regex filter in library using regex{Environment.NewLine}{regexString}{Environment.NewLine}{ex.Message}", MessageBoxIcon.Error, ignoreNextMessage: true);
+                        }
                     }
-
-                    switch (m.Groups[2].Value)
-                    {
-                        case ">":
-                            statGreaterThan[statIndex] = int.Parse(m.Groups[3].Value);
-                            break;
-                        case "<":
-                            statLessThan[statIndex] = int.Parse(m.Groups[3].Value);
-                            break;
-                        case "==":
-                            statEqualTo[statIndex] = int.Parse(m.Groups[3].Value);
-                            break;
-                    }
-                    removeFilterIndex.Add(i);
                 }
+                else
+                {
+                    // filter parameter are separated by commas and all parameter must be found on an item to have it included
+                    var filterStrings = filterString.Split(',').Select(f => f.Trim())
+                        .Where(f => !string.IsNullOrEmpty(f)).ToList();
 
-                if (!statGreaterThan.Any()) statGreaterThan = null;
-                if (!statLessThan.Any()) statLessThan = null;
-                if (!statEqualTo.Any()) statEqualTo = null;
-                if (!colorFilterOr.Any()) colorFilterOr = null;
-                foreach (var i in removeFilterIndex)
-                    filterStrings.RemoveAt(i);
+                    // extract stat level filter
+                    var statGreaterThan = new Dictionary<int, int>();
+                    var statLessThan = new Dictionary<int, int>();
+                    var statEqualTo = new Dictionary<int, int>();
+                    var statFilterRegex = new Regex(@"(\w{2}) ?(<|>|==) ?(\d+)");
 
-                filteredList = filteredList.Where(c => filterStrings.All(f =>
-                    c.name.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) != -1
-                    || (c.Species?.name.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
-                    || (c.owner?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
-                    || (c.tribe?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
-                    || (c.note?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
-                    || (c.ArkIdInGame?.StartsWith(f) ?? false)
-                    || (c.server?.IndexOf(f, StringComparison.InvariantCultureIgnoreCase) ?? -1) != -1
-                    || (c.tags?.Any(t => string.Equals(t, f, StringComparison.InvariantCultureIgnoreCase)) ?? false)
-                )
-                && (statGreaterThan?.All(si => c.levelsWild[si.Key] > si.Value) ?? true)
-                && (statLessThan?.All(si => c.levelsWild[si.Key] < si.Value) ?? true)
-                && (statEqualTo?.All(si => c.levelsWild[si.Key] == si.Value) ?? true)
-                && (colorFilterOr?.All(colorRegions => colorRegions.Key.Any(colorRegion => colorRegions.Value.Contains(c.colors[colorRegion]))) ?? true)
-                && (mutationFilterGreaterThan == -1 || mutationFilterGreaterThan < c.Mutations)
-                && (mutationFilterLessThan == -1 || mutationFilterLessThan > c.Mutations)
-                && (mutationFilterEqualTo == -1 || mutationFilterEqualTo == c.Mutations)
-                );
+                    // color filter
+                    var colorFilterOr =
+                        new Dictionary<int[], int[]>(); // includes creatures that have in one of the regions one of the colors
+                    var colorFilterRegexOr = new Regex(@"c([0-5 ]+): ?([\d ]+)");
+
+                    // mutation filter
+                    var mutationFilterEqualTo = -1;
+                    var mutationFilterGreaterThan = -1;
+                    var mutationFilterLessThan = -1;
+
+                    var removeFilterIndex =
+                        new List<int>(); // remove all filter entries that are added to specific filter properties
+                    // start at the end, so the removed filter indices are also removed from the end
+                    for (var i = filterStrings.Count - 1; i >= 0; i--)
+                    {
+                        var f = filterStrings[i];
+
+                        // color region filter
+                        var m = colorFilterRegexOr.Match(f);
+                        if (m.Success)
+                        {
+                            var colorIds = m.Groups[2].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(int.Parse).Distinct().ToArray();
+                            if (!colorIds.Any()) continue;
+
+                            var colorRegions = m.Groups[1].Value.Where(r => r != ' ')
+                                .Select(r => int.Parse(r.ToString())).ToArray();
+
+                            colorFilterOr[colorRegions] = colorIds;
+                            removeFilterIndex.Add(i);
+                            continue;
+                        }
+
+                        // stat filter
+                        m = statFilterRegex.Match(f);
+                        if (!m.Success) continue;
+                        if (!Utils.StatAbbreviationToIndex.TryGetValue(m.Groups[1].Value, out var statIndex))
+                        {
+                            // mutations
+                            if (m.Groups[1].Value == "mu")
+                            {
+                                switch (m.Groups[2].Value)
+                                {
+                                    case ">":
+                                        mutationFilterGreaterThan = int.Parse(m.Groups[3].Value);
+                                        break;
+                                    case "<":
+                                        mutationFilterLessThan = int.Parse(m.Groups[3].Value);
+                                        break;
+                                    case "==":
+                                        mutationFilterEqualTo = int.Parse(m.Groups[3].Value);
+                                        break;
+                                }
+
+                                removeFilterIndex.Add(i);
+                            }
+
+                            continue;
+                        }
+
+                        switch (m.Groups[2].Value)
+                        {
+                            case ">":
+                                statGreaterThan[statIndex] = int.Parse(m.Groups[3].Value);
+                                break;
+                            case "<":
+                                statLessThan[statIndex] = int.Parse(m.Groups[3].Value);
+                                break;
+                            case "==":
+                                statEqualTo[statIndex] = int.Parse(m.Groups[3].Value);
+                                break;
+                        }
+
+                        removeFilterIndex.Add(i);
+                    }
+
+                    if (!statGreaterThan.Any()) statGreaterThan = null;
+                    if (!statLessThan.Any()) statLessThan = null;
+                    if (!statEqualTo.Any()) statEqualTo = null;
+                    if (!colorFilterOr.Any()) colorFilterOr = null;
+                    foreach (var i in removeFilterIndex)
+                        filterStrings.RemoveAt(i);
+
+                    filteredList = filteredList.Where(c => filterStrings.All(f =>
+                                                               c.name.IndexOf(f,
+                                                                   StringComparison.InvariantCultureIgnoreCase) != -1
+                                                               || (c.Species?.name.IndexOf(f,
+                                                                       StringComparison.InvariantCultureIgnoreCase) ??
+                                                                   -1) != -1
+                                                               || (c.owner?.IndexOf(f,
+                                                                       StringComparison.InvariantCultureIgnoreCase) ??
+                                                                   -1) != -1
+                                                               || (c.tribe?.IndexOf(f,
+                                                                       StringComparison.InvariantCultureIgnoreCase) ??
+                                                                   -1) != -1
+                                                               || (c.note?.IndexOf(f,
+                                                                       StringComparison.InvariantCultureIgnoreCase) ??
+                                                                   -1) != -1
+                                                               || (c.ArkIdInGame?.StartsWith(f) ?? false)
+                                                               || (c.server?.IndexOf(f,
+                                                                       StringComparison.InvariantCultureIgnoreCase) ??
+                                                                   -1) != -1
+                                                               || (c.tags?.Any(t =>
+                                                                       string.Equals(t, f,
+                                                                           StringComparison
+                                                                               .InvariantCultureIgnoreCase)) ??
+                                                                   false)
+                                                           )
+                                                           && (statGreaterThan?.All(si =>
+                                                               c.levelsWild[si.Key] > si.Value) ?? true)
+                                                           && (statLessThan?.All(si =>
+                                                               c.levelsWild[si.Key] < si.Value) ?? true)
+                                                           && (statEqualTo?.All(si =>
+                                                               c.levelsWild[si.Key] == si.Value) ?? true)
+                                                           && (colorFilterOr?.All(colorRegions =>
+                                                               colorRegions.Key.Any(colorRegion =>
+                                                                   colorRegions.Value.Contains(
+                                                                       c.colors[colorRegion]))) ?? true)
+                                                           && (mutationFilterGreaterThan == -1 ||
+                                                               mutationFilterGreaterThan < c.Mutations)
+                                                           && (mutationFilterLessThan == -1 ||
+                                                               mutationFilterLessThan > c.Mutations)
+                                                           && (mutationFilterEqualTo == -1 ||
+                                                               mutationFilterEqualTo == c.Mutations)
+                    );
+                }
             }
 
             // display new results
@@ -1809,7 +1919,7 @@ namespace ARKBreedingStats
                 anyFilterSet = true;
             }
 
-            libraryFilterToolStripMenuItem.BackColor = anyFilterSet ? Color.LightGoldenrodYellow : SystemColors.Control;
+            libraryFilterToolStripMenuItem.BackColor = anyFilterSet ? UiColors.Current.FilterActive : SystemColors.Control;
 
             return creatures;
         }
@@ -2036,6 +2146,7 @@ namespace ARKBreedingStats
                 }
 
                 var imagesCreated = 0;
+                var skippedWithoutStatData = 0;
                 string firstImageFilePath = null;
 
                 foreach (int i in listViewLibrary.SelectedIndices)
@@ -2056,20 +2167,107 @@ namespace ARKBreedingStats
                             default: return;
                         }
                     }
-                    (await c.InfoGraphicAsync(_creatureCollection)).Save(filePath);
+                    using (var img = await c.InfoGraphicAsync(_creatureCollection))
+                    {
+                        // no image for creatures the selected style cannot draw, e.g. one that was
+                        // never extracted and so has no stat levels
+                        if (img == null)
+                        {
+                            skippedWithoutStatData++;
+                            continue;
+                        }
+                        img.Save(filePath);
+                    }
                     if (firstImageFilePath == null) firstImageFilePath = filePath;
 
                     imagesCreated++;
                 }
 
-                if (imagesCreated == 0) return;
+                if (imagesCreated == 0)
+                {
+                    if (skippedWithoutStatData > 0)
+                        SetMessageLabelText(NoStatDataText(skippedWithoutStatData, true), MessageBoxIcon.Warning);
+                    return;
+                }
 
-                var pluralS = (imagesCreated != 1 ? "s" : string.Empty);
-                SetMessageLabelText($"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\r\n{(imagesCreated == 1 ? firstImageFilePath : folderPath)}", MessageBoxIcon.Information, firstImageFilePath);
+                var pluralS = imagesCreated != 1 ? "s" : string.Empty;
+                SetMessageLabelText($"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\r\n{(imagesCreated == 1 ? firstImageFilePath : folderPath)}{NoStatDataText(skippedWithoutStatData)}", MessageBoxIcon.Information, firstImageFilePath);
             }
             catch (Exception ex)
             {
                 MessageBoxes.ExceptionMessageBox(ex);
+            }
+        }
+
+        /// <summary>
+        /// Note appended to an infographic export result. Creatures that were never extracted have
+        /// no stat levels and no infographic is created for them, this says so instead of letting
+        /// them disappear from the export without explanation.
+        /// </summary>
+        /// <param name="onlyMessage">True if this is the whole message, not appended to a result.</param>
+        private static string NoStatDataText(int skippedCount, bool onlyMessage = false)
+        {
+            if (skippedCount < 1) return string.Empty;
+
+            var text = skippedCount == 1
+                ? "1 creature was skipped, it has no stat data."
+                : $"{skippedCount} creatures were skipped, they have no stat data.";
+            return onlyMessage ? text : "\r\n" + text;
+        }
+
+        private async void saveStitchedInfographicsToFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listViewLibrary.SelectedIndices.Count == 0) return;
+            if (listViewLibrary.SelectedIndices.Count > 100
+                && MessageBox.Show($"Creating {listViewLibrary.SelectedIndices.Count} images could take some time, do you want to start the process?",
+                    "ARK Smart Breeding Infographic creation", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+
+            try
+            {
+                var lastFilePath = Properties.Settings.Default.InfoGraphicStitchLastFilePath;
+                var initialFolder = !string.IsNullOrEmpty(lastFilePath) ? Path.GetDirectoryName(Properties.Settings.Default.InfoGraphicStitchLastFilePath) : Properties.Settings.Default.InfoGraphicExportFolder;
+                if (string.IsNullOrEmpty(initialFolder) || !Directory.Exists(initialFolder))
+                    initialFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                string filePathSaveTo;
+                using (var fs = new SaveFileDialog
+                {
+                    InitialDirectory = initialFolder,
+                    FileName = string.IsNullOrEmpty(lastFilePath) ? "infographics.jpg" : Path.GetFileName(lastFilePath),
+                    Filter = "Image Files|*.jpg;*.jpeg;*.png|All Files|*.*"
+                })
+                {
+                    if (fs.ShowDialog() != DialogResult.OK || string.IsNullOrEmpty(fs.FileName))
+                        return;
+                    filePathSaveTo = fs.FileName;
+                }
+
+                Properties.Settings.Default.InfoGraphicStitchLastFilePath = filePathSaveTo;
+
+                await InvokeAsync(() =>
+                {
+                    ToolStripStatusLabelImport.Text = "Creating infographics";
+                    ToolStripStatusLabelImport.Visible = true;
+                });
+                var creatures = (from int i in listViewLibrary.SelectedIndices select _creaturesDisplayed[i]).ToArray();
+                var imagesCreated = await Task.Run(() => InfoGraphic.Stitching.CreateStitchedImages(creatures, _creatureCollection,
+                    filePathSaveTo, Properties.Settings.Default.InfoGraphicStitchMaxWidth, Properties.Settings.Default.InfoGraphicStitchBackground, Properties.Settings.Default.InfoGraphicStitchGap));
+
+                // the stitching only leaves out creatures it could get no image for
+                var skippedWithoutStatData = creatures.Length - imagesCreated;
+
+                var pluralS = imagesCreated != 1 ? "s" : string.Empty;
+                SetMessageLabelText(
+                    $"Infographic{pluralS} for {imagesCreated} creature{pluralS} created at\r\n{filePathSaveTo}{NoStatDataText(skippedWithoutStatData)}",
+                    MessageBoxIcon.Information, filePathSaveTo);
+            }
+            catch (Exception ex)
+            {
+                MessageBoxes.ExceptionMessageBox(ex, "Error while creating multiple infographics.");
+            }
+            finally
+            {
+                ToolStripStatusLabelImport.Visible = false;
             }
         }
 
@@ -2400,6 +2598,7 @@ namespace ARKBreedingStats
             var creaturesToUpdate = new List<Creature>();
             Creature[] sameSpecies = null;
             var libraryCreatureCount = _creatureCollection.GetTotalCreatureCount();
+            string lastGeneratedName = null;
 
             foreach (int i in listViewLibrary.SelectedIndices)
             {
@@ -2410,9 +2609,10 @@ namespace ARKBreedingStats
                     sameSpecies = _creatureCollection.creatures.Where(c => c.Species == cr.Species).ToArray();
 
                 // set new name
-                cr.name = NamePattern.GenerateCreatureName(cr, cr, sameSpecies, _creatureCollection.TopLevels.TryGetValue(cr.Species, out var tl) ? tl : null,
+                lastGeneratedName = NamePattern.GenerateCreatureName(cr, cr, sameSpecies, _creatureCollection.TopLevels.TryGetValue(cr.Species, out var tl) ? tl : null,
                     _customReplacingNamingPattern, false, namePatternIndex,
                     Properties.Settings.Default.DisplayWarningAboutTooLongNameGenerated, libraryCreatureCount: libraryCreatureCount);
+                cr.name = lastGeneratedName;
 
                 creaturesToUpdate.Add(cr);
             }
@@ -2422,6 +2622,8 @@ namespace ARKBreedingStats
                 UpdateDisplayedCreatureValues(cr, false, false);
 
             listViewLibrary.EndUpdate();
+            if (Properties.Settings.Default.CopyNameToClipboardWhenAppliedInLibrary)
+                ClipboardHandler.SetText(lastGeneratedName);
         }
         private void CopyGeneratedNamePatternToClipboard(object sender, EventArgs e) => CopyCreatureNamePatternToClipboard((int)((ToolStripMenuItem)sender).Tag);
 

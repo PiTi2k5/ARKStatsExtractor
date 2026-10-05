@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ARKBreedingStats.library;
+using ARKBreedingStats.Library;
 using ARKBreedingStats.utils;
 using ARKBreedingStats.values;
 
@@ -29,7 +29,7 @@ namespace ARKBreedingStats.uiControls
                 var lbColorId = new Label { AutoSize = true, TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill, Padding = new Padding(3) };
                 var lbCreatureCount = new Label { AutoSize = true, TextAlign = ContentAlignment.MiddleRight, Anchor = AnchorStyles.Right, Padding = new Padding(3) };
                 var lbWantedColor = new Label { AutoSize = true, ForeColor = Color.White, BackColor = Color.DarkGreen, Padding = new Padding(3) };
-                var llbLibraryLink = new LinkLabel { AutoSize = true, Text = "view", Tag = ri };
+                var llbLibraryLink = new LinkLabel { AutoSize = true, Text = "view", Tag = ri, LinkColor = UiColors.LinkLabelText() };
                 llbLibraryLink.Click += (s, e) => ViewInLibrary((int)((LinkLabel)s).Tag);
 
                 _labelsRegionColors[3 * ri] = lbColorId;
@@ -136,7 +136,7 @@ namespace ARKBreedingStats.uiControls
         {
             if (status.HasFlag(LevelColorStatusFlags.LevelStatus.NewTopLevel))
             {
-                labelIcon.BackColor = Color.LightYellow;
+                labelIcon.BackColor = UiColors.IsDark ? Color.FromArgb(100, 90, 0) : Color.LightYellow;
                 labelIcon.ForeColor = Color.Gold;
                 labelIcon.Text = "★";
                 if (labelText != null)
@@ -144,16 +144,16 @@ namespace ARKBreedingStats.uiControls
             }
             else if (status.HasFlag(LevelColorStatusFlags.LevelStatus.TopLevel))
             {
-                labelIcon.BackColor = Color.LightGreen;
-                labelIcon.ForeColor = Color.DarkGreen;
+                labelIcon.BackColor = UiColors.Current.Success;
+                labelIcon.ForeColor = UiColors.Current.SuccessText;
                 labelIcon.Text = "✓";
                 if (labelText != null)
                     labelText.Text = "Keep this creature!";
             }
             else
             {
-                labelIcon.BackColor = Color.LightGray;
-                labelIcon.ForeColor = Color.Gray;
+                labelIcon.BackColor = SystemColors.ControlDark;
+                labelIcon.ForeColor = SystemColors.GrayText;
                 labelIcon.Text = "-";
                 if (labelText != null)
                     labelText.Text = "This creature adds nothing new to your library.";

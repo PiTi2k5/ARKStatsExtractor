@@ -1,4 +1,6 @@
-﻿namespace ARKBreedingStats.raising
+﻿using ARKBreedingStats.uiControls;
+
+namespace ARKBreedingStats.raising
 {
     partial class RaisingControl
     {
@@ -69,7 +71,7 @@
             this.btAdjustAllTimers = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
             this.dhmsInputOffsetAllTimers = new ARKBreedingStats.uiControls.dhmsInput();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new GroupBoxC();
             this.LbFoodInfoGeneral = new System.Windows.Forms.Label();
             this.CbGrowingFood = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -284,7 +286,7 @@
             // btStartPauseTimer
             // 
             this.btStartPauseTimer.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btStartPauseTimer.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btStartPauseTimer.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btStartPauseTimer.Location = new System.Drawing.Point(3, 280);
             this.btStartPauseTimer.Name = "btStartPauseTimer";
             this.btStartPauseTimer.Size = new System.Drawing.Size(358, 34);
@@ -324,7 +326,7 @@
             this.tabPageMaturationProgress.Size = new System.Drawing.Size(350, 133);
             this.tabPageMaturationProgress.TabIndex = 0;
             this.tabPageMaturationProgress.Text = "Maturation Progress";
-            this.tabPageMaturationProgress.UseVisualStyleBackColor = true;
+            this.tabPageMaturationProgress.UseVisualStyleBackColor = false;
             // 
             // label1
             // 
@@ -364,7 +366,7 @@
             this.tabPageEditTimer.Size = new System.Drawing.Size(350, 133);
             this.tabPageEditTimer.TabIndex = 1;
             this.tabPageEditTimer.Text = "Edit Timer";
-            this.tabPageEditTimer.UseVisualStyleBackColor = true;
+            this.tabPageEditTimer.UseVisualStyleBackColor = false;
             // 
             // bSaveTimerEdit
             // 
@@ -436,7 +438,7 @@
             this.tabPage1.Size = new System.Drawing.Size(350, 133);
             this.tabPage1.TabIndex = 2;
             this.tabPage1.Text = "Edit all Timers";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabPage1.UseVisualStyleBackColor = false;
             // 
             // cbSubtractOffsetToAllTimers
             // 
@@ -590,8 +592,6 @@
             // 
             // RaisingControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.Controls.Add(this.tableLayoutPanel2);
             this.Name = "RaisingControl";
@@ -630,7 +630,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripBabyList;
         private System.Windows.Forms.ToolStripMenuItem extractValuesOfHatchedbornBabyToolStripMenuItem;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private GroupBoxC groupBox2;
         private System.Windows.Forms.Label labelAmountFoodAdult;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

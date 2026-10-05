@@ -420,7 +420,11 @@ namespace ARKBreedingStats.Library
         /// <summary>
         /// The total current level inclusive domesticate levels.
         /// </summary>
-        public int Level => (levelsWild?[Stats.Torpidity] ?? 0) + 1 + levelsDom.Sum();
+        /// <remarks>
+        /// levelsDom is serialized with DefaultValueHandling.Ignore, so a creature without
+        /// domesticate levels comes back from the library file with a null array.
+        /// </remarks>
+        public int Level => (levelsWild?[Stats.Torpidity] ?? 0) + 1 + (levelsDom?.Sum() ?? 0);
 
         /// <summary>
         /// Max possible level when applying all possible domestic levels according to the server settings (ignoring global server level cap)
@@ -728,8 +732,13 @@ namespace ARKBreedingStats.Library
         /// </summary>
         Divider = 4096,
         /// <summary>
+        /// When looking for parent stats, allow this creature to match by name.
+        /// This allows a single library creature to represent many in-game creatures.
+        /// </summary>
+        Archetype = 8192,
+        /// <summary>
         /// If applied to the flags with &, the status is removed.
         /// </summary>
-        StatusMask = Mutated | Neutered | Placeholder | Female | Male | MutagenApplied | Divider
+        StatusMask = Mutated | Neutered | Placeholder | Female | Male | MutagenApplied | Divider | Archetype
     }
 }

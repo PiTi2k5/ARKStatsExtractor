@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using ARKBreedingStats.library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.species;
 using ARKBreedingStats.utils;
@@ -396,12 +395,12 @@ namespace ARKBreedingStats
                 }
 
                 infoText = sb.ToString();
-                textColor = Color.FromArgb(colorSaturation, 255, colorSaturation);
+                textColor = UiColors.Current.SuccessText;
             }
             else
             {
                 infoText = $"Creature \"{creature.name}\" couldn't be extracted uniquely, manual level selection is necessary.";
-                textColor = Color.FromArgb(255, colorSaturation, colorSaturation);
+                textColor = UiColors.Current.WarningText;
                 LevelColorStatusFlags.Clear();
             }
 

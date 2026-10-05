@@ -4,12 +4,10 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using ARKBreedingStats.library;
 using ARKBreedingStats.Library;
 using ARKBreedingStats.NamePatterns;
 using ARKBreedingStats.Properties;
 using ARKBreedingStats.species;
-using ARKBreedingStats.SpeciesImages;
 using ARKBreedingStats.Traits;
 using ARKBreedingStats.uiControls;
 using ARKBreedingStats.utils;
@@ -41,7 +39,7 @@ namespace ARKBreedingStats
         private bool _updateMaturation;
         private Creature[] _sameSpecies;
         public int LibraryCreatureCount;
-        public List<string> NamesOfAllCreatures;
+        public HashSet<string> NamesOfAllCreatures;
         private string[] _ownersTribes;
         private byte[] _regionColorIDs;
         private byte[] _colorIdsAlsoPossible;
@@ -56,7 +54,7 @@ namespace ARKBreedingStats
             set
             {
                 _traits = value;
-                BtTraits.BackColor = _traits == null ? SystemColors.Control : Color.Aquamarine;
+                BtTraits.SetBackColorAndAccordingForeColor(_traits == null ? SystemColors.Control : Color.Aquamarine);
                 _tt.SetToolTip(BtTraits, _traits == null ? null : CreatureTrait.StringList(_traits, Environment.NewLine));
             }
 
@@ -66,11 +64,11 @@ namespace ARKBreedingStats
         /// </summary>
         private Creature _alreadyExistingCreature;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true, it's the tester input. This affects the behaviour of the saveToLibrary button.
         /// In the extractor it will change colour and text if a creature is reimported, in the tester it will always display add to library.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsTester
         {
             get => _isTester;
@@ -111,11 +109,12 @@ namespace ARKBreedingStats
 
         internal LevelColorStatusFlags.ColorStatus[] ColorAlreadyExistingInformation;
 
-        private Button[] ButtonsNamingPattern => new[] { btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6 };
+        private Button[] ButtonsNamingPattern => [btnGenerateUniqueName, btNamingPattern2, btNamingPattern3, btNamingPattern4, btNamingPattern5, btNamingPattern6];
 
         public CreatureInfoInput()
         {
             InitializeComponent();
+            InitializeColors();
             _selectedSpecies = null;
             textBoxName.Text = string.Empty;
             parentComboBoxMother.naLabel = " - " + Loc.S("Mother") + " n/a";
@@ -126,7 +125,6 @@ namespace ARKBreedingStats
             parentComboBoxFather.SelectedIndex = 0;
             _updateMaturation = true;
             _regionColorIDs = new byte[Ark.ColorRegionCount];
-            NamesOfAllCreatures = new List<string>();
 
             var namingPatternButtons = ButtonsNamingPattern;
             for (int bi = 0; bi < namingPatternButtons.Length; bi++)
@@ -161,15 +159,15 @@ namespace ARKBreedingStats
         /// <summary>
         /// Updates the displayed colors of the creature.
         /// </summary>
-        public void UpdateRegionColorImage(bool colorsChanged = true)
+        public void UpdateRegionColorImage(bool colorsChanged = true, int regionId = -1)
         {
             if (colorsChanged)
             {
                 ParentInheritance?.UpdateColors(RegionColors);
                 ColorsChanged?.Invoke(this);
             }
-            if (ColoredCreatureDisplay == null) return;
-            ColoredCreatureDisplay.SetCreatureImage(_selectedSpecies, RegionColors, CreatureSex, CreatureCollection.CurrentCreatureCollection?.Game);
+
+            ColoredCreatureDisplay?.SetCreatureImage(_selectedSpecies, RegionColors, CreatureSex, CreatureCollection.CurrentCreatureCollection?.Game);
         }
 
         /// <summary>
@@ -186,8 +184,12 @@ namespace ARKBreedingStats
         private void buttonAdd2Library_Click(object sender, EventArgs e)
         {
             // keep selected parents
+            var motherId = MotherArkId;
+            var fatherId = FatherArkId;
             Mother = Mother;
             Father = Father;
+            if (MotherArkId == 0 && motherId != 0) MotherArkId = motherId;
+            if (FatherArkId == 0 && fatherId != 0) FatherArkId = fatherId;
 
             Add2LibraryClicked?.Invoke(this);
         }
@@ -204,7 +206,7 @@ namespace ARKBreedingStats
             set
             {
                 textBoxName.Text = value;
-                textBoxName.BackColor = SystemColors.Window;
+                textBoxName.SetBackColorAndAccordingForeColor(SystemColors.Window);
             }
         }
 
@@ -230,7 +232,7 @@ namespace ARKBreedingStats
             {
                 _sex = value;
                 buttonSex.Text = Utils.SexSymbol(_sex);
-                buttonSex.BackColor = Utils.SexColor(_sex);
+                buttonSex.SetBackColorAndAccordingForeColor(Utils.SexColor(_sex));
                 _tt.SetToolTip(buttonSex, $"{Loc.S("Sex")}: {Loc.S(_sex.ToString())}");
                 cbNeutered.Text = Loc.S(_sex == Sex.Female ? "Spayed" : "Neutered");
                 if (value == Sex.Female)
@@ -309,10 +311,10 @@ namespace ARKBreedingStats
             set => _sameSpecies = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// Possible parents of the current creature. Index 0: possible mothers, index 1: possible fathers. If species has no sex all parents are in index 0.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<Creature>[] Parents
         {
             set
@@ -350,8 +352,8 @@ namespace ARKBreedingStats
             set
             {
                 btSaveChanges.Visible = value;
-                btAdd2Library.Size = new Size((value ? Width / 2 : Width) - 10, btAdd2Library.Size.Height);
-                btAdd2Library.Location = new Point(value ? Width / 2 + 6 : 6, btAdd2Library.Location.Y);
+                btAdd2Library.Size = btAdd2Library.Size with { Width = (value ? Width / 2 : Width) - 2 * btAdd2Library.Margin.Left };
+                btAdd2Library.Update();
             }
         }
 
@@ -396,13 +398,13 @@ namespace ARKBreedingStats
             _updateMaturation = true;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the cooldown of the creature is finished.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime? CooldownUntil
         {
-            get => dhmsInputCooldown.changed ? DateTime.Now.Add(dhmsInputCooldown.Timespan) : default(DateTime?);
+            get => dhmsInputCooldown.changed ? DateTime.Now.Add(dhmsInputCooldown.Timespan) : null;
             set
             {
                 if (value.HasValue)
@@ -412,13 +414,13 @@ namespace ARKBreedingStats
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the creature is mature.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime? GrowingUntil
         {
-            get => dhmsInputGrown.changed ? DateTime.Now.Add(dhmsInputGrown.Timespan) : default(DateTime?);
+            get => dhmsInputGrown.changed ? DateTime.Now.Add(dhmsInputGrown.Timespan) : null;
             set
             {
                 if (value.HasValue)
@@ -458,10 +460,10 @@ namespace ARKBreedingStats
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// List of tribes of owners.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] OwnersTribes
         {
             set => _ownersTribes = value;
@@ -481,10 +483,10 @@ namespace ARKBreedingStats
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// DateTime when the creature was domesticated.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime? DomesticatedAt
         {
             get => dateTimePickerDomesticatedAt.Value;
@@ -497,10 +499,10 @@ namespace ARKBreedingStats
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// Flags of the creature, e.g. if the creature is neutered.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CreatureFlags CreatureFlags
         {
             get
@@ -511,6 +513,9 @@ namespace ARKBreedingStats
                 if (CbMutagen.Checked)
                     _creatureFlags |= CreatureFlags.MutagenApplied;
                 else _creatureFlags &= ~CreatureFlags.MutagenApplied;
+                if (cbArchetype.Checked)
+                    _creatureFlags |= CreatureFlags.Archetype;
+                else _creatureFlags &= ~CreatureFlags.Archetype;
                 if (MutationCounterMother > 0 || MutationCounterFather > 0)
                     _creatureFlags |= CreatureFlags.Mutated;
                 else _creatureFlags &= ~CreatureFlags.Mutated;
@@ -522,6 +527,7 @@ namespace ARKBreedingStats
                 _creatureFlags = value;
                 cbNeutered.Checked = _creatureFlags.HasFlag(CreatureFlags.Neutered);
                 CbMutagen.Checked = _creatureFlags.HasFlag(CreatureFlags.MutagenApplied);
+                cbArchetype.Checked = _creatureFlags.HasFlag(CreatureFlags.Archetype);
             }
         }
 
@@ -732,52 +738,52 @@ namespace ARKBreedingStats
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true the OCR and import exported methods will not change the owner field.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LockOwner
         {
             get => _lockOwner;
             set
             {
                 _lockOwner = value;
-                textBoxOwner.BackColor = value ? Color.LightGray : SystemColors.Window;
+                textBoxOwner.SetBackColorAndAccordingForeColor(value ? SystemColors.ControlLight : SystemColors.Window);
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true the OCR and import exported methods will not change the tribe field.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LockTribe
         {
             get => _lockTribe;
             set
             {
                 _lockTribe = value;
-                textBoxTribe.BackColor = value ? Color.LightGray : SystemColors.Window;
+                textBoxTribe.SetBackColorAndAccordingForeColor(value ? SystemColors.ControlLight : SystemColors.Window);
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If true the importing will not change the server field.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LockServer
         {
             get => _lockServer;
             set
             {
                 _lockServer = value;
-                cbServer.BackColor = value ? Color.LightGray : SystemColors.Window;
+                cbServer.SetBackColorAndAccordingForeColor(value ? SystemColors.ControlLight : SystemColors.Window);
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// If not null it's assumed the creature is already existing in the library.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Creature AlreadyExistingCreature
         {
             set
@@ -800,10 +806,7 @@ namespace ARKBreedingStats
 
         private void SetAdd2LibColor(bool buttonEnabled)
         {
-            btAdd2Library.BackColor = !buttonEnabled
-                ? SystemColors.Control
-                : IsTester || _alreadyExistingCreature == null ? Color.LightGreen
-                : Color.LightSkyBlue;
+            btAdd2Library.SetBackColorAndAccordingForeColor(!buttonEnabled ? SystemColors.Control : IsTester || _alreadyExistingCreature == null ? UiColors.Current.Success : UiColors.Current.Info);
         }
 
         private void lblOwner_Click(object sender, EventArgs e) => LockOwner = !IsTester && !LockOwner;
@@ -843,14 +846,14 @@ namespace ARKBreedingStats
         private void CheckIfNameAlreadyExists()
         {
             // feedback if name already exists
-            if (!string.IsNullOrEmpty(textBoxName.Text) && NamesOfAllCreatures != null && NamesOfAllCreatures.Contains(textBoxName.Text))
+            if (!string.IsNullOrEmpty(textBoxName.Text) && NamesOfAllCreatures?.Contains(textBoxName.Text) == true)
             {
-                textBoxName.BackColor = Color.Khaki;
+                textBoxName.SetBackColorAndAccordingForeColor(Color.Khaki);
                 _tt.SetToolTip(textBoxName, Loc.S("nameAlreadyExistsInLibrary"));
             }
             else
             {
-                textBoxName.BackColor = SystemColors.Window;
+                textBoxName.SetBackColorAndAccordingForeColor(SystemColors.Window);
                 _tt.SetToolTip(textBoxName, null);
             }
         }
@@ -872,7 +875,7 @@ namespace ARKBreedingStats
             }
 
             lbNewMutations.Text = $"+{newMutations} mut";
-            lbNewMutations.BackColor = newMutations != 0 ? Utils.MutationColor : SystemColors.Control;
+            lbNewMutations.SetBackColorAndAccordingForeColor(newMutations != 0 ? UiColors.Current.Mutation : SystemColors.Control);
         }
 
         private void NudMutations_ValueChanged(object sender, EventArgs e)
@@ -903,9 +906,9 @@ namespace ARKBreedingStats
             var namingPatternButtons = ButtonsNamingPattern;
             for (var i = 0; i < namingPatternButtons.Length; i++)
             {
-                namingPatternButtons[i].BackColor = patterns.Length > i && !string.IsNullOrWhiteSpace(patterns[i])
+                namingPatternButtons[i].SetBackColorAndAccordingForeColor(patterns.Length > i && !string.IsNullOrWhiteSpace(patterns[i])
                     ? Color.FromArgb(150, 110, 255, 104)
-                    : Color.Transparent;
+                    : SystemColors.Control);
             }
         }
 
@@ -954,6 +957,7 @@ namespace ARKBreedingStats
         {
             Loc.ControlText(gbCreatureInfo);
             Loc.ControlText(lbName, "Name", _tt);
+            Loc.ControlText(cbArchetype, _tt);
             Loc.ControlText(lbOwner, "Owner", _tt);
             Loc.ControlText(lbTribe, "Tribe", _tt);
             Loc.ControlText(lbServer, "Server", _tt);
@@ -991,6 +995,22 @@ namespace ARKBreedingStats
             LbColorNewInRegion.Visible = regionColorChooser1.ColorNewInRegion;
             LbColorNewInSpecies.Visible = regionColorChooser1.ColorNewInSpecies;
             return (regionColorChooser1.ColorNewInRegion, regionColorChooser1.ColorNewInSpecies);
+        }
+
+        internal void InitializeColors()
+        {
+            LbColorNewInRegion.SetBackColorAndAccordingForeColor(UiColors.Current.NewColorInRegion);
+            LbColorNewInSpecies.SetBackColorAndAccordingForeColor(UiColors.Current.NewColorInSpecies);
+        }
+
+        private void CbMutagen_CheckedChanged(object sender, EventArgs e)
+        {
+            CbMutagen.SetBackColorAndAccordingForeColor(CbMutagen.Checked ? UiColors.Current.MutationMarker : SystemColors.Control);
+        }
+
+        private void cbNeutered_CheckedChanged(object sender, EventArgs e)
+        {
+            cbNeutered.SetBackColorAndAccordingForeColor(cbNeutered.Checked ? UiColors.Current.PedigreeSelected : SystemColors.Control);
         }
     }
 }

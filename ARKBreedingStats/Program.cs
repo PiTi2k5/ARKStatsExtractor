@@ -36,9 +36,7 @@ namespace ARKBreedingStats
                 }
             }
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetDefaultFont(new Font(new FontFamily("Microsoft Sans Serif"), 8.25f));
+            ApplicationConfiguration.Initialize();
             Application.Run(new Form1
             {
                 Font = new Font(Properties.Settings.Default.DefaultFontName, Properties.Settings.Default.DefaultFontSize)

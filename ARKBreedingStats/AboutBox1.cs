@@ -23,6 +23,7 @@ namespace ARKBreedingStats
             TbDependencies.Text = File.Exists(dependenciesFilePath)
                 ? File.ReadAllText(dependenciesFilePath)
                 : "see " + "https://raw.githubusercontent.com/cadon/ARKStatsExtractor/dev/ARKBreedingStats/" + noticeFileName;
+            linkLabel.LinkColor = UiColors.LinkLabelText();
         }
 
         #region Assemblyattributaccessoren
@@ -112,13 +113,13 @@ namespace ARKBreedingStats
 * Warstone: Kibble recipes
 * tsebring: naming-generator
 * maxime-paquatte: custom timer sounds
-* hallipr: FTP save file import and Javascript name pattern support
+* hallipr: FTP save file import, Javascript name pattern support, upgrade of framework, dark-mode
 * EmkioA: Cryopod import, listView tweaks
 * dunger: fixes
 * Myrmecoleon: extra species color region images
 * Lunat1q: improved OCR
 * ThatGamerBlue: species dividers in virtual listView
-* Jaymei: ATLAS species data
+* Jaymei: ATLAS species data and modern infographic
 * Shen: many ASA color region images
 * emma: fixes, hotkey addition
 
